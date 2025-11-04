@@ -14,6 +14,11 @@
             "date": 1762089156491,
             "name": "logs/2025/weeks-45/day-0/error.log",
             "hash": "03255ec99790c397dd483f03e98169ffe2e00bd95e4b8cb541b964650c7e367e"
+        },
+        {
+            "date": 1762223692908,
+            "name": "logs\\2025/weeks-45/day-2/error.log",
+            "hash": "eea09d26c0604398da2d3d939d0b5d1f500c4bccfe9b256d9756d1368ce4bb6f"
         }
     ],
     "hashType": "sha256"
