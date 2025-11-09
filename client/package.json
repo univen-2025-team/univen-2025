@@ -3,11 +3,11 @@
     "version": "0.1.0",
     "private": true,
     "scripts": {
-        "dev": "next dev --turbo --experimental-https",
+        "dev": "cross-env next dev --turbo --experimental-https",
         "build": "next build",
-        "start": "NODE_ENV=production bun server.js",
-        "start:https": "NODE_ENV=production bun server.js",
-        "start:dev": "next dev --experimental-https",
+        "start": "cross-env NODE_ENV=production bun server.js",
+        "start:https": "cross-env NODE_ENV=production bun server.js",
+        "start:dev": "cross-env next dev --experimental-https",
         "generate-certs": "bash generate-certificates.sh",
         "lint": "next lint"
     },
