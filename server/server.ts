@@ -82,4 +82,4 @@ process.on('SIGINT', async () => {
 /* ---------------------------------------------------------- */
 /*                        Initial data                        */
 /* ---------------------------------------------------------- */
-await RBACService.getInstance().initRBAC();
+// await RBACService.getInstance().initRBAC();
