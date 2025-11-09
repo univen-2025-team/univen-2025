@@ -14,7 +14,7 @@ export default class SocketIOService {
     private io: SocketIOServer | null = null;
     private connectedUsers: Map<string, string> = new Map(); // userId -> socketId
 
-    private constructor() {}
+    private constructor() { }
 
     public static getInstance(): SocketIOService {
         if (!SocketIOService.instance) {
@@ -46,6 +46,7 @@ export default class SocketIOService {
 
         // Connection handling
         this.io.on('connection', (socket) => {
+            console.log(`User connected`);
             this.handleConnection(socket);
         });
 
@@ -97,7 +98,83 @@ export default class SocketIOService {
         socket.role = payload.role;
     }
 
-    private handleConnection(socket: any): void {}
+    private handleConnection(socket: any): void {
+        const userId = socket.userId as string;
+
+        this.connectedUsers.set(userId, socket.id);
+
+        socket.join(`user_${userId}`)
+
+        //Client send message 
+        socket.on(
+            'message-send',
+            (
+                payload: { text: string },
+                ack?: (res: { ok: boolean; error?: string }) => void
+            ) => {
+                try {
+                    const text = payload.text?.trim();
+                    if (!text) {
+                        ack?.({ ok: false, error: 'Null text' });
+                        return;
+                    }
+
+                    const message = {
+                        text,
+                        senderId: userId,
+                        sender: socket.user,
+                        createdAt: new Date().toISOString(),
+                    }
+
+                    this.io?.emit('message-new', message);
+                    ack?.({ ok: true })
+                } catch (err: any) {
+                    ack?.({ ok: false, error: err?.message || 'Send failed' });
+                }
+            }
+        );
+
+        socket.on(
+            'message-on-toUser', (
+                payload: { toUserId: string, text: string },
+                ack?: (res: { ok: boolean; error?: string }) => void
+            ) => {
+            try {
+                const text = payload.text?.trim();
+                if (!payload.toUserId || !payload.text) {
+                    ack?.({ ok: false, error: "toUser or text is null" });
+                    return;
+                }
+
+                const message = {
+                    text,
+                    senderId: userId,
+                    receiverId: payload.toUserId,
+                    sender: socket.user,
+                    createdAt: new Date().toISOString(),
+                }
+
+                const targetSocketId = this.connectedUsers.get(payload.toUserId);
+                if (!targetSocketId) {
+                    ack?.({ ok: false, error: "Offline user" })
+                    return;
+                }
+
+                this.io?.to(targetSocketId).emit("message-new-direct", message);
+                socket.emit('message-new-direct', message);
+
+                ack?.({ ok: true });
+            } catch (err: any) {
+                ack?.({ ok: false, error: err?.message || 'Send failed' });
+            }
+        }
+        )
+        socket.on('disconnect', () => {
+            if (this.connectedUsers.get(userId) === socket.id) {
+                this.connectedUsers.delete(userId);
+            }
+        });
+    }
 
     /* -------------------- Public Methods -------------------- */
     public sendToUser(userId: string, event: string, data: any): boolean {

@@ -1,1 +1,9 @@
 [2025-11-04T03:24:41.924Z] [error]: Redis error: Error: Connection timeout
+[2025-11-04T03:37:50.616Z] [error]: HIDE::404::NotFound::Route is not exists::
+[2025-11-04T04:47:48.134Z] [error]: Redis error: Error: Socket closed unexpectedly
+[2025-11-04T04:47:48.196Z] [error]: Redis error: DNSException: getaddrinfo ENOTFOUND
+[2025-11-04T04:47:48.220Z] [error]: Redis error: DNSException: getaddrinfo ENOTFOUND
+[2025-11-04T04:47:48.298Z] [error]: Redis error: DNSException: getaddrinfo ENOTFOUND
+[2025-11-04T04:47:48.408Z] [error]: Redis error: DNSException: getaddrinfo ENOTFOUND
+[2025-11-04T04:47:48.569Z] [error]: Redis error: DNSException: getaddrinfo ENOTFOUND
+[2025-11-04T04:47:48.782Z] [error]: Redis error: DNSException: getaddrinfo ENOTFOUND
