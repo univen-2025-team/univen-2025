@@ -1,6 +1,6 @@
 // Libs
 import bcrypt from 'bcrypt';
-import _ from 'lodash';
+import _, { get } from 'lodash';
 
 // Handle error
 import {
@@ -20,8 +20,6 @@ import JwtService from './jwt.service.js';
 import LoggerService from './logger.service.js';
 
 // Models
-import { findOneShop, isExistsShop } from '@/models/repository/shop/index.js';
-import shopModel from '@/models/shop.model.js';
 import { getRoleIdByName } from '@/models/repository/rbac/index.js';
 import { findOneAndUpdateUser, findOneUser, findUserById } from '@/models/repository/user/index.js';
 import { RoleNames } from '@/enums/rbac.enum.js';
@@ -31,6 +29,7 @@ import { USER_PUBLIC_FIELDS } from '@/configs/user.config.js';
 import { roleService } from './rbac.service.js';
 import { changeMediaOwner } from '@/models/repository/media/index.js';
 import { NODE_ENV } from '@/configs/server.config.js';
+import { ObjectId } from '@/configs/mongoose.config.js';
 
 export default class AuthService {
     /* ------------------------------------------------------ */
@@ -131,7 +130,7 @@ export default class AuthService {
             throw new ForbiddenErrorResponse({ message: 'Username or password is not correct!' });
 
         /* --------- Generate token and send response --------- */
-        const { privateKey, publicKey } = KeyTokenService.generateTokenPair();
+        const { privateKey, publicKey } = KeyTokenService.generateTokenPair(); // RSA
         const jwtPair = await JwtService.signJwtPair({
             privateKey,
             payload: {
@@ -156,12 +155,12 @@ export default class AuthService {
         };
 
         /* --------------------- Add role data  --------------------- */
-        const roleData = await roleService.getUserRoleData({
-            userId: user._id.toString(),
-            roleId: user.user_role.toString()
-        });
-        if (roleData && roleData.role_name !== RoleNames.USER)
-            result[roleData.role_name] = roleData.role_data || true;
+        // const roleData = await roleService.getUserRoleData({
+        //     userId: user._id.toString(),
+        //     roleId: user.user_role.toString()
+        // });
+        // if (roleData && roleData.role_name !== RoleNames.USER)
+        //     result[roleData.role_name] = roleData.role_data || true;
 
         return result;
     };

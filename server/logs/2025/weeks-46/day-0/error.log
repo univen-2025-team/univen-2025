@@ -1,0 +1,32 @@
+[2025-11-09T15:33:08.008Z] [error]: HIDE::404::NotFound::Username or password is not correct!::
+[2025-11-09T15:33:16.293Z] [error]: HIDE::404::NotFound::Default role not found!::
+[2025-11-09T15:33:26.216Z] [error]: HIDE::404::NotFound::Default role not found!::
+[2025-11-09T15:34:59.403Z] [error]: HIDE::404::NotFound::Default role not found!::
+[2025-11-09T15:36:15.415Z] [error]: HIDE::400::TypeError::undefined is not an object (evaluating 'userInstance.user_role.toString')::
+[2025-11-09T15:37:28.085Z] [error]: HIDE::404::NotFound::Default role not found!::
+[2025-11-09T15:37:54.685Z] [error]: HIDE::400::TypeError::undefined is not an object (evaluating 'userInstance.user_role.toString')::
+[2025-11-09T15:39:03.937Z] [error]: HIDE::403::Forbidden::Error on save user or key token!::
+[2025-11-09T16:20:08.210Z] [error]: HIDE::403::Forbidden::Error on save user or key token!::
+[2025-11-09T16:21:07.925Z] [error]: HIDE::404::NotFound::Default role not found!::
+[2025-11-09T16:23:12.939Z] [error]: HIDE::400::BadRequest::[
+  {
+    "validation": "regex",
+    "code": "invalid_string",
+    "message": "Invalid phone number format",
+    "path": [
+      "phoneNumber"
+    ]
+  }
+]::
+[2025-11-09T16:23:18.769Z] [error]: HIDE::400::BadRequest::[
+  {
+    "validation": "regex",
+    "code": "invalid_string",
+    "message": "Invalid phone number format",
+    "path": [
+      "phoneNumber"
+    ]
+  }
+]::
+[2025-11-09T16:23:27.325Z] [error]: HIDE::409::Conflict::User is exists!::
+[2025-11-09T16:23:33.749Z] [error]: HIDE::409::Conflict::User is exists!::

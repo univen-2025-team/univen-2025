@@ -15,6 +15,7 @@ import MongoDB from './src/app/db.app.js';
 
 // Socket.IO
 import SocketIOService from '@/services/socketio.service.js';
+import RBACService from '@/services/rbac.service';
 
 // await new Promise((resolve) => {
 //     // kill 4000 with bun
@@ -81,4 +82,4 @@ process.on('SIGINT', async () => {
 /* ---------------------------------------------------------- */
 /*                        Initial data                        */
 /* ---------------------------------------------------------- */
-// await RBACService.getInstance().initRBAC();
+await RBACService.getInstance().initRBAC();
