@@ -1,0 +1,21 @@
+[2025-11-08T19:35:41.439Z] [error]: HIDE::400::Error::ENOENT: no such file or directory, stat 'D:\UniVen25\univen-2025\server\public\abc.html'::
+[2025-11-08T19:35:43.134Z] [error]: HIDE::404::NotFound::Route is not exists::
+[2025-11-08T19:36:54.872Z] [error]: HIDE::400::Error::ENOENT: no such file or directory, stat 'D:\UniVen25\univen-2025\server\public\abc.html'::
+[2025-11-08T19:38:23.746Z] [error]: HIDE::404::NotFound::Route is not exists::
+[2025-11-08T19:38:31.436Z] [error]: HIDE::404::NotFound::Route is not exists::
+[2025-11-08T19:43:00.110Z] [error]: HIDE::404::NotFound::Route is not exists::
+[2025-11-08T19:43:54.161Z] [error]: HIDE::404::NotFound::Route is not exists::
+[2025-11-08T19:44:11.073Z] [error]: HIDE::404::NotFound::Route is not exists::
+[2025-11-08T19:44:26.471Z] [error]: HIDE::404::NotFound::Route is not exists::
+[2025-11-08T19:46:04.797Z] [error]: HIDE::404::NotFound::Route is not exists::
+[2025-11-08T20:02:39.791Z] [error]: HIDE::404::NotFound::Route is not exists::
+[2025-11-08T20:02:53.401Z] [error]: HIDE::404::NotFound::Route is not exists::
+[2025-11-09T08:04:01.807Z] [error]: HIDE::404::NotFound::Route is not exists::
+[2025-11-09T08:04:06.584Z] [error]: HIDE::400::Error::ENOENT: no such file or directory, stat 'D:\UniVen25\univen-2025\server\src\api\routes\public\abc.html'::
+[2025-11-09T08:13:57.551Z] [error]: HIDE::404::NotFound::Route is not exists::
+[2025-11-09T08:14:07.446Z] [error]: HIDE::404::NotFound::Route is not exists::
+[2025-11-09T08:14:25.826Z] [error]: HIDE::404::NotFound::Route is not exists::
+[2025-11-09T08:14:34.959Z] [error]: HIDE::404::NotFound::Route is not exists::
+[2025-11-09T08:14:42.065Z] [error]: HIDE::404::NotFound::Route is not exists::
+[2025-11-09T08:33:38.754Z] [error]: HIDE::404::NotFound::Route is not exists::
+[2025-11-09T09:24:32.336Z] [error]: HIDE::404::NotFound::Route is not exists::
