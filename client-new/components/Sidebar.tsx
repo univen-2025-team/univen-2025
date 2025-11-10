@@ -184,7 +184,7 @@ export function Sidebar() {
           </nav>
 
           {/* Footer / Profile */}
-          <div className="p-4 border-t border-gray-200 relative">
+          <div className="p-4 border-t border-gray-200 relative" ref={profileMenuRef}>
             <button
               onClick={() => setShowProfileMenu(!showProfileMenu)}
               className={`w-full flex items-center gap-3 ${isCollapsed ? "justify-center" : ""} hover:bg-gray-50 rounded-lg p-2 transition-colors`}
