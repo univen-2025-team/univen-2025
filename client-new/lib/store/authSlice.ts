@@ -6,10 +6,10 @@ export interface User {
   _id: string;
   email: string;
   user_fullName: string;
-  user_avatar?: string;
-  user_status?: string;
-  user_role?: string;
-  user_gender?: boolean;
+  user_avatar: string;
+  user_role: string;
+  user_gender: boolean;
+  user_status: string; // "ACTIVE" | "INACTIVE" | "BLOCKED"
 }
 
 export interface AuthState {
