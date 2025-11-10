@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { useAppDispatch, useAppSelector } from "@/lib/store/hooks";
 import { selectUser, selectIsAuthenticated, logoutUser } from "@/lib/store/authSlice";
-import { appConfig } from "@/lib/config";
+import { appConfig } from "@/config";
 
 export default function DashboardPage() {
   const router = useRouter();

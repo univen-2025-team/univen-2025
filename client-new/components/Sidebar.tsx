@@ -6,8 +6,8 @@ import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useAppSelector, useAppDispatch } from "@/lib/store/hooks";
 import { selectUser, logoutUser } from "@/lib/store/authSlice";
-import { appConfig } from "@/lib/config";
-import { sidebarRoutes, isRouteActive } from "@/lib/config/sidebar.config";
+import { appConfig } from "@/config";
+import { sidebarRoutes, isRouteActive } from "@/config/sidebar.config";
 
 export function Sidebar() {
   const [isOpen, setIsOpen] = useState(false);
