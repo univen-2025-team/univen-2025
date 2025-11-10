@@ -37,8 +37,8 @@ export default function RegisterPage() {
         const result = await dispatch(signUpUser(registerData)).unwrap();
         
         if (result) {
-          // Redirect đến dashboard
-          router.push('/dashboard');
+          // Redirect to home page
+          router.push('/');
         }
       } catch (err) {
         const errorMessage = typeof err === 'string' ? err : 'Đăng ký thất bại. Vui lòng thử lại.';
