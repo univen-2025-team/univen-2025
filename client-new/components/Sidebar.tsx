@@ -2,9 +2,11 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useAppSelector } from "@/lib/store/hooks";
 import { selectUser } from "@/lib/store/authSlice";
+import { appConfig } from "@/lib/config";
 
 export function Sidebar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -95,11 +97,13 @@ export function Sidebar() {
           {/* Header */}
           <div className="p-4 border-b border-gray-200 flex items-center justify-between gap-2">
             <div className="flex items-center gap-3">
-              <div className={`h-10 w-10 rounded-md flex items-center justify-center text-white bg-gradient-to-r from-blue-500 to-indigo-600`}>{isCollapsed ? "SU" : "SU"}</div>
+              <div className={`h-10 w-10 rounded-md flex items-center justify-center text-white bg-gradient-to-r from-blue-500 to-indigo-600 text-sm font-bold`}>
+                {isCollapsed ? appConfig.shortName.charAt(0) : appConfig.shortName.substring(0, 2)}
+              </div>
               {!isCollapsed && (
                 <div>
-                  <h1 className="text-lg font-bold text-gray-900">SampleUniven2025</h1>
-                  <p className="text-xs text-gray-500">Sàn Giao Dịch</p>
+                  <h1 className="text-lg font-bold text-gray-900">{appConfig.name}</h1>
+                  <p className="text-xs text-gray-500">{appConfig.company.shortName}</p>
                 </div>
               )}
             </div>
@@ -157,9 +161,19 @@ export function Sidebar() {
           {/* Footer / Profile */}
           <div className="p-4 border-t border-gray-200">
             <div className={`flex items-center gap-3 ${isCollapsed ? "justify-center" : ""}`}>
-              <div className="w-9 h-9 rounded-full bg-gradient-to-r from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold">
-                {user?.user_fullName?.charAt(0).toUpperCase() || "U"}
-              </div>
+              {user?.user_avatar ? (
+                <Image
+                  src={user.user_avatar}
+                  alt={user.user_fullName}
+                  width={36}
+                  height={36}
+                  className="w-9 h-9 rounded-full object-cover"
+                />
+              ) : (
+                <div className="w-9 h-9 rounded-full bg-gradient-to-r from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold">
+                  {user?.user_fullName?.charAt(0).toUpperCase() || "U"}
+                </div>
+              )}
               {!isCollapsed && (
                 <div className="min-w-0">
                   <p className="text-sm font-semibold text-gray-900 truncate">
