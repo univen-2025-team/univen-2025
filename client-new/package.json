@@ -11,12 +11,14 @@
         "generate-certs": "bash generate-certificates.sh"
     },
     "dependencies": {
+        "@reduxjs/toolkit": "^2.10.1",
         "@types/yup": "^0.32.0",
         "axios": "^1.13.2",
         "formik": "^2.4.8",
         "next": "16.0.1",
         "react": "19.2.0",
         "react-dom": "19.2.0",
+        "react-redux": "^9.2.0",
         "yup": "^1.7.1"
     },
     "devDependencies": {
