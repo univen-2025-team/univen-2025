@@ -29,7 +29,9 @@ export default function LoginPage() {
         setLocalError('');
         dispatch(clearError());
         
+        console.log(values)
         const result = await dispatch(loginUser(values)).unwrap();
+        console.log(result)
         
         if (result) {
           // Redirect to home page
