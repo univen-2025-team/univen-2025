@@ -149,6 +149,17 @@ export default function ProfilePage() {
             </div>
           </div>
 
+          {/* Email */}
+          <div>
+            <label className="block text-sm font-medium text-gray-600 mb-2">Email</label>
+            <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg">
+              <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              </svg>
+              <span className="text-gray-900">{profile?.email || displayProfile.email || "N/A"}</span>
+            </div>
+          </div>
+
           {/* Full Name */}
           <div>
             <label className="block text-sm font-medium text-gray-600 mb-2">Họ và tên</label>
