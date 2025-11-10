@@ -41,60 +41,67 @@ export const authApi = {
    * Đăng nhập
    */
   login: async (data: LoginRequest): Promise<AuthResponse> => {
-    return axiosInstance.post('/auth/login', data);
+    const response = await axiosInstance.post('/auth/login', data);
+    return response.data.metadata;
   },
 
   /**
    * Đăng ký
    */
   signUp: async (data: SignUpRequest): Promise<AuthResponse> => {
-    return axiosInstance.post('/auth/sign-up', data);
+    const response = await axiosInstance.post('/auth/sign-up', data);
+    return response.data.metadata;
   },
 
   /**
    * Đăng xuất
    */
   logout: async (): Promise<void> => {
-    return axiosInstance.post('/auth/logout');
+    await axiosInstance.post('/auth/logout');
   },
 
   /**
    * Refresh token
    */
   newToken: async (refreshToken: string): Promise<NewTokenResponse> => {
-    return axiosInstance.post('/auth/new-token', {
+    const response = await axiosInstance.post('/auth/new-token', {
       refreshToken,
     });
+    return response.data.metadata;
   },
 
   /**
    * Quên mật khẩu
    */
   forgotPassword: async (email: string): Promise<{ message: string }> => {
-    return axiosInstance.post('/auth/forgot-password', { email });
+    const response = await axiosInstance.post('/auth/forgot-password', { email });
+    return response.data;
   },
 
   /**
    * Reset mật khẩu
    */
   resetPassword: async (token: string, newPassword: string): Promise<{ message: string }> => {
-    return axiosInstance.post('/auth/reset-password', {
+    const response = await axiosInstance.post('/auth/reset-password', {
       token,
       newPassword,
     });
+    return response.data;
   },
 
   /**
    * Lấy thông tin user hiện tại
    */
   getCurrentUser: async (): Promise<AuthResponse['user']> => {
-    return axiosInstance.get('/auth/me');
+    const response = await axiosInstance.get('/auth/me');
+    return response.data.metadata;
   },
 
   /**
    * Đăng nhập bằng Google
    */
   loginWithGoogle: async (token: string): Promise<AuthResponse> => {
-    return axiosInstance.post('/auth/google', { token });
+    const response = await axiosInstance.post('/auth/google', { token });
+    return response.data.metadata;
   },
 };

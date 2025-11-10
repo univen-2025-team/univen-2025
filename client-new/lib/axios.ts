@@ -15,8 +15,25 @@ const axiosInstance = axios.create({
 // Request interceptor
 axiosInstance.interceptors.request.use(
   (config) => {
-    // Lấy token từ localStorage nếu có
-    const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+    // Get token from localStorage (Redux Persist stores it there)
+    let token = null;
+    
+    if (typeof window !== 'undefined') {
+      // Try to get from Redux Persist storage first
+      const persistedState = localStorage.getItem('persist:root');
+      if (persistedState) {
+        try {
+          const parsed = JSON.parse(persistedState);
+          const authState = JSON.parse(parsed.auth);
+          token = authState.accessToken;
+        } catch {
+          // Fallback to direct localStorage access
+          token = localStorage.getItem('accessToken');
+        }
+      } else {
+        token = localStorage.getItem('accessToken');
+      }
+    }
     
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -31,56 +48,86 @@ axiosInstance.interceptors.request.use(
 
 // Response interceptor
 axiosInstance.interceptors.response.use(
-  (response) => {
-    // Trả về metadata từ response
-    return response.data.metadata || response.data;
-  },
+  (response) => response,
   async (error) => {
     const originalRequest = error.config;
-
-    // Nếu lỗi 401 và chưa retry
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    
+    // Handle 401 (Unauthorized) or 403 (Forbidden) - both indicate token issues
+    if ((error.response?.status === 401 || error.response?.status === 403) && !originalRequest._retry) {
       originalRequest._retry = true;
-
+      
       try {
-        // Lấy refresh token
-        const refreshToken = typeof window !== 'undefined' ? localStorage.getItem('refreshToken') : null;
+        // Get refresh token from localStorage or Redux Persist
+        let refreshToken = null;
         
-        if (refreshToken) {
-          // Gọi API refresh token
-          const response = await axios.post(`${BASE_URL}/auth/new-token`, {
-            refreshToken,
-          });
-
-          const { accessToken, refreshToken: newRefreshToken } = response.data.metadata;
-
-          // Lưu token mới
+        if (typeof window !== 'undefined') {
+          const persistedState = localStorage.getItem('persist:root');
+          if (persistedState) {
+            try {
+              const parsed = JSON.parse(persistedState);
+              const authState = JSON.parse(parsed.auth);
+              refreshToken = authState.refreshToken;
+            } catch {
+              refreshToken = localStorage.getItem('refreshToken');
+            }
+          } else {
+            refreshToken = localStorage.getItem('refreshToken');
+          }
+        }
+        
+        if (!refreshToken) {
+          // No refresh token, redirect to login
           if (typeof window !== 'undefined') {
-            localStorage.setItem('accessToken', accessToken);
-            if (newRefreshToken) {
-              localStorage.setItem('refreshToken', newRefreshToken);
+            localStorage.clear();
+            window.location.href = '/auth/login';
+          }
+          return Promise.reject(error);
+        }
+        
+        // Request new access token
+        const response = await axios.post(`${BASE_URL}/auth/new-token`, {
+          refreshToken
+        });
+        
+        const { accessToken, refreshToken: newRefreshToken } = response.data.metadata;
+        
+        // Update both localStorage and Redux Persist storage
+        if (typeof window !== 'undefined') {
+          // Update direct localStorage
+          localStorage.setItem('accessToken', accessToken);
+          localStorage.setItem('refreshToken', newRefreshToken);
+          
+          // Update Redux Persist storage
+          const persistedState = localStorage.getItem('persist:root');
+          if (persistedState) {
+            try {
+              const parsed = JSON.parse(persistedState);
+              const authState = JSON.parse(parsed.auth);
+              authState.accessToken = accessToken;
+              authState.refreshToken = newRefreshToken;
+              parsed.auth = JSON.stringify(authState);
+              localStorage.setItem('persist:root', JSON.stringify(parsed));
+            } catch {
+              // If parsing fails, just rely on direct localStorage
             }
           }
-
-          // Retry request với token mới
-          originalRequest.headers.Authorization = `Bearer ${accessToken}`;
-          return axiosInstance(originalRequest);
         }
+        
+        // Retry original request with new token
+        originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+        return axiosInstance(originalRequest);
+        
       } catch (refreshError) {
-        // Nếu refresh token thất bại, redirect đến login
+        // Refresh token failed, redirect to login
         if (typeof window !== 'undefined') {
-          localStorage.removeItem('accessToken');
-          localStorage.removeItem('refreshToken');
-          localStorage.removeItem('user');
+          localStorage.clear();
           window.location.href = '/auth/login';
         }
         return Promise.reject(refreshError);
       }
     }
-
-    // Trả về error message từ response
-    const errorMessage = error.response?.data?.message || error.message || 'Có lỗi xảy ra';
-    return Promise.reject(new Error(errorMessage));
+    
+    return Promise.reject(error);
   }
 );
 
