@@ -30,7 +30,7 @@ export const findUserById = async ({
         phoneNumber: user.phoneNumber,
         user_role: user.user_role,
         user_avatar: user.user_avatar,
-        user_sex: user.user_sex,
+        user_gender: user.user_gender,
         user_status: user.user_status,
         user_dayOfBirth: user.user_dayOfBirth,
     });

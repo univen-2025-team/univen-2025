@@ -23,7 +23,7 @@ export default class UserService {
                 'user_role',
                 'user_fullName',
                 'user_avatar',
-                'user_sex',
+                'user_gender',
                 'user_status',
                 'user_dayOfBirth'
             ]

@@ -27,7 +27,7 @@ export interface AuthResponse {
             phoneNumber: string;
             user_avatar: string;
             user_role: string;
-            user_sex: boolean;
+            user_gender: boolean;
             user_status: string;
             user_dayOfBirth: Date;
             // ...other user properties

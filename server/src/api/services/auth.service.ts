@@ -36,14 +36,13 @@ export default class AuthService {
     /*                        Sign up                         */
     /* ------------------------------------------------------ */
     public static signUp = async ({
-        phoneNumber,
+        email,
         password,
-        user_email,
         user_fullName
     }: service.auth.arguments.SignUp) => {
         /* --------------- Check if user is exists -------------- */
         const userIsExist = await UserService.checkUserExist({
-            $or: [{ phoneNumber }, { user_email }]
+            $or: [{ email }]
         });
         if (userIsExist) throw new ConflictErrorResponse({ message: 'User is exists!' });
 
@@ -55,17 +54,14 @@ export default class AuthService {
         /* ---------------------------------------------------------- */
         /*                             Dev                            */
         /* ---------------------------------------------------------- */
-        if (NODE_ENV === 'development' && phoneNumber === '0327781162') userRole = RoleNames.ADMIN;
-
         const userInstance = UserService.newInstance({
-            phoneNumber,
+            email,
             password: hashPassword,
 
-            user_email,
             user_avatar: '',
             user_fullName,
             user_role: await getRoleIdByName(userRole),
-            user_sex: false
+            user_gender: false
         });
         if (!userInstance) throw new ForbiddenErrorResponse({ message: 'Create user failed!' });
 
@@ -99,17 +95,10 @@ export default class AuthService {
 
         return {
             token: jwtTokenPair,
-            user: _.pick(userInstance.toObject(), [
-                '_id',
-                'phoneNumber',
-                'user_fullName',
-                'user_email',
-                'user_role'
-            ])
+            user: _.pick(userInstance.toObject(), USER_PUBLIC_FIELDS)
         };
     };
 
-    
     /* ------------------------------------------------------ */
     /*                         Login                          */
     /* ------------------------------------------------------ */
@@ -179,7 +168,10 @@ export default class AuthService {
     /* ------------------------------------------------------ */
     /*                         Forgot password                */
     /* ------------------------------------------------------ */
-    public static forgotPassword = async ({ email, newPassword }: service.auth.arguments.ForgotPassword) => {
+    public static forgotPassword = async ({
+        email,
+        newPassword
+    }: service.auth.arguments.ForgotPassword) => {
         const user = await findOneUser({
             query: { user_email: email },
             options: { lean: true }
