@@ -20,6 +20,7 @@ import catchError from '@/middlewares/catchError.middleware.js';
 import { authenticate } from '@/middlewares/jwt.middleware.js';
 import { AvatarFields } from '@/enums/media.enum.js';
 import { checkCustomerAccountToRegisterShop } from '@/middlewares/auth.middleware.js';
+import passport from 'passport';
 
 const authRoute = Router();
 const authRouteValidate = Router();
@@ -27,6 +28,18 @@ const authRouteValidate = Router();
 authRoute.post('/sign-up', validateSignUp, catchError(AuthController.signUp));
 
 authRoute.post('/login', validateLogin, catchError(AuthController.login));
+
+authRoute.get('/login/google', passport.authenticate('google', { scope: ['profile'] }));
+
+authRoute.get(
+    '/login/google/callback',
+    passport.authenticate('google', { failureRedirect: '/login' }),
+    function (req, res) {
+        console.log('Google OAuth successful, user:', req.user);
+
+        res.redirect('/');
+    }
+);
 
 authRoute.post('/new-token', validateNewToken, catchError(AuthController.newToken));
 

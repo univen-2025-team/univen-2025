@@ -24,6 +24,8 @@ import { NotFoundErrorResponse } from './api/response/error.response.js';
 import { engine } from 'express-handlebars';
 import path from 'path';
 import viewRoute from '@/routes/views/index.js';
+import './api/services/passport.service.js';
+import passport from 'passport';
 
 const app = express();
 
@@ -83,6 +85,7 @@ await MongoDB.getInstance().connect();
 
 // Start service
 ScheduledService.startScheduledService();
+
 
 /* ---------------------------------------------------------- */
 /*                           Routes                           */
