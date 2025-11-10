@@ -32,8 +32,8 @@ export default function LoginPage() {
         const result = await dispatch(loginUser(values)).unwrap();
         
         if (result) {
-          // Redirect đến dashboard
-          router.push('/dashboard');
+          // Redirect to home page
+          router.push('/');
         }
       } catch (err) {
         const errorMessage = typeof err === 'string' ? err : 'Đăng nhập thất bại. Vui lòng thử lại.';
