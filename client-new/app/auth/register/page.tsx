@@ -3,13 +3,20 @@
 import Link from 'next/link';
 import { useFormik } from 'formik';
 import { signUpSchema } from '@/lib/validations';
-import { authApi } from '@/lib/api';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useAppDispatch, useAppSelector } from '@/lib/store/hooks';
+import { signUpUser, selectIsLoading, selectError, clearError } from '@/lib/store/authSlice';
 
 export default function RegisterPage() {
   const router = useRouter();
-  const [error, setError] = useState<string>('');
+  const dispatch = useAppDispatch();
+  const isLoading = useAppSelector(selectIsLoading);
+  const reduxError = useAppSelector(selectError);
+  const [localError, setLocalError] = useState<string>('');
+  
+  // Hiển thị error từ Redux hoặc local
+  const error = reduxError || localError;
 
   const formik = useFormik({
     initialValues: {
@@ -22,24 +29,20 @@ export default function RegisterPage() {
     validationSchema: signUpSchema,
     onSubmit: async (values) => {
       try {
-        setError('');
+        setLocalError('');
+        dispatch(clearError());
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { confirmPassword, terms, ...registerData } = values;
         
-        const response = await authApi.signUp(registerData);
+        const result = await dispatch(signUpUser(registerData)).unwrap();
         
-        // Lưu tokens vào localStorage
-        localStorage.setItem('accessToken', response.token.accessToken);
-        localStorage.setItem('refreshToken', response.token.refreshToken);
-        
-        // Lưu user info
-        localStorage.setItem('user', JSON.stringify(response.user));
-        
-        // Redirect đến dashboard
-        router.push('/dashboard');
+        if (result) {
+          // Redirect đến dashboard
+          router.push('/dashboard');
+        }
       } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : 'Đăng ký thất bại. Vui lòng thử lại.';
-        setError(errorMessage);
+        const errorMessage = typeof err === 'string' ? err : 'Đăng ký thất bại. Vui lòng thử lại.';
+        setLocalError(errorMessage);
         console.error('Register error:', err);
       }
     },
@@ -263,10 +266,10 @@ export default function RegisterPage() {
             {/* Submit button */}
             <button
               type="submit"
-              disabled={formik.isSubmitting}
+              disabled={formik.isSubmitting || isLoading}
               className="w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-lg shadow-lg text-sm font-semibold text-white bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
             >
-              {formik.isSubmitting ? (
+              {(formik.isSubmitting || isLoading) ? (
                 <>
                   <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
