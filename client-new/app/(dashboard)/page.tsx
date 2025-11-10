@@ -36,7 +36,7 @@ export default function DashboardPage() {
   const userName = user.user_fullName || "Admin";
 
   return (
-      <div className="p-4 md:p-8 space-y-6">
+      <div className="space-y-6">
         {/* Welcome Header */}
         <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl shadow-xl p-8 text-white">
           <div className="flex items-center justify-between">

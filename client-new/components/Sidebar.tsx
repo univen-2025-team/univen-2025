@@ -83,7 +83,7 @@ export function Sidebar() {
             {/* Collapse Toggle (desktop) */}
             <button
               onClick={() => setIsCollapsed(!isCollapsed)}
-              className="hidden lg:inline-flex p-2 rounded-md hover:bg-gray-100"
+              className="hidden lg:inline-flex p-2 rounded-md hover:bg-gray-100 text-gray-600 hover:text-gray-900 transition-colors"
               title={isCollapsed ? "Mở rộng" : "Thu gọn"}
             >
               <svg className={`w-5 h-5 transform ${isCollapsed ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
