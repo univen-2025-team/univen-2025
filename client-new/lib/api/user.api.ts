@@ -3,6 +3,7 @@ import axiosInstance from '../axios';
 // User profile response type
 export interface UserProfile {
   _id: string;
+  email: string;
   user_avatar: string;
   user_fullName: string;
   user_gender: boolean;
