@@ -6,3 +6,23 @@
 [2025-11-10T15:35:15.414Z] [error]: HIDE::403::Forbidden::Error on save user or key token!::
 [2025-11-10T15:35:22.129Z] [error]: HIDE::403::Forbidden::Error on save user or key token!::
 [2025-11-10T15:35:55.307Z] [error]: HIDE::403::Forbidden::Error on save user or key token!::
+[2025-11-10T15:48:54.706Z] [error]: HIDE::403::Forbidden::Token not found!::
+[2025-11-10T16:15:03.564Z] [error]: HIDE::403::Forbidden::Token is expired or invalid!::
+[2025-11-10T16:15:08.572Z] [error]: HIDE::403::Forbidden::Token is invalid!::
+[2025-11-10T16:24:19.748Z] [error]: HIDE::403::Forbidden::Token not found!::
+[2025-11-10T16:24:19.778Z] [error]: HIDE::403::Forbidden::Token not found!::
+[2025-11-10T16:24:25.272Z] [error]: HIDE::403::Forbidden::Token not found!::
+[2025-11-10T16:24:25.294Z] [error]: HIDE::403::Forbidden::Token not found!::
+[2025-11-10T16:24:26.443Z] [error]: HIDE::403::Forbidden::Token not found!::
+[2025-11-10T16:24:26.444Z] [error]: HIDE::403::Forbidden::Token not found!::
+[2025-11-10T16:24:55.218Z] [error]: HIDE::403::Forbidden::Token not found!::
+[2025-11-10T16:24:55.239Z] [error]: HIDE::403::Forbidden::Token not found!::
+[2025-11-10T16:26:15.574Z] [error]: HIDE::403::Forbidden::Token is expired or invalid!::
+[2025-11-10T16:26:15.690Z] [error]: HIDE::403::Forbidden::Token is expired or invalid!::
+[2025-11-10T16:26:20.909Z] [error]: HIDE::403::Forbidden::Token is expired or invalid!::
+[2025-11-10T16:26:21.024Z] [error]: HIDE::403::Forbidden::Token is expired or invalid!::
+[2025-11-10T16:28:07.956Z] [error]: HIDE::403::Forbidden::Token is expired or invalid!::
+[2025-11-10T16:28:08.159Z] [error]: HIDE::403::Forbidden::Token is expired or invalid!::
+[2025-11-10T16:28:08.216Z] [error]: HIDE::403::Forbidden::Token is invalid!::
+[2025-11-10T16:28:08.363Z] [error]: HIDE::403::Forbidden::Token is invalid!::
+[2025-11-10T16:33:52.442Z] [error]: HIDE::403::Forbidden::Token is expired or invalid!::
