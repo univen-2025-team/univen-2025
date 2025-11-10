@@ -3,16 +3,24 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname } from "next/navigation";
-import { useAppSelector } from "@/lib/store/hooks";
-import { selectUser } from "@/lib/store/authSlice";
+import { usePathname, useRouter } from "next/navigation";
+import { useAppSelector, useAppDispatch } from "@/lib/store/hooks";
+import { selectUser, logoutUser } from "@/lib/store/authSlice";
 import { appConfig } from "@/lib/config";
 
 export function Sidebar() {
   const [isOpen, setIsOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
   const pathname = usePathname() || "/";
+  const router = useRouter();
+  const dispatch = useAppDispatch();
   const user = useAppSelector(selectUser);
+
+  const handleLogout = async () => {
+    await dispatch(logoutUser());
+    router.push("/auth/login");
+  };
 
   const menuItems = [
     { name: "Trang chủ", path: "/dashboard", icon: (
