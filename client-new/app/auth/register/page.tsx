@@ -1,6 +1,5 @@
 'use client';
 
-import Link from 'next/link';
 import { useFormik } from 'formik';
 import { signUpSchema } from '@/lib/validations';
 import { useState } from 'react';
@@ -49,38 +48,16 @@ export default function RegisterPage() {
   });
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-r from-blue-600 to-purple-600 mb-4">
-            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
-            </svg>
-          </div>
-          <h2 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-            Tạo tài khoản mới
-          </h2>
-          <p className="mt-2 text-sm text-gray-600">
-            Đã có tài khoản?{' '}
-            <Link href="/auth/login" className="font-semibold text-blue-600 hover:text-blue-500 transition-colors">
-              Đăng nhập ngay
-            </Link>
-          </p>
+    <form onSubmit={formik.handleSubmit} className="space-y-5">
+      {/* Error Message */}
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg flex items-start">
+          <svg className="w-5 h-5 mr-2 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+          </svg>
+          <span className="text-sm">{error}</span>
         </div>
-
-        {/* Form Card */}
-        <div className="bg-white rounded-2xl shadow-xl p-8 space-y-6 border border-gray-100">
-          <form onSubmit={formik.handleSubmit} className="space-y-5">
-            {/* Error Message */}
-            {error && (
-              <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg flex items-start">
-                <svg className="w-5 h-5 mr-2 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                </svg>
-                <span className="text-sm">{error}</span>
-              </div>
-            )}
+      )}
 
             {/* Full Name */}
             <div>
@@ -285,15 +262,7 @@ export default function RegisterPage() {
                   Tạo tài khoản
                 </>
               )}
-            </button>
-          </form>
-        </div>
-
-        {/* Footer */}
-        <p className="mt-6 text-center text-xs text-gray-500">
-          Bằng cách đăng ký, bạn đồng ý với các điều khoản và chính sách của chúng tôi
-        </p>
-      </div>
-    </div>
+          </button>
+        </form>
   );
 }
