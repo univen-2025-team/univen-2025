@@ -21,7 +21,7 @@ export interface AuthState {
   error: string | null;
 }
 
-// Initial state
+// Initial state - Redux Persist will handle rehydration
 const initialState: AuthState = {
   user: null,
   accessToken: null,
@@ -29,31 +29,6 @@ const initialState: AuthState = {
   isAuthenticated: false,
   isLoading: false,
   error: null,
-};
-
-// Load state from localStorage (only on client)
-const loadStateFromStorage = (): Partial<AuthState> => {
-  if (typeof window === 'undefined') return {};
-  
-  try {
-    const accessToken = localStorage.getItem('accessToken');
-    const refreshToken = localStorage.getItem('refreshToken');
-    const userStr = localStorage.getItem('user');
-    
-    if (accessToken && refreshToken && userStr) {
-      const user = JSON.parse(userStr);
-      return {
-        user,
-        accessToken,
-        refreshToken,
-        isAuthenticated: true,
-      };
-    }
-  } catch (error) {
-    console.error('Error loading auth state from localStorage:', error);
-  }
-  
-  return {};
 };
 
 // Async thunks
@@ -112,17 +87,11 @@ export const getCurrentUser = createAsyncThunk(
 // Auth slice
 const authSlice = createSlice({
   name: 'auth',
-  initialState: {
-    ...initialState,
-    ...loadStateFromStorage(),
-  },
+  initialState,
   reducers: {
     setUser: (state, action: PayloadAction<User>) => {
       state.user = action.payload;
       state.isAuthenticated = true;
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('user', JSON.stringify(action.payload));
-      }
     },
     setTokens: (
       state,
@@ -130,10 +99,6 @@ const authSlice = createSlice({
     ) => {
       state.accessToken = action.payload.accessToken;
       state.refreshToken = action.payload.refreshToken;
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('accessToken', action.payload.accessToken);
-        localStorage.setItem('refreshToken', action.payload.refreshToken);
-      }
     },
     clearAuth: (state) => {
       state.user = null;
@@ -141,11 +106,6 @@ const authSlice = createSlice({
       state.refreshToken = null;
       state.isAuthenticated = false;
       state.error = null;
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
-        localStorage.removeItem('user');
-      }
     },
     clearError: (state) => {
       state.error = null;
@@ -165,13 +125,6 @@ const authSlice = createSlice({
         state.refreshToken = action.payload.token.refreshToken;
         state.isAuthenticated = true;
         state.error = null;
-        
-        // Save to localStorage
-        if (typeof window !== 'undefined') {
-          localStorage.setItem('accessToken', action.payload.token.accessToken);
-          localStorage.setItem('refreshToken', action.payload.token.refreshToken);
-          localStorage.setItem('user', JSON.stringify(action.payload.user));
-        }
       })
       .addCase(loginUser.rejected, (state, action) => {
         state.isLoading = false;
@@ -191,13 +144,6 @@ const authSlice = createSlice({
         state.refreshToken = action.payload.token.refreshToken;
         state.isAuthenticated = true;
         state.error = null;
-        
-        // Save to localStorage
-        if (typeof window !== 'undefined') {
-          localStorage.setItem('accessToken', action.payload.token.accessToken);
-          localStorage.setItem('refreshToken', action.payload.token.refreshToken);
-          localStorage.setItem('user', JSON.stringify(action.payload.user));
-        }
       })
       .addCase(signUpUser.rejected, (state, action) => {
         state.isLoading = false;
@@ -216,13 +162,6 @@ const authSlice = createSlice({
         state.isAuthenticated = false;
         state.isLoading = false;
         state.error = null;
-        
-        // Clear localStorage
-        if (typeof window !== 'undefined') {
-          localStorage.removeItem('accessToken');
-          localStorage.removeItem('refreshToken');
-          localStorage.removeItem('user');
-        }
       })
       .addCase(logoutUser.rejected, (state) => {
         // Clear state even if API call fails
@@ -231,13 +170,6 @@ const authSlice = createSlice({
         state.refreshToken = null;
         state.isAuthenticated = false;
         state.isLoading = false;
-        
-        // Clear localStorage
-        if (typeof window !== 'undefined') {
-          localStorage.removeItem('accessToken');
-          localStorage.removeItem('refreshToken');
-          localStorage.removeItem('user');
-        }
       });
 
     // Get current user
@@ -250,11 +182,6 @@ const authSlice = createSlice({
         state.isLoading = false;
         state.user = action.payload;
         state.isAuthenticated = true;
-        
-        // Update localStorage
-        if (typeof window !== 'undefined') {
-          localStorage.setItem('user', JSON.stringify(action.payload));
-        }
       })
       .addCase(getCurrentUser.rejected, (state, action) => {
         state.isLoading = false;
