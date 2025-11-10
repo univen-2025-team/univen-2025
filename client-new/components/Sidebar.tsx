@@ -3,11 +3,14 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useAppSelector } from "@/lib/store/hooks";
+import { selectUser } from "@/lib/store/authSlice";
 
 export function Sidebar() {
   const [isOpen, setIsOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const pathname = usePathname() || "/";
+  const user = useAppSelector(selectUser);
 
   const menuItems = [
     { name: "Trang chủ", path: "/dashboard", icon: (
@@ -154,11 +157,17 @@ export function Sidebar() {
           {/* Footer / Profile */}
           <div className="p-4 border-t border-gray-200">
             <div className={`flex items-center gap-3 ${isCollapsed ? "justify-center" : ""}`}>
-              <div className="w-9 h-9 rounded-full bg-gradient-to-r from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold">A</div>
+              <div className="w-9 h-9 rounded-full bg-gradient-to-r from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold">
+                {user?.user_fullName?.charAt(0).toUpperCase() || "U"}
+              </div>
               {!isCollapsed && (
                 <div className="min-w-0">
-                  <p className="text-sm font-semibold text-gray-900 truncate">Admin</p>
-                  <p className="text-xs text-gray-500 truncate">admin@example.com</p>
+                  <p className="text-sm font-semibold text-gray-900 truncate">
+                    {user?.user_fullName || "User"}
+                  </p>
+                  <p className="text-xs text-gray-500 truncate">
+                    {user?.email || "user@example.com"}
+                  </p>
                 </div>
               )}
             </div>

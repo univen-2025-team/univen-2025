@@ -8,7 +8,7 @@ export interface UserProfile {
     user_role: string;
     user_fullName: string;
     user_avatar: string;
-    user_sex: boolean;
+    user_gender: boolean;
     user_status: string;
     user_dayOfBirth: string;
     role_name?: string;
@@ -35,7 +35,7 @@ export interface ShopInfo {
 export interface UpdateProfilePayload {
     user_fullName?: string;
     user_email?: string;
-    user_sex?: boolean;
+    user_gender?: boolean;
     user_dayOfBirth?: string;
     user_avatar?: string;
 }

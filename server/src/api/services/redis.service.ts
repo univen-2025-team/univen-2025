@@ -90,7 +90,7 @@ export const getUserProfile = async (id: string) => {
     const result: any = await hGetRedis(getUserProfileKey(id));
 
     if (result) {
-        result.user_sex = result.user_sex === "1";
+        result.user_gender = result.user_gender === "1";
     }
 
     return result;
@@ -104,7 +104,7 @@ export const setUserProfile = async ({
     phoneNumber,
     user_role,
     user_avatar,
-    user_sex,
+    user_gender,
     user_status,
     user_dayOfBirth
 }: service.redis.SetUserProfile) => {
@@ -115,7 +115,7 @@ export const setUserProfile = async ({
         phoneNumber,
         user_role: user_role.toString(),
         user_avatar,
-        user_sex: user_sex ? "1" : "0",
+        user_gender: user_gender ? "1" : "0",
         user_status: user_status!,
         user_dayOfBirth: user_dayOfBirth?.toISOString() || "",
     }

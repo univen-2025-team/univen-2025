@@ -1,0 +1,8 @@
+[2025-11-10T14:38:51.619Z] [error]: HIDE::404::NotFound::Route is not exists::
+[2025-11-10T14:38:51.723Z] [error]: HIDE::404::NotFound::Route is not exists::
+[2025-11-10T15:25:21.570Z] [error]: HIDE::403::Forbidden::Username or password is not correct!::
+[2025-11-10T15:35:02.114Z] [error]: HIDE::409::Conflict::User is exists!::
+[2025-11-10T15:35:09.068Z] [error]: HIDE::403::Forbidden::Error on save user or key token!::
+[2025-11-10T15:35:15.414Z] [error]: HIDE::403::Forbidden::Error on save user or key token!::
+[2025-11-10T15:35:22.129Z] [error]: HIDE::403::Forbidden::Error on save user or key token!::
+[2025-11-10T15:35:55.307Z] [error]: HIDE::403::Forbidden::Error on save user or key token!::
