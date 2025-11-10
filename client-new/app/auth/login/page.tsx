@@ -3,8 +3,14 @@
 import Link from 'next/link';
 import { useFormik } from 'formik';
 import { loginSchema } from '@/lib/validations';
+import { authApi } from '@/lib/api';
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 export default function LoginPage() {
+  const router = useRouter();
+  const [error, setError] = useState<string>('');
+
   const formik = useFormik({
     initialValues: {
       email: '',
@@ -12,8 +18,24 @@ export default function LoginPage() {
     },
     validationSchema: loginSchema,
     onSubmit: async (values) => {
-      // TODO: Implement login logic
-      console.log('Login data:', values);
+      try {
+        setError('');
+        const response = await authApi.login(values);
+        
+        // Lưu tokens vào localStorage
+        localStorage.setItem('accessToken', response.token.accessToken);
+        localStorage.setItem('refreshToken', response.token.refreshToken);
+        
+        // Lưu user info
+        localStorage.setItem('user', JSON.stringify(response.user));
+        
+        // Redirect đến dashboard
+        router.push('/dashboard');
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : 'Đăng nhập thất bại. Vui lòng thử lại.';
+        setError(errorMessage);
+        console.error('Login error:', err);
+      }
     },
   });
 
@@ -46,6 +68,16 @@ export default function LoginPage() {
         {/* Form Card */}
         <div className="bg-white rounded-2xl shadow-xl p-8 space-y-6 border border-gray-100">
           <form onSubmit={formik.handleSubmit} className="space-y-5">
+            {/* Error Message */}
+            {error && (
+              <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg flex items-start">
+                <svg className="w-5 h-5 mr-2 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                </svg>
+                <span className="text-sm">{error}</span>
+              </div>
+            )}
+
             {/* Email */}
             <div>
               <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-2">
