@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { userApi, type UserProfile } from "@/lib/api/user.api";
 import { useAppSelector } from "@/lib/store/hooks";
 import { selectUser } from "@/lib/store/authSlice";
@@ -74,9 +75,15 @@ export default function ProfilePage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold text-gray-900">Thông tin cá nhân</h1>
-        <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+        <Link 
+          href="/profile/edit"
+          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+          </svg>
           Chỉnh sửa
-        </button>
+        </Link>
       </div>
 
       {/* Profile Card */}
@@ -221,9 +228,12 @@ export default function ProfilePage() {
 
       {/* Actions */}
       <div className="flex gap-4">
-        <button className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium">
+        <Link
+          href="/profile/edit"
+          className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-center"
+        >
           Cập nhật thông tin
-        </button>
+        </Link>
         <button className="flex-1 px-6 py-3 bg-white border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium">
           Đổi mật khẩu
         </button>

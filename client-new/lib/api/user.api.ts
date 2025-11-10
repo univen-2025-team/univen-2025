@@ -10,6 +10,7 @@ export interface UserProfile {
   user_role: string;
   user_status: string; // "ACTIVE" | "INACTIVE" | "BLOCKED"
   role_name: string;
+  user_dayOfBirth?: string;
 }
 
 export interface UserProfileResponse {
