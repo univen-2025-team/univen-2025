@@ -9,7 +9,7 @@ export interface User {
     user_fullName: string;
     user_email: string;
     user_role: string;
-    user_sex: boolean; // Changed to boolean to match UserProfile
+    user_gender: boolean; // Changed to boolean to match UserProfile
     user_status: string;
     user_dayOfBirth: string; // Added based on response
     role_name?: string; // Changed to optional string to match UserProfile

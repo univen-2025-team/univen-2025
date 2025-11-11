@@ -7,14 +7,14 @@ declare global {
         namespace auth {
             type UserSchema<isModel = false, isDoc = false> = moduleTypes.mongoose.MongooseType<
                 {
-                    phoneNumber: string;
+                    email: string;
+                    googleId: string;
                     password: string;
 
-                    user_email: string;
                     user_avatar: string;
                     user_fullName: string;
                     user_dayOfBirth?: Date;
-                    user_sex: boolean;
+                    user_gender: boolean;
 
                     user_role: mongoose.Types.ObjectId;
                     user_status?: UserStatus;

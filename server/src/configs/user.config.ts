@@ -1,11 +1,10 @@
 export const USER_PUBLIC_FIELDS: (keyof model.auth.UserSchema)[] = [
     '_id',
-    'phoneNumber',
+    'email',
     "user_avatar",
     'user_fullName',
-    'user_email',
     'user_role',
-    "user_sex",
+    "user_gender",
     "user_status",
     "user_dayOfBirth",
 ];

@@ -5,10 +5,6 @@ import AuthController from '@/controllers/auth.controller.js';
 
 /* ------------------------- Joi ------------------------ */
 import {
-    forgotPasswordSchema,
-    loginSchema,
-    newTokenSchema,
-    signUpSchema,
     validateForgotPassword,
     validateLogin,
     validateNewToken,
@@ -18,8 +14,8 @@ import {
 /* --------------------- Middlewares -------------------- */
 import catchError from '@/middlewares/catchError.middleware.js';
 import { authenticate } from '@/middlewares/jwt.middleware.js';
-import { AvatarFields } from '@/enums/media.enum.js';
-import { checkCustomerAccountToRegisterShop } from '@/middlewares/auth.middleware.js';
+import passport from 'passport';
+import LoggerService from '@/services/logger.service';
 
 const authRoute = Router();
 const authRouteValidate = Router();
@@ -27,6 +23,17 @@ const authRouteValidate = Router();
 authRoute.post('/sign-up', validateSignUp, catchError(AuthController.signUp));
 
 authRoute.post('/login', validateLogin, catchError(AuthController.login));
+
+authRoute.get(
+    '/login/google',
+    passport.authenticate('google', { scope: ['profile'], session: false })
+);
+
+authRoute.get(
+    '/login/google/callback',
+    passport.authenticate('google', { failureRedirect: '/login', session: false }),
+    catchError(AuthController.loginWithGoogle)
+);
 
 authRoute.post('/new-token', validateNewToken, catchError(AuthController.newToken));
 
