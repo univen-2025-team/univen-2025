@@ -4,6 +4,7 @@ import type { RequestHandler } from 'express';
 import AuthService from '@/services/auth.service.js';
 import { CreatedResponse, OkResponse } from '@/response/success.response.js';
 import { ForbiddenErrorResponse } from '@/response/error.response.js';
+import { Profile } from 'passport-google-oauth20';
 
 export default class AuthController {
     /* ------------------------------------------------------ */
@@ -25,6 +26,18 @@ export default class AuthController {
             metadata: await AuthService.login(req.body)
         }).send(res);
     };
+
+    /* ------------------------------------------------------ */
+    /*                    Login with google                   */
+    /* ------------------------------------------------------ */
+    public static loginWithGoogle: RequestHandler = async (req, res, _) => {
+        if (!req.user) throw new ForbiddenErrorResponse({ message: 'Login failed!' });
+
+        new OkResponse({
+            message: 'Login with Google success!',
+            metadata: await AuthService.loginWithGoogle(req.user as Profile)
+        }).send(res);
+    }
 
     /* ------------------------------------------------------ */
     /*                         Logout                         */
