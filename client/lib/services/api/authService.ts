@@ -3,8 +3,7 @@ import apiClient from '../axiosInstance';
 // It's good practice to define types/interfaces for your API payloads and responses.
 // Example (you should adjust these to match your actual API):
 export interface LoginPayload {
-    // email?: string;
-    phoneNumber?: string; // Assuming login can be via phone or email
+    email: string; // Assuming login can be via phone or email
     password: string;
 }
 
@@ -29,7 +28,7 @@ export interface AuthResponse {
             user_role: string;
             user_gender: boolean;
             user_status: string;
-            user_dayOfBirth: Date;
+            user_dayOfBirth: string;
             // ...other user properties
         };
         token: {
