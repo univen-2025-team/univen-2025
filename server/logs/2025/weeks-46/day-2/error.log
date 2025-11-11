@@ -3,3 +3,8 @@
 [2025-11-10T17:10:42.310Z] [error]: HIDE::404::NotFound::Route is not exists::
 [2025-11-11T02:27:18.071Z] [error]: HIDE::400::Error::Login sessions require session support. Did you forget to use `express-session` middleware?::
 [2025-11-11T02:27:18.208Z] [error]: HIDE::404::NotFound::Route is not exists::
+[2025-11-11T03:28:40.095Z] [error]: HIDE::400::BadRequest::Google profile is invalid!::
+[2025-11-11T03:29:44.317Z] [error]: HIDE::400::BadRequest::Google profile is invalid!::
+[2025-11-11T03:30:50.468Z] [error]: HIDE::400::BadRequest::Google profile is invalid!::
+[2025-11-11T03:31:54.224Z] [error]: HIDE::400::ValidationError::User validation failed: password: Path `password` is required.::
+[2025-11-11T03:38:21.001Z] [error]: HIDE::400::TypeError::userExists.save is not a function. (In 'userExists.save()', 'userExists.save' is undefined)::
