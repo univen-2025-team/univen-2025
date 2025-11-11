@@ -1,0 +1,5 @@
+[2025-11-10T17:10:03.408Z] [error]: HIDE::400::Error::Login sessions require session support. Did you forget to use `express-session` middleware?::
+[2025-11-10T17:10:03.545Z] [error]: HIDE::404::NotFound::Route is not exists::
+[2025-11-10T17:10:42.310Z] [error]: HIDE::404::NotFound::Route is not exists::
+[2025-11-11T02:27:18.071Z] [error]: HIDE::400::Error::Login sessions require session support. Did you forget to use `express-session` middleware?::
+[2025-11-11T02:27:18.208Z] [error]: HIDE::404::NotFound::Route is not exists::

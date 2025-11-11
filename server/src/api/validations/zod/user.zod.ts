@@ -7,7 +7,7 @@ import { z } from 'zod';
 export const updateProfileSchema = z.object({
     user_fullName: z.string().optional(),
     user_email: z.string().email().optional(),
-    user_sex: z.boolean().optional(),
+    user_gender: z.boolean().optional(),
     user_dayOfBirth: z
         .string()
         .optional()

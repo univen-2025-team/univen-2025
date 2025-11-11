@@ -10,15 +10,15 @@ export const USER_COLLECTION_NAME = 'users';
 const userSchema = new Schema<model.auth.UserSchema>(
     {
         /* ---------------------- Authenticate ---------------------- */
-        phoneNumber: { type: String, length: 10, required, unique },
+        email: { type: String, unique },
+        googleId: { type: String, unique },
         password: { type: String, required, select: false },
 
         /* ---------------------- Information  ---------------------- */
-        user_email: { type: String, unique },
         user_avatar: { type: String, default: undefined },
         user_fullName: { type: String, required },
         user_dayOfBirth: Date,
-        user_sex: { type: Boolean, default: false }, // true => male, false => female
+        user_gender: { type: Boolean, default: false }, // true => male, false => female
 
         /* ------------------------ Metadata ------------------------ */
         user_role: { type: ObjectId, required, ref: ROLE_MODEL_NAME },

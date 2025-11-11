@@ -11,7 +11,7 @@ declare global {
             interface SignUpSchema
                 extends Pick<
                     model.auth.UserSchema,
-                    'user_fullName' | 'password' | 'phoneNumber' | 'user_email'
+                    'user_fullName' | 'password' | 'email'
                 > {}
 
             interface SignUpShop
