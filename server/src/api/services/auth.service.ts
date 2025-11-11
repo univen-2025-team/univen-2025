@@ -105,15 +105,18 @@ export default class AuthService {
     /* ------------------------------------------------------ */
     /*                         Login                          */
     /* ------------------------------------------------------ */
-    public static login = async ({ phoneNumber, password }: service.auth.arguments.Login) => {
+    public static login = async ({ email, password }: service.auth.arguments.Login) => {
         /* -------------- Check if user is exists ------------- */
         const user = await findOneUser({
-            query: { phoneNumber },
+            query: { email },
             select: ['password'],
             options: { lean: true }
         });
         if (!user)
             throw new NotFoundErrorResponse({ message: 'Username or password is not correct!' });
+
+        if (!user.password) 
+            throw new ForbiddenErrorResponse({ message: 'This account already uses Google login!' });
 
         /* ------------------ Check password ------------------ */
         const hashPassword = user.password;

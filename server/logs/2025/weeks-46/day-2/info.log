@@ -405,3 +405,41 @@
   "user_fullName": "Còn Trần",
   "user_avatar": "https://lh3.googleusercontent.com/a/ACg8ocL0LjeGLGlMTQ-AqPc3_kjYrC7aUmdVDVRW8hOKzbLQ6_jq8agWnw=s96-c"
 }
+[2025-11-11T03:41:47.081Z] [info]: Socket.IO service initialized
+[2025-11-11T03:42:00.486Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-11T03:42:00.486Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-11T03:43:10.039Z] [info]: Cleanup key token: 2 key token cleaned
+[2025-11-11T03:43:10.040Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-11T03:44:29.033Z] [info]: Socket.IO service initialized
+[2025-11-11T03:44:31.321Z] [info]: Socket.IO service initialized
+[2025-11-11T03:44:49.276Z] [info]: Socket.IO service initialized
+[2025-11-11T03:44:52.794Z] [info]: Socket.IO service initialized
+[2025-11-11T03:44:55.448Z] [info]: Socket.IO service initialized
+[2025-11-11T03:44:57.450Z] [info]: Socket.IO service initialized
+[2025-11-11T03:44:59.406Z] [info]: Socket.IO service initialized
+[2025-11-11T03:45:00.175Z] [info]: Cleanup key token: 2 key token cleaned
+[2025-11-11T03:45:00.175Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-11T03:46:00.188Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-11T03:46:00.188Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-11T03:47:00.109Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-11T03:47:00.110Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-11T03:48:00.117Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-11T03:48:00.118Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-11T03:49:00.123Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-11T03:49:00.123Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-11T03:50:00.120Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-11T03:50:00.121Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-11T03:50:59.027Z] [info]: Google Profile: {
+  "googleId": "117202748895060778370",
+  "email": "tranvanconkg@gmail.com",
+  "user_fullName": "Còn Trần",
+  "user_avatar": "https://lh3.googleusercontent.com/a/ACg8ocL0LjeGLGlMTQ-AqPc3_kjYrC7aUmdVDVRW8hOKzbLQ6_jq8agWnw=s96-c"
+}
+[2025-11-11T03:51:00.240Z] [info]: Cleanup key token: 2 key token cleaned
+[2025-11-11T03:51:00.241Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-11T03:51:44.661Z] [info]: Google Profile: {
+  "googleId": "117202748895060778370",
+  "email": "tranvanconkg@gmail.com",
+  "user_fullName": "Còn Trần",
+  "user_avatar": "https://lh3.googleusercontent.com/a/ACg8ocL0LjeGLGlMTQ-AqPc3_kjYrC7aUmdVDVRW8hOKzbLQ6_jq8agWnw=s96-c"
+}

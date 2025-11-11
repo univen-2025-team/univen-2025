@@ -26,7 +26,7 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
 
-  const [signInPhoneNumber, setSignInPhoneNumber] = useState("")
+  const [signInEmail, setSignInPhoneNumber] = useState("")
   const [signInPassword, setSignInPassword] = useState("")
 
   const togglePasswordVisibility = () => {
@@ -40,7 +40,7 @@ export default function LoginPage() {
     dispatch(loginFailure('')); // Clear previous errors
 
     const payload: LoginPayload = {
-      phoneNumber: signInPhoneNumber,
+      email: signInEmail,
       password: signInPassword,
     }
 
@@ -109,7 +109,7 @@ export default function LoginPage() {
               type="tel"
               placeholder="Số điện thoại của bạn"
               required
-              value={signInPhoneNumber}
+              value={signInEmail}
               onChange={(e) => setSignInPhoneNumber(e.target.value)}
               disabled={reduxIsLoading}
             />
