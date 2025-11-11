@@ -117,34 +117,17 @@ export default class AuthService {
 
         /* ------------------ Check password ------------------ */
         const hashPassword = user.password;
+        if (!hashPassword)
+            throw new ForbiddenErrorResponse({
+                message: 'Username or password is not correct!'
+            });
+
         const isPasswordMatch = await bcrypt.compare(password, hashPassword);
         if (!isPasswordMatch)
             throw new ForbiddenErrorResponse({ message: 'Username or password is not correct!' });
 
         /* --------- Generate token and send response --------- */
-        const { privateKey, publicKey } = KeyTokenService.generateTokenPair(); // RSA
-        const jwtPair = await JwtService.signJwtPair({
-            privateKey,
-            payload: {
-                id: user._id.toString(),
-                role: user.user_role.toString()
-            }
-        });
-        if (!jwtPair) throw new ForbiddenErrorResponse({ message: 'Generate jwt token failed!' });
-
-        /* ---------------- Save new key token ---------------- */
-        const keyTokenId = await KeyTokenService.findOneAndReplace({
-            userId: user._id.toString(),
-            privateKey,
-            publicKey,
-            refreshToken: jwtPair.refreshToken
-        });
-        if (!keyTokenId) throw new ForbiddenErrorResponse({ message: 'Save key token failed!' });
-
-        const result: commonTypes.object.ObjectAnyKeys = {
-            token: jwtPair,
-            user: _.pick(user, USER_PUBLIC_FIELDS)
-        };
+        return await AuthService.generateAuth(user);
 
         /* --------------------- Add role data  --------------------- */
         // const roleData = await roleService.getUserRoleData({
@@ -153,8 +136,6 @@ export default class AuthService {
         // });
         // if (roleData && roleData.role_name !== RoleNames.USER)
         //     result[roleData.role_name] = roleData.role_data || true;
-
-        return result;
     };
 
     /* ------------------------------------------------------ */
@@ -168,11 +149,47 @@ export default class AuthService {
             user_avatar: profile.photos?.[0]?.value
         };
 
+        LoggerService.getInstance().info(
+            `Google Profile: ${JSON.stringify(googleProfile, null, 2)}`
+        );
+
         if (loginWithGoogleSchema.safeParse(googleProfile).success === false) {
             throw new BadRequestErrorResponse({ message: 'Google profile is invalid!' });
         }
 
-        return {};
+        const userExists = await findOneUser({
+            query: { $or: [{ email: googleProfile.email }, { googleId: googleProfile.googleId }] }
+        });
+        let userResponse: model.auth.UserSchema;
+
+        if (userExists) {
+            if (!userExists.googleId) {
+                userExists.googleId = googleProfile.googleId;
+            }
+
+            if (userExists.email !== googleProfile.email) {
+                throw new ConflictErrorResponse({
+                    message: 'Google account is already in use by another email!'
+                });
+            }
+
+            userResponse = await userExists.save();
+        } else {
+            const newUser = UserService.newInstance({
+                googleId: googleProfile.googleId,
+                email: googleProfile.email,
+                password: '',
+
+                user_fullName: googleProfile.user_fullName,
+                user_avatar: googleProfile.user_avatar || '',
+                user_role: await getRoleIdByName(RoleNames.USER),
+                user_gender: false
+            });
+
+            userResponse = await newUser.save();
+        }
+
+        return await AuthService.generateAuth(userResponse);
     };
 
     /* ------------------------------------------------------ */
@@ -276,4 +293,33 @@ export default class AuthService {
 
         return newJwtTokenPair;
     };
+
+    private static async generateAuth(user: model.auth.UserSchema) {
+        /* --------- Generate token and send response --------- */
+        const { privateKey, publicKey } = KeyTokenService.generateTokenPair(); // RSA
+        const jwtPair = await JwtService.signJwtPair({
+            privateKey,
+            payload: {
+                id: user._id.toString(),
+                role: user.user_role.toString()
+            }
+        });
+        if (!jwtPair) throw new ForbiddenErrorResponse({ message: 'Generate jwt token failed!' });
+
+        /* ---------------- Save new key token ---------------- */
+        const keyTokenId = await KeyTokenService.findOneAndReplace({
+            userId: user._id.toString(),
+            privateKey,
+            publicKey,
+            refreshToken: jwtPair.refreshToken
+        });
+        if (!keyTokenId) throw new ForbiddenErrorResponse({ message: 'Save key token failed!' });
+
+        const result: commonTypes.object.ObjectAnyKeys = {
+            token: jwtPair,
+            user: _.pick(user, USER_PUBLIC_FIELDS)
+        };
+
+        return result;
+    }
 }

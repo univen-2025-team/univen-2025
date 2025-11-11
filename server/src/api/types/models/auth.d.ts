@@ -8,8 +8,8 @@ declare global {
             type UserSchema<isModel = false, isDoc = false> = moduleTypes.mongoose.MongooseType<
                 {
                     email: string;
-                    googleId: string;
-                    password: string;
+                    googleId?: string;
+                    password?: string;
 
                     user_avatar: string;
                     user_fullName: string;

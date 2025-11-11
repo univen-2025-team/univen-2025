@@ -33,10 +33,7 @@ export default class SuccessResponse {
         this.headers = headers;
     }
 
-    public send(
-        res: Response,
-        headers: SuccessResponseProperties['headers'] = {}
-    ): Response {
+    public send(res: Response, headers: SuccessResponseProperties['headers'] = {}): Response {
         // Add headers before send response
         const allHeaders = { ...this.headers, ...headers };
         const keys = Object.keys(allHeaders);
@@ -48,6 +45,35 @@ export default class SuccessResponse {
         return res
             .status(this.statusCode)
             .json(_.pick(this, ['statusCode', 'name', 'message', 'metadata']));
+    }
+
+    public sendAuth(
+        res: Response,
+        redirectUrl: string,
+        headers: SuccessResponseProperties['headers'] = {}
+    ) {
+        // Add headers before send response
+        const allHeaders = { ...this.headers, ...headers };
+        const keys = Object.keys(allHeaders);
+
+        keys.forEach((key) => {
+            res.setHeader(key, allHeaders[key]);
+        });
+
+        // Convert metadata to query params
+        const url = new URL(redirectUrl);
+        if (this.metadata) {
+            Object.entries(this.metadata).forEach(([key, value]) => {
+                if (typeof value === 'object') {
+                    // Serialize objects as JSON and encode
+                    url.searchParams.append(key, encodeURIComponent(JSON.stringify(value)));
+                } else {
+                    url.searchParams.append(key, String(value));
+                }
+            });
+        }
+
+        res.status(this.statusCode).redirect(url.toString());
     }
 }
 
