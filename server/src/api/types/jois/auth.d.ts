@@ -6,7 +6,7 @@ declare global {
             interface UserSchema
                 extends moduleTypes.mongoose.ConvertObjectIdToString<model.auth.UserSchema> {}
 
-            interface LoginSchema extends Required<Pick<UserSchema, 'phoneNumber' | 'password'>> {}
+            interface LoginSchema extends Required<Pick<UserSchema, 'email' | 'password'>> {}
 
             interface SignUpSchema
                 extends Required<
