@@ -14,26 +14,6 @@
             "date": 1762089156486,
             "name": "logs/2025/weeks-45/day-0/debug.log",
             "hash": "20a765110247dae03f34972b2ac7c2e196f451a3f1d6a24242563bce9c12a29c"
-        },
-        {
-            "date": 1762226681912,
-            "name": "logs/2025/weeks-45/day-2/debug.log",
-            "hash": "f9fa45f00ab843c5a8a477f1a4892e71a2c563446d6902eb08703ec851a077d0"
-        },
-        {
-            "date": 1762702375700,
-            "name": "logs/2025/weeks-46/day-0/debug.log",
-            "hash": "adbe964ba3441a366624fd9f513492b9e01b6df04231275036322a3222218652"
-        },
-        {
-            "date": 1762784858727,
-            "name": "logs/2025/weeks-46/day-1/debug.log",
-            "hash": "3589f7e0b263af8e8a43769b939168fe8a5a29ed167549f6c654d618bc2ade94"
-        },
-        {
-            "date": 1762794261812,
-            "name": "logs/2025/weeks-46/day-2/debug.log",
-            "hash": "c2db2f3967c9314f825bbe2c91d857f18121ba1ae5cc875fc415881b4487af60"
         }
     ],
     "hashType": "sha256"
