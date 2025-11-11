@@ -14,27 +14,7 @@
             "date": 1762089156491,
             "name": "logs/2025/weeks-45/day-0/error.log",
             "hash": "03255ec99790c397dd483f03e98169ffe2e00bd95e4b8cb541b964650c7e367e"
-        },
-        {
-            "date": 1762226681922,
-            "name": "logs/2025/weeks-45/day-2/error.log",
-            "hash": "d06004bdfcf544373301550c29557f908445b5f410dfe915a9e1d3d08ef1ff8d"
-        },
-        {
-            "date": 1762702375708,
-            "name": "logs/2025/weeks-46/day-0/error.log",
-            "hash": "03d40e71958eafc5e902054386836685d2c456b72f250075f59a26c4c1a863d1"
-        },
-        {
-            "date": 1762784858732,
-            "name": "logs/2025/weeks-46/day-1/error.log",
-            "hash": "a60a2d5b8046b69e8e8286bdaace15bbc2a118273c04650822384d5c57e4209a"
-        },
-        {
-            "date": 1762794261816,
-            "name": "logs/2025/weeks-46/day-2/error.log",
-            "hash": "e74d339aa12464a9238892ae7000b9d01db1403a7c5ea5421fe06c9d47c0cd4b"
         }
     ],
     "hashType": "sha256"
-}
+}https://github.com/univen-2025-team/univen-2025/pull/3/conflict?name=server%252Flogs%252F.7f20d8429fcf92d10844ba9cb828501448bc4fd2-audit.json&ancestor_oid=db9805410004bf9764a969b619f4177274751407&base_oid=2bfc2c0dfb486d9905d72d767d2f6376c22c119f&head_oid=72430f95a7ca255d12a1af4e0246fbf72ea59a6f
