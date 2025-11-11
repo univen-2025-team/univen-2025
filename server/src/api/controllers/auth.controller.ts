@@ -33,10 +33,12 @@ export default class AuthController {
     public static loginWithGoogle: RequestHandler = async (req, res, _) => {
         if (!req.user) throw new ForbiddenErrorResponse({ message: 'Login failed!' });
 
+        const user = await AuthService.loginWithGoogle(req.user as Profile);
+
         new OkResponse({
             message: 'Login with Google success!',
-            metadata: await AuthService.loginWithGoogle(req.user as Profile)
-        }).send(res);
+            metadata: user
+        }).sendAuth(res, "http://localhost:3000/auth/google/callback");
     }
 
     /* ------------------------------------------------------ */

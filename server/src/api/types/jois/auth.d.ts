@@ -6,12 +6,11 @@ declare global {
             interface UserSchema
                 extends moduleTypes.mongoose.ConvertObjectIdToString<model.auth.UserSchema> {}
 
-            interface LoginSchema extends Pick<UserSchema, 'phoneNumber' | 'password'> {}
+            interface LoginSchema extends Required<Pick<UserSchema, 'phoneNumber' | 'password'>> {}
 
             interface SignUpSchema
-                extends Pick<
-                    model.auth.UserSchema,
-                    'user_fullName' | 'password' | 'email'
+                extends Required<
+                    Pick<model.auth.UserSchema, 'user_fullName' | 'password' | 'email'>
                 > {}
 
             interface SignUpShop
@@ -27,7 +26,7 @@ declare global {
 
             interface ForgotPasswordSchema {
                 email: UserSchema['user_email'];
-                newPassword: UserSchema['password'];
+                newPassword: NonNullable<UserSchema['password']>;
             }
 
             interface NewTokenSchema {
