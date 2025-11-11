@@ -35,6 +35,17 @@ export const loginSchema = userBase.pick({
 export type LoginSchema = z.infer<typeof loginSchema>;
 
 /* ------------------------------------------------------ */
+/*                Login with google schema                */
+/* ------------------------------------------------------ */
+export const loginWithGoogleSchema = z.object({
+    googleId: z.string().min(1),
+    email: z.string().email(),
+    user_fullName: z.string().min(4).max(30),
+    user_avatar: z.string().url().optional().nullable()
+});
+export type LoginWithGoogleSchema = z.infer<typeof loginWithGoogleSchema>;
+
+/* ------------------------------------------------------ */
 /*                    Sign up schema                      */
 /* ------------------------------------------------------ */
 export const signUpSchema = userBase.pick({

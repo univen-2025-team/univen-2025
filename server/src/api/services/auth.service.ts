@@ -30,6 +30,9 @@ import { roleService } from './rbac.service.js';
 import { changeMediaOwner } from '@/models/repository/media/index.js';
 import { NODE_ENV } from '@/configs/server.config.js';
 import { ObjectId } from '@/configs/mongoose.config.js';
+import { Profile } from 'passport-google-oauth20';
+import { LoginWithGoogleSchema, loginWithGoogleSchema } from '@/validations/zod/auth.zod.js';
+import { keyof } from 'zod/v4';
 
 export default class AuthService {
     /* ------------------------------------------------------ */
@@ -152,6 +155,24 @@ export default class AuthService {
         //     result[roleData.role_name] = roleData.role_data || true;
 
         return result;
+    };
+
+    /* ------------------------------------------------------ */
+    /*                    Login with google                   */
+    /* ------------------------------------------------------ */
+    public static loginWithGoogle = async (profile: Profile) => {
+        const googleProfile: { [k in keyof LoginWithGoogleSchema]: any } = {
+            googleId: profile.id,
+            email: profile.emails?.[0]?.value,
+            user_fullName: profile.displayName,
+            user_avatar: profile.photos?.[0]?.value
+        };
+
+        if (loginWithGoogleSchema.safeParse(googleProfile).success === false) {
+            throw new BadRequestErrorResponse({ message: 'Google profile is invalid!' });
+        }
+
+        return {};
     };
 
     /* ------------------------------------------------------ */
