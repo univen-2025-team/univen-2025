@@ -26,7 +26,7 @@ authRoute.post('/login', validateLogin, catchError(AuthController.login));
 
 authRoute.get(
     '/login/google',
-    passport.authenticate('google', { scope: ['profile'], session: false })
+    passport.authenticate('google', { scope: ['profile', 'email'], session: false })
 );
 
 authRoute.get(

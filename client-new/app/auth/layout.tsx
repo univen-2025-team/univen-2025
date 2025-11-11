@@ -136,7 +136,10 @@ export default function AuthLayout({
           <div className="px-8 pb-8">
             <button
               type="button"
-              onClick={() => console.log('Google login')}
+              onClick={() => {
+                // Redirect to backend Google OAuth endpoint
+                window.location.href = 'http://localhost:4000/v1/api/auth/login/google';
+              }}
               className="w-full inline-flex justify-center items-center py-3 px-4 border-2 border-gray-200 rounded-lg shadow-sm bg-white text-sm font-semibold text-gray-700 hover:bg-gray-50 hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all transform hover:scale-[1.02] active:scale-[0.98]"
             >
               <svg className="w-5 h-5 mr-3" viewBox="0 0 24 24">

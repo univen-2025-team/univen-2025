@@ -12,7 +12,7 @@ const userSchema = new Schema<model.auth.UserSchema>(
         /* ---------------------- Authenticate ---------------------- */
         email: { type: String, unique },
         googleId: { type: String, unique },
-        password: { type: String, required, select: false },
+        password: { type: String, select: false },
 
         /* ---------------------- Information  ---------------------- */
         user_avatar: { type: String, default: undefined },

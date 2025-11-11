@@ -10,6 +10,7 @@ export interface User {
     user_role: string;
     user_gender: boolean;
     user_status: string; // "ACTIVE" | "INACTIVE" | "BLOCKED"
+    user_dayOfBirth?: string;
 }
 
 export interface AuthState {
