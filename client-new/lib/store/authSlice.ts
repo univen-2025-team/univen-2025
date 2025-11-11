@@ -41,8 +41,23 @@ export const loginUser = createAsyncThunk(
             const response = await authApi.login(credentials);
             console.log('Login response:', response);
             return response;
-        } catch (error) {
-            return rejectWithValue(error instanceof Error ? error.message : 'Login failed');
+        } catch (error: unknown) {
+            console.error('Login error:', error);
+            
+            // Extract error message from API response
+            let errorMessage = 'Đăng nhập thất bại. Vui lòng kiểm tra lại email và mật khẩu.';
+            
+            if (error && typeof error === 'object' && 'response' in error) {
+                const axiosError = error as { response?: { data?: { message?: string; error?: string } } };
+                errorMessage = 
+                    axiosError.response?.data?.message || 
+                    axiosError.response?.data?.error ||
+                    errorMessage;
+            } else if (error instanceof Error) {
+                errorMessage = error.message;
+            }
+            
+            return rejectWithValue(errorMessage);
         }
     }
 );
@@ -56,8 +71,23 @@ export const signUpUser = createAsyncThunk(
         try {
             const response = await authApi.signUp(data);
             return response;
-        } catch (error) {
-            return rejectWithValue(error instanceof Error ? error.message : 'Sign up failed');
+        } catch (error: unknown) {
+            console.error('Sign up error:', error);
+            
+            // Extract error message from API response
+            let errorMessage = 'Đăng ký thất bại. Vui lòng thử lại.';
+            
+            if (error && typeof error === 'object' && 'response' in error) {
+                const axiosError = error as { response?: { data?: { message?: string; error?: string } } };
+                errorMessage = 
+                    axiosError.response?.data?.message || 
+                    axiosError.response?.data?.error ||
+                    errorMessage;
+            } else if (error instanceof Error) {
+                errorMessage = error.message;
+            }
+            
+            return rejectWithValue(errorMessage);
         }
     }
 );
@@ -78,8 +108,23 @@ export const getCurrentUser = createAsyncThunk(
         try {
             const user = await authApi.getCurrentUser();
             return user;
-        } catch (error) {
-            return rejectWithValue(error instanceof Error ? error.message : 'Failed to get user');
+        } catch (error: unknown) {
+            console.error('Get current user error:', error);
+            
+            // Extract error message from API response
+            let errorMessage = 'Không thể lấy thông tin người dùng.';
+            
+            if (error && typeof error === 'object' && 'response' in error) {
+                const axiosError = error as { response?: { data?: { message?: string; error?: string } } };
+                errorMessage = 
+                    axiosError.response?.data?.message || 
+                    axiosError.response?.data?.error ||
+                    errorMessage;
+            } else if (error instanceof Error) {
+                errorMessage = error.message;
+            }
+            
+            return rejectWithValue(errorMessage);
         }
     }
 );
