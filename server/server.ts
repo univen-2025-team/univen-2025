@@ -15,6 +15,7 @@ import MongoDB from './src/app/db.app.js';
 
 // Socket.IO
 import SocketIOService from '@/services/socketio.service.js';
+import RBACService from '@/services/rbac.service';
 
 // await new Promise((resolve) => {
 //     // kill 4000 with bun
@@ -28,21 +29,21 @@ import SocketIOService from '@/services/socketio.service.js';
 //     }
 // });
 
-const server = https
-    .createServer(
-        {
-            key: await fs.readFile(path.join(import.meta.dirname, './src/api/assets/ssl/key.pem')),
-            cert: await fs.readFile(path.join(import.meta.dirname, './src/api/assets/ssl/key.cert'))
-        },
-        app
-    )
-    .listen(Number(PORT), async () => {
-        console.log(`Server is running at ${BASE_URL}`);
-    });
+// const server = https
+//     .createServer(
+//         {
+//             key: await fs.readFile(path.join(import.meta.dirname, './src/api/assets/ssl/key.pem')),
+//             cert: await fs.readFile(path.join(import.meta.dirname, './src/api/assets/ssl/key.cert'))
+//         },
+//         app
+//     )
+//     .listen(Number(PORT), async () => {
+//         console.log(`Server is running at ${BASE_URL}`);
+//     });
 
-// const server = app.listen(Number(PORT), () => {
-//     console.log(`Server is running at ${BASE_URL}`);
-// });
+const server = app.listen(Number(PORT), () => {
+    console.log(`Server is running at ${BASE_URL}`);
+});
 
 /* ---------------------------------------------------------- */
 /*                       Socket.IO Setup                     */
