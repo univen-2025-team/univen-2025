@@ -1,6 +1,6 @@
 // Libs
 import bcrypt from 'bcrypt';
-import _ from 'lodash';
+import _, { get } from 'lodash';
 
 // Handle error
 import {
@@ -20,8 +20,6 @@ import JwtService from './jwt.service.js';
 import LoggerService from './logger.service.js';
 
 // Models
-import { findOneShop, isExistsShop } from '@/models/repository/shop/index.js';
-import shopModel from '@/models/shop.model.js';
 import { getRoleIdByName } from '@/models/repository/rbac/index.js';
 import { findOneAndUpdateUser, findOneUser, findUserById } from '@/models/repository/user/index.js';
 import { RoleNames } from '@/enums/rbac.enum.js';
@@ -31,20 +29,23 @@ import { USER_PUBLIC_FIELDS } from '@/configs/user.config.js';
 import { roleService } from './rbac.service.js';
 import { changeMediaOwner } from '@/models/repository/media/index.js';
 import { NODE_ENV } from '@/configs/server.config.js';
+import { ObjectId } from '@/configs/mongoose.config.js';
+import { Profile } from 'passport-google-oauth20';
+import { LoginWithGoogleSchema, loginWithGoogleSchema } from '@/validations/zod/auth.zod.js';
+import { keyof } from 'zod/v4';
 
 export default class AuthService {
     /* ------------------------------------------------------ */
     /*                        Sign up                         */
     /* ------------------------------------------------------ */
     public static signUp = async ({
-        phoneNumber,
+        email,
         password,
-        user_email,
         user_fullName
     }: service.auth.arguments.SignUp) => {
         /* --------------- Check if user is exists -------------- */
         const userIsExist = await UserService.checkUserExist({
-            $or: [{ phoneNumber }, { user_email }]
+            $or: [{ email }]
         });
         if (userIsExist) throw new ConflictErrorResponse({ message: 'User is exists!' });
 
@@ -56,17 +57,14 @@ export default class AuthService {
         /* ---------------------------------------------------------- */
         /*                             Dev                            */
         /* ---------------------------------------------------------- */
-        if (NODE_ENV === 'development' && phoneNumber === '0327781162') userRole = RoleNames.ADMIN;
-
         const userInstance = UserService.newInstance({
-            phoneNumber,
+            email,
             password: hashPassword,
 
-            user_email,
             user_avatar: '',
             user_fullName,
             user_role: await getRoleIdByName(userRole),
-            user_sex: false
+            user_gender: false
         });
         if (!userInstance) throw new ForbiddenErrorResponse({ message: 'Create user failed!' });
 
@@ -100,70 +98,101 @@ export default class AuthService {
 
         return {
             token: jwtTokenPair,
-            user: _.pick(userInstance.toObject(), [
-                '_id',
-                'phoneNumber',
-                'user_fullName',
-                'user_email',
-                'user_role'
-            ])
+            user: _.pick(userInstance.toObject(), USER_PUBLIC_FIELDS)
         };
     };
 
-    
     /* ------------------------------------------------------ */
     /*                         Login                          */
     /* ------------------------------------------------------ */
-    public static login = async ({ phoneNumber, password }: service.auth.arguments.Login) => {
+    public static login = async ({ email, password }: service.auth.arguments.Login) => {
         /* -------------- Check if user is exists ------------- */
         const user = await findOneUser({
-            query: { phoneNumber },
+            query: { email },
             select: ['password'],
             options: { lean: true }
         });
         if (!user)
             throw new NotFoundErrorResponse({ message: 'Username or password is not correct!' });
 
+        if (!user.password) 
+            throw new ForbiddenErrorResponse({ message: 'This account already uses Google login!' });
+
         /* ------------------ Check password ------------------ */
         const hashPassword = user.password;
+        if (!hashPassword)
+            throw new ForbiddenErrorResponse({
+                message: 'Username or password is not correct!'
+            });
+
         const isPasswordMatch = await bcrypt.compare(password, hashPassword);
         if (!isPasswordMatch)
             throw new ForbiddenErrorResponse({ message: 'Username or password is not correct!' });
 
         /* --------- Generate token and send response --------- */
-        const { privateKey, publicKey } = KeyTokenService.generateTokenPair();
-        const jwtPair = await JwtService.signJwtPair({
-            privateKey,
-            payload: {
-                id: user._id.toString(),
-                role: user.user_role.toString()
-            }
-        });
-        if (!jwtPair) throw new ForbiddenErrorResponse({ message: 'Generate jwt token failed!' });
-
-        /* ---------------- Save new key token ---------------- */
-        const keyTokenId = await KeyTokenService.findOneAndReplace({
-            userId: user._id.toString(),
-            privateKey,
-            publicKey,
-            refreshToken: jwtPair.refreshToken
-        });
-        if (!keyTokenId) throw new ForbiddenErrorResponse({ message: 'Save key token failed!' });
-
-        const result: commonTypes.object.ObjectAnyKeys = {
-            token: jwtPair,
-            user: _.pick(user, USER_PUBLIC_FIELDS)
-        };
+        return await AuthService.generateAuth(user);
 
         /* --------------------- Add role data  --------------------- */
-        const roleData = await roleService.getUserRoleData({
-            userId: user._id.toString(),
-            roleId: user.user_role.toString()
-        });
-        if (roleData && roleData.role_name !== RoleNames.USER)
-            result[roleData.role_name] = roleData.role_data || true;
+        // const roleData = await roleService.getUserRoleData({
+        //     userId: user._id.toString(),
+        //     roleId: user.user_role.toString()
+        // });
+        // if (roleData && roleData.role_name !== RoleNames.USER)
+        //     result[roleData.role_name] = roleData.role_data || true;
+    };
 
-        return result;
+    /* ------------------------------------------------------ */
+    /*                    Login with google                   */
+    /* ------------------------------------------------------ */
+    public static loginWithGoogle = async (profile: Profile) => {
+        const googleProfile: { [k in keyof LoginWithGoogleSchema]: any } = {
+            googleId: profile.id,
+            email: profile.emails?.[0]?.value,
+            user_fullName: profile.displayName,
+            user_avatar: profile.photos?.[0]?.value
+        };
+
+        LoggerService.getInstance().info(
+            `Google Profile: ${JSON.stringify(googleProfile, null, 2)}`
+        );
+
+        if (loginWithGoogleSchema.safeParse(googleProfile).success === false) {
+            throw new BadRequestErrorResponse({ message: 'Google profile is invalid!' });
+        }
+
+        const userExists = await findOneUser({
+            query: { $or: [{ email: googleProfile.email }, { googleId: googleProfile.googleId }] }
+        });
+        let userResponse: model.auth.UserSchema;
+
+        if (userExists) {
+            if (!userExists.googleId) {
+                userExists.googleId = googleProfile.googleId;
+            }
+
+            if (userExists.email !== googleProfile.email) {
+                throw new ConflictErrorResponse({
+                    message: 'Google account is already in use by another email!'
+                });
+            }
+
+            userResponse = await userExists.save();
+        } else {
+            const newUser = UserService.newInstance({
+                googleId: googleProfile.googleId,
+                email: googleProfile.email,
+                password: '',
+
+                user_fullName: googleProfile.user_fullName,
+                user_avatar: googleProfile.user_avatar || '',
+                user_role: await getRoleIdByName(RoleNames.USER),
+                user_gender: false
+            });
+
+            userResponse = await newUser.save();
+        }
+
+        return await AuthService.generateAuth(userResponse);
     };
 
     /* ------------------------------------------------------ */
@@ -180,7 +209,10 @@ export default class AuthService {
     /* ------------------------------------------------------ */
     /*                         Forgot password                */
     /* ------------------------------------------------------ */
-    public static forgotPassword = async ({ email, newPassword }: service.auth.arguments.ForgotPassword) => {
+    public static forgotPassword = async ({
+        email,
+        newPassword
+    }: service.auth.arguments.ForgotPassword) => {
         const user = await findOneUser({
             query: { user_email: email },
             options: { lean: true }
@@ -264,4 +296,33 @@ export default class AuthService {
 
         return newJwtTokenPair;
     };
+
+    private static async generateAuth(user: model.auth.UserSchema) {
+        /* --------- Generate token and send response --------- */
+        const { privateKey, publicKey } = KeyTokenService.generateTokenPair(); // RSA
+        const jwtPair = await JwtService.signJwtPair({
+            privateKey,
+            payload: {
+                id: user._id.toString(),
+                role: user.user_role.toString()
+            }
+        });
+        if (!jwtPair) throw new ForbiddenErrorResponse({ message: 'Generate jwt token failed!' });
+
+        /* ---------------- Save new key token ---------------- */
+        const keyTokenId = await KeyTokenService.findOneAndReplace({
+            userId: user._id.toString(),
+            privateKey,
+            publicKey,
+            refreshToken: jwtPair.refreshToken
+        });
+        if (!keyTokenId) throw new ForbiddenErrorResponse({ message: 'Save key token failed!' });
+
+        const result: commonTypes.object.ObjectAnyKeys = {
+            token: jwtPair,
+            user: _.pick(user, USER_PUBLIC_FIELDS)
+        };
+
+        return result;
+    }
 }

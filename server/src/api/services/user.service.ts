@@ -10,23 +10,14 @@ import { BadRequestErrorResponse, NotFoundErrorResponse } from '@/response/error
 import { UpdateProfileSchema } from '@/validations/zod/user.zod.js';
 import { get$SetNestedFromObject } from '@/utils/mongoose.util.js';
 import { deleteUserProfile } from './redis.service.js';
+import { USER_PUBLIC_FIELDS } from '@/configs/user.config.js';
 
 export default class UserService {
     /* -------------------- Get user by id -------------------- */
     public static getUserById = async (id: string) => {
         const user = await findUserById({
             id,
-            only: [
-                '_id',
-                'phoneNumber',
-                'user_email',
-                'user_role',
-                'user_fullName',
-                'user_avatar',
-                'user_sex',
-                'user_status',
-                'user_dayOfBirth'
-            ]
+            only: USER_PUBLIC_FIELDS
         });
         const result: commonTypes.object.ObjectAnyKeys = { user };
 
@@ -42,8 +33,6 @@ export default class UserService {
 
         return result;
     };
-
-    
 
     /* -------------------- Update profile -------------------- */
     public static updateProfile = async (id: string, data: UpdateProfileSchema) => {
