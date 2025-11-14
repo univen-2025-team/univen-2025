@@ -209,3 +209,112 @@
 [2025-11-09T09:30:00.080Z] [info]: Cleanup key token: 0 refresh token used cleaned
 [2025-11-09T09:31:00.056Z] [info]: Cleanup key token: 0 key token cleaned
 [2025-11-09T09:31:00.065Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-09T15:43:16.450Z] [info]: Socket.IO service initialized
+[2025-11-09T15:44:00.180Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-09T15:44:00.182Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-09T15:45:00.128Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-09T15:45:00.129Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-09T15:46:00.165Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-09T15:46:00.173Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-09T15:47:00.095Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-09T15:47:00.097Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-09T15:48:00.167Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-09T15:48:00.169Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-09T15:49:00.134Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-09T15:49:00.135Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-09T15:50:00.109Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-09T15:50:00.110Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-09T15:51:00.164Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-09T15:51:00.173Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-09T15:52:00.341Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-09T15:52:00.342Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-09T15:53:00.204Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-09T15:53:00.205Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-09T15:54:00.087Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-09T15:54:00.089Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-09T15:55:00.112Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-09T15:55:00.113Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-09T15:56:00.113Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-09T15:56:00.114Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-09T15:57:00.139Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-09T15:57:00.141Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-09T15:58:00.198Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-09T15:58:00.199Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-09T15:59:00.132Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-09T15:59:00.132Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-09T16:00:00.159Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-09T16:00:00.161Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-09T16:01:00.416Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-09T16:01:00.421Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-09T16:02:00.140Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-09T16:02:00.142Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-09T16:03:00.100Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-09T16:03:00.102Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-09T16:04:00.137Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-09T16:04:00.138Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-09T16:05:00.410Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-09T16:05:00.412Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-09T16:06:00.133Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-09T16:06:00.134Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-09T16:07:00.117Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-09T16:07:00.118Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-09T16:08:00.132Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-09T16:08:00.135Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-09T16:09:00.108Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-09T16:09:00.110Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-09T16:10:00.097Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-09T16:10:00.097Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-09T16:11:00.137Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-09T16:11:00.140Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-09T16:12:00.093Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-09T16:12:00.094Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-09T16:13:00.149Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-09T16:13:00.150Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-09T16:14:00.089Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-09T16:14:00.090Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-09T16:15:00.128Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-09T16:15:00.128Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-09T16:16:00.152Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-09T16:16:00.154Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-09T16:17:00.130Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-09T16:17:00.131Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-09T16:18:00.124Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-09T16:18:00.125Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-09T16:19:00.130Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-09T16:19:00.132Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-09T16:20:00.121Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-09T16:20:00.122Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-09T16:21:00.113Z] [info]: Cleanup key token: 2 key token cleaned
+[2025-11-09T16:21:00.116Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-09T16:22:00.104Z] [info]: Cleanup key token: 2 key token cleaned
+[2025-11-09T16:22:00.105Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-09T16:23:00.136Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-09T16:23:00.136Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-09T16:24:00.107Z] [info]: Cleanup key token: 2 key token cleaned
+[2025-11-09T16:24:00.108Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-09T16:25:00.115Z] [info]: Cleanup key token: 2 key token cleaned
+[2025-11-09T16:25:00.117Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-09T16:26:00.095Z] [info]: Cleanup key token: 2 key token cleaned
+[2025-11-09T16:26:00.096Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-09T16:27:00.115Z] [info]: Cleanup key token: 2 key token cleaned
+[2025-11-09T16:27:00.121Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-09T16:28:00.128Z] [info]: Cleanup key token: 2 key token cleaned
+[2025-11-09T16:28:00.129Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-09T16:29:00.110Z] [info]: Cleanup key token: 2 key token cleaned
+[2025-11-09T16:29:00.111Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-09T16:30:00.112Z] [info]: Cleanup key token: 2 key token cleaned
+[2025-11-09T16:30:00.113Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-09T16:31:00.103Z] [info]: Cleanup key token: 2 key token cleaned
+[2025-11-09T16:31:00.104Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-09T16:32:00.096Z] [info]: Cleanup key token: 2 key token cleaned
+[2025-11-09T16:32:00.100Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-09T16:33:00.093Z] [info]: Cleanup key token: 2 key token cleaned
+[2025-11-09T16:33:00.094Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-09T16:34:00.131Z] [info]: Cleanup key token: 2 key token cleaned
+[2025-11-09T16:34:00.133Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-09T16:35:00.114Z] [info]: Cleanup key token: 2 key token cleaned
+[2025-11-09T16:35:00.115Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-09T16:36:00.153Z] [info]: Cleanup key token: 2 key token cleaned
+[2025-11-09T16:36:00.154Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-09T16:37:00.114Z] [info]: Cleanup key token: 2 key token cleaned
+[2025-11-09T16:37:00.115Z] [info]: Cleanup key token: 0 refresh token used cleaned

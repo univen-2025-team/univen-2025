@@ -19,7 +19,7 @@ import {
 /* ---------------------------------------------------------- */
 /*                         Init client                        */
 /* ---------------------------------------------------------- */
-const redisClient = await createClient({
+export const redisClient = await createClient({
     username: REDIS_CONFIG.username,
     password: REDIS_CONFIG.password,
     socket: REDIS_CONFIG.socket
