@@ -1,0 +1,15 @@
+{
+    "keep": {
+        "days": true,
+        "amount": 30
+    },
+    "auditLog": "D:\\UniVen25\\univen-2025\\server\\logs\\2025\\weeks-46\\day-5\\info\\.72fb2a5d275881d31cb22ca3659949dd7ec3d454-audit.json",
+    "files": [
+        {
+            "date": 1763109488852,
+            "name": "D:\\UniVen25\\univen-2025\\server\\logs\\2025\\weeks-46\\day-5\\info\\app-2025-11-14.log",
+            "hash": "9d325df590b6c1b52bcd03e7de85f19c996cc79ddbd70543f0bb883fcbbef130"
+        }
+    ],
+    "hashType": "sha256"
+}
