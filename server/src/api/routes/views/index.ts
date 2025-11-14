@@ -10,9 +10,6 @@ const viewRoute = Router();
 /* ------------------------ Home page ----------------------- */
 const homePageController = catchError(ViewController.pageMapper[Pages.HOME]);
 viewRoute.get('/', homePageController);
-viewRoute.get('/abc', (req, res) => {
-    res.sendFile(path.join(__dirname, '../../../../public/abc.html'));
-})
 
 /* ------------------------ More page ----------------------- */
 

@@ -14,3 +14,5 @@ export const getUserProfileKey = (id: string) => `user:${id}:profile`;
 export const getKeyTokenKey = (id: string) => `user:${id}:keyToken`;
 export const getKeyTokenRefreshTokenUsedKey = (id: string) =>
     `user:${id}:keyToken_refreshTokenUsed`;
+export const getConversationMessagesKey = (conversationId: string) =>
+  `conversation:${conversationId}:messages`;
