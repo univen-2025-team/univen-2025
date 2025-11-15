@@ -38,6 +38,7 @@ export default function EditProfilePage() {
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [showUnsavedWarning, setShowUnsavedWarning] = useState(false);
   const [pendingNavigation, setPendingNavigation] = useState<(() => void) | null>(null);
+  const [allowNavigation, setAllowNavigation] = useState(false);
 
   // Fetch current profile
   useEffect(() => {
@@ -116,7 +117,7 @@ export default function EditProfilePage() {
   // Warn user about unsaved changes when leaving page
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      if (formik.dirty && !formik.isSubmitting) {
+      if (formik.dirty && !formik.isSubmitting && !allowNavigation) {
         e.preventDefault();
         e.returnValue = ""; // Chrome requires returnValue to be set
       }
@@ -127,7 +128,7 @@ export default function EditProfilePage() {
     return () => {
       window.removeEventListener("beforeunload", handleBeforeUnload);
     };
-  }, [formik.dirty, formik.isSubmitting]);
+  }, [formik.dirty, formik.isSubmitting, allowNavigation]);
 
   // Handle navigation with unsaved changes
   const handleNavigation = useCallback((navigationFn: () => void) => {
@@ -140,11 +141,15 @@ export default function EditProfilePage() {
   }, [formik.dirty, formik.isSubmitting]);
 
   const confirmNavigation = () => {
-    if (pendingNavigation) {
-      pendingNavigation();
-      setPendingNavigation(null);
-    }
+    setAllowNavigation(true);
     setShowUnsavedWarning(false);
+    if (pendingNavigation) {
+      // Use setTimeout to ensure state update completes before navigation
+      setTimeout(() => {
+        pendingNavigation();
+        setPendingNavigation(null);
+      }, 0);
+    }
   };
 
   const cancelNavigation = () => {
