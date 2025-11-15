@@ -1,6 +1,17 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import {
+  LineChart,
+  Line,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
 
 interface StockData {
   symbol: string;
@@ -29,12 +40,18 @@ interface MarketData {
   timestamp: string;
 }
 
+interface IndexHistoryPoint {
+  time: string;
+  index: number;
+}
+
 export default function MarketPage() {
   const [marketData, setMarketData] = useState<MarketData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<'price' | 'change' | 'changePercent' | 'volume'>('price');
   const [order, setOrder] = useState<'asc' | 'desc'>('desc');
+  const [indexHistory, setIndexHistory] = useState<IndexHistoryPoint[]>([]);
 
   const fetchMarketData = async () => {
     try {
@@ -45,6 +62,14 @@ export default function MarketPage() {
       if (result.success) {
         setMarketData(result.data);
         setError(null);
+        
+        // Update index history for the chart (keep last 20 points)
+        const now = new Date();
+        const timeStr = now.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+        setIndexHistory(prev => {
+          const newHistory = [...prev, { time: timeStr, index: result.data.vn30Index.index }];
+          return newHistory.slice(-20); // Keep only last 20 data points
+        });
       } else {
         setError(result.error || 'Failed to fetch market data');
       }
@@ -159,6 +184,102 @@ export default function MarketPage() {
           <p className="text-gray-500 text-xs mt-4">
             Cập nhật lần cuối: {new Date(marketData.timestamp).toLocaleString('vi-VN')}
           </p>
+        </div>
+      )}
+
+      {/* Charts Section */}
+      {marketData && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* VN30 Index Trend Chart */}
+          <div className="bg-white rounded-xl shadow-lg p-6">
+            <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
+              <svg className="w-6 h-6 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
+              </svg>
+              Biểu đồ VN30 Index
+            </h2>
+            <div className="h-64">
+              {indexHistory.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={indexHistory}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                    <XAxis 
+                      dataKey="time" 
+                      stroke="#6b7280"
+                      style={{ fontSize: '12px' }}
+                    />
+                    <YAxis 
+                      stroke="#6b7280"
+                      style={{ fontSize: '12px' }}
+                      domain={['auto', 'auto']}
+                    />
+                    <Tooltip 
+                      contentStyle={{ 
+                        backgroundColor: '#fff', 
+                        border: '1px solid #e5e7eb',
+                        borderRadius: '8px',
+                        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                      }}
+                    />
+                    <Line 
+                      type="monotone" 
+                      dataKey="index" 
+                      stroke="#2563eb" 
+                      strokeWidth={2}
+                      dot={{ fill: '#2563eb', r: 3 }}
+                      activeDot={{ r: 5 }}
+                      name="VN30"
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="flex items-center justify-center h-full text-gray-500">
+                  <p>Đang thu thập dữ liệu...</p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Top Stocks Performance Chart */}
+          <div className="bg-white rounded-xl shadow-lg p-6">
+            <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
+              <svg className="w-6 h-6 text-indigo-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
+              Top 10 cổ phiếu
+            </h2>
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={marketData.stocks.slice(0, 10)}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                  <XAxis 
+                    dataKey="symbol" 
+                    stroke="#6b7280"
+                    style={{ fontSize: '11px' }}
+                  />
+                  <YAxis 
+                    stroke="#6b7280"
+                    style={{ fontSize: '12px' }}
+                  />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: '#fff', 
+                      border: '1px solid #e5e7eb',
+                      borderRadius: '8px',
+                      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                    }}
+                    formatter={(value: number) => [formatPrice(value), 'Giá']}
+                  />
+                  <Bar 
+                    dataKey="price" 
+                    fill="#6366f1"
+                    radius={[8, 8, 0, 0]}
+                    name="Giá"
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
         </div>
       )}
 
