@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   LineChart,
   Line,
@@ -46,6 +47,7 @@ interface IndexHistoryPoint {
 }
 
 export default function MarketPage() {
+  const router = useRouter();
   const [marketData, setMarketData] = useState<MarketData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -298,7 +300,8 @@ export default function MarketPage() {
               {marketData.topGainers.map((stock) => (
                 <div
                   key={stock.symbol}
-                  className={`flex items-center justify-between p-3 rounded-lg border ${getChangeBgColor(stock.change)}`}
+                  onClick={() => router.push(`/market/${stock.symbol}`)}
+                  className={`flex items-center justify-between p-3 rounded-lg border cursor-pointer hover:shadow-md transition-shadow ${getChangeBgColor(stock.change)}`}
                 >
                   <div>
                     <p className="font-bold text-gray-900">{stock.symbol}</p>
@@ -329,7 +332,8 @@ export default function MarketPage() {
               {marketData.topLosers.map((stock) => (
                 <div
                   key={stock.symbol}
-                  className={`flex items-center justify-between p-3 rounded-lg border ${getChangeBgColor(stock.change)}`}
+                  onClick={() => router.push(`/market/${stock.symbol}`)}
+                  className={`flex items-center justify-between p-3 rounded-lg border cursor-pointer hover:shadow-md transition-shadow ${getChangeBgColor(stock.change)}`}
                 >
                   <div>
                     <p className="font-bold text-gray-900">{stock.symbol}</p>
@@ -401,10 +405,11 @@ export default function MarketPage() {
               {marketData?.stocks.map((stock) => (
                 <tr
                   key={stock.symbol}
-                  className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
+                  onClick={() => router.push(`/market/${stock.symbol}`)}
+                  className="border-b border-gray-100 hover:bg-blue-50 transition-colors cursor-pointer"
                 >
                   <td className="px-4 py-3">
-                    <span className="font-bold text-gray-900">{stock.symbol}</span>
+                    <span className="font-bold text-blue-600 hover:text-blue-800">{stock.symbol}</span>
                   </td>
                   <td className={`px-4 py-3 text-right font-semibold ${getChangeColor(stock.change)}`}>
                     {formatPrice(stock.price)}
