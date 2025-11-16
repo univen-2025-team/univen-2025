@@ -1,8 +1,6 @@
 import LoggerService from './logger.service.js';
 
-// Note: vnstock-js is a CommonJS module, we'll use dynamic import
-let VNStock: any = null;
-
+// VNStock data types
 interface VNStockData {
     symbol: string;
     price: number;
@@ -23,7 +21,7 @@ interface VN30IndexData {
 
 export default class VNStockService {
     private static instance: VNStockService;
-    private vnstockClient: any = null;
+    private vnstock: any = null;
     private initialized: boolean = false;
     private initPromise: Promise<void> | null = null;
 
@@ -40,11 +38,9 @@ export default class VNStockService {
 
     private async initialize(): Promise<void> {
         try {
-            // Dynamic import for CommonJS module
+            // Dynamic import for vnstock-js
             const vnstockModule = await import('vnstock-js');
-            VNStock = vnstockModule.default || vnstockModule;
-            
-            this.vnstockClient = new VNStock();
+            this.vnstock = vnstockModule;
             this.initialized = true;
             
             LoggerService.getInstance().info('VNStock service initialized successfully');
@@ -63,31 +59,38 @@ export default class VNStockService {
     public async getStockPrice(symbol: string): Promise<VNStockData | null> {
         await this.waitForInitialization();
         
-        if (!this.initialized || !this.vnstockClient) {
+        if (!this.initialized || !this.vnstock) {
             return null;
         }
 
         try {
-            // Fetch real-time stock data
-            const data = await this.vnstockClient.stock(symbol).quote();
+            // Fetch price board data for the stock
+            const data = await this.vnstock.stock.priceBoard({ ticker: symbol });
             
             if (!data || !data.price) {
                 return null;
             }
 
+            // Calculate change and percent from the data
+            const currentPrice = parseFloat(data.price) || 0;
+            const referencePrice = parseFloat(data.ref) || currentPrice;
+            const change = currentPrice - referencePrice;
+            const changePercent = referencePrice > 0 ? (change / referencePrice) * 100 : 0;
+
             return {
                 symbol: symbol.toUpperCase(),
-                price: parseFloat(data.price) || 0,
-                change: parseFloat(data.change) || 0,
-                changePercent: parseFloat(data.changePercent) || 0,
-                volume: parseFloat(data.volume) || 0,
-                high: parseFloat(data.high) || parseFloat(data.price) || 0,
-                low: parseFloat(data.low) || parseFloat(data.price) || 0,
-                open: parseFloat(data.open) || parseFloat(data.price) || 0,
-                close: parseFloat(data.close) || parseFloat(data.price) || 0,
+                price: currentPrice,
+                change: change,
+                changePercent: parseFloat(changePercent.toFixed(2)),
+                volume: parseFloat(data.vol) || 0,
+                high: parseFloat(data.high) || currentPrice,
+                low: parseFloat(data.low) || currentPrice,
+                open: parseFloat(data.open) || currentPrice,
+                close: currentPrice,
             };
         } catch (error) {
             // Silently fail and return null - let caller handle fallback
+            LoggerService.getInstance().debug(`Failed to fetch stock data for ${symbol}`, error);
             return null;
         }
     }
@@ -95,25 +98,31 @@ export default class VNStockService {
     public async getVN30Index(): Promise<VN30IndexData | null> {
         await this.waitForInitialization();
         
-        if (!this.initialized || !this.vnstockClient) {
+        if (!this.initialized || !this.vnstock) {
             return null;
         }
 
         try {
-            // Fetch VN30 index data
-            const data = await this.vnstockClient.index('VN30').quote();
+            // Fetch VN30 index data using price board
+            const data = await this.vnstock.stock.priceBoard({ ticker: 'VN30' });
             
-            if (!data || !data.index) {
+            if (!data || !data.price) {
                 return null;
             }
 
+            const currentIndex = parseFloat(data.price) || 0;
+            const referenceIndex = parseFloat(data.ref) || currentIndex;
+            const change = currentIndex - referenceIndex;
+            const changePercent = referenceIndex > 0 ? (change / referenceIndex) * 100 : 0;
+
             return {
-                index: parseFloat(data.index) || 0,
-                change: parseFloat(data.change) || 0,
-                changePercent: parseFloat(data.changePercent) || 0,
+                index: currentIndex,
+                change: change,
+                changePercent: parseFloat(changePercent.toFixed(2)),
             };
         } catch (error) {
             // Silently fail and return null
+            LoggerService.getInstance().debug('Failed to fetch VN30 index data', error);
             return null;
         }
     }
@@ -125,17 +134,23 @@ export default class VNStockService {
     ): Promise<any[]> {
         await this.waitForInitialization();
         
-        if (!this.initialized || !this.vnstockClient) {
+        if (!this.initialized || !this.vnstock) {
             return [];
         }
 
         try {
-            const data = await this.vnstockClient
-                .stock(symbol)
-                .history({ start: startDate, end: endDate });
+            const data = await this.vnstock.stock.quote({
+                ticker: symbol,
+                start: startDate,
+                end: endDate,
+            });
             
             return data || [];
         } catch (error) {
+            LoggerService.getInstance().debug(
+                `Failed to fetch historical data for ${symbol}`,
+                error
+            );
             return [];
         }
     }
