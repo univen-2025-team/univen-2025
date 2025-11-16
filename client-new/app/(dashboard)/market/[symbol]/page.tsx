@@ -16,6 +16,7 @@ import {
   AreaChart,
   Legend,
 } from "recharts";
+import { useStockSocket } from "@/lib/hooks/useMarketSocket";
 
 interface StockDetailData {
   symbol: string;
@@ -59,7 +60,35 @@ export default function StockDetailPage() {
   const [technicalIndicators, setTechnicalIndicators] = useState<TechnicalIndicator | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [timeRange, setTimeRange] = useState<'1D' | '1W' | '1M' | '3M' | '1Y'>('1D');
+  const [timeRange, setTimeRange] = useState<'15s' | '1m' | '3m' | '5m' | '15m' | '30m' | '1h' | '6h' | '12h' | '1D' | '1W' | '1M' | '3M' | '1Y'>('1m');
+  const [realtimeEnabled, setRealtimeEnabled] = useState(false);
+
+  // Get interval in milliseconds from time range
+  const getInterval = (range: string): number => {
+    const intervalMap: Record<string, number> = {
+      '15s': 15000,
+      '1m': 60000,
+      '3m': 180000,
+      '5m': 300000,
+      '15m': 900000,
+      '30m': 1800000,
+      '1h': 3600000,
+      '6h': 21600000,
+      '12h': 43200000,
+      '1D': 86400000,
+      '1W': 604800000,
+      '1M': 2592000000,
+      '3M': 7776000000,
+      '1Y': 31536000000,
+    };
+    return intervalMap[range] || 60000;
+  };
+
+  // Socket connection for real-time updates
+  const { isConnected, stockData: socketStockData, subscribeToStock, unsubscribeFromStock } = useStockSocket(
+    symbol,
+    getInterval(timeRange)
+  );
 
   const fetchStockDetail = async () => {
     try {
@@ -86,12 +115,54 @@ export default function StockDetailPage() {
   useEffect(() => {
     if (symbol) {
       fetchStockDetail();
-      // Auto-refresh every 15 seconds
-      const interval = setInterval(fetchStockDetail, 15000);
-      return () => clearInterval(interval);
+      // Auto-refresh every 15 seconds (only when realtime is disabled)
+      if (!realtimeEnabled) {
+        const interval = setInterval(fetchStockDetail, 15000);
+        return () => clearInterval(interval);
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [symbol, timeRange]);
+  }, [symbol, timeRange, realtimeEnabled]);
+
+  // Handle real-time updates from socket
+  useEffect(() => {
+    if (realtimeEnabled && socketStockData && stockData) {
+      // Update stock data with socket data
+      setStockData({
+        ...stockData,
+        price: socketStockData.price,
+        change: socketStockData.change,
+        changePercent: socketStockData.changePercent,
+        volume: socketStockData.volume,
+        high: socketStockData.high,
+        low: socketStockData.low,
+        lastUpdate: socketStockData.timestamp,
+      });
+
+      // Add new point to price history
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      setPriceHistory(prev => {
+        const newHistory = [...prev, {
+          time: timeStr,
+          price: socketStockData.price,
+          volume: socketStockData.volume,
+        }];
+        // Keep last 50 points for real-time chart
+        return newHistory.slice(-50);
+      });
+    }
+  }, [socketStockData, realtimeEnabled, stockData]);
+
+  // Subscribe/unsubscribe to real-time updates
+  useEffect(() => {
+    if (realtimeEnabled && symbol) {
+      subscribeToStock(symbol, getInterval(timeRange));
+    } else {
+      unsubscribeFromStock(symbol);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [realtimeEnabled, symbol, timeRange]);
 
   const formatNumber = (num: number): string => {
     return new Intl.NumberFormat('vi-VN').format(num);
@@ -177,10 +248,16 @@ export default function StockDetailPage() {
       {stockData && (
         <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl shadow-xl p-8 text-white">
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between">
-            <div className="mb-4 md:mb-0">
+            <div className="mb-4 md:mb-0 flex-1">
               <div className="flex items-center gap-3 mb-2">
                 <h1 className="text-4xl font-bold">{stockData.symbol}</h1>
                 <span className="text-lg text-blue-100">{stockData.companyName}</span>
+                {isConnected && realtimeEnabled && (
+                  <span className="flex items-center text-xs bg-green-500 px-2 py-1 rounded-full">
+                    <span className="w-2 h-2 bg-white rounded-full mr-1 animate-pulse"></span>
+                    Trực tiếp
+                  </span>
+                )}
               </div>
               <div className="flex items-baseline gap-4">
                 <p className="text-4xl font-bold">{formatPrice(stockData.price)}</p>
@@ -232,19 +309,34 @@ export default function StockDetailPage() {
 
       {/* Price Chart with Time Range Selector */}
       <div className="bg-white rounded-xl shadow-lg p-6">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-gray-900 flex items-center">
-            <svg className="w-7 h-7 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
-            </svg>
-            Biểu đồ giá
-          </h2>
-          <div className="flex gap-2">
-            {(['1D', '1W', '1M', '3M', '1Y'] as const).map((range) => (
+        <div className="flex flex-col gap-4 mb-6">
+          <div className="flex items-center justify-between">
+            <h2 className="text-2xl font-bold text-gray-900 flex items-center">
+              <svg className="w-7 h-7 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
+              </svg>
+              Biểu đồ giá
+            </h2>
+            <button
+              onClick={() => setRealtimeEnabled(!realtimeEnabled)}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+                realtimeEnabled
+                  ? 'bg-green-600 text-white hover:bg-green-700'
+                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+              }`}
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+              {realtimeEnabled ? 'Đang cập nhật' : 'Cập nhật trực tiếp'}
+            </button>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {(['15s', '1m', '3m', '5m', '15m', '30m', '1h', '6h', '12h', '1D', '1W', '1M', '3M', '1Y'] as const).map((range) => (
               <button
                 key={range}
                 onClick={() => setTimeRange(range)}
-                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                className={`px-3 py-1.5 rounded-lg font-medium text-sm transition-colors ${
                   timeRange === range
                     ? 'bg-blue-600 text-white'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
