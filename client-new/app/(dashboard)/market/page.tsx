@@ -13,6 +13,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
+import { useMarketSocket } from "@/lib/hooks/useMarketSocket";
 
 interface StockData {
   symbol: string;
@@ -54,6 +55,10 @@ export default function MarketPage() {
   const [sortBy, setSortBy] = useState<'price' | 'change' | 'changePercent' | 'volume'>('price');
   const [order, setOrder] = useState<'asc' | 'desc'>('desc');
   const [indexHistory, setIndexHistory] = useState<IndexHistoryPoint[]>([]);
+  const [realtimeEnabled, setRealtimeEnabled] = useState(false);
+
+  // Socket connection for real-time updates
+  const { isConnected, marketData: socketMarketData, subscribeToMarket, unsubscribeFromMarket } = useMarketSocket();
 
   const fetchMarketData = async () => {
     try {
@@ -85,11 +90,42 @@ export default function MarketPage() {
 
   useEffect(() => {
     fetchMarketData();
-    // Auto-refresh every 30 seconds
-    const interval = setInterval(fetchMarketData, 30000);
-    return () => clearInterval(interval);
+    // Auto-refresh every 30 seconds (only when realtime is disabled)
+    if (!realtimeEnabled) {
+      const interval = setInterval(fetchMarketData, 30000);
+      return () => clearInterval(interval);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sortBy, order]);
+  }, [sortBy, order, realtimeEnabled]);
+
+  // Handle real-time updates from socket
+  useEffect(() => {
+    if (realtimeEnabled && socketMarketData) {
+      setMarketData({
+        ...socketMarketData,
+        total: socketMarketData.stocks.length,
+      });
+      setError(null);
+      
+      // Update index history for the chart
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+      setIndexHistory(prev => {
+        const newHistory = [...prev, { time: timeStr, index: socketMarketData.vn30Index.index }];
+        return newHistory.slice(-20);
+      });
+    }
+  }, [socketMarketData, realtimeEnabled]);
+
+  // Subscribe/unsubscribe to real-time updates
+  useEffect(() => {
+    if (realtimeEnabled) {
+      subscribeToMarket();
+    } else {
+      unsubscribeFromMarket();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [realtimeEnabled]);
 
   const formatNumber = (num: number): string => {
     return new Intl.NumberFormat('vi-VN').format(num);
@@ -165,9 +201,17 @@ export default function MarketPage() {
       {/* VN30 Index Card */}
       {marketData && (
         <div className="bg-white rounded-xl shadow-lg p-6 border-l-4 border-blue-500">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-600 text-sm font-medium mb-2">Chỉ số VN30</p>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex-1">
+              <div className="flex items-center gap-3 mb-2">
+                <p className="text-gray-600 text-sm font-medium">Chỉ số VN30</p>
+                {isConnected && realtimeEnabled && (
+                  <span className="flex items-center text-xs text-green-600 bg-green-50 px-2 py-1 rounded-full">
+                    <span className="w-2 h-2 bg-green-600 rounded-full mr-1 animate-pulse"></span>
+                    Trực tiếp
+                  </span>
+                )}
+              </div>
               <h2 className="text-3xl font-bold text-gray-900">
                 {formatNumber(marketData.vn30Index.index)}
               </h2>
@@ -183,9 +227,24 @@ export default function MarketPage() {
               </p>
             </div>
           </div>
-          <p className="text-gray-500 text-xs mt-4">
-            Cập nhật lần cuối: {new Date(marketData.timestamp).toLocaleString('vi-VN')}
-          </p>
+          <div className="flex items-center justify-between">
+            <p className="text-gray-500 text-xs">
+              Cập nhật lần cuối: {new Date(marketData.timestamp).toLocaleString('vi-VN')}
+            </p>
+            <button
+              onClick={() => setRealtimeEnabled(!realtimeEnabled)}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+                realtimeEnabled
+                  ? 'bg-green-600 text-white hover:bg-green-700'
+                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+              }`}
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+              {realtimeEnabled ? 'Đang cập nhật' : 'Cập nhật trực tiếp'}
+            </button>
+          </div>
         </div>
       )}
 
