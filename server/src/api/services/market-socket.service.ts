@@ -80,12 +80,12 @@ export default class MarketSocketService {
             LoggerService.getInstance().info(`Client connected to market: ${socket.id}`);
 
             // Subscribe to market updates
-            socket.on('subscribe:market', () => {
+            socket.on('subscribe:market', async () => {
                 socket.join('market');
                 LoggerService.getInstance().info(`Client ${socket.id} subscribed to market updates`);
                 
                 // Send initial data
-                this.sendMarketUpdate();
+                await this.sendMarketUpdate();
                 
                 // Start broadcasting if not already started
                 if (!this.updateIntervals.has('market')) {
@@ -94,7 +94,7 @@ export default class MarketSocketService {
             });
 
             // Subscribe to specific stock updates
-            socket.on('subscribe:stock', (data: { symbol: string; interval?: number }) => {
+            socket.on('subscribe:stock', async (data: { symbol: string; interval?: number }) => {
                 const { symbol, interval = 15000 } = data;
                 const room = `stock:${symbol.toUpperCase()}`;
                 socket.join(room);
@@ -103,7 +103,7 @@ export default class MarketSocketService {
                 );
 
                 // Send initial stock data
-                this.sendStockUpdate(symbol.toUpperCase());
+                await this.sendStockUpdate(symbol.toUpperCase());
 
                 // Start broadcasting for this stock if not already started
                 const key = `stock:${symbol.toUpperCase()}:${interval}`;
