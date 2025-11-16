@@ -89,19 +89,27 @@ export default class MarketSocketService {
 
             // Subscribe to market updates
 <<<<<<< HEAD
+<<<<<<< HEAD
             socket.on('subscribe:market', async () => {
 =======
             socket.on('subscribe:market', () => {
 >>>>>>> 0aabcc08 (Add real-time socket updates and enhanced time filters)
+=======
+            socket.on('subscribe:market', async () => {
+>>>>>>> b326450b (Add debug logging and fix async socket handlers)
                 socket.join('market');
                 LoggerService.getInstance().info(`Client ${socket.id} subscribed to market updates`);
                 
                 // Send initial data
 <<<<<<< HEAD
+<<<<<<< HEAD
                 await this.sendMarketUpdate();
 =======
                 this.sendMarketUpdate();
 >>>>>>> 0aabcc08 (Add real-time socket updates and enhanced time filters)
+=======
+                await this.sendMarketUpdate();
+>>>>>>> b326450b (Add debug logging and fix async socket handlers)
                 
                 // Start broadcasting if not already started
                 if (!this.updateIntervals.has('market')) {
@@ -111,10 +119,14 @@ export default class MarketSocketService {
 
             // Subscribe to specific stock updates
 <<<<<<< HEAD
+<<<<<<< HEAD
             socket.on('subscribe:stock', async (data: { symbol: string; interval?: number }) => {
 =======
             socket.on('subscribe:stock', (data: { symbol: string; interval?: number }) => {
 >>>>>>> 0aabcc08 (Add real-time socket updates and enhanced time filters)
+=======
+            socket.on('subscribe:stock', async (data: { symbol: string; interval?: number }) => {
+>>>>>>> b326450b (Add debug logging and fix async socket handlers)
                 const { symbol, interval = 15000 } = data;
                 const room = `stock:${symbol.toUpperCase()}`;
                 socket.join(room);
@@ -124,10 +136,14 @@ export default class MarketSocketService {
 
                 // Send initial stock data
 <<<<<<< HEAD
+<<<<<<< HEAD
                 await this.sendStockUpdate(symbol.toUpperCase());
 =======
                 this.sendStockUpdate(symbol.toUpperCase());
 >>>>>>> 0aabcc08 (Add real-time socket updates and enhanced time filters)
+=======
+                await this.sendStockUpdate(symbol.toUpperCase());
+>>>>>>> b326450b (Add debug logging and fix async socket handlers)
 
                 // Start broadcasting for this stock if not already started
                 const key = `stock:${symbol.toUpperCase()}:${interval}`;
