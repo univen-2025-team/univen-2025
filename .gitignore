@@ -5,3 +5,6 @@
 /**/.env.production.local
 
 /**/.cursor/
+# Log files
+**/logs/
+*.log
