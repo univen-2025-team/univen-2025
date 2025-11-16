@@ -79,25 +79,101 @@ function generatePriceHistory(
   let timeFormat: (index: number) => string;
 
   switch (timeRange) {
-    case '1D':
-      numPoints = 48; // 30-minute intervals
+    case '15s':
+      numPoints = 20; // 20 points in last 5 minutes
       timeFormat = (i) => {
-        const hour = Math.floor(i / 2) + 9;
-        const minute = i % 2 === 0 ? '00' : '30';
-        return `${hour.toString().padStart(2, '0')}:${minute}`;
+        const now = new Date();
+        now.setSeconds(now.getSeconds() - (19 - i) * 15);
+        return now.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      };
+      break;
+    case '1m':
+      numPoints = 30; // 30 minutes
+      timeFormat = (i) => {
+        const now = new Date();
+        now.setMinutes(now.getMinutes() - (29 - i));
+        return now.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+      };
+      break;
+    case '3m':
+      numPoints = 30; // 3 hours (6-minute intervals)
+      timeFormat = (i) => {
+        const now = new Date();
+        now.setMinutes(now.getMinutes() - (29 - i) * 6);
+        return now.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+      };
+      break;
+    case '5m':
+      numPoints = 30; // 2.5 hours (5-minute intervals)
+      timeFormat = (i) => {
+        const now = new Date();
+        now.setMinutes(now.getMinutes() - (29 - i) * 5);
+        return now.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+      };
+      break;
+    case '15m':
+      numPoints = 24; // 6 hours (15-minute intervals)
+      timeFormat = (i) => {
+        const now = new Date();
+        now.setMinutes(now.getMinutes() - (23 - i) * 15);
+        return now.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+      };
+      break;
+    case '30m':
+      numPoints = 24; // 12 hours (30-minute intervals)
+      timeFormat = (i) => {
+        const now = new Date();
+        now.setMinutes(now.getMinutes() - (23 - i) * 30);
+        return now.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+      };
+      break;
+    case '1h':
+      numPoints = 24; // 1 day (hourly intervals)
+      timeFormat = (i) => {
+        const now = new Date();
+        now.setHours(now.getHours() - (23 - i));
+        return now.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+      };
+      break;
+    case '6h':
+      numPoints = 28; // 1 week (6-hour intervals)
+      timeFormat = (i) => {
+        const now = new Date();
+        now.setHours(now.getHours() - (27 - i) * 6);
+        return `${now.getDate()}/${now.getMonth() + 1} ${now.getHours().toString().padStart(2, '0')}:00`;
+      };
+      break;
+    case '12h':
+      numPoints = 28; // 2 weeks (12-hour intervals)
+      timeFormat = (i) => {
+        const now = new Date();
+        now.setHours(now.getHours() - (27 - i) * 12);
+        return `${now.getDate()}/${now.getMonth() + 1} ${now.getHours().toString().padStart(2, '0')}:00`;
+      };
+      break;
+    case '1D':
+      numPoints = 30; // 30 days (daily intervals)
+      timeFormat = (i) => {
+        const now = new Date();
+        now.setDate(now.getDate() - (29 - i));
+        return `${now.getDate()}/${now.getMonth() + 1}`;
       };
       break;
     case '1W':
-      numPoints = 35; // 5 days, 7 points per day
+      numPoints = 12; // 12 weeks
       timeFormat = (i) => {
-        const day = Math.floor(i / 7);
-        const dayNames = ['T2', 'T3', 'T4', 'T5', 'T6'];
-        return dayNames[day] || 'T2';
+        const now = new Date();
+        now.setDate(now.getDate() - (11 - i) * 7);
+        return `${now.getDate()}/${now.getMonth() + 1}`;
       };
       break;
     case '1M':
       numPoints = 30; // 30 days
-      timeFormat = (i) => `${i + 1}/${new Date().getMonth() + 1}`;
+      timeFormat = (i) => {
+        const now = new Date();
+        now.setDate(now.getDate() - (29 - i));
+        return `${now.getDate()}/${now.getMonth() + 1}`;
+      };
       break;
     case '3M':
       numPoints = 90; // 90 days
@@ -109,14 +185,18 @@ function generatePriceHistory(
       break;
     case '1Y':
       numPoints = 52; // 52 weeks
-      timeFormat = (i) => `T${i + 1}`;
+      timeFormat = (i) => {
+        const now = new Date();
+        now.setDate(now.getDate() - (51 - i) * 7);
+        return `${now.getDate()}/${now.getMonth() + 1}`;
+      };
       break;
     default:
-      numPoints = 48;
+      numPoints = 30;
       timeFormat = (i) => {
-        const hour = Math.floor(i / 2) + 9;
-        const minute = i % 2 === 0 ? '00' : '30';
-        return `${hour.toString().padStart(2, '0')}:${minute}`;
+        const now = new Date();
+        now.setMinutes(now.getMinutes() - (29 - i));
+        return now.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
       };
   }
 
