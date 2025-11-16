@@ -3,3 +3,7 @@
 
 /**/.env.development.local
 /**/.env.production.local
+
+# Log files
+**/logs/
+*.log

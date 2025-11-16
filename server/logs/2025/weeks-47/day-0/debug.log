@@ -1,4 +1,0 @@
-[2025-11-16T00:23:37.688Z] [debug]: Failed to fetch stock data for VCB An error occurred while fetching price board data: getaddrinfo ENOTFOUND trading.vietcap.com.vn
-[2025-11-16T00:23:37.692Z] [debug]: Failed to fetch stock data for VHM An error occurred while fetching price board data: getaddrinfo ENOTFOUND trading.vietcap.com.vn
-[2025-11-16T00:23:37.695Z] [debug]: Failed to fetch stock data for HPG An error occurred while fetching price board data: getaddrinfo ENOTFOUND trading.vietcap.com.vn
-[2025-11-16T00:23:37.699Z] [debug]: Failed to fetch VN30 index data An error occurred while fetching price board data: getaddrinfo ENOTFOUND trading.vietcap.com.vn
