@@ -1,6 +1,9 @@
 import SocketIOService from './socketio.service.js';
 import LoggerService from './logger.service.js';
+<<<<<<< HEAD
 import VNStockService from './vnstock.service.js';
+=======
+>>>>>>> 0aabcc08 (Add real-time socket updates and enhanced time filters)
 
 interface StockData {
     symbol: string;
@@ -51,12 +54,17 @@ export default class MarketSocketService {
     private updateIntervals: Map<string, NodeJS.Timeout> = new Map();
     private stockPriceCache: Map<string, StockData> = new Map();
     private vn30IndexCache: VN30Index | null = null;
+<<<<<<< HEAD
     private vnstockService: VNStockService;
     private useRealData: boolean = true; // Flag to enable/disable real data
 
     private constructor() {
         this.vnstockService = VNStockService.getInstance();
     }
+=======
+
+    private constructor() {}
+>>>>>>> 0aabcc08 (Add real-time socket updates and enhanced time filters)
 
     public static getInstance(): MarketSocketService {
         if (!MarketSocketService.instance) {
@@ -80,12 +88,20 @@ export default class MarketSocketService {
             LoggerService.getInstance().info(`Client connected to market: ${socket.id}`);
 
             // Subscribe to market updates
+<<<<<<< HEAD
             socket.on('subscribe:market', async () => {
+=======
+            socket.on('subscribe:market', () => {
+>>>>>>> 0aabcc08 (Add real-time socket updates and enhanced time filters)
                 socket.join('market');
                 LoggerService.getInstance().info(`Client ${socket.id} subscribed to market updates`);
                 
                 // Send initial data
+<<<<<<< HEAD
                 await this.sendMarketUpdate();
+=======
+                this.sendMarketUpdate();
+>>>>>>> 0aabcc08 (Add real-time socket updates and enhanced time filters)
                 
                 // Start broadcasting if not already started
                 if (!this.updateIntervals.has('market')) {
@@ -94,7 +110,11 @@ export default class MarketSocketService {
             });
 
             // Subscribe to specific stock updates
+<<<<<<< HEAD
             socket.on('subscribe:stock', async (data: { symbol: string; interval?: number }) => {
+=======
+            socket.on('subscribe:stock', (data: { symbol: string; interval?: number }) => {
+>>>>>>> 0aabcc08 (Add real-time socket updates and enhanced time filters)
                 const { symbol, interval = 15000 } = data;
                 const room = `stock:${symbol.toUpperCase()}`;
                 socket.join(room);
@@ -103,7 +123,11 @@ export default class MarketSocketService {
                 );
 
                 // Send initial stock data
+<<<<<<< HEAD
                 await this.sendStockUpdate(symbol.toUpperCase());
+=======
+                this.sendStockUpdate(symbol.toUpperCase());
+>>>>>>> 0aabcc08 (Add real-time socket updates and enhanced time filters)
 
                 // Start broadcasting for this stock if not already started
                 const key = `stock:${symbol.toUpperCase()}:${interval}`;
@@ -135,6 +159,7 @@ export default class MarketSocketService {
     }
 
     private initializeStockCache(): void {
+<<<<<<< HEAD
         // Check if Python server is available
         this.vnstockService.testConnection().then((isConnected) => {
             if (isConnected) {
@@ -154,6 +179,8 @@ export default class MarketSocketService {
     }
 
     private loadMockData(): void {
+=======
+>>>>>>> 0aabcc08 (Add real-time socket updates and enhanced time filters)
         // Initialize cache with mock data
         VN30_SYMBOLS.forEach(symbol => {
             this.stockPriceCache.set(symbol, this.generateStockData(symbol));
@@ -163,6 +190,7 @@ export default class MarketSocketService {
         this.vn30IndexCache = this.generateVN30Index();
     }
 
+<<<<<<< HEAD
     private async loadRealMarketData(): Promise<void> {
         try {
             const marketData = await this.vnstockService.getMarketData();
@@ -185,6 +213,8 @@ export default class MarketSocketService {
         }
     }
 
+=======
+>>>>>>> 0aabcc08 (Add real-time socket updates and enhanced time filters)
     private generateStockData(symbol: string): StockData {
         const basePrice = Math.random() * 100000 + 10000;
         const change = (Math.random() - 0.5) * 5000;
@@ -203,6 +233,7 @@ export default class MarketSocketService {
         };
     }
 
+<<<<<<< HEAD
     private async updateStockData(symbol: string): Promise<StockData> {
         // Try to fetch real data if enabled
         if (this.useRealData && this.vnstockService.isInitialized()) {
@@ -221,11 +252,15 @@ export default class MarketSocketService {
         }
 
         // Fallback to mock data generation
+=======
+    private updateStockData(symbol: string): StockData {
+>>>>>>> 0aabcc08 (Add real-time socket updates and enhanced time filters)
         const current = this.stockPriceCache.get(symbol);
         if (!current) {
             return this.generateStockData(symbol);
         }
 
+<<<<<<< HEAD
         // If not using real data, simulate small changes
         if (!this.useRealData) {
             const priceChange = (Math.random() - 0.5) * current.price * 0.01; // 1% max change
@@ -249,6 +284,27 @@ export default class MarketSocketService {
         }
 
         return current;
+=======
+        // Small random change based on current price
+        const priceChange = (Math.random() - 0.5) * current.price * 0.01; // 1% max change
+        const newPrice = Math.max(current.price + priceChange, current.price * 0.5); // Don't drop below 50%
+        const change = newPrice - current.open;
+        const changePercent = (change / current.open) * 100;
+
+        const updated: StockData = {
+            ...current,
+            price: Math.round(newPrice),
+            change: Math.round(change),
+            changePercent: parseFloat(changePercent.toFixed(2)),
+            volume: current.volume + Math.round(Math.random() * 1000000),
+            high: Math.max(current.high, Math.round(newPrice)),
+            low: Math.min(current.low, Math.round(newPrice)),
+            close: Math.round(newPrice),
+        };
+
+        this.stockPriceCache.set(symbol, updated);
+        return updated;
+>>>>>>> 0aabcc08 (Add real-time socket updates and enhanced time filters)
     }
 
     private generateVN30Index(): VN30Index {
@@ -262,6 +318,7 @@ export default class MarketSocketService {
         };
     }
 
+<<<<<<< HEAD
     private async updateVN30Index(): Promise<VN30Index> {
         // Try to fetch real data if enabled
         if (this.useRealData && this.vnstockService.isInitialized()) {
@@ -280,6 +337,9 @@ export default class MarketSocketService {
         }
 
         // Fallback to mock data
+=======
+    private updateVN30Index(): VN30Index {
+>>>>>>> 0aabcc08 (Add real-time socket updates and enhanced time filters)
         if (!this.vn30IndexCache) {
             return this.generateVN30Index();
         }
@@ -299,8 +359,13 @@ export default class MarketSocketService {
     }
 
     private startMarketBroadcast(interval: number = 5000): void {
+<<<<<<< HEAD
         const updateInterval = setInterval(async () => {
             await this.sendMarketUpdate();
+=======
+        const updateInterval = setInterval(() => {
+            this.sendMarketUpdate();
+>>>>>>> 0aabcc08 (Add real-time socket updates and enhanced time filters)
         }, interval);
 
         this.updateIntervals.set('market', updateInterval);
@@ -310,14 +375,20 @@ export default class MarketSocketService {
     private startStockBroadcast(symbol: string, interval: number): void {
         const key = `stock:${symbol}:${interval}`;
         
+<<<<<<< HEAD
         const updateInterval = setInterval(async () => {
             await this.sendStockUpdate(symbol);
+=======
+        const updateInterval = setInterval(() => {
+            this.sendStockUpdate(symbol);
+>>>>>>> 0aabcc08 (Add real-time socket updates and enhanced time filters)
         }, interval);
 
         this.updateIntervals.set(key, updateInterval);
         LoggerService.getInstance().info(`Stock broadcast started for ${symbol} with interval ${interval}ms`);
     }
 
+<<<<<<< HEAD
     private async sendMarketUpdate(): Promise<void> {
         const io = SocketIOService.getInstance().getSocketIO();
         if (!io) return;
@@ -374,6 +445,53 @@ export default class MarketSocketService {
         } catch (error) {
             LoggerService.getInstance().error(`Error sending stock update for ${symbol}`, error);
         }
+=======
+    private sendMarketUpdate(): void {
+        const io = SocketIOService.getInstance().getSocketIO();
+        if (!io) return;
+
+        // Update all stocks
+        const stocks = VN30_SYMBOLS.map(symbol => this.updateStockData(symbol));
+        
+        // Update VN30 index
+        const vn30Index = this.updateVN30Index();
+
+        // Calculate top gainers and losers
+        const sortedByChange = [...stocks].sort((a, b) => b.changePercent - a.changePercent);
+        const topGainers = sortedByChange.slice(0, 5);
+        const topLosers = sortedByChange.slice(-5).reverse();
+
+        const marketUpdate: MarketUpdate = {
+            vn30Index,
+            stocks,
+            topGainers,
+            topLosers,
+            timestamp: new Date().toISOString(),
+        };
+
+        io.of('/market').to('market').emit('market:update', marketUpdate);
+    }
+
+    private sendStockUpdate(symbol: string): void {
+        const io = SocketIOService.getInstance().getSocketIO();
+        if (!io) return;
+
+        const stockData = this.updateStockData(symbol);
+        const room = `stock:${symbol}`;
+
+        const stockUpdate: StockDetailUpdate = {
+            symbol: stockData.symbol,
+            price: stockData.price,
+            change: stockData.change,
+            changePercent: stockData.changePercent,
+            volume: stockData.volume,
+            high: stockData.high,
+            low: stockData.low,
+            timestamp: new Date().toISOString(),
+        };
+
+        io.of('/market').to(room).emit('stock:update', stockUpdate);
+>>>>>>> 0aabcc08 (Add real-time socket updates and enhanced time filters)
     }
 
     public stopAllBroadcasts(): void {
