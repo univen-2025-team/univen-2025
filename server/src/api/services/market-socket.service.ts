@@ -1,5 +1,6 @@
 import SocketIOService from './socketio.service.js';
 import LoggerService from './logger.service.js';
+import VNStockService from './vnstock.service.js';
 
 interface StockData {
     symbol: string;
@@ -50,8 +51,12 @@ export default class MarketSocketService {
     private updateIntervals: Map<string, NodeJS.Timeout> = new Map();
     private stockPriceCache: Map<string, StockData> = new Map();
     private vn30IndexCache: VN30Index | null = null;
+    private vnstockService: VNStockService;
+    private useRealData: boolean = true; // Flag to enable/disable real data
 
-    private constructor() {}
+    private constructor() {
+        this.vnstockService = VNStockService.getInstance();
+    }
 
     public static getInstance(): MarketSocketService {
         if (!MarketSocketService.instance) {
@@ -75,12 +80,12 @@ export default class MarketSocketService {
             LoggerService.getInstance().info(`Client connected to market: ${socket.id}`);
 
             // Subscribe to market updates
-            socket.on('subscribe:market', () => {
+            socket.on('subscribe:market', async () => {
                 socket.join('market');
                 LoggerService.getInstance().info(`Client ${socket.id} subscribed to market updates`);
                 
                 // Send initial data
-                this.sendMarketUpdate();
+                await this.sendMarketUpdate();
                 
                 // Start broadcasting if not already started
                 if (!this.updateIntervals.has('market')) {
@@ -89,7 +94,7 @@ export default class MarketSocketService {
             });
 
             // Subscribe to specific stock updates
-            socket.on('subscribe:stock', (data: { symbol: string; interval?: number }) => {
+            socket.on('subscribe:stock', async (data: { symbol: string; interval?: number }) => {
                 const { symbol, interval = 15000 } = data;
                 const room = `stock:${symbol.toUpperCase()}`;
                 socket.join(room);
@@ -98,7 +103,7 @@ export default class MarketSocketService {
                 );
 
                 // Send initial stock data
-                this.sendStockUpdate(symbol.toUpperCase());
+                await this.sendStockUpdate(symbol.toUpperCase());
 
                 // Start broadcasting for this stock if not already started
                 const key = `stock:${symbol.toUpperCase()}:${interval}`;
@@ -157,7 +162,24 @@ export default class MarketSocketService {
         };
     }
 
-    private updateStockData(symbol: string): StockData {
+    private async updateStockData(symbol: string): Promise<StockData> {
+        // Try to fetch real data if enabled
+        if (this.useRealData && this.vnstockService.isInitialized()) {
+            try {
+                const realData = await this.vnstockService.getStockPrice(symbol);
+                if (realData) {
+                    this.stockPriceCache.set(symbol, realData);
+                    return realData;
+                }
+            } catch (error) {
+                LoggerService.getInstance().warn(
+                    `Failed to fetch real data for ${symbol}, using mock data`,
+                    error
+                );
+            }
+        }
+
+        // Fallback to mock data generation
         const current = this.stockPriceCache.get(symbol);
         if (!current) {
             return this.generateStockData(symbol);
@@ -195,7 +217,24 @@ export default class MarketSocketService {
         };
     }
 
-    private updateVN30Index(): VN30Index {
+    private async updateVN30Index(): Promise<VN30Index> {
+        // Try to fetch real data if enabled
+        if (this.useRealData && this.vnstockService.isInitialized()) {
+            try {
+                const realData = await this.vnstockService.getVN30Index();
+                if (realData) {
+                    this.vn30IndexCache = realData;
+                    return realData;
+                }
+            } catch (error) {
+                LoggerService.getInstance().warn(
+                    'Failed to fetch real VN30 index data, using mock data',
+                    error
+                );
+            }
+        }
+
+        // Fallback to mock data
         if (!this.vn30IndexCache) {
             return this.generateVN30Index();
         }
@@ -215,8 +254,8 @@ export default class MarketSocketService {
     }
 
     private startMarketBroadcast(interval: number = 5000): void {
-        const updateInterval = setInterval(() => {
-            this.sendMarketUpdate();
+        const updateInterval = setInterval(async () => {
+            await this.sendMarketUpdate();
         }, interval);
 
         this.updateIntervals.set('market', updateInterval);
@@ -226,59 +265,70 @@ export default class MarketSocketService {
     private startStockBroadcast(symbol: string, interval: number): void {
         const key = `stock:${symbol}:${interval}`;
         
-        const updateInterval = setInterval(() => {
-            this.sendStockUpdate(symbol);
+        const updateInterval = setInterval(async () => {
+            await this.sendStockUpdate(symbol);
         }, interval);
 
         this.updateIntervals.set(key, updateInterval);
         LoggerService.getInstance().info(`Stock broadcast started for ${symbol} with interval ${interval}ms`);
     }
 
-    private sendMarketUpdate(): void {
+    private async sendMarketUpdate(): Promise<void> {
         const io = SocketIOService.getInstance().getSocketIO();
         if (!io) return;
 
-        // Update all stocks
-        const stocks = VN30_SYMBOLS.map(symbol => this.updateStockData(symbol));
-        
-        // Update VN30 index
-        const vn30Index = this.updateVN30Index();
+        try {
+            // Update all stocks in parallel
+            const stockPromises = VN30_SYMBOLS.map(symbol => this.updateStockData(symbol));
+            const stocks = await Promise.all(stockPromises);
+            
+            // Update VN30 index
+            const vn30Index = await this.updateVN30Index();
 
-        // Calculate top gainers and losers
-        const sortedByChange = [...stocks].sort((a, b) => b.changePercent - a.changePercent);
-        const topGainers = sortedByChange.slice(0, 5);
-        const topLosers = sortedByChange.slice(-5).reverse();
+            // Calculate top gainers and losers
+            const sortedByChange = [...stocks].sort((a, b) => b.changePercent - a.changePercent);
+            const topGainers = sortedByChange.slice(0, 5);
+            const topLosers = sortedByChange.slice(-5).reverse();
 
-        const marketUpdate: MarketUpdate = {
-            vn30Index,
-            stocks,
-            topGainers,
-            topLosers,
-            timestamp: new Date().toISOString(),
-        };
+            const marketUpdate: MarketUpdate = {
+                vn30Index,
+                stocks,
+                topGainers,
+                topLosers,
+                timestamp: new Date().toISOString(),
+            };
 
-        io.of('/market').to('market').emit('market:update', marketUpdate);
+            io.of('/market').to('market').emit('market:update', marketUpdate);
+            LoggerService.getInstance().debug('Market update sent to clients');
+        } catch (error) {
+            LoggerService.getInstance().error('Error sending market update', error);
+        }
     }
 
-    private sendStockUpdate(symbol: string): void {
+    private async sendStockUpdate(symbol: string): Promise<void> {
         const io = SocketIOService.getInstance().getSocketIO();
         if (!io) return;
 
-        const stockData = this.updateStockData(symbol);
-        const room = `stock:${symbol}`;
+        try {
+            const stockData = await this.updateStockData(symbol);
+            const room = `stock:${symbol}`;
 
-        const stockUpdate: StockDetailUpdate = {
-            symbol: stockData.symbol,
-            price: stockData.price,
-            change: stockData.change,
-            changePercent: stockData.changePercent,
-            volume: stockData.volume,
-            high: stockData.high,
-            low: stockData.low,
-            timestamp: new Date().toISOString(),
-        };
+            const stockUpdate: StockDetailUpdate = {
+                symbol: stockData.symbol,
+                price: stockData.price,
+                change: stockData.change,
+                changePercent: stockData.changePercent,
+                volume: stockData.volume,
+                high: stockData.high,
+                low: stockData.low,
+                timestamp: new Date().toISOString(),
+            };
 
-        io.of('/market').to(room).emit('stock:update', stockUpdate);
+            io.of('/market').to(room).emit('stock:update', stockUpdate);
+            LoggerService.getInstance().debug(`Stock update sent for ${symbol}`);
+        } catch (error) {
+            LoggerService.getInstance().error(`Error sending stock update for ${symbol}`, error);
+        }
     }
 
     public stopAllBroadcasts(): void {

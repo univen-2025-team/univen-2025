@@ -70,6 +70,11 @@ export function useMarketSocket(serverUrl: string = 'http://localhost:4000') {
     });
 
     socket.on('market:update', (data: MarketUpdate) => {
+      console.log('Received market:update event:', { 
+        indexValue: data.vn30Index.index, 
+        stockCount: data.stocks.length, 
+        timestamp: data.timestamp 
+      });
       setMarketData(data);
     });
 
@@ -126,6 +131,7 @@ export function useStockSocket(
       
       // Auto-subscribe on connect
       if (symbol) {
+        console.log(`Auto-subscribing to stock ${symbol} with interval ${interval}ms`);
         socket.emit('subscribe:stock', { symbol, interval });
       }
     });
@@ -141,8 +147,12 @@ export function useStockSocket(
     });
 
     socket.on('stock:update', (data: StockDetailUpdate) => {
+      console.log('Received stock:update event:', { symbol: data.symbol, price: data.price, timestamp: data.timestamp });
       if (data.symbol === symbol.toUpperCase()) {
+        console.log(`Stock data matched for ${symbol}, updating state`);
         setStockData(data);
+      } else {
+        console.log(`Stock data mismatch: expected ${symbol.toUpperCase()}, got ${data.symbol}`);
       }
     });
 
