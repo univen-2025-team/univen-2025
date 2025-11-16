@@ -246,7 +246,8 @@ This project is licensed under the MIT License.
 
 For issues or questions:
 - Check the [documentation](VNSTOCK_INTEGRATION.md)
-- Review [troubleshooting guide](QUICKSTART.md#troubleshooting)
+- Review [troubleshooting guide](TROUBLESHOOTING.md) for Python server issues
+- See [quick start guide](QUICKSTART.md) for setup help
 - Open an [issue](https://github.com/univen-2025-team/univen-2025/issues)
 
 ---
