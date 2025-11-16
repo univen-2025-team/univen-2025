@@ -27,6 +27,12 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# VNStock configuration
+# TCBS is the default free source that doesn't require an API key
+# For premium features, you can set VNSTOCK_API_KEY and VNSTOCK_SOURCE
+VNSTOCK_SOURCE = os.getenv('VNSTOCK_SOURCE', 'TCBS')
+VNSTOCK_API_KEY = os.getenv('VNSTOCK_API_KEY', None)
+
 # VN30 stock symbols
 VN30_SYMBOLS = [
     'ACB', 'BCM', 'BID', 'BVH', 'CTG', 'FPT', 'GAS', 'GVR', 'HDB', 'HPG',
@@ -75,7 +81,8 @@ def get_stock_data(symbol):
     try:
         from vnstock3 import Vnstock
         
-        stock = Vnstock().stock(symbol=symbol, source='VCI')
+        # Use configured source (default: TCBS which is free)
+        stock = Vnstock().stock(symbol=symbol, source=VNSTOCK_SOURCE)
         
         # Get quote data
         quote = stock.quote.history(symbol=symbol, start='2024-01-01', end=datetime.now().strftime('%Y-%m-%d'))
@@ -121,7 +128,8 @@ def get_stock_detail(symbol, time_range='1D'):
         from vnstock3 import Vnstock
         import pandas as pd
         
-        stock = Vnstock().stock(symbol=symbol, source='VCI')
+        # Use configured source (default: TCBS which is free)
+        stock = Vnstock().stock(symbol=symbol, source=VNSTOCK_SOURCE)
         
         # Calculate date range based on time_range
         end_date = datetime.now()
@@ -242,8 +250,8 @@ def get_vn30_index():
     try:
         from vnstock3 import Vnstock
         
-        # Fetch VN30 index data
-        stock = Vnstock().stock(symbol='VN30', source='VCI')
+        # Fetch VN30 index data using configured source
+        stock = Vnstock().stock(symbol='VN30', source=VNSTOCK_SOURCE)
         index_data = stock.quote.history(symbol='VN30', start='2024-01-01', end=datetime.now().strftime('%Y-%m-%d'))
         
         if index_data is None or len(index_data) == 0:
