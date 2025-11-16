@@ -19,3 +19,7 @@ logs/
 # Environment files (keep examples)
 .env
 !.env.example
+
+# Log files
+**/logs/
+*.log
