@@ -8,13 +8,15 @@ import { ForbiddenErrorResponse, NotFoundErrorResponse } from '@/response/error.
 
 // Chat related imports
 import { findUserById } from '@/models/repository/user/index.js';
+import { createMessage } from '@/models/repository/message/index.js';
+import { addMessageToCache } from "@/services/redis/message.cache.service";
 
 export default class SocketIOService {
     private static instance: SocketIOService;
     private io: SocketIOServer | null = null;
     private connectedUsers: Map<string, string> = new Map(); // userId -> socketId
 
-    private constructor() {}
+    private constructor() { }
 
     public static getInstance(): SocketIOService {
         if (!SocketIOService.instance) {
@@ -46,6 +48,7 @@ export default class SocketIOService {
 
         // Connection handling
         this.io.on('connection', (socket) => {
+            console.log(`User connected`);
             this.handleConnection(socket);
         });
 
@@ -97,7 +100,105 @@ export default class SocketIOService {
         socket.role = payload.role;
     }
 
-    private handleConnection(socket: any): void {}
+    private handleConnection(socket: any): void {
+        const userId = socket.userId as string;
+
+        this.connectedUsers.set(userId, socket.id);
+
+        socket.join(`user_${userId}`)
+
+        //Client send message 
+        socket.on('message-send', async (
+            payload: { conversationId: string, text: string },
+            ack?: (res: { ok: boolean; error?: string }) => void
+            ) => {
+                try {
+                    const text = payload.text?.trim();
+                    if (!text) {
+                        ack?.({ ok: false, error: 'Null text' });
+                        return;
+                    }
+
+                    const saved = await createMessage({
+                        conversationId: payload.conversationId,
+                        senderId: userId,
+                        text,
+                    });
+
+                    
+                    const message = {
+                        _id: saved._id,
+                        text: saved.text,
+                        senderId: saved.senderId,
+                        sender: socket.user,
+                        conversationId: saved.conversationId,
+                        createdAt: saved.createdAt,
+                    };
+                    
+                    //Cache to Redis
+                    await addMessageToCache(payload.conversationId, message);
+
+                    this.io?.to(`conversation_${payload.conversationId}`).emit('message-new', message);
+                    ack?.({ ok: true });
+                } catch (err: any) {
+                    ack?.({ ok: false, error: err?.message || 'Send failed' });
+                }
+            }
+        );
+        
+        //Send message to one user
+        socket.on('message-on-toUser', async (
+            payload: { toUserId: string, conversationId: string, text: string },
+            ack?: (res: { ok: boolean; error?: string }) => void
+            ) => {
+                try {
+                    const text = payload.text?.trim();
+                    if (!payload.toUserId || !payload.text) {
+                        ack?.({ ok: false, error: "toUser or text is null" });
+                        return;
+                    }
+
+                    const savedMessage = await createMessage({
+                        senderId: userId,
+                        receiverId: payload.toUserId,
+                        conversationId: payload.conversationId,
+                        text,
+                    });
+
+                    const message = {
+                        _id: savedMessage._id,
+                        text: savedMessage.text,
+                        senderId: savedMessage.senderId,
+                        receiverId: savedMessage.receiverId,
+                        conversationId: savedMessage.conversationId,
+                        sender: socket.user,
+                        createdAt: savedMessage.createdAt,
+                    };
+
+                    await addMessageToCache(payload.conversationId, message);
+
+                    const targetSocketId = this.connectedUsers.get(payload.toUserId);
+                    if (!targetSocketId) {
+                        ack?.({ ok: false, error: "Offline user" })
+                        return;
+                    }
+
+                    this.io?.to(targetSocketId).emit("message-new-direct", message);
+                    socket.emit('message-new-direct', message);
+
+                    ack?.({ ok: true });
+                } catch (err: any) {
+                    ack?.({ ok: false, error: err?.message || 'Send failed' });
+                }
+            }
+        )
+
+        socket.on('disconnect', () => {
+            if (this.connectedUsers.get(userId) === socket.id) {
+                this.connectedUsers.delete(userId);
+            }
+        });
+    }
 
     /* -------------------- Public Methods -------------------- */
     public sendToUser(userId: string, event: string, data: any): boolean {
