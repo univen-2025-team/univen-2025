@@ -1,0 +1,2 @@
+[2025-11-14T21:26:06.997Z] [error]: InvalidTokenError: Invalid token specified: missing part #2
+[2025-11-14T21:26:06.998Z] [error]: Socket authentication failed: HIDE::403::Forbidden::Invalid token payload!::

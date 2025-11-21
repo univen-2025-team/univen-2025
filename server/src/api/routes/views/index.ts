@@ -3,6 +3,8 @@ import { Pages } from '@/enums/pages.enum';
 import catchError from '@/middlewares/catchError.middleware';
 import { Router } from 'express';
 
+import path from 'path/win32';
+
 const viewRoute = Router();
 
 /* ------------------------ Home page ----------------------- */

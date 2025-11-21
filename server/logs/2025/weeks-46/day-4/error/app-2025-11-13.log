@@ -1,0 +1,14 @@
+[2025-11-13T09:38:36.762Z] [error]: HIDE::404::NotFound::Route is not exists::
+[2025-11-13T11:14:28.528Z] [error]: Redis error: Error: Socket closed unexpectedly
+[2025-11-13T15:22:36.887Z] [error]: Redis error: Error: Socket closed unexpectedly
+[2025-11-13T15:22:36.904Z] [error]: Redis error: DNSException: getaddrinfo ENOTFOUND
+[2025-11-13T15:22:36.931Z] [error]: Redis error: DNSException: getaddrinfo ENOTFOUND
+[2025-11-13T15:22:37.010Z] [error]: Redis error: DNSException: getaddrinfo ENOTFOUND
+[2025-11-13T15:22:37.129Z] [error]: Redis error: DNSException: getaddrinfo ENOTFOUND
+[2025-11-13T15:22:37.280Z] [error]: Redis error: DNSException: getaddrinfo ENOTFOUND
+[2025-11-13T15:22:37.500Z] [error]: Redis error: DNSException: getaddrinfo ENOTFOUND
+[2025-11-13T15:22:37.754Z] [error]: Redis error: DNSException: getaddrinfo ENOTFOUND
+[2025-11-13T15:22:38.065Z] [error]: Redis error: DNSException: getaddrinfo ENOTFOUND
+[2025-11-13T15:22:38.428Z] [error]: Redis error: DNSException: getaddrinfo ENOTFOUND
+[2025-11-13T15:22:38.842Z] [error]: Redis error: DNSException: getaddrinfo ENOTFOUND
+[2025-11-13T15:22:39.335Z] [error]: Redis error: DNSException: getaddrinfo ENOTFOUND
