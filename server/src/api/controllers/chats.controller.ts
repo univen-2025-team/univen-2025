@@ -85,7 +85,7 @@ export default class ChatController {
       }
 
       const reply: string = aiData.reply ?? "";
-      const uiEffects = Array.isArray(aiData.ui_effects) ? aiData.ui_effects : [];
+      // const uiEffects = Array.isArray(aiData.ui_effects) ? aiData.ui_effects : [];
       const suggestionMessages = Array.isArray(aiData.suggestion_messages)
         ? aiData.suggestion_messages
         : [];
@@ -104,7 +104,7 @@ export default class ChatController {
         metadata: {
           conversationId,
           reply,
-          ui_effects: uiEffects,
+          // ui_effects: uiEffects,
           suggestion_messages: suggestionMessages,
           raw_agent_output: rawAgentOutput,
         },
