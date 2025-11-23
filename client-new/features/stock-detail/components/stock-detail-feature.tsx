@@ -1,154 +1,291 @@
 'use client'
 
-import { useState } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import StockBackButton from '@/components/market/stock/StockBackButton'
+import StockHeaderCard from '@/components/market/stock/StockHeaderCard'
+import StockMetricsGrid from '@/components/market/stock/StockMetricsGrid'
+import PriceChartCard from '@/components/market/stock/PriceChartCard'
+import VolumeChartCard from '@/components/market/stock/VolumeChartCard'
+import TechnicalIndicatorsCard from '@/components/market/stock/TechnicalIndicatorsCard'
+import CompanyInfoCard from '@/components/market/stock/CompanyInfoCard'
+import StockErrorState from '@/components/market/stock/StockErrorState'
+import StockLoadingState from '@/components/market/stock/StockLoadingState'
 import { Button } from '@/components/ui/button'
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
-import { ArrowLeft } from 'lucide-react'
-import { StockDetailData } from '@/features/types/features'
-import { getThemeColor } from '@/lib/theme-colors'
+import { StockDetailData as FeatureStockDetailData } from '@/features/types/features'
+import {
+  PriceHistoryPoint,
+  StockDetailData as FullStockDetailData,
+  TechnicalIndicator,
+  TimeRange,
+} from '@/lib/types/stock-detail'
+import { fetchStockDetail } from '@/lib/services/marketService'
+import { useStockSocket } from '@/lib/hooks/useMarketSocket'
 
 type StockDetailFeatureProps = {
-  data: StockDetailData
+  data: FeatureStockDetailData
   onBack?: () => void
   onBuyClick?: (symbol: string) => void
 }
 
-export function StockDetailFeature({
-  data,
-  onBack,
-  onBuyClick,
-}: StockDetailFeatureProps) {
-  const [timeframe, setTimeframe] = useState('1D')
+const getInterval = (range: TimeRange | string): number => {
+  const map: Record<string, number> = {
+    '15s': 15000,
+    '1m': 60000,
+    '3m': 180000,
+    '5m': 300000,
+    '15m': 900000,
+    '30m': 1800000,
+    '1h': 3600000,
+    '6h': 21600000,
+    '12h': 43200000,
+    '1D': 86400000,
+    '1W': 604800000,
+    '1M': 2592000000,
+    '3M': 7776000000,
+    '1Y': 31536000000,
+  }
+  return map[range] ?? 60000
+}
 
-  const chart1 = getThemeColor('chart1')
-  const borderColor = getThemeColor('border-color')
-  const mutedText = getThemeColor('muted-text')
-  const cardBg = getThemeColor('card-bg')
+const buildFallbackPriceHistory = (detail: FeatureStockDetailData): PriceHistoryPoint[] => {
+  if (!detail.intradayChart.length) {
+    return []
+  }
 
-  const timeframes = ['1H', '1D', '1W', '1M', '1Y']
+  return detail.intradayChart.map((point, index, arr) => {
+    const previousValue = arr[index - 1]?.value ?? point.value
+    const open = previousValue
+    const close = point.value
+    const high = Math.max(open, close)
+    const low = Math.min(open, close)
 
-  // Transform chart data
-  const chartData = data.intradayChart.map((point) => ({
-    time: point.time,
-    value: point.value,
-  }))
+    return {
+      time: point.time,
+      price: point.value,
+      volume: 0,
+      open,
+      close,
+      high,
+      low,
+    }
+  })
+}
+
+const buildFallbackStockDetail = (detail: FeatureStockDetailData): FullStockDetailData => {
+  const chartValues = detail.intradayChart.map((point) => point.value)
+  const high = chartValues.length ? Math.max(...chartValues) : detail.price
+  const low = chartValues.length ? Math.min(...chartValues) : detail.price
+  const change = Number(((detail.changePercent / 100) * detail.price).toFixed(2))
+  const previousClose = detail.price - change
+
+  return {
+    symbol: detail.symbol,
+    companyName: detail.name ?? detail.symbol,
+    price: detail.price,
+    change,
+    changePercent: detail.changePercent,
+    volume: 0,
+    high,
+    low,
+    open: previousClose,
+    close: detail.price,
+    previousClose,
+    marketCap: detail.price * 1_000_000,
+    pe: 0,
+    eps: 0,
+    lastUpdate: new Date().toISOString(),
+  }
+}
+
+const createFallbackIndicators = (
+  priceHistory: PriceHistoryPoint[],
+  fallbackPrice: number
+): TechnicalIndicator => {
+  const prices = priceHistory.map((point) => point.price)
+  const base = prices.length ? prices[prices.length - 1] : fallbackPrice
+
+  const avg = (items: number[]) => {
+    if (!items.length) return base
+    const sum = items.reduce((acc, val) => acc + val, 0)
+    return sum / items.length
+  }
+
+  return {
+    ma5: avg(prices.slice(-5)),
+    ma10: avg(prices.slice(-10)),
+    ma20: avg(prices.slice(-20)),
+    rsi: 50,
+    macd: 0,
+  }
+}
+
+export function StockDetailFeature({ data, onBack, onBuyClick }: StockDetailFeatureProps) {
+  const symbol = data.symbol.toUpperCase()
+  const fallbackDetail = useMemo(() => buildFallbackStockDetail(data), [data])
+  const fallbackHistory = useMemo(() => buildFallbackPriceHistory(data), [data])
+  const fallbackIndicators = useMemo(
+    () => createFallbackIndicators(fallbackHistory, fallbackDetail.price),
+    [fallbackHistory, fallbackDetail.price]
+  )
+
+  const [stockData, setStockData] = useState<FullStockDetailData | null>(fallbackDetail)
+  const [priceHistory, setPriceHistory] = useState<PriceHistoryPoint[]>(fallbackHistory)
+  const [technicalIndicators, setTechnicalIndicators] = useState<TechnicalIndicator | null>(
+    fallbackIndicators
+  )
+  const [timeRange, setTimeRange] = useState<TimeRange>('1D')
+  const [realtimeEnabled, setRealtimeEnabled] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    setStockData(fallbackDetail)
+    setPriceHistory(fallbackHistory)
+    setTechnicalIndicators(fallbackIndicators)
+  }, [fallbackDetail, fallbackHistory, fallbackIndicators])
+
+  const {
+    isConnected,
+    stockData: socketStockData,
+    subscribeToStock,
+    unsubscribeFromStock,
+  } = useStockSocket(symbol, getInterval(timeRange))
+
+  const loadStockDetail = useCallback(async () => {
+    try {
+      setLoading(true)
+      const result = await fetchStockDetail({ symbol, timeRange })
+
+      if (result.success && result.data) {
+        setStockData(result.data.stock)
+        setPriceHistory(result.data.priceHistory)
+        setTechnicalIndicators(result.data.technicalIndicators)
+        setError(null)
+      } else {
+        setError(result?.error || result?.message || 'Failed to fetch stock data')
+      }
+    } catch (err) {
+      setError('Network error: Unable to fetch stock data')
+      console.error('Error fetching stock data:', err)
+    } finally {
+      setLoading(false)
+    }
+  }, [symbol, timeRange])
+
+  useEffect(() => {
+    if (!symbol) return
+
+    loadStockDetail()
+
+    if (!realtimeEnabled) {
+      const interval = setInterval(loadStockDetail, 15000)
+      return () => clearInterval(interval)
+    }
+  }, [symbol, timeRange, realtimeEnabled, loadStockDetail])
+
+  useEffect(() => {
+    if (realtimeEnabled && socketStockData) {
+      setStockData((prev) =>
+        prev
+          ? {
+            ...prev,
+            price: socketStockData.price,
+            change: socketStockData.change,
+            changePercent: socketStockData.changePercent,
+            volume: socketStockData.volume,
+            high: socketStockData.high,
+            low: socketStockData.low,
+            lastUpdate: socketStockData.timestamp,
+          }
+          : prev
+      )
+
+      setPriceHistory((prev) => {
+        const previousClose =
+          prev.length > 0 ? prev[prev.length - 1].close ?? prev[prev.length - 1].price : socketStockData.price
+        const open = previousClose
+        const close = socketStockData.price
+        const high = Math.max(open, close)
+        const low = Math.min(open, close)
+        const now = new Date()
+        const timeStr = now.toLocaleTimeString('vi-VN', {
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
+        })
+
+        return [
+          ...prev,
+          {
+            time: timeStr,
+            price: close,
+            volume: socketStockData.volume,
+            open,
+            close,
+            high,
+            low,
+          },
+        ].slice(-50)
+      })
+    }
+  }, [socketStockData, realtimeEnabled])
+
+  useEffect(() => {
+    if (realtimeEnabled) {
+      subscribeToStock(symbol, getInterval(timeRange))
+    } else {
+      unsubscribeFromStock(symbol)
+    }
+
+    return () => {
+      unsubscribeFromStock(symbol)
+    }
+  }, [realtimeEnabled, symbol, timeRange, subscribeToStock, unsubscribeFromStock])
+
+  const handleToggleRealtime = () => setRealtimeEnabled((prev) => !prev)
+  const handleBack = onBack ?? (() => setError(null))
+
+  if (loading && !stockData) {
+    return <StockLoadingState symbol={symbol} />
+  }
+
+  if (error) {
+    return <StockErrorState error={error} onRetry={loadStockDetail} onBack={handleBack} />
+  }
+
+  if (!stockData) {
+    return <StockLoadingState symbol={symbol} />
+  }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center gap-4">
-        {onBack && (
-          <Button variant="ghost" size="icon" onClick={onBack}>
-            <ArrowLeft className="h-5 w-5" />
+    <div className="space-y-6 pb-8">
+      <div className="flex items-center justify-between">
+        <div>{onBack && <StockBackButton onBack={onBack} />}</div>
+        {onBuyClick && (
+          <Button onClick={() => onBuyClick(stockData.symbol)} className="bg-blue-600 text-white">
+            Mua ngay
           </Button>
         )}
-        <div className="flex-1">
-          <h1 className="text-2xl font-bold">{data.symbol}</h1>
-          {data.description && (
-            <p className="text-sm text-muted-foreground">{data.description}</p>
-          )}
-        </div>
       </div>
 
-      {/* Price Card */}
-      <Card className="bg-gradient-to-br from-card to-card/95 border border-border/50 shadow-lg">
-        <CardContent className="p-6">
-          <div className="flex items-end justify-between">
-            <div>
-              <p className="text-4xl font-bold text-primary">
-                {data.price.toLocaleString('vi-VN')} VND
-              </p>
-              <p
-                className={`mt-1 text-lg font-medium ${
-                  data.changePercent >= 0 ? 'text-green-600' : 'text-red-600'
-                }`}
-              >
-                {data.changePercent >= 0 ? '+' : ''}
-                {data.changePercent.toFixed(2)}%
-              </p>
-            </div>
-            {onBuyClick && (
-              <Button
-                onClick={() => onBuyClick(data.symbol)}
-                className="bg-chart-1 hover:bg-chart-1/90 text-primary-foreground"
-              >
-                Mua ngay
-              </Button>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+      <StockHeaderCard stock={stockData} showRealtimeBadge={isConnected && realtimeEnabled} />
+      <StockMetricsGrid stock={stockData} />
 
-      {/* Chart */}
-      <Card className="bg-gradient-to-br from-card to-card/95 border border-border/50 shadow-lg">
-        <CardHeader className="pb-4">
-          <div className="flex items-center justify-between">
-            <CardTitle>Biểu đồ {data.symbol}</CardTitle>
-            <div className="flex gap-2">
-              {timeframes.map((tf) => (
-                <Button
-                  key={tf}
-                  variant={timeframe === tf ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setTimeframe(tf)}
-                  className="w-12"
-                >
-                  {tf}
-                </Button>
-              ))}
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="h-80">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" stroke={borderColor} />
-                <XAxis dataKey="time" stroke={mutedText} />
-                <YAxis stroke={mutedText} domain={['dataMin - 10', 'dataMax + 10']} />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: cardBg,
-                    border: `1px solid ${borderColor}`,
-                  }}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="value"
-                  stroke={chart1}
-                  strokeWidth={3}
-                  dot={false}
-                  activeDot={{ r: 6, fill: chart1 }}
-                  connectNulls
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        </CardContent>
-      </Card>
+      <PriceChartCard
+        data={priceHistory}
+        timeRange={timeRange}
+        onTimeRangeChange={setTimeRange}
+        realtimeEnabled={realtimeEnabled}
+        onToggleRealtime={handleToggleRealtime}
+      />
 
-      {/* Info Blocks - Placeholder */}
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card className="bg-gradient-to-br from-card to-card/95 border border-border/50">
-          <CardContent className="p-4">
-            <p className="text-sm text-muted-foreground">Volume</p>
-            <p className="text-lg font-semibold">--</p>
-          </CardContent>
-        </Card>
-        <Card className="bg-gradient-to-br from-card to-card/95 border border-border/50">
-          <CardContent className="p-4">
-            <p className="text-sm text-muted-foreground">Market Cap</p>
-            <p className="text-lg font-semibold">--</p>
-          </CardContent>
-        </Card>
-        <Card className="bg-gradient-to-br from-card to-card/95 border border-border/50">
-          <CardContent className="p-4">
-            <p className="text-sm text-muted-foreground">P/E Ratio</p>
-            <p className="text-lg font-semibold">--</p>
-          </CardContent>
-        </Card>
-      </div>
+      <VolumeChartCard data={priceHistory} />
+
+      {technicalIndicators && (
+        <TechnicalIndicatorsCard stock={stockData} indicators={technicalIndicators} />
+      )}
+
+      <CompanyInfoCard stock={stockData} />
     </div>
   )
 }
