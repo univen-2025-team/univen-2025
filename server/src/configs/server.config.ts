@@ -21,3 +21,6 @@ export const ITEM_PER_PAGE = 48; // Chia hết cho tá để dễ phân layout
 
 // File
 export const PUBLIC_PATH = path.join(import.meta.dirname, '../../public');
+
+//AI 
+export const AI_CHAT_SERVICE_URL = process.env.AI_CHAT_SERVICE_URL || 'http://localhost:5000/api/v1/chat';
