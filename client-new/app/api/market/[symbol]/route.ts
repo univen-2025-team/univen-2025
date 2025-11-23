@@ -1,36 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-
-interface StockDetailData {
-  symbol: string;
-  companyName: string;
-  price: number;
-  change: number;
-  changePercent: number;
-  volume: number;
-  high: number;
-  low: number;
-  open: number;
-  close: number;
-  previousClose: number;
-  marketCap: number;
-  pe: number;
-  eps: number;
-  lastUpdate: string;
-}
-
-interface PriceHistoryPoint {
-  time: string;
-  price: number;
-  volume: number;
-}
-
-interface TechnicalIndicator {
-  ma5: number;
-  ma10: number;
-  ma20: number;
-  rsi: number;
-  macd: number;
-}
+import {
+  PriceHistoryPoint,
+  StockDetailData,
+  TechnicalIndicator,
+} from '@/lib/types/stock-detail';
 
 // Company names mapping for VN30 stocks
 const COMPANY_NAMES: Record<string, string> = {
@@ -202,22 +175,36 @@ function generatePriceHistory(
 
   const volatility = currentPrice * 0.02; // 2% volatility
   let price = currentPrice * (0.95 + Math.random() * 0.1); // Start near current price
+  let previousClose = price;
 
   for (let i = 0; i < numPoints; i++) {
-    // Random walk with slight upward trend
     const change = (Math.random() - 0.48) * volatility;
-    price = Math.max(price + change, currentPrice * 0.8); // Don't go below 80% of current
-    price = Math.min(price, currentPrice * 1.2); // Don't go above 120% of current
-    
+    const open = previousClose;
+    let close = Math.max(price + change, currentPrice * 0.8); // Don't go below 80% of current
+    close = Math.min(close, currentPrice * 1.2); // Don't go above 120% of current
+    const high = Math.max(open, close) + Math.random() * volatility * 0.3;
+    const low = Math.min(open, close) - Math.random() * volatility * 0.3;
+    const safeLow = Math.max(low, currentPrice * 0.7);
+
+    previousClose = close;
+    price = close;
+
     points.push({
       time: timeFormat(i),
-      price: Math.round(price),
+      price: Math.round(close),
       volume: Math.round(Math.random() * 5000000 + 1000000),
+      open: Math.round(open),
+      close: Math.round(close),
+      high: Math.round(Math.max(high, close)),
+      low: Math.round(safeLow),
     });
   }
 
   // Ensure the last point is close to current price
-  points[points.length - 1].price = currentPrice;
+  const lastPoint = points[points.length - 1];
+  lastPoint.price = Math.round(currentPrice);
+  lastPoint.close = Math.round(currentPrice);
+  lastPoint.high = Math.max(lastPoint.high ?? lastPoint.close, lastPoint.close);
 
   return points;
 }
@@ -230,12 +217,12 @@ function calculateTechnicalIndicators(
   currentPrice: number
 ): TechnicalIndicator {
   const prices = priceHistory.map(p => p.price);
-  
+
   // Moving Averages
   const ma5 = prices.slice(-5).reduce((a, b) => a + b, 0) / 5;
   const ma10 = prices.slice(-10).reduce((a, b) => a + b, 0) / 10;
   const ma20 = prices.slice(-20).reduce((a, b) => a + b, 0) / 20;
-  
+
   // RSI calculation (simplified)
   let gains = 0;
   let losses = 0;
@@ -248,12 +235,12 @@ function calculateTechnicalIndicators(
   const avgLoss = losses / 14;
   const rs = avgLoss === 0 ? 100 : avgGain / avgLoss;
   const rsi = 100 - (100 / (1 + rs));
-  
+
   // MACD (simplified)
   const ema12 = prices.slice(-12).reduce((a, b) => a + b, 0) / 12;
   const ema26 = prices.slice(-26).reduce((a, b) => a + b, 0) / 26;
   const macd = ema12 - ema26;
-  
+
   return {
     ma5: Math.round(ma5),
     ma10: Math.round(ma10),
@@ -272,7 +259,7 @@ async function fetchStockDetail(symbol: string, timeRange: string): Promise<Stoc
   const change = (Math.random() - 0.5) * 5000;
   const changePercent = (change / basePrice) * 100;
   const previousClose = basePrice - change;
-  
+
   return {
     symbol: symbol.toUpperCase(),
     companyName: COMPANY_NAMES[symbol.toUpperCase()] || 'Công ty Cổ phần',
@@ -308,10 +295,10 @@ export async function GET(
 
     // Fetch stock detail
     const stockData = await fetchStockDetail(symbol, timeRange);
-    
+
     // Generate price history
     const priceHistory = generatePriceHistory(symbol, stockData.price, timeRange);
-    
+
     // Calculate technical indicators
     const technicalIndicators = calculateTechnicalIndicators(priceHistory, stockData.price);
 
