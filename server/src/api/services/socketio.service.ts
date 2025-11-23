@@ -88,8 +88,9 @@ export default class SocketIOService {
         const user = await findUserById({
             id: payload.id,
             options: { lean: true },
-            only: ['_id', 'user_fullName', 'user_email', 'user_avatar']
+            only: ['_id', 'user_fullName', 'email', 'user_avatar', 'user_role', 'user_gender', 'user_status', 'user_dayOfBirth']
         });
+
         if (!user) {
             throw new NotFoundErrorResponse({ message: 'User not found!' });
         }
@@ -136,7 +137,12 @@ export default class SocketIOService {
                     };
                     
                     //Cache to Redis
-                    await addMessageToCache(payload.conversationId, message);
+                    await addMessageToCache(userId, {
+                        role: "user",
+                        content: saved.text,
+                        createdAt: saved.createdAt.toISOString(),
+                        metadata: { senderId: saved.senderId },
+                    });
 
                     this.io?.to(`conversation_${payload.conversationId}`).emit('message-new', message);
                     ack?.({ ok: true });
@@ -175,7 +181,12 @@ export default class SocketIOService {
                         createdAt: savedMessage.createdAt,
                     };
 
-                    await addMessageToCache(payload.conversationId, message);
+                    await addMessageToCache(userId, {
+                        role: "user",
+                        content: savedMessage.text,
+                        createdAt: savedMessage.createdAt.toISOString(),
+                        metadata: { senderId: savedMessage.senderId },
+                    });
 
                     const targetSocketId = this.connectedUsers.get(payload.toUserId);
                     if (!targetSocketId) {

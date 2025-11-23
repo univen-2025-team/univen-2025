@@ -15,6 +15,7 @@ export default new class OTPController {
             options: { lean: true }
         });
         if (!user) throw new NotFoundErrorResponse({ message: "User not found" });
+        if (!user.user_email) throw new NotFoundErrorResponse({ message: "User email not found" });
 
         await otpService.sendOTP({ email: user.user_email });
 

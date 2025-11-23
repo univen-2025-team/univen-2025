@@ -98,30 +98,43 @@ export const getUserProfile = async (id: string) => {
 
 /* -------------------- Set user profile -------------------- */
 export const setUserProfile = async ({
-    _id,
-    user_fullName,
-    user_email,
-    phoneNumber,
-    user_role,
-    user_avatar,
-    user_gender,
-    user_status,
-    user_dayOfBirth
+  _id,
+  user_fullName,
+  user_email,
+  phoneNumber,
+  user_role,
+  user_avatar,
+  user_gender,
+  user_status,
+  user_dayOfBirth,
 }: service.redis.SetUserProfile) => {
-    const data = {
-        _id,
-        user_fullName,
-        user_email,
-        phoneNumber,
-        user_role: user_role.toString(),
-        user_avatar,
-        user_gender: user_gender ? "1" : "0",
-        user_status: user_status!,
-        user_dayOfBirth: user_dayOfBirth?.toISOString() || "",
-    }
+  const key = getUserProfileKey(_id);
 
-    await redisClient.hSet(getUserProfileKey(_id), data);
+  const data: Record<string, string> = {};
+
+  if (_id) data._id = String(_id);
+  if (user_fullName) data.user_fullName = String(user_fullName);
+  if (user_email) data.user_email = String(user_email);
+  if (phoneNumber) data.phoneNumber = String(phoneNumber);
+  if (user_role) data.user_role = String(user_role);
+  if (user_avatar) data.user_avatar = String(user_avatar);
+
+  // boolean -> "1"/"0"
+  if (typeof user_gender === "boolean") {
+    data.user_gender = user_gender ? "1" : "0";
+  }
+
+  if (user_status) data.user_status = String(user_status);
+  if (user_dayOfBirth) {
+    data.user_dayOfBirth = user_dayOfBirth.toISOString();
+  }
+
+  // chỉ hSet khi có field
+  if (Object.keys(data).length > 0) {
+    await redisClient.hSet(key, data);
+  }
 };
+
 
 /* -------------------- Delete user profile -------------------- */
 export const deleteUserProfile = async (id: string) => {

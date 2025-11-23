@@ -26,8 +26,8 @@ export const findUserById = async ({
     setUserProfile({
         _id: user._id.toString(),
         user_fullName: user.user_fullName,
-        user_email: user.user_email,
-        phoneNumber: user.phoneNumber,
+        email: user.email,
+        // phoneNumber: user.phoneNumber,
         user_role: user.user_role,
         user_avatar: user.user_avatar,
         user_gender: user.user_gender,
