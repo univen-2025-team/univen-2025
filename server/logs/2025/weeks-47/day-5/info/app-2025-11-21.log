@@ -226,3 +226,860 @@
 [2025-11-21T07:51:57.694Z] [info]: Socket.IO service initialized
 [2025-11-21T07:52:00.102Z] [info]: Cleanup key token: 0 key token cleaned
 [2025-11-21T07:52:00.102Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T08:48:56.737Z] [info]: Socket.IO service initialized
+[2025-11-21T08:48:56.743Z] [info]: Market Socket Service initialized
+[2025-11-21T08:49:05.326Z] [info]: VNStock service initialized successfully
+[2025-11-21T08:49:05.599Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T08:49:05.600Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T08:50:00.148Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T08:50:00.154Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T08:51:00.115Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T08:51:00.117Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T08:52:00.129Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T08:52:00.132Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T08:53:00.106Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T08:53:00.107Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T08:54:00.132Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T08:54:00.134Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T08:55:00.130Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T08:55:00.132Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T08:56:00.079Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T08:56:00.079Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T08:57:00.102Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T08:57:00.103Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T08:58:00.103Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T08:58:00.110Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T08:59:00.107Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T08:59:00.108Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T09:00:00.104Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T09:00:00.105Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T09:01:00.125Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T09:01:00.126Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T09:02:00.113Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T09:02:00.115Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T09:03:00.120Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T09:03:00.121Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T09:04:00.113Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T09:04:00.114Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T09:05:00.099Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T09:05:00.101Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T09:06:00.143Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T09:06:00.145Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T09:07:00.087Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T09:07:00.089Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T09:08:00.116Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T09:08:00.117Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T09:09:00.121Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T09:09:00.122Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T09:10:00.110Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T09:10:00.111Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T09:10:38.471Z] [info]: Socket.IO service initialized
+[2025-11-21T09:10:38.475Z] [info]: Market Socket Service initialized
+[2025-11-21T09:10:38.904Z] [info]: VNStock service initialized successfully
+[2025-11-21T09:11:00.106Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T09:11:00.106Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T09:11:17.955Z] [info]: Socket.IO service initialized
+[2025-11-21T09:11:17.962Z] [info]: Market Socket Service initialized
+[2025-11-21T09:11:18.429Z] [info]: VNStock service initialized successfully
+[2025-11-21T09:12:03.826Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T09:12:03.829Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T09:13:59.021Z] [info]: Socket.IO service initialized
+[2025-11-21T09:13:59.029Z] [info]: Market Socket Service initialized
+[2025-11-21T09:13:59.490Z] [info]: VNStock service initialized successfully
+[2025-11-21T09:14:00.113Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T09:14:00.114Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T09:15:00.084Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T09:15:00.086Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T09:16:00.102Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T09:16:00.104Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T09:17:00.137Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T09:17:00.138Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T09:18:00.222Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T09:18:00.223Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T09:19:00.122Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T09:19:00.133Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T09:20:00.115Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T09:20:00.117Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T09:21:00.126Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T09:21:00.128Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T09:22:00.115Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T09:22:00.117Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T09:23:00.158Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T09:23:00.160Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T09:24:00.165Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T09:24:00.166Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T09:25:00.312Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T09:25:00.313Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T09:26:00.102Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T09:26:00.103Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T09:27:00.137Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T09:27:00.139Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T09:28:00.110Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T09:28:00.125Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T09:29:00.132Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T09:29:00.136Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T09:30:00.150Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T09:30:00.153Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T09:31:00.098Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T09:31:00.099Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T09:32:00.099Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T09:32:00.100Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T09:32:09.149Z] [info]: Socket.IO service initialized
+[2025-11-21T09:32:09.154Z] [info]: Market Socket Service initialized
+[2025-11-21T09:32:09.708Z] [info]: VNStock service initialized successfully
+[2025-11-21T09:33:00.127Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T09:33:00.128Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T09:34:00.112Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T09:34:00.113Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T09:35:00.093Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T09:35:00.094Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T09:36:00.102Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T09:36:00.103Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T09:37:00.106Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T09:37:00.107Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T09:38:00.112Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T09:38:00.113Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T09:39:00.134Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T09:39:00.136Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T09:40:00.114Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T09:40:00.117Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T09:41:00.097Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T09:41:00.098Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T09:42:00.139Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T09:42:00.140Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T09:43:00.105Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T09:43:00.106Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T09:44:00.154Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T09:44:00.156Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T09:45:00.088Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T09:45:00.089Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T09:46:00.105Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T09:46:00.108Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T09:47:00.118Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T09:47:00.120Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T09:48:00.117Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T09:48:00.119Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T09:49:00.111Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T09:49:00.113Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T09:50:00.111Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T09:50:00.112Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T09:51:00.430Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T09:51:00.430Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T09:52:00.109Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T09:52:00.114Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T09:53:00.098Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T09:53:00.099Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T09:54:00.115Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T09:54:00.117Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T09:55:00.089Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T09:55:00.100Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T09:56:00.111Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T09:56:00.115Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T09:57:00.137Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T09:57:00.138Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T09:58:00.115Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T09:58:00.116Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T09:59:00.098Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T09:59:00.099Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T10:00:00.100Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T10:00:00.101Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T10:01:00.085Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T10:01:00.086Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T10:01:47.179Z] [info]: Socket.IO service initialized
+[2025-11-21T10:01:47.183Z] [info]: Market Socket Service initialized
+[2025-11-21T10:01:47.578Z] [info]: VNStock service initialized successfully
+[2025-11-21T10:02:00.117Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T10:02:00.118Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T10:03:00.117Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T10:03:00.118Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T10:04:00.135Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T10:04:00.138Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T10:05:00.112Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T10:05:00.114Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T10:06:00.087Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T10:06:00.089Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T10:07:00.088Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T10:07:00.090Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T10:08:00.113Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T10:08:00.114Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T10:09:00.104Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T10:09:00.105Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T10:10:00.103Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T10:10:00.104Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T10:11:00.094Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T10:11:00.095Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T10:12:00.104Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T10:12:00.105Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T10:13:00.137Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T10:13:00.139Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T10:14:00.099Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T10:14:00.100Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T10:14:27.085Z] [info]: Socket.IO service initialized
+[2025-11-21T10:14:27.090Z] [info]: Market Socket Service initialized
+[2025-11-21T10:14:27.666Z] [info]: VNStock service initialized successfully
+[2025-11-21T10:15:00.121Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T10:15:00.122Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T10:16:00.121Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T10:16:00.123Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T10:17:00.130Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T10:17:00.131Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T10:18:00.147Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T10:18:00.148Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T10:19:00.152Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T10:19:00.153Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T10:20:00.108Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T10:20:00.111Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T10:21:00.139Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T10:21:00.141Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T10:22:01.417Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T10:22:01.422Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T10:23:00.113Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T10:23:00.114Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T10:24:00.185Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T10:24:00.186Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T10:25:00.128Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T10:25:00.129Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T10:26:00.126Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T10:26:00.128Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T10:27:00.122Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T10:27:00.124Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T10:28:00.096Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T10:28:00.097Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T10:29:00.089Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T10:29:00.091Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T10:30:00.109Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T10:30:00.111Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T10:31:00.116Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T10:31:00.118Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T10:32:00.128Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T10:32:00.130Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T10:33:00.105Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T10:33:00.106Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T10:34:00.115Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T10:34:00.116Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T10:35:00.114Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T10:35:00.115Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T10:36:00.115Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T10:36:00.120Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T10:37:00.092Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T10:37:00.094Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T10:38:00.108Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T10:38:00.110Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T10:39:00.157Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T10:39:00.158Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T10:40:00.114Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T10:40:00.115Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T10:41:00.097Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T10:41:00.098Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T10:42:00.120Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T10:42:00.122Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T10:43:00.108Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T10:43:00.109Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T10:44:00.113Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T10:44:00.114Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T10:45:00.101Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T10:45:00.102Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T10:46:00.093Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T10:46:00.094Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T10:46:39.692Z] [info]: Socket.IO service initialized
+[2025-11-21T10:46:39.698Z] [info]: Market Socket Service initialized
+[2025-11-21T10:46:40.202Z] [info]: VNStock service initialized successfully
+[2025-11-21T10:47:00.395Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T10:47:00.398Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T10:48:00.096Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T10:48:00.097Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T10:49:04.445Z] [info]: Socket.IO service initialized
+[2025-11-21T10:49:04.452Z] [info]: Market Socket Service initialized
+[2025-11-21T10:49:05.156Z] [info]: VNStock service initialized successfully
+[2025-11-21T10:50:00.136Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T10:50:00.138Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T10:51:00.101Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T10:51:00.102Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T10:52:00.088Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T10:52:00.090Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T10:53:00.186Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T10:53:00.192Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T10:54:00.077Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T10:54:00.078Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T10:55:00.094Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T10:55:00.095Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T10:57:48.987Z] [info]: Socket.IO service initialized
+[2025-11-21T10:57:48.993Z] [info]: Market Socket Service initialized
+[2025-11-21T10:57:49.444Z] [info]: VNStock service initialized successfully
+[2025-11-21T10:58:00.112Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T10:58:00.113Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T10:59:00.097Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T10:59:00.098Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T11:00:00.097Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T11:00:00.098Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T11:01:00.106Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T11:01:00.107Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T11:02:00.089Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T11:02:00.091Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T11:03:00.078Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T11:03:00.083Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T11:04:00.089Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T11:04:00.090Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T11:05:00.139Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T11:05:00.143Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T11:06:00.088Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T11:06:00.090Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T11:07:00.095Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T11:07:00.095Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T11:07:05.800Z] [info]: Socket.IO service initialized
+[2025-11-21T11:07:05.804Z] [info]: Market Socket Service initialized
+[2025-11-21T11:07:06.267Z] [info]: VNStock service initialized successfully
+[2025-11-21T11:08:00.139Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T11:08:00.140Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T11:09:00.111Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T11:09:00.112Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T11:10:00.093Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T11:10:00.094Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T11:11:00.090Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T11:11:00.091Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T11:12:00.128Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T11:12:00.130Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T11:13:00.108Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T11:13:00.109Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T11:14:00.130Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T11:14:00.131Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T11:15:00.090Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T11:15:00.092Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T11:16:00.125Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T11:16:00.126Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T11:17:00.156Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T11:17:00.157Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T11:18:00.124Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T11:18:00.126Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T11:19:00.120Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T11:19:00.121Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T11:20:00.115Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T11:20:00.116Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T11:21:00.125Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T11:21:00.126Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T11:22:00.118Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T11:22:00.126Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T11:23:00.125Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T11:23:00.128Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T11:24:00.137Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T11:24:00.139Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T11:24:18.448Z] [info]: Socket.IO service initialized
+[2025-11-21T11:24:18.452Z] [info]: Market Socket Service initialized
+[2025-11-21T11:24:18.797Z] [info]: VNStock service initialized successfully
+[2025-11-21T11:25:00.145Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T11:25:00.147Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T11:26:00.119Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T11:26:00.122Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T11:26:46.992Z] [info]: Socket.IO service initialized
+[2025-11-21T11:26:46.998Z] [info]: Market Socket Service initialized
+[2025-11-21T11:26:47.909Z] [info]: VNStock service initialized successfully
+[2025-11-21T11:27:00.141Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T11:27:00.145Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T11:27:24.975Z] [info]: Socket.IO service initialized
+[2025-11-21T11:27:24.980Z] [info]: Market Socket Service initialized
+[2025-11-21T11:27:25.992Z] [info]: VNStock service initialized successfully
+[2025-11-21T11:28:00.142Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T11:28:00.143Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T11:29:00.131Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T11:29:00.133Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T11:30:00.119Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T11:30:00.121Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T11:31:00.154Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T11:31:00.155Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T11:32:00.151Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T11:32:00.153Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T11:33:02.069Z] [info]: Socket.IO service initialized
+[2025-11-21T11:33:02.074Z] [info]: Market Socket Service initialized
+[2025-11-21T11:33:02.484Z] [info]: VNStock service initialized successfully
+[2025-11-21T11:34:00.148Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T11:34:00.150Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T11:35:00.109Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T11:35:00.110Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T11:36:00.082Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T11:36:00.083Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T11:37:00.107Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T11:37:00.108Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T11:38:00.122Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T11:38:00.126Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T11:39:00.112Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T11:39:00.113Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T11:39:28.884Z] [info]: Socket.IO service initialized
+[2025-11-21T11:39:28.888Z] [info]: Market Socket Service initialized
+[2025-11-21T11:39:29.327Z] [info]: VNStock service initialized successfully
+[2025-11-21T11:40:00.119Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T11:40:00.120Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T11:41:00.109Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T11:41:00.111Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T11:41:10.775Z] [info]: Socket.IO service initialized
+[2025-11-21T11:41:10.780Z] [info]: Market Socket Service initialized
+[2025-11-21T11:41:11.284Z] [info]: VNStock service initialized successfully
+[2025-11-21T11:42:00.142Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T11:42:00.144Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T11:43:00.200Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T11:43:00.205Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T11:44:00.101Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T11:44:00.103Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T11:45:00.207Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T11:45:00.208Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T11:46:00.104Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T11:46:00.106Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T11:47:00.117Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T11:47:00.118Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T11:48:00.170Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T11:48:00.173Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T11:49:00.131Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T11:49:00.133Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T11:50:00.136Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T11:50:00.137Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T11:51:00.167Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T11:51:00.168Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T11:52:00.103Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T11:52:00.103Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T11:52:20.942Z] [info]: Socket.IO service initialized
+[2025-11-21T11:52:20.947Z] [info]: Market Socket Service initialized
+[2025-11-21T11:52:21.511Z] [info]: VNStock service initialized successfully
+[2025-11-21T11:53:00.126Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T11:53:00.128Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T11:53:57.701Z] [info]: Socket.IO service initialized
+[2025-11-21T11:53:57.705Z] [info]: Market Socket Service initialized
+[2025-11-21T11:53:58.090Z] [info]: VNStock service initialized successfully
+[2025-11-21T11:54:00.121Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T11:54:00.123Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T11:54:49.163Z] [info]: Socket.IO service initialized
+[2025-11-21T11:54:49.167Z] [info]: Market Socket Service initialized
+[2025-11-21T11:54:49.597Z] [info]: VNStock service initialized successfully
+[2025-11-21T11:55:00.203Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T11:55:00.204Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T11:56:00.133Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T11:56:00.134Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T11:57:00.164Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T11:57:00.167Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T11:58:00.128Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T11:58:00.129Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T11:59:00.098Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T11:59:00.099Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T11:59:50.425Z] [info]: Socket.IO service initialized
+[2025-11-21T11:59:50.429Z] [info]: Market Socket Service initialized
+[2025-11-21T11:59:50.855Z] [info]: VNStock service initialized successfully
+[2025-11-21T12:00:00.117Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T12:00:00.118Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T12:01:00.086Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T12:01:00.086Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T12:02:00.120Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T12:02:00.121Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T12:02:49.076Z] [info]: Socket.IO service initialized
+[2025-11-21T12:02:49.080Z] [info]: Market Socket Service initialized
+[2025-11-21T12:02:49.587Z] [info]: VNStock service initialized successfully
+[2025-11-21T12:03:00.102Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T12:03:00.102Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T12:04:00.113Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T12:04:00.114Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T12:05:00.107Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T12:05:00.109Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T12:06:00.134Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T12:06:00.135Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T12:07:00.126Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T12:07:00.127Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T12:08:00.104Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T12:08:00.104Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T12:09:00.122Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T12:09:00.123Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T12:10:00.099Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T12:10:00.101Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T12:11:00.107Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T12:11:00.108Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T12:12:00.083Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T12:12:00.084Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T12:12:30.317Z] [info]: Socket.IO service initialized
+[2025-11-21T12:12:30.320Z] [info]: Market Socket Service initialized
+[2025-11-21T12:12:30.669Z] [info]: VNStock service initialized successfully
+[2025-11-21T12:13:00.130Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T12:13:00.131Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T12:13:33.438Z] [info]: Socket.IO service initialized
+[2025-11-21T12:13:33.441Z] [info]: Market Socket Service initialized
+[2025-11-21T12:13:33.674Z] [info]: VNStock service initialized successfully
+[2025-11-21T12:14:00.146Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T12:14:00.148Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T12:15:00.099Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T12:15:00.100Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T12:15:08.819Z] [info]: Socket.IO service initialized
+[2025-11-21T12:15:08.821Z] [info]: Market Socket Service initialized
+[2025-11-21T12:15:09.145Z] [info]: VNStock service initialized successfully
+[2025-11-21T12:15:27.927Z] [info]: Socket.IO service initialized
+[2025-11-21T12:15:27.929Z] [info]: Market Socket Service initialized
+[2025-11-21T12:15:28.215Z] [info]: VNStock service initialized successfully
+[2025-11-21T12:16:00.141Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T12:16:00.143Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T12:17:00.097Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T12:17:00.099Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T12:17:31.986Z] [info]: Socket.IO service initialized
+[2025-11-21T12:17:31.988Z] [info]: Market Socket Service initialized
+[2025-11-21T12:17:32.255Z] [info]: VNStock service initialized successfully
+[2025-11-21T12:17:50.913Z] [info]: Socket.IO service initialized
+[2025-11-21T12:17:50.915Z] [info]: Market Socket Service initialized
+[2025-11-21T12:17:51.187Z] [info]: VNStock service initialized successfully
+[2025-11-21T12:18:00.119Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T12:18:00.119Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T12:19:00.092Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T12:19:00.093Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T12:20:00.083Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T12:20:00.084Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T12:21:00.096Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T12:21:00.097Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T12:22:00.115Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T12:22:00.116Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T12:23:00.108Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T12:23:00.109Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T12:24:00.093Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T12:24:00.094Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T12:25:00.102Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T12:25:00.103Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T12:26:00.105Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T12:26:00.106Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T12:27:00.098Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T12:27:00.099Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T12:28:00.110Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T12:28:00.111Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T12:29:00.109Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T12:29:00.110Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T12:30:00.083Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T12:30:00.084Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T12:31:00.118Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T12:31:00.119Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T12:32:00.106Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T12:32:00.111Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T12:33:00.083Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T12:33:00.084Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T12:34:00.137Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T12:34:00.138Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T12:35:00.089Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T12:35:00.090Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T12:36:00.094Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T12:36:00.095Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T12:37:00.099Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T12:37:00.103Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T12:38:00.096Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T12:38:00.097Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T12:39:00.106Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T12:39:00.113Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T12:40:00.080Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T12:40:00.084Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T12:41:00.106Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T12:41:00.107Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T12:42:00.114Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T12:42:00.114Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T12:43:58.894Z] [info]: Socket.IO service initialized
+[2025-11-21T12:43:58.926Z] [info]: Market Socket Service initialized
+[2025-11-21T12:44:12.604Z] [info]: VNStock service initialized successfully
+[2025-11-21T12:44:12.898Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T12:44:12.898Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T12:45:00.120Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T12:45:00.124Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T12:46:00.087Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T12:46:00.088Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T12:47:00.103Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T12:47:00.104Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T12:48:00.086Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T12:48:00.086Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T12:49:00.102Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T12:49:00.104Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T12:50:00.109Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T12:50:00.110Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T12:51:00.104Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T12:51:00.105Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T12:52:00.091Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T12:52:00.092Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T12:52:15.792Z] [info]: Socket.IO service initialized
+[2025-11-21T12:52:15.796Z] [info]: Market Socket Service initialized
+[2025-11-21T12:52:16.086Z] [info]: VNStock service initialized successfully
+[2025-11-21T12:53:00.117Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T12:53:00.118Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T12:54:00.192Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T12:54:00.193Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T12:54:50.089Z] [info]: Socket.IO service initialized
+[2025-11-21T12:54:50.092Z] [info]: Market Socket Service initialized
+[2025-11-21T12:54:50.365Z] [info]: VNStock service initialized successfully
+[2025-11-21T12:55:00.127Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T12:55:00.128Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T12:55:08.826Z] [info]: Socket.IO service initialized
+[2025-11-21T12:55:08.829Z] [info]: Market Socket Service initialized
+[2025-11-21T12:55:09.107Z] [info]: VNStock service initialized successfully
+[2025-11-21T12:56:00.124Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T12:56:00.125Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T12:57:00.106Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T12:57:00.107Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T12:58:00.091Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T12:58:00.092Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T12:59:00.083Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T12:59:00.088Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T13:00:00.106Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T13:00:00.107Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T13:01:00.107Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T13:01:00.108Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T13:02:00.094Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T13:02:00.095Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T13:03:00.090Z] [info]: Cleanup key token: 0 key token cleaned
+[2025-11-21T13:03:00.091Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T13:04:00.203Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-21T13:04:00.204Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T13:05:00.187Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-21T13:05:00.188Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T13:06:00.302Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-21T13:06:00.303Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T13:07:00.168Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-21T13:07:00.169Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T13:08:00.171Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-21T13:08:00.172Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T13:09:00.172Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-21T13:09:00.173Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T13:10:00.184Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-21T13:10:00.185Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T13:11:00.177Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-21T13:11:00.178Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T13:12:00.158Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-21T13:12:00.158Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T13:13:00.202Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-21T13:13:00.204Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T13:14:00.169Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-21T13:14:00.170Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T13:15:00.221Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-21T13:15:00.222Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T13:16:00.171Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-21T13:16:00.175Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T13:17:00.181Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-21T13:17:00.182Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T13:18:00.171Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-21T13:18:00.171Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T13:19:00.172Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-21T13:19:00.172Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T13:19:10.908Z] [info]: Socket.IO service initialized
+[2025-11-21T13:19:10.911Z] [info]: Market Socket Service initialized
+[2025-11-21T13:19:11.248Z] [info]: VNStock service initialized successfully
+[2025-11-21T13:20:00.216Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-21T13:20:00.216Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T13:21:00.176Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-21T13:21:00.177Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T13:22:00.197Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-21T13:22:00.198Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T13:23:00.194Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-21T13:23:00.195Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T13:24:00.205Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-21T13:24:00.207Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T13:25:00.189Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-21T13:25:00.191Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T13:26:00.193Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-21T13:26:00.194Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T13:26:38.504Z] [info]: Socket.IO service initialized
+[2025-11-21T13:26:38.506Z] [info]: Market Socket Service initialized
+[2025-11-21T13:26:38.738Z] [info]: VNStock service initialized successfully
+[2025-11-21T13:27:00.240Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-21T13:27:00.241Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T13:28:00.172Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-21T13:28:00.173Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T13:28:03.439Z] [info]: Socket.IO service initialized
+[2025-11-21T13:28:03.442Z] [info]: Market Socket Service initialized
+[2025-11-21T13:28:03.717Z] [info]: VNStock service initialized successfully
+[2025-11-21T13:28:17.043Z] [info]: Socket.IO service initialized
+[2025-11-21T13:28:17.048Z] [info]: Market Socket Service initialized
+[2025-11-21T13:28:17.656Z] [info]: VNStock service initialized successfully
+[2025-11-21T13:29:00.238Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-21T13:29:00.239Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T13:30:00.204Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-21T13:30:00.206Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T13:31:00.182Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-21T13:31:00.183Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T13:32:00.201Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-21T13:32:00.201Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T13:33:00.227Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-21T13:33:00.228Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T13:34:00.194Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-21T13:34:00.195Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T13:35:00.185Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-21T13:35:00.186Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T13:36:00.176Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-21T13:36:00.177Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T13:37:00.208Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-21T13:37:00.209Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T13:38:00.191Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-21T13:38:00.191Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T13:39:00.188Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-21T13:39:00.189Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T13:40:00.170Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-21T13:40:00.171Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T13:41:00.211Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-21T13:41:00.211Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T13:42:00.172Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-21T13:42:00.180Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T13:43:00.221Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-21T13:43:00.223Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T13:44:00.213Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-21T13:44:00.215Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T13:46:07.583Z] [info]: Socket.IO service initialized
+[2025-11-21T13:46:07.616Z] [info]: Market Socket Service initialized
+[2025-11-21T13:46:21.306Z] [info]: VNStock service initialized successfully
+[2025-11-21T13:47:00.222Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-21T13:47:00.226Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T13:48:00.187Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-21T13:48:00.188Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T13:49:00.160Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-21T13:49:00.162Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T13:50:00.197Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-21T13:50:00.198Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T13:51:00.195Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-21T13:51:00.196Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T13:52:00.204Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-21T13:52:00.206Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T13:53:06.627Z] [info]: Socket.IO service initialized
+[2025-11-21T13:53:06.631Z] [info]: Market Socket Service initialized
+[2025-11-21T13:53:07.049Z] [info]: VNStock service initialized successfully
+[2025-11-21T13:54:00.275Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-21T13:54:00.276Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T13:55:02.050Z] [info]: Socket.IO service initialized
+[2025-11-21T13:55:02.053Z] [info]: Market Socket Service initialized
+[2025-11-21T13:55:02.305Z] [info]: VNStock service initialized successfully
+[2025-11-21T13:56:00.314Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-21T13:56:00.316Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T13:57:00.184Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-21T13:57:00.186Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T13:58:00.159Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-21T13:58:00.160Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T13:58:21.279Z] [info]: Socket.IO service initialized
+[2025-11-21T13:58:21.282Z] [info]: Market Socket Service initialized
+[2025-11-21T13:58:21.604Z] [info]: VNStock service initialized successfully
+[2025-11-21T13:59:00.216Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-21T13:59:00.217Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T14:00:00.174Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-21T14:00:00.175Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T14:01:00.186Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-21T14:01:00.187Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T14:02:00.164Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-21T14:02:00.165Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T14:03:00.174Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-21T14:03:00.175Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T14:04:00.183Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-21T14:04:00.184Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T14:04:11.607Z] [info]: Socket.IO service initialized
+[2025-11-21T14:04:11.613Z] [info]: Market Socket Service initialized
+[2025-11-21T14:04:12.379Z] [info]: VNStock service initialized successfully
+[2025-11-21T14:05:00.275Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-21T14:05:00.276Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T14:06:00.184Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-21T14:06:00.185Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T14:07:00.270Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-21T14:07:00.271Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T14:08:00.186Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-21T14:08:00.187Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T14:09:00.288Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-21T14:09:00.289Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T14:10:00.174Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-21T14:10:00.175Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T14:11:00.230Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-21T14:11:00.235Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T14:11:41.075Z] [info]: Socket.IO service initialized
+[2025-11-21T14:11:41.077Z] [info]: Market Socket Service initialized
+[2025-11-21T14:11:41.332Z] [info]: VNStock service initialized successfully
+[2025-11-21T14:12:00.286Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-21T14:12:00.287Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T14:13:00.169Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-21T14:13:00.170Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T14:13:50.689Z] [info]: Socket.IO service initialized
+[2025-11-21T14:13:50.692Z] [info]: Market Socket Service initialized
+[2025-11-21T14:13:50.953Z] [info]: VNStock service initialized successfully
+[2025-11-21T14:14:00.270Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-21T14:14:00.271Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T14:14:45.842Z] [info]: Socket.IO service initialized
+[2025-11-21T14:14:45.845Z] [info]: Market Socket Service initialized
+[2025-11-21T14:14:46.344Z] [info]: VNStock service initialized successfully
+[2025-11-21T14:15:00.241Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-21T14:15:00.242Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T14:16:00.171Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-21T14:16:00.172Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T14:16:08.025Z] [info]: Socket.IO service initialized
+[2025-11-21T14:16:08.027Z] [info]: Market Socket Service initialized
+[2025-11-21T14:16:08.280Z] [info]: VNStock service initialized successfully
+[2025-11-21T14:17:00.226Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-21T14:17:00.227Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T14:17:04.070Z] [info]: Socket.IO service initialized
+[2025-11-21T14:17:04.073Z] [info]: Market Socket Service initialized
+[2025-11-21T14:17:04.339Z] [info]: VNStock service initialized successfully
+[2025-11-21T14:17:28.939Z] [info]: Socket.IO service initialized
+[2025-11-21T14:17:28.941Z] [info]: Market Socket Service initialized
+[2025-11-21T14:17:29.189Z] [info]: VNStock service initialized successfully
+[2025-11-21T14:18:00.237Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-21T14:18:00.238Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T14:19:00.218Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-21T14:19:00.219Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T14:20:00.172Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-21T14:20:00.177Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T14:21:00.203Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-21T14:21:00.204Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T14:22:00.174Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-21T14:22:00.175Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T14:23:00.173Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-21T14:23:00.174Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T14:24:00.200Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-21T14:24:00.201Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T14:25:00.163Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-21T14:25:00.164Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T14:25:07.026Z] [info]: Socket.IO service initialized
+[2025-11-21T14:25:07.029Z] [info]: Market Socket Service initialized
+[2025-11-21T14:25:07.317Z] [info]: VNStock service initialized successfully
+[2025-11-21T14:26:00.198Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-21T14:26:00.199Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T14:26:25.927Z] [info]: Socket.IO service initialized
+[2025-11-21T14:26:25.930Z] [info]: Market Socket Service initialized
+[2025-11-21T14:26:26.221Z] [info]: VNStock service initialized successfully
+[2025-11-21T14:27:00.187Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-21T14:27:00.188Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T14:27:46.539Z] [info]: Socket.IO service initialized
+[2025-11-21T14:27:46.542Z] [info]: Market Socket Service initialized
+[2025-11-21T14:27:46.805Z] [info]: VNStock service initialized successfully
+[2025-11-21T14:28:00.162Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-21T14:28:00.163Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T14:28:23.369Z] [info]: Socket.IO service initialized
+[2025-11-21T14:28:23.372Z] [info]: Market Socket Service initialized
+[2025-11-21T14:28:23.645Z] [info]: VNStock service initialized successfully
+[2025-11-21T14:29:00.164Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-21T14:29:00.164Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T14:29:52.143Z] [info]: Socket.IO service initialized
+[2025-11-21T14:29:52.145Z] [info]: Market Socket Service initialized
+[2025-11-21T14:29:52.368Z] [info]: VNStock service initialized successfully
+[2025-11-21T14:30:00.179Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-21T14:30:00.179Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T14:30:07.287Z] [info]: Socket.IO service initialized
+[2025-11-21T14:30:07.290Z] [info]: Market Socket Service initialized
+[2025-11-21T14:30:07.561Z] [info]: VNStock service initialized successfully
+[2025-11-21T14:30:13.148Z] [info]: Socket.IO service initialized
+[2025-11-21T14:30:13.151Z] [info]: Market Socket Service initialized
+[2025-11-21T14:30:13.398Z] [info]: VNStock service initialized successfully
+[2025-11-21T14:30:50.277Z] [info]: Socket.IO service initialized
+[2025-11-21T14:30:50.280Z] [info]: Market Socket Service initialized
+[2025-11-21T14:30:50.551Z] [info]: VNStock service initialized successfully
+[2025-11-21T14:31:01.419Z] [info]: Socket.IO service initialized
+[2025-11-21T14:31:01.422Z] [info]: Market Socket Service initialized
+[2025-11-21T14:31:01.747Z] [info]: VNStock service initialized successfully
+[2025-11-21T14:32:00.196Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-21T14:32:00.197Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T14:33:00.180Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-21T14:33:00.182Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T14:34:00.187Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-21T14:34:00.188Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T14:34:25.435Z] [info]: Socket.IO service initialized
+[2025-11-21T14:34:25.437Z] [info]: Market Socket Service initialized
+[2025-11-21T14:34:25.660Z] [info]: VNStock service initialized successfully
+[2025-11-21T14:35:01.999Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-21T14:35:02.000Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T14:36:00.181Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-21T14:36:00.183Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T14:37:00.172Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-21T14:37:00.173Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T14:38:00.201Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-21T14:38:00.202Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T14:39:00.178Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-21T14:39:00.191Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T14:40:00.173Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-21T14:40:00.174Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T14:41:00.198Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-21T14:41:00.199Z] [info]: Cleanup key token: 0 refresh token used cleaned
+[2025-11-21T14:42:00.182Z] [info]: Cleanup key token: 1 key token cleaned
+[2025-11-21T14:42:00.183Z] [info]: Cleanup key token: 0 refresh token used cleaned
