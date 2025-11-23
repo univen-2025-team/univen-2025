@@ -1,27 +1,59 @@
 import { redisClient } from "@/services/redis.service"; 
 import { getConversationMessagesKey } from "@/utils/redis.util";
 
-const MAX_CACHE = 20;
+const MAX_CACHE = 20 as const;
 
-export const addMessageToCache = async (conversationId: string, message: any) => {
-  const key = getConversationMessagesKey(conversationId);
+export type ChatRole = "user" | "system";
 
-  // Push vào đầu danh sách
+export interface CachedMessage {
+  role: ChatRole;
+  content: string;
+  createdAt: string;
+  metadata?: {
+    senderId?: string;
+    senderEmail?: string;
+    senderName?: string;
+  };
+}
+
+const getUserMessagesKey = (userId: string) => `chat:messages:user:${userId}`;
+
+/* ------------------ Thêm message ------------------ */
+export const addMessageToCache = async (
+  userId: string,
+  message: CachedMessage
+) => {
+  const key = getUserMessagesKey(userId);
+
   await redisClient.lPush(key, JSON.stringify(message));
-
-  // Chỉ giữ lại 20 phần tử
   await redisClient.lTrim(key, 0, MAX_CACHE - 1);
 };
 
-export const getCachedMessages = async (conversationId: string) => {
-  const key = getConversationMessagesKey(conversationId);
-
+/* ------------------ Lấy history ------------------ */
+export const getCachedMessages = async (
+  userId: string
+): Promise<CachedMessage[]> => {
+  const key = getUserMessagesKey(userId);
   const list = await redisClient.lRange(key, 0, MAX_CACHE - 1);
-  return list.map((x) => JSON.parse(x));
+
+  return list
+    .map((x) => {
+      try {
+        return JSON.parse(x);
+      } catch {
+        return null;
+      }
+    })
+    .filter(Boolean)
+    .map((m: any) => {
+      if (!m.content && m.text) m.content = m.text;
+      if (!m.role) m.role = "user";
+      if (!m.createdAt) m.createdAt = new Date().toISOString();
+      return m as CachedMessage;
+    });
 };
 
-export const clearMessageCache = async (conversationId: string) => {
-  const key = getConversationMessagesKey(conversationId);
+export const clearMessageCache = async (userId: string) => {
+  const key = getUserMessagesKey(userId);
   await redisClient.del(key);
 };
-
