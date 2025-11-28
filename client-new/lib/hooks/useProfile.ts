@@ -18,7 +18,7 @@ export function useProfile(autoFetch: boolean = true): UseProfileReturn {
   const dispatch = useAppDispatch();
   const reduxUser = useAppSelector(selectUser);
   const isAuthenticated = useAppSelector(selectIsAuthenticated);
-  
+
   const [profile, setProfile] = useState<UserProfile | null>(reduxUser as UserProfile | null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -35,7 +35,7 @@ export function useProfile(autoFetch: boolean = true): UseProfileReturn {
       setError(null);
       const data = await userApi.getProfile();
       setProfile(data);
-      
+
       // Sync with Redux store
       dispatch(setUser({
         _id: data._id,
@@ -46,6 +46,7 @@ export function useProfile(autoFetch: boolean = true): UseProfileReturn {
         user_gender: data.user_gender,
         user_status: data.user_status,
         user_dayOfBirth: data.user_dayOfBirth,
+        balance: data.balance || 0
       }));
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to fetch profile';
