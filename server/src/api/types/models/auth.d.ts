@@ -15,6 +15,7 @@ declare global {
                     user_fullName: string;
                     user_dayOfBirth?: Date;
                     user_gender: boolean;
+                    balance: number;
 
                     user_role: mongoose.Types.ObjectId;
                     user_status?: UserStatus;
