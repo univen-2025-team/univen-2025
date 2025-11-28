@@ -7,6 +7,11 @@ import * as Yup from "yup";
 import { userApi, type UserProfile } from "@/lib/api/user.api";
 import { useAppSelector, useAppDispatch } from "@/lib/store/hooks";
 import { selectUser, setUser } from "@/lib/store/authSlice";
+import LoadingSpinner from "@/components/common/LoadingSpinner";
+import ErrorMessage from "@/components/common/ErrorMessage";
+import SuccessMessage from "@/components/common/SuccessMessage";
+import FormInput from "@/components/forms/FormInput";
+import InfoBox from "@/components/common/InfoBox";
 
 // Validation schema based on backend zod schema
 const updateProfileSchema = Yup.object({
@@ -112,14 +117,7 @@ export default function EditProfilePage() {
   });
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-          <p className="text-gray-600">Đang tải thông tin...</p>
-        </div>
-      </div>
-    );
+    return <LoadingSpinner />;
   }
 
   return (
@@ -140,100 +138,47 @@ export default function EditProfilePage() {
         <p className="text-gray-600 ml-11">Cập nhật thông tin cá nhân của bạn</p>
       </div>
 
-      {/* Success Message */}
-      {successMessage && (
-        <div className="mb-6 bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg flex items-start">
-          <svg className="w-5 h-5 mr-2 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-          </svg>
-          <span className="text-sm">{successMessage}</span>
-        </div>
-      )}
-
-      {/* Error Message */}
-      {error && (
-        <div className="mb-6 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg flex items-start">
-          <svg className="w-5 h-5 mr-2 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-          </svg>
-          <span className="text-sm">{error}</span>
-        </div>
-      )}
+      {successMessage && <SuccessMessage message={successMessage} className="mb-6" />}
+      {error && <ErrorMessage message={error} className="mb-6" />}
 
       {/* Form */}
       <div className="bg-white rounded-xl shadow-md p-6">
         <form onSubmit={formik.handleSubmit} className="space-y-6">
-          {/* Full Name */}
-          <div>
-            <label htmlFor="user_fullName" className="block text-sm font-semibold text-gray-700 mb-2">
-              Họ và tên
-            </label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                </svg>
-              </div>
-              <input
-                id="user_fullName"
-                name="user_fullName"
-                type="text"
-                value={formik.values.user_fullName}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                className={`block w-full pl-10 pr-3 py-3 border ${
-                  formik.touched.user_fullName && formik.errors.user_fullName
-                    ? "border-red-500 focus:ring-red-500"
-                    : "border-gray-300 focus:ring-blue-500"
-                } rounded-lg focus:outline-none focus:ring-2 focus:border-transparent transition-all text-gray-900`}
-                placeholder="Nhập họ và tên"
-              />
-            </div>
-            {formik.touched.user_fullName && formik.errors.user_fullName && (
-              <p className="mt-2 text-sm text-red-600 flex items-center">
-                <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                </svg>
-                {formik.errors.user_fullName}
-              </p>
-            )}
-          </div>
+          <FormInput
+            id="user_fullName"
+            name="user_fullName"
+            label="Họ và tên"
+            type="text"
+            value={formik.values.user_fullName}
+            onChange={formik.handleChange}
+            onBlur={formik.handleBlur}
+            placeholder="Nhập họ và tên"
+            icon={
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+            }
+            error={formik.errors.user_fullName}
+            touched={formik.touched.user_fullName}
+          />
 
-          {/* Email */}
-          <div>
-            <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-2">
-              Email
-            </label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                </svg>
-              </div>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                value={formik.values.email}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                className={`block w-full pl-10 pr-3 py-3 border ${
-                  formik.touched.email && formik.errors.email
-                    ? "border-red-500 focus:ring-red-500"
-                    : "border-gray-300 focus:ring-blue-500"
-                } rounded-lg focus:outline-none focus:ring-2 focus:border-transparent transition-all text-gray-900`}
-                placeholder="example@email.com"
-              />
-            </div>
-            {formik.touched.email && formik.errors.email && (
-              <p className="mt-2 text-sm text-red-600 flex items-center">
-                <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                </svg>
-                {formik.errors.email}
-              </p>
-            )}
-          </div>
+          <FormInput
+            id="email"
+            name="email"
+            label="Email"
+            type="email"
+            value={formik.values.email}
+            onChange={formik.handleChange}
+            onBlur={formik.handleBlur}
+            placeholder="example@email.com"
+            icon={
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              </svg>
+            }
+            error={formik.errors.email}
+            touched={formik.touched.email}
+          />
 
           {/* Gender */}
           <div>
@@ -264,41 +209,23 @@ export default function EditProfilePage() {
             </div>
           </div>
 
-          {/* Date of Birth */}
-          <div>
-            <label htmlFor="user_dayOfBirth" className="block text-sm font-semibold text-gray-700 mb-2">
-              Ngày sinh
-            </label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
-              </div>
-              <input
-                id="user_dayOfBirth"
-                name="user_dayOfBirth"
-                type="date"
-                value={formik.values.user_dayOfBirth}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                max={new Date().toISOString().split('T')[0]}
-                className={`block w-full pl-10 pr-3 py-3 border ${
-                  formik.touched.user_dayOfBirth && formik.errors.user_dayOfBirth
-                    ? "border-red-500 focus:ring-red-500"
-                    : "border-gray-300 focus:ring-blue-500"
-                } rounded-lg focus:outline-none focus:ring-2 focus:border-transparent transition-all text-gray-900`}
-              />
-            </div>
-            {formik.touched.user_dayOfBirth && formik.errors.user_dayOfBirth && (
-              <p className="mt-2 text-sm text-red-600 flex items-center">
-                <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                </svg>
-                {formik.errors.user_dayOfBirth}
-              </p>
-            )}
-          </div>
+          <FormInput
+            id="user_dayOfBirth"
+            name="user_dayOfBirth"
+            label="Ngày sinh"
+            type="date"
+            value={formik.values.user_dayOfBirth}
+            onChange={formik.handleChange}
+            onBlur={formik.handleBlur}
+            max={new Date().toISOString().split('T')[0]}
+            icon={
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+            }
+            error={formik.errors.user_dayOfBirth}
+            touched={formik.touched.user_dayOfBirth}
+          />
 
           {/* Action Buttons */}
           <div className="flex gap-4 pt-4 border-t">
@@ -336,22 +263,15 @@ export default function EditProfilePage() {
         </form>
       </div>
 
-      {/* Info Box */}
-      <div className="mt-6 bg-blue-50 rounded-lg p-4 border border-blue-100">
-        <div className="flex">
-          <svg className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-          </svg>
-          <div className="ml-3">
-            <p className="text-xs text-blue-800 font-medium mb-1">Lưu ý</p>
-            <ul className="text-xs text-blue-700 space-y-1">
-              <li>• Chỉ các trường được thay đổi mới được cập nhật</li>
-              <li>• Email phải là duy nhất trong hệ thống</li>
-              <li>• Ngày sinh không thể trong tương lai</li>
-            </ul>
-          </div>
-        </div>
-      </div>
+      <InfoBox
+        title="Lưu ý"
+        items={[
+          "Chỉ các trường được thay đổi mới được cập nhật",
+          "Email phải là duy nhất trong hệ thống",
+          "Ngày sinh không thể trong tương lai"
+        ]}
+        className="mt-6"
+      />
     </div>
   );
 }
