@@ -32,7 +32,6 @@ export const userApi = {
    */
   getProfile: async (): Promise<UserProfile> => {
     const response = await axiosInstance.get('/user/profile');
-    console.log('userApi.getProfile response:', response.data);
     return response.data.metadata.user;
   },
 
