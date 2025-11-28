@@ -1,7 +1,28 @@
 import { configureStore, combineReducers } from '@reduxjs/toolkit';
 import { persistStore, persistReducer } from 'redux-persist';
-import storage from 'redux-persist/lib/storage';
 import authReducer from './authSlice';
+
+// Create a noop storage for server-side rendering
+// This prevents the "failed to create sync storage" warning
+const createNoopStorage = () => {
+  return {
+    getItem(_key: string) {
+      return Promise.resolve(null);
+    },
+    setItem(_key: string, value: any) {
+      return Promise.resolve(value);
+    },
+    removeItem(_key: string) {
+      return Promise.resolve();
+    },
+  };
+};
+
+// Use localStorage only on client-side, noop storage on server-side
+// This fixes the "redux-persist failed to create sync storage" warning
+const storage = typeof window !== 'undefined'
+  ? require('redux-persist/lib/storage').default
+  : createNoopStorage();
 
 // Combine reducers
 const rootReducer = combineReducers({

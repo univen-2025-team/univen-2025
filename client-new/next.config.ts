@@ -12,6 +12,10 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  // Fix warning about multiple lockfiles in monorepo
+  turbopack: {
+    root: __dirname,
+  },
 };
 
 export default nextConfig;
