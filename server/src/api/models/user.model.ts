@@ -19,6 +19,7 @@ const userSchema = new Schema<model.auth.UserSchema>(
         user_fullName: { type: String, required },
         user_dayOfBirth: Date,
         user_gender: { type: Boolean, default: false }, // true => male, false => female
+        balance: { type: Number, default: 100000000 }, // default balance: 100,000,000 VND
 
         /* ------------------------ Metadata ------------------------ */
         user_role: { type: ObjectId, required, ref: ROLE_MODEL_NAME },
