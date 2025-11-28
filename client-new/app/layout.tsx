@@ -4,6 +4,7 @@ import { ReduxProvider } from "@/lib/store/Provider";
 import { appConfig } from "@/config";
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'),
   title: appConfig.seo.title,
   description: appConfig.seo.description,
   keywords: appConfig.seo.keywords,

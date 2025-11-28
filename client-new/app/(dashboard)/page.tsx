@@ -1,8 +1,10 @@
 "use client";
 
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAppDispatch, useAppSelector } from "@/lib/store/hooks";
-import { selectUser, selectIsAuthenticated, logoutUser } from "@/lib/store/authSlice";
+import { selectIsAuthenticated, logoutUser } from "@/lib/store/authSlice";
+import { useProfile } from "@/lib/hooks/useProfile";
 import LoadingSpinner from "@/components/dashboard/LoadingSpinner";
 import WelcomeHeader from "@/components/dashboard/WelcomeHeader";
 import StatsGrid from "@/components/dashboard/StatsGrid";
@@ -12,26 +14,33 @@ import RecentActivity from "@/components/dashboard/RecentActivity";
 export default function DashboardPage() {
   const router = useRouter();
   const dispatch = useAppDispatch();
-  const user = useAppSelector(selectUser);
-  // const isAuthenticated = useAppSelector(selectIsAuthenticated);
-  const isAuthenticated = true;
+  const isAuthenticated = useAppSelector(selectIsAuthenticated);
+  
+  // Fetch profile data from API
+  const { profile, isLoading, error } = useProfile(true);
 
-  // useEffect(() => {
-  //   if (!isAuthenticated) {
-  //     router.push("/auth/login");
-  //   }
-  // }, [isAuthenticated, router]);
+  useEffect(() => {
+    if (!isAuthenticated) {
+      router.push("/auth/login");
+    }
+  }, [isAuthenticated, router]);
 
   const handleLogout = async () => {
     await dispatch(logoutUser());
     router.push("/auth/login");
   };
 
-  if (!isAuthenticated || !user) {
+  // Show loading while fetching profile or if not authenticated
+  if (!isAuthenticated || isLoading || !profile) {
     return <LoadingSpinner />;
   }
 
-  const userName = user.user_fullName || "Admin";
+  // Show error state if profile fetch failed
+  if (error) {
+    return <ErrorMessage message={error} />;
+  }
+
+  const userName = profile.user_fullName || "Admin";
 
   return (
     <div className="space-y-6">
