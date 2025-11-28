@@ -92,7 +92,6 @@ export default function ProfilePage() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
-
           <ProfileDetailField
             label="Email"
             value={profile?.email || displayProfileData.email || "N/A"}
