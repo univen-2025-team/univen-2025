@@ -169,8 +169,6 @@ GET /v1/api/stock-transactions/transactions/:userId?transaction_type=BUY&stock_c
                 "total_amount": 950000,
                 "transaction_type": "BUY",
                 "transaction_status": "COMPLETED",
-                "fee_amount": 0,
-                "commission_amount": 0,
                 "balance_before": 100000000,
                 "balance_after": 99050000,
                 "createdAt": "2025-11-28T10:30:00.000Z",
@@ -186,8 +184,6 @@ GET /v1/api/stock-transactions/transactions/:userId?transaction_type=BUY&stock_c
                 "total_amount": 400000,
                 "transaction_type": "BUY",
                 "transaction_status": "COMPLETED",
-                "fee_amount": 0,
-                "commission_amount": 0,
                 "balance_before": 99050000,
                 "balance_after": 98650000,
                 "createdAt": "2025-11-28T11:00:00.000Z",
@@ -274,8 +270,6 @@ Authorization: Bearer <jwt_token>
         "total_amount": 950000,
         "transaction_type": "BUY",
         "transaction_status": "COMPLETED",
-        "fee_amount": 0,
-        "commission_amount": 0,
         "balance_before": 100000000,
         "balance_after": 99050000,
         "createdAt": "2025-11-28T10:30:00.000Z",
@@ -372,8 +366,6 @@ Authorization: Bearer <jwt_token>
         "total_amount": 950000,
         "transaction_type": "BUY",
         "transaction_status": "CANCELLED",
-        "fee_amount": 0,
-        "commission_amount": 0,
         "balance_before": 100000000,
         "balance_after": 100000000,
         "cancellation_reason": "Changed my mind",
@@ -448,8 +440,6 @@ Authorization: Bearer <jwt_token>
         "sell_transactions_count": 2,
         "total_spent": 3450000,
         "total_earned": 500000,
-        "total_fees": 0,
-        "total_commissions": 0,
         "average_transaction_value": 400000,
         "most_traded_stock": {
             "stock_code": "VNM",
@@ -470,8 +460,6 @@ Authorization: Bearer <jwt_token>
 | `sell_transactions_count`   | number | Total SELL transactions                    |
 | `total_spent`               | number | Total amount spent on BUY transactions     |
 | `total_earned`              | number | Total amount earned from SELL transactions |
-| `total_fees`                | number | Total fees paid                            |
-| `total_commissions`         | number | Total commissions paid                     |
 | `average_transaction_value` | number | Average transaction amount                 |
 | `most_traded_stock`         | object | Most frequently traded stock with details  |
 
@@ -537,8 +525,6 @@ curl -X GET http://localhost:4000/v1/api/stock-transactions/transactions/6929304
   total_amount: number;                 // quantity × price_per_unit
   transaction_type: "BUY" | "SELL";
   transaction_status: "PENDING" | "COMPLETED" | "CANCELLED" | "FAILED";
-  fee_amount: number;                   // Transaction fee
-  commission_amount: number;            // Commission
   balance_before: number;               // User balance before transaction
   balance_after: number;                // User balance after transaction
   cancellation_reason?: string;         // Reason for cancellation

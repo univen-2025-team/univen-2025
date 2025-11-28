@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { authApi, type AuthResponse } from '../api/auth.api';
+import { userApi, type UserProfile } from '../api/user.api';
 
 // Types
 export interface User {
@@ -8,6 +9,7 @@ export interface User {
     user_fullName: string;
     user_avatar: string;
     user_role: string;
+    balance: number;
     user_gender: boolean;
     user_status: string; // "ACTIVE" | "INACTIVE" | "BLOCKED"
     user_dayOfBirth?: string;
@@ -21,6 +23,50 @@ export interface AuthState {
     isLoading: boolean;
     error: string | null;
 }
+
+const buildUserFromProfile = (profile: UserProfile): User => ({
+    _id: profile._id,
+    email: profile.email,
+    user_fullName: profile.user_fullName,
+    user_avatar: profile.user_avatar,
+    user_role: profile.user_role,
+    balance: profile.balance ?? 0,
+    user_gender: profile.user_gender,
+    user_status: profile.user_status,
+    user_dayOfBirth: profile.user_dayOfBirth
+});
+
+const buildUserFromAuthResponse = (
+    authUser: AuthResponse['user'],
+    profile?: UserProfile | null
+): User => {
+    if (profile) {
+        return buildUserFromProfile(profile);
+    }
+
+    return {
+        _id: authUser._id,
+        email: authUser.email,
+        user_fullName: authUser.user_fullName,
+        user_avatar: authUser.user_avatar,
+        user_role: authUser.user_role,
+        balance: authUser.balance ?? 0,
+        user_gender: authUser.user_gender,
+        user_status: authUser.user_status,
+        user_dayOfBirth: authUser.user_dayOfBirth
+    };
+};
+
+const fetchProfileSafely = async (accessToken?: string) => {
+    if (!accessToken) return null;
+
+    try {
+        return await userApi.getProfile(accessToken);
+    } catch (error) {
+        console.warn('Không thể đồng bộ profile sau khi đăng nhập:', error);
+        return null;
+    }
+};
 
 // Initial state - Redux Persist will handle rehydration
 const initialState: AuthState = {
@@ -40,23 +86,27 @@ export const loginUser = createAsyncThunk(
             console.log('Login credentials:', credentials);
             const response = await authApi.login(credentials);
             console.log('Login response:', response);
-            return response;
+            const profile = await fetchProfileSafely(response.token.accessToken);
+            return {
+                ...response,
+                user: buildUserFromAuthResponse(response.user, profile)
+            };
         } catch (error: unknown) {
             console.error('Login error:', error);
-            
+
             // Extract error message from API response
             let errorMessage = 'Đăng nhập thất bại. Vui lòng kiểm tra lại email và mật khẩu.';
-            
+
             if (error && typeof error === 'object' && 'response' in error) {
                 const axiosError = error as { response?: { data?: { message?: string; error?: string } } };
-                errorMessage = 
-                    axiosError.response?.data?.message || 
+                errorMessage =
+                    axiosError.response?.data?.message ||
                     axiosError.response?.data?.error ||
                     errorMessage;
             } else if (error instanceof Error) {
                 errorMessage = error.message;
             }
-            
+
             return rejectWithValue(errorMessage);
         }
     }
@@ -70,23 +120,27 @@ export const signUpUser = createAsyncThunk(
     ) => {
         try {
             const response = await authApi.signUp(data);
-            return response;
+            const profile = await fetchProfileSafely(response.token.accessToken);
+            return {
+                ...response,
+                user: buildUserFromAuthResponse(response.user, profile)
+            };
         } catch (error: unknown) {
             console.error('Sign up error:', error);
-            
+
             // Extract error message from API response
             let errorMessage = 'Đăng ký thất bại. Vui lòng thử lại.';
-            
+
             if (error && typeof error === 'object' && 'response' in error) {
                 const axiosError = error as { response?: { data?: { message?: string; error?: string } } };
-                errorMessage = 
-                    axiosError.response?.data?.message || 
+                errorMessage =
+                    axiosError.response?.data?.message ||
                     axiosError.response?.data?.error ||
                     errorMessage;
             } else if (error instanceof Error) {
                 errorMessage = error.message;
             }
-            
+
             return rejectWithValue(errorMessage);
         }
     }
@@ -106,24 +160,24 @@ export const getCurrentUser = createAsyncThunk(
     'auth/getCurrentUser',
     async (_, { rejectWithValue }) => {
         try {
-            const user = await authApi.getCurrentUser();
-            return user;
+            const profile = await userApi.getProfile();
+            return buildUserFromProfile(profile);
         } catch (error: unknown) {
             console.error('Get current user error:', error);
-            
+
             // Extract error message from API response
             let errorMessage = 'Không thể lấy thông tin người dùng.';
-            
+
             if (error && typeof error === 'object' && 'response' in error) {
                 const axiosError = error as { response?: { data?: { message?: string; error?: string } } };
-                errorMessage = 
-                    axiosError.response?.data?.message || 
+                errorMessage =
+                    axiosError.response?.data?.message ||
                     axiosError.response?.data?.error ||
                     errorMessage;
             } else if (error instanceof Error) {
                 errorMessage = error.message;
             }
-            
+
             return rejectWithValue(errorMessage);
         }
     }
