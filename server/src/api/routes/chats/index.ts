@@ -4,8 +4,6 @@ import chatController from '../../controllers/chats.controller.js';
 
 const router = express.Router();
 
-router.get('/', chatController.getChats);
-
-router.post("/suggestions", chatController.postChatSuggestions);
+router.post("/getChat", chatController.postChatSuggestions);
 
 export default router;
