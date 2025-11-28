@@ -20,6 +20,7 @@ export default class UserService {
             only: USER_PUBLIC_FIELDS
         });
         const result: commonTypes.object.ObjectAnyKeys = { user };
+        console.log('UserService.getUserById user:', user);
 
         /* --------------------- Add role data  --------------------- */
         const roleData = await roleService.getUserRoleData({
