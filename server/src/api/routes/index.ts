@@ -6,6 +6,7 @@ import otpRoute from './otp/index.js';
 import userRoute from './user/index.js';
 import viewRoute from './views/index.js';
 import chatRoute from './chats/index.js';
+import stockTransactionRoute from './stockTransaction/index.js';
 
 const rootRoute = Router();
 
@@ -20,5 +21,8 @@ rootRoute.use('/user', userRoute);
 
 /* -------------------------- Chat ------------------------- */
 rootRoute.use('/chats', chatRoute);
+
+/* ---------------------- Stock Transaction ---------------------- */
+rootRoute.use('/stock-transactions', stockTransactionRoute);
 
 export default rootRoute;
