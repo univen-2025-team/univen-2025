@@ -35,10 +35,6 @@ const stockTransactionSchema = new Schema<model.stockTransaction.StockTransactio
             index: true
         },
 
-        /* -------------------- Fee & Commission -------------------- */
-        fee_amount: { type: Number, default: 0, min: 0 }, // Phí giao dịch
-        commission_amount: { type: Number, default: 0, min: 0 }, // Hoa hồng (nếu có)
-
         /* -------------------- Balance Impact -------------------- */
         balance_before: { type: Number, required }, // Số dư trước giao dịch
         balance_after: { type: Number }, // Số dư sau giao dịch

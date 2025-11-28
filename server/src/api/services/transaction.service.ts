@@ -13,25 +13,14 @@ interface CreateTransactionPayload {
     quantity: number;
     price_per_unit: number;
     transaction_type: 'BUY' | 'SELL';
-    fee_amount?: number;
-    commission_amount?: number;
     notes?: string;
 }
 
 export default class TransactionService {
     /* -------------------- Create Transaction -------------------- */
     public static createTransaction = async (payload: CreateTransactionPayload) => {
-        const {
-            userId,
-            stock_code,
-            stock_name,
-            quantity,
-            price_per_unit,
-            transaction_type,
-            fee_amount = 0,
-            commission_amount = 0,
-            notes
-        } = payload;
+        const { userId, stock_code, stock_name, quantity, price_per_unit, transaction_type, notes } =
+            payload;
 
         // Validation
         this.validateTransactionInput(quantity, price_per_unit, transaction_type);
@@ -45,23 +34,21 @@ export default class TransactionService {
         }
 
         const total_amount = quantity * price_per_unit;
-        const total_cost = total_amount + fee_amount + commission_amount;
         const balance_before = user.balance;
 
         // Validate balance for BUY transaction
-        if (transaction_type === 'BUY' && balance_before < total_cost) {
+        if (transaction_type === 'BUY' && balance_before < total_amount) {
             throw new BadRequestErrorResponse({
-                message: `Insufficient balance. Required: ${total_cost}, Available: ${balance_before}`
+                message: `Insufficient balance. Required: ${total_amount}, Available: ${balance_before}`
             });
         }
 
         // Calculate balance after
         let balance_after: number;
         if (transaction_type === 'BUY') {
-            balance_after = balance_before - total_cost;
+            balance_after = balance_before - total_amount;
         } else {
-            // SELL: cộng tiền bán trừ phí
-            balance_after = balance_before + total_amount - fee_amount - commission_amount;
+            balance_after = balance_before + total_amount;
         }
 
         // Create transaction record
@@ -73,8 +60,6 @@ export default class TransactionService {
             price_per_unit,
             total_amount,
             transaction_type,
-            fee_amount,
-            commission_amount,
             balance_before,
             balance_after,
             notes,
@@ -201,19 +186,7 @@ export default class TransactionService {
         }
 
         // Refund logic
-        let refundAmount = 0;
-        if (transaction.transaction_type === 'BUY') {
-            refundAmount =
-                transaction.total_amount + transaction.fee_amount + transaction.commission_amount;
-        } else {
-            refundAmount = -(
-                transaction.total_amount -
-                transaction.fee_amount -
-                transaction.commission_amount
-            );
-        }
-
-        // Update user balance
+        // Update user balance back to the value before the transaction
         user.balance = transaction.balance_before;
         await user.save();
 
@@ -247,20 +220,9 @@ export default class TransactionService {
             }
         ]);
 
-        const totalFees = await stockTransactionModel.aggregate([
-            { $match: { user_id: new Types.ObjectId(userId), transaction_status: 'COMPLETED' } },
-            {
-                $group: {
-                    _id: null,
-                    total_fees: { $sum: { $add: ['$fee_amount', '$commission_amount'] } }
-                }
-            }
-        ]);
-
         return {
             current_balance: user.balance,
-            transaction_stats: stats,
-            total_fees: totalFees[0]?.total_fees || 0
+            transaction_stats: stats
         };
     };
 
