@@ -25,8 +25,6 @@ declare global {
                     transaction_status: TransactionStatus;
 
                     /* -------------------- Fee & Commission -------------------- */
-                    fee_amount: number; // Phí giao dịch
-                    commission_amount: number; // Hoa hồng
 
                     /* -------------------- Balance Impact -------------------- */
                     balance_before: number; // Số dư trước giao dịch
@@ -35,7 +33,7 @@ declare global {
                     /* -------------------- Additional Info -------------------- */
                     notes?: string;
                     order_id?: mongoose.Types.ObjectId;
-                    
+
                     /* -------------------- Timestamps -------------------- */
                     executed_at?: Date; // Thời gian thực thi
                     cancelled_at?: Date; // Thời gian hủy

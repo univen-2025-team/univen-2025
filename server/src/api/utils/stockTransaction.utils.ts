@@ -6,23 +6,13 @@ export const calculateTotalAmount = (quantity: number, pricePerUnit: number): nu
 };
 
 /**
- * Tính phí giao dịch (mặc định 0.3%)
- */
-export const calculateFeeAmount = (totalAmount: number, feePercentage: number = 0.3): number => {
-    return Math.round((totalAmount * feePercentage) / 100);
-};
-
-/**
  * Tính số dư sau giao dịch (BUY)
  */
 export const calculateBalanceAfterBuy = (
     balanceBefore: number,
-    totalAmount: number,
-    feeAmount: number,
-    commissionAmount: number = 0
+    totalAmount: number
 ): number => {
-    const totalDeduction = totalAmount + feeAmount + commissionAmount;
-    return balanceBefore - totalDeduction;
+    return balanceBefore - totalAmount;
 };
 
 /**
@@ -30,12 +20,9 @@ export const calculateBalanceAfterBuy = (
  */
 export const calculateBalanceAfterSell = (
     balanceBefore: number,
-    totalAmount: number,
-    feeAmount: number,
-    commissionAmount: number = 0
+    totalAmount: number
 ): number => {
-    const totalReceived = totalAmount - feeAmount - commissionAmount;
-    return balanceBefore + totalReceived;
+    return balanceBefore + totalAmount;
 };
 
 /**
@@ -43,12 +30,9 @@ export const calculateBalanceAfterSell = (
  */
 export const canAffordBuy = (
     balance: number,
-    totalAmount: number,
-    feeAmount: number,
-    commissionAmount: number = 0
+    totalAmount: number
 ): boolean => {
-    const required = totalAmount + feeAmount + commissionAmount;
-    return balance >= required;
+    return balance >= totalAmount;
 };
 
 /**
@@ -64,17 +48,14 @@ export const calculateHoldingValue = (quantity: number, currentPrice: number): n
 export const calculateProfitLoss = (
     buyPrice: number,
     sellPrice: number,
-    quantity: number,
-    feeAmount: number,
-    commissionAmount: number = 0
+    quantity: number
 ): {
     profitLoss: number;
     profitLossPercentage: number;
     netProfit: number;
 } => {
     const grossProfit = (sellPrice - buyPrice) * quantity;
-    const totalCost = feeAmount + commissionAmount;
-    const netProfit = grossProfit - totalCost;
+    const netProfit = grossProfit;
     const profitLossPercentage = (netProfit / (buyPrice * quantity)) * 100;
 
     return {
@@ -89,11 +70,10 @@ export const calculateProfitLoss = (
  */
 export const calculateAverageCost = (
     totalCost: number,
-    totalQuantity: number,
-    totalFees: number
+    totalQuantity: number
 ): number => {
     if (totalQuantity === 0) return 0;
-    return (totalCost + totalFees) / totalQuantity;
+    return totalCost / totalQuantity;
 };
 
 /**
@@ -109,25 +89,11 @@ export const formatVND = (amount: number): string => {
 };
 
 /**
- * Tính chi phí giao dịch hoàn chỉnh (phí + hoa hồng)
- */
-export const calculateTotalTransactionCost = (
-    feeAmount: number,
-    commissionAmount: number = 0
-): number => {
-    return feeAmount + commissionAmount;
-};
-
-/**
  * Tính ROI (Return on Investment)
  */
-export const calculateROI = (
-    initialInvestment: number,
-    currentValue: number,
-    totalFees: number
-): number => {
+export const calculateROI = (initialInvestment: number, currentValue: number): number => {
     if (initialInvestment === 0) return 0;
-    return ((currentValue - initialInvestment - totalFees) / initialInvestment) * 100;
+    return ((currentValue - initialInvestment) / initialInvestment) * 100;
 };
 
 /**
