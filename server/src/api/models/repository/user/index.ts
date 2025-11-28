@@ -17,8 +17,8 @@ export const findUserById = async ({
     ...payload
 }: moduleTypes.mongoose.FindById<model.auth.UserSchema>) => {
     /* ---------------------- Redis check  ---------------------- */
-    const redisUser = await getUserProfile(payload.id.toString());
-    if (redisUser) return redisUser;
+    // const redisUser = await getUserProfile(payload.id.toString());
+    // if (redisUser) return redisUser;
 
     const user = await findById({ ...payload }).lean();
 
@@ -33,6 +33,7 @@ export const findUserById = async ({
         user_gender: user.user_gender,
         user_status: user.user_status,
         user_dayOfBirth: user.user_dayOfBirth,
+        balance: user.balance
     });
 
     return user;

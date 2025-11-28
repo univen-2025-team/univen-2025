@@ -7,6 +7,7 @@ export interface UserProfile {
   user_avatar: string;
   user_fullName: string;
   user_gender: boolean;
+  balance: number;
   user_role: string;
   user_status: string; // "ACTIVE" | "INACTIVE" | "BLOCKED"
   role_name: string;
@@ -31,6 +32,7 @@ export const userApi = {
    */
   getProfile: async (): Promise<UserProfile> => {
     const response = await axiosInstance.get('/user/profile');
+    console.log('userApi.getProfile response:', response.data);
     return response.data.metadata.user;
   },
 

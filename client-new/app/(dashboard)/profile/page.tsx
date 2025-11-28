@@ -91,15 +91,7 @@ export default function ProfilePage() {
         <h3 className="text-xl font-bold text-gray-900 border-b pb-3">Chi tiết tài khoản</h3>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <ProfileDetailField
-            label="Mã người dùng"
-            value={<span className="font-mono text-sm">{displayProfileData._id}</span>}
-            icon={
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14" />
-              </svg>
-            }
-          />
+
 
           <ProfileDetailField
             label="Email"
