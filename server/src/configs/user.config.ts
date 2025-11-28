@@ -7,4 +7,5 @@ export const USER_PUBLIC_FIELDS: (keyof model.auth.UserSchema)[] = [
     "user_gender",
     "user_status",
     "user_dayOfBirth",
+    "balance",
 ];

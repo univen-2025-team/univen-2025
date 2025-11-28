@@ -6,6 +6,10 @@ type ProfileHeaderCardProps = {
   profile: UserProfile;
 };
 
+const formatBalance = (balance: number): string => {
+  return new Intl.NumberFormat('vi-VN').format(balance);
+};
+
 export default function ProfileHeaderCard({ profile }: ProfileHeaderCardProps) {
   return (
     <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl p-8 text-white">
@@ -53,7 +57,7 @@ export default function ProfileHeaderCard({ profile }: ProfileHeaderCardProps) {
           </div>
 
           <div className="text-2xl font-bold">
-            Số dư: {profile.user_balance || "0"}
+            Số dư: {formatBalance(profile.balance)} VND
           </div>
         </div>
       </div>

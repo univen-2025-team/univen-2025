@@ -153,7 +153,7 @@ export const generateFindById = <T = any>(model: any) => {
             omit
         });
 
-        const result: Query = model.findById(id, projection, options);
+        const result: Query = model.findById(id, projection, options).select(projection);
 
         return result;
     };
