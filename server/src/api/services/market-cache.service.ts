@@ -30,6 +30,11 @@ type StockDataLean = {
     date: string;
     companyName: string;
     price: number;
+    prices: Array<{
+        time: string;
+        price: number;
+        volume: number;
+    }>;
     change: number;
     changePercent: number;
     volume: number;
@@ -139,6 +144,89 @@ export default class MarketCacheService {
             return results.map((r: any) => r.date);
         } catch (error) {
             this.logger.error('Error getting available dates', error as any);
+            return [];
+        }
+    }
+
+    /**
+     * Get VN30 Index history
+     */
+    static async getVN30History(limit: number = 30): Promise<any[]> {
+        try {
+            // If limit is small (e.g., 1 for 1D), we might want intraday data
+            // But the current API design uses 'limit' as days for history
+            // Let's check if we should fetch intraday based on a convention or separate method
+            // For now, let's keep this for daily history
+
+            const results = await MarketDataModel.find({})
+                .select('date vn30Index timestamp')
+                .sort({ date: 1 }) // Sort ascending for chart
+                .limit(limit)
+                .lean()
+                .exec();
+
+            return results.map((r: any) => ({
+                time: r.date, // Use date as time label for now
+                index: r.vn30Index.index
+            }));
+        } catch (error) {
+            this.logger.error('Error getting VN30 history', error as any);
+            return [];
+        }
+    }
+
+    /**
+     * Get VN30 Intraday data
+     */
+
+    static async getVN30Intraday(limit: number = 300): Promise<any[]> {
+        try {
+            // Query StockDataModel for VN30 symbol
+            // This leverages the unified storage where VN30 is treated as a stock
+            const result = await StockDataModel.findOne({ symbol: 'VN30' })
+                .sort({ date: -1 }) // Get latest date
+                .lean()
+                .exec();
+
+            if (!result || !result.prices) {
+                return [];
+            }
+
+            // The prices array is already in chronological order (09:15 -> 15:00)
+            // We just need to map it to the expected format
+
+            let prices = result.prices;
+
+            // Filter by time duration (limit is treated as minutes)
+            if (limit > 0 && prices.length > 0) {
+                // Get the timestamp of the last data point
+                const lastPoint = prices[prices.length - 1];
+                // Handle "YYYY-MM-DD HH:MM:SS" format
+                const lastTime = new Date(lastPoint.time).getTime();
+
+                if (!isNaN(lastTime)) {
+                    const durationMs = limit * 60 * 1000; // Convert minutes to ms
+                    const cutoffTime = lastTime - durationMs;
+
+                    prices = prices.filter((p: any) => {
+                        const pTime = new Date(p.time).getTime();
+                        return pTime >= cutoffTime;
+                    });
+                } else {
+                    // Fallback to slice if date parsing fails
+                    if (limit < prices.length) {
+                        prices = prices.slice(-limit);
+                    }
+                }
+            }
+
+            return prices.map((p: any) => ({
+                time: p.time,
+                index: p.close, // Use close price as index value
+                volume: p.volume
+            }));
+        } catch (error) {
+            this.logger.error('Error getting VN30 intraday', error as any);
             return [];
         }
     }

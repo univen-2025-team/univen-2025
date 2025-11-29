@@ -175,3 +175,34 @@ export async function getAvailableDates(limit: number = 30): Promise<string[]> {
         return [];
     }
 }
+
+/**
+ * Get VN30 history
+ */
+export async function getVN30History(
+    limit: number = 30,
+    type: 'daily' | 'intraday' = 'daily'
+): Promise<Array<{ time: string; index: number }>> {
+    try {
+        const response = await fetch(
+            `${API_BASE_URL}/market/history/vn30?limit=${limit}&type=${type}`,
+            {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            }
+        );
+
+        if (!response.ok) {
+            console.error('Failed to fetch VN30 history:', response.statusText);
+            return [];
+        }
+
+        const result = await response.json();
+        return result.metadata?.history || [];
+    } catch (error) {
+        console.error('Error fetching VN30 history:', error);
+        return [];
+    }
+}

@@ -20,4 +20,7 @@ router.get('/stocks', MarketCacheController.getAllStocks);
 // GET /api/cached/dates - Get available cached dates
 router.get('/dates', MarketCacheController.getAvailableDates);
 
+// GET /api/cached/history/vn30 - Get VN30 history
+router.get('/history/vn30', MarketCacheController.getVN30History);
+
 export default router;

@@ -18,12 +18,16 @@ export default class MarketCacheController {
             const { date } = req.query;
 
             let marketData;
+            let vn30History = [];
+
             if (date) {
                 // Get data for specific date
                 marketData = await MarketCacheService.getMarketDataByDate(date as string);
             } else {
                 // Get latest data
                 marketData = await MarketCacheService.getLatestMarketData();
+                // Get history for chart (last 30 days)
+                vn30History = await MarketCacheService.getVN30History(30);
             }
 
             if (!marketData) {
@@ -37,6 +41,7 @@ export default class MarketCacheController {
                 message: 'Market data retrieved successfully',
                 metadata: {
                     ...marketData,
+                    vn30History,
                     isCached: true
                 }
             }).send(res);
@@ -130,6 +135,36 @@ export default class MarketCacheController {
                 metadata: {
                     dates,
                     total: dates.length
+                }
+            }).send(res);
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    /**
+     * GET /api/cached/history/vn30
+     * Get VN30 index history
+     */
+    static async getVN30History(req: Request, res: Response, next: NextFunction) {
+        try {
+            const limit = parseInt(req.query.limit as string) || 30;
+            const type = req.query.type as string; // 'daily' or 'intraday'
+
+            let history;
+            if (type === 'intraday') {
+                // For intraday, limit is number of points (minutes)
+                // 1H = 60, 1D = ~240 (trading minutes)
+                history = await MarketCacheService.getVN30Intraday(limit);
+            } else {
+                history = await MarketCacheService.getVN30History(limit);
+            }
+
+            new OkResponse({
+                message: 'VN30 history retrieved successfully',
+                metadata: {
+                    history,
+                    total: history.length
                 }
             }).send(res);
         } catch (error) {
