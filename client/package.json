@@ -3,7 +3,11 @@
     "version": "0.1.0",
     "private": true,
     "scripts": {
+<<<<<<< HEAD
         "dev": "cross-env next dev --turbo --experimental-https",
+=======
+        "dev": "cross-env next dev --turbo",
+>>>>>>> ea92ef4d712de077556c73c19678cf028ca8fded
         "build": "next build",
         "start": "cross-env NODE_ENV=production bun server.js",
         "start:https": "cross-env NODE_ENV=production bun server.js",
@@ -49,6 +53,10 @@
         "class-variance-authority": "^0.7.1",
         "clsx": "^2.1.1",
         "cmdk": "1.0.4",
+<<<<<<< HEAD
+=======
+        "cross-env": "^10.1.0",
+>>>>>>> ea92ef4d712de077556c73c19678cf028ca8fded
         "date-fns": "^3.6.0",
         "embla-carousel-react": "8.5.1",
         "html2canvas": "^1.4.1",

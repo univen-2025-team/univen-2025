@@ -8,6 +8,12 @@ const VN30_SYMBOLS = [
   'STB', 'TCB', 'TPB', 'VCB', 'VHM', 'VIB', 'VIC', 'VJC', 'VNM', 'VPB'
 ];
 
+<<<<<<< HEAD
+=======
+// Python server URL
+const PYTHON_SERVER_URL = process.env.PYTHON_SERVER_URL || 'http://localhost:5000';
+
+>>>>>>> ea92ef4d712de077556c73c19678cf028ca8fded
 interface StockData {
   symbol: string;
   price: number;
@@ -20,6 +26,7 @@ interface StockData {
   close: number;
 }
 
+<<<<<<< HEAD
 /**
  * Fetch stock data from SSI or alternative Vietnamese stock API
  * For now, we'll use a mock implementation that can be replaced with real API calls
@@ -47,11 +54,67 @@ async function fetchStockData(symbol: string): Promise<StockData | null> {
     };
   } catch (error) {
     console.error(`Error fetching data for ${symbol}:`, error);
+=======
+interface VN30Index {
+  index: number;
+  change: number;
+  changePercent: number;
+}
+
+interface MarketData {
+  vn30Index: VN30Index;
+  stocks: StockData[];
+  topGainers: StockData[];
+  topLosers: StockData[];
+  total: number;
+  timestamp: string;
+}
+
+/**
+ * Fetch market data from Python vnstock server
+ */
+async function fetchMarketDataFromPython(
+  sortBy: string = 'price',
+  order: string = 'desc',
+  limit: number = 30
+): Promise<MarketData | null> {
+  try {
+    const url = new URL('/api/market', PYTHON_SERVER_URL);
+    url.searchParams.set('sortBy', sortBy);
+    url.searchParams.set('order', order);
+    url.searchParams.set('limit', limit.toString());
+
+    const response = await fetch(url.toString(), {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      // Add timeout
+      signal: AbortSignal.timeout(10000),
+    });
+
+    if (!response.ok) {
+      console.error(`Python server responded with status: ${response.status}`);
+      return null;
+    }
+
+    const result = await response.json();
+    
+    if (result.success && result.data) {
+      return result.data;
+    }
+
+    console.error('Python server response was not successful');
+    return null;
+  } catch (error) {
+    console.error('Error fetching data from Python server:', error);
+>>>>>>> ea92ef4d712de077556c73c19678cf028ca8fded
     return null;
   }
 }
 
 /**
+<<<<<<< HEAD
  * Fetch VN30 index data
  */
 async function fetchVN30Index() {
@@ -69,6 +132,10 @@ async function fetchVN30Index() {
 /**
  * GET /api/market
  * Fetches VN30 stock data sorted by price
+=======
+ * GET /api/market
+ * Fetches VN30 stock data sorted by price from Python vnstock server
+>>>>>>> ea92ef4d712de077556c73c19678cf028ca8fded
  */
 export async function GET(request: NextRequest) {
   try {
@@ -77,6 +144,7 @@ export async function GET(request: NextRequest) {
     const order = searchParams.get('order') || 'desc';
     const limit = parseInt(searchParams.get('limit') || '30');
 
+<<<<<<< HEAD
     // Fetch data for all VN30 stocks
     const stockPromises = VN30_SYMBOLS.map(symbol => fetchStockData(symbol));
     const stockResults = await Promise.all(stockPromises);
@@ -134,6 +202,27 @@ export async function GET(request: NextRequest) {
         timestamp: new Date().toISOString(),
       },
     });
+=======
+    // Fetch data from Python server
+    const marketData = await fetchMarketDataFromPython(sortBy, order, limit);
+
+    if (marketData) {
+      return NextResponse.json({
+        success: true,
+        data: marketData,
+      });
+    }
+
+    // If Python server is not available, return error
+    return NextResponse.json(
+      {
+        success: false,
+        error: 'Python vnstock server is not available',
+        message: 'Unable to fetch real market data. Please ensure the Python server is running.',
+      },
+      { status: 503 }
+    );
+>>>>>>> ea92ef4d712de077556c73c19678cf028ca8fded
   } catch (error) {
     console.error('Error in market API:', error);
     return NextResponse.json(
