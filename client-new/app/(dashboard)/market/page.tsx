@@ -1,14 +1,8 @@
 'use client';
 
 import { useMarketSocket } from '@/lib/hooks/useMarketSocket';
-<<<<<<< HEAD
-import { useRouter } from 'next/router';
-import { useEffect, useState } from 'react';
-import PageHeader from '@/components/dashboard/PageHeader';
-=======
 import { useRouter } from 'next/navigation';
 import { useEffect, useState, useMemo } from 'react';
->>>>>>> bf8018ee (init: market page)
 import {
     LineChart,
     Line,
@@ -41,6 +35,7 @@ interface StockData {
     low: number;
     open: number;
     close: number;
+    previousClose?: number;
 }
 
 interface VN30Index {
@@ -283,13 +278,6 @@ export default function MarketPage() {
 
     return (
         <div className="space-y-6 pb-8">
-<<<<<<< HEAD
-            {/* Header */}
-            <PageHeader
-                title="Thị trường VN30"
-                description="Theo dõi 30 mã cổ phiếu vốn hóa lớn nhất thị trường Việt Nam"
-            />
-=======
             {/* Header with Search */}
             <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl shadow-xl p-6 md:p-8 text-white">
                 <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
@@ -308,7 +296,6 @@ export default function MarketPage() {
                     </div>
                 </div>
             </div>
->>>>>>> bf8018ee (init: market page)
 
             {/* Market Statistics Cards */}
             {marketStats && (
@@ -376,13 +363,8 @@ export default function MarketPage() {
 
             {/* VN30 Index Card */}
             {marketData && (
-<<<<<<< HEAD
-                <div className="bg-white rounded-xl shadow-lg p-6 border-l-4 border-primary">
-                    <div className="flex items-center justify-between mb-4">
-=======
                 <div className="bg-white rounded-xl shadow-lg p-6 border-l-4 border-blue-500">
                     <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-4">
->>>>>>> bf8018ee (init: market page)
                         <div className="flex-1">
                             <div className="flex items-center gap-3 mb-2">
                                 <p className="text-gray-600 text-sm font-medium">Chỉ số VN30</p>
@@ -699,10 +681,10 @@ export default function MarketPage() {
                             onChange={(e) =>
                                 setSortBy(
                                     e.target.value as
-                                    | 'price'
-                                    | 'change'
-                                    | 'changePercent'
-                                    | 'volume'
+                                        | 'price'
+                                        | 'change'
+                                        | 'changePercent'
+                                        | 'volume'
                                 )
                             }
                             className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
@@ -731,6 +713,9 @@ export default function MarketPage() {
                                 <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">
                                     Mã CK
                                 </th>
+                                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">
+                                    Công ty
+                                </th>
                                 <th className="px-4 py-3 text-right text-sm font-semibold text-gray-900">
                                     Giá
                                 </th>
@@ -741,13 +726,13 @@ export default function MarketPage() {
                                     % Thay đổi
                                 </th>
                                 <th className="px-4 py-3 text-right text-sm font-semibold text-gray-900">
+                                    Giá TC
+                                </th>
+                                <th className="px-4 py-3 text-right text-sm font-semibold text-gray-900">
+                                    Biên độ
+                                </th>
+                                <th className="px-4 py-3 text-right text-sm font-semibold text-gray-900">
                                     Khối lượng
-                                </th>
-                                <th className="px-4 py-3 text-right text-sm font-semibold text-gray-900">
-                                    Cao
-                                </th>
-                                <th className="px-4 py-3 text-right text-sm font-semibold text-gray-900">
-                                    Thấp
                                 </th>
                                 <th className="px-4 py-3 text-center text-sm font-semibold text-gray-900">
                                     Hành động
@@ -755,59 +740,85 @@ export default function MarketPage() {
                             </tr>
                         </thead>
                         <tbody>
-                            {filteredStocks.map((stock) => (
-                                <tr
-                                    key={stock.symbol}
-                                    className="border-b border-gray-100 hover:bg-blue-50 transition-colors cursor-pointer"
-                                    onClick={() => handleStockClick(stock)}
-                                >
-                                    <td className="px-4 py-3">
-                                        <span className="font-bold text-primary hover:text-primary/90">
-                                            {stock.symbol}
-                                        </span>
-                                    </td>
-                                    <td
-                                        className={`px-4 py-3 text-right font-semibold ${getChangeColor(
-                                            stock.change
-                                        )}`}
+                            {filteredStocks.map((stock) => {
+                                const dayRange =
+                                    stock.high && stock.low
+                                        ? `${formatPrice(stock.low)} - ${formatPrice(stock.high)}`
+                                        : '-';
+                                const priceChange = stock.previousClose
+                                    ? ((stock.price - stock.previousClose) / stock.previousClose) *
+                                      100
+                                    : stock.changePercent;
+
+                                return (
+                                    <tr
+                                        key={stock.symbol}
+                                        className="border-b border-gray-100 hover:bg-blue-50 transition-colors cursor-pointer"
+                                        onClick={() => handleStockClick(stock)}
                                     >
-                                        {formatPrice(stock.price)}
-                                    </td>
-                                    <td
-                                        className={`px-4 py-3 text-right font-semibold ${getChangeColor(
-                                            stock.change
-                                        )}`}
-                                    >
-                                        {stock.change > 0 ? '+' : ''}
-                                        {formatNumber(stock.change)}
-                                    </td>
-                                    <td
-                                        className={`px-4 py-3 text-right font-semibold ${getChangeColor(
-                                            stock.changePercent
-                                        )}`}
-                                    >
-                                        {stock.changePercent > 0 ? '+' : ''}
-                                        {stock.changePercent}%
-                                    </td>
-                                    <td className="px-4 py-3 text-right text-gray-700">
-                                        {formatNumber(stock.volume)}
-                                    </td>
-                                    <td className="px-4 py-3 text-right text-gray-700">
-                                        {formatPrice(stock.high)}
-                                    </td>
-                                    <td className="px-4 py-3 text-right text-gray-700">
-                                        {formatPrice(stock.low)}
-                                    </td>
-                                    <td className="px-4 py-3 text-center">
-                                        <QuickTradeButton
-                                            symbol={stock.symbol}
-                                            price={stock.price}
-                                            onClick={() => handleBuyClick(stock)}
-                                            variant="buy"
-                                        />
-                                    </td>
-                                </tr>
-                            ))}
+                                        <td className="px-4 py-3">
+                                            <div>
+                                                <span className="font-bold text-blue-600 hover:text-blue-800 block">
+                                                    {stock.symbol}
+                                                </span>
+                                            </div>
+                                        </td>
+                                        <td className="px-4 py-3 text-left">
+                                            <span
+                                                className="text-sm text-gray-700 line-clamp-1"
+                                                title={stock.companyName}
+                                            >
+                                                {stock.companyName || '-'}
+                                            </span>
+                                        </td>
+                                        <td
+                                            className={`px-4 py-3 text-right font-bold text-lg ${getChangeColor(
+                                                stock.change
+                                            )}`}
+                                        >
+                                            {formatPrice(stock.price)}
+                                        </td>
+                                        <td
+                                            className={`px-4 py-3 text-right font-semibold ${getChangeColor(
+                                                stock.change
+                                            )}`}
+                                        >
+                                            {stock.change > 0 ? '+' : ''}
+                                            {formatNumber(stock.change)}
+                                        </td>
+                                        <td
+                                            className={`px-4 py-3 text-right font-semibold ${getChangeColor(
+                                                stock.changePercent
+                                            )}`}
+                                        >
+                                            {stock.changePercent > 0 ? '+' : ''}
+                                            {stock.changePercent}%
+                                        </td>
+                                        <td className="px-4 py-3 text-right text-gray-600 text-sm">
+                                            {stock.previousClose
+                                                ? formatPrice(stock.previousClose)
+                                                : '-'}
+                                        </td>
+                                        <td className="px-4 py-3 text-right text-gray-600 text-sm">
+                                            {dayRange}
+                                        </td>
+                                        <td className="px-4 py-3 text-right text-gray-700">
+                                            {formatNumber(stock.volume)}
+                                        </td>
+                                        <td
+                                            className="px-4 py-3 text-center"
+                                            onClick={(e) => e.stopPropagation()}
+                                        >
+                                            <QuickTradeButton
+                                                symbol={stock.symbol}
+                                                price={stock.price}
+                                                onClick={() => handleBuyClick(stock)}
+                                                variant="buy"
+                                            />
+                                        </td>
+                                    </tr>
+                                );
+                            })}
                         </tbody>
                     </table>
 
