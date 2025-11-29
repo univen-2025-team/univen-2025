@@ -69,7 +69,6 @@ export function useMarketSocket(serverUrl: string = 'http://localhost:4000') {
             setIsConnected(false);
         });
 
-<<<<<<< HEAD
         socket.on('market:update', (data: MarketUpdate) => {
             console.log('Received market:update event:', {
                 indexValue: data.vn30Index.index,
@@ -78,16 +77,6 @@ export function useMarketSocket(serverUrl: string = 'http://localhost:4000') {
             });
             setMarketData(data);
         });
-=======
-    socket.on('market:update', (data: MarketUpdate) => {
-      console.log('Received market:update event:', {
-        indexValue: data.vn30Index.index,
-        stockCount: data.stocks.length,
-        timestamp: data.timestamp
-      });
-      setMarketData(data);
-    });
->>>>>>> b00e09d3 (update profile)
 
         return () => {
             if (socket) {
@@ -102,7 +91,6 @@ export function useMarketSocket(serverUrl: string = 'http://localhost:4000') {
         }
     };
 
-<<<<<<< HEAD
     const unsubscribeFromMarket = () => {
         if (socketRef.current && isConnected) {
             socketRef.current.emit('unsubscribe:market');
@@ -115,37 +103,6 @@ export function useMarketSocket(serverUrl: string = 'http://localhost:4000') {
         subscribeToMarket,
         unsubscribeFromMarket
     };
-=======
-  const subscribeToMarket = () => {
-    if (socketRef.current) {
-      if (isConnected) {
-        console.log('Subscribing to market updates');
-        socketRef.current.emit('subscribe:market');
-      } else {
-        console.log('Socket not connected yet, will subscribe on connect');
-        // Subscribe when connected
-        socketRef.current.once('connect', () => {
-          console.log('Socket connected, subscribing to market');
-          socketRef.current?.emit('subscribe:market');
-        });
-      }
-    }
-  };
-
-  const unsubscribeFromMarket = () => {
-    if (socketRef.current && isConnected) {
-      console.log('Unsubscribing from market updates');
-      socketRef.current.emit('unsubscribe:market');
-    }
-  };
-
-  return {
-    isConnected,
-    marketData,
-    subscribeToMarket,
-    unsubscribeFromMarket,
-  };
->>>>>>> b00e09d3 (update profile)
 }
 
 export function useStockSocket(
@@ -168,22 +125,9 @@ export function useStockSocket(
 
         const socket = socketRef.current;
 
-<<<<<<< HEAD
         socket.on('connect', () => {
             console.log(`Connected to stock socket for ${symbol}`);
             setIsConnected(true);
-=======
-    socket.on('connect', () => {
-      console.log(`Connected to stock socket for ${symbol}`);
-      setIsConnected(true);
-
-      // Auto-subscribe on connect
-      if (symbol) {
-        console.log(`Auto-subscribing to stock ${symbol} with interval ${interval}ms`);
-        socket.emit('subscribe:stock', { symbol, interval });
-      }
-    });
->>>>>>> b00e09d3 (update profile)
 
             // Auto-subscribe on connect
             if (symbol) {
@@ -249,7 +193,6 @@ export function useStockSocket(
         }
     };
 
-<<<<<<< HEAD
     const unsubscribeFromStock = (symbolToUnsubscribe?: string) => {
         if (socketRef.current && isConnected) {
             socketRef.current.emit('unsubscribe:stock', {
@@ -264,29 +207,4 @@ export function useStockSocket(
         subscribeToStock,
         unsubscribeFromStock
     };
-=======
-  const subscribeToStock = (newSymbol?: string, newInterval?: number) => {
-    if (socketRef.current && isConnected) {
-      socketRef.current.emit('subscribe:stock', {
-        symbol: newSymbol || symbol,
-        interval: newInterval || interval
-      });
-    }
-  };
-
-  const unsubscribeFromStock = (symbolToUnsubscribe?: string) => {
-    if (socketRef.current && isConnected) {
-      socketRef.current.emit('unsubscribe:stock', {
-        symbol: symbolToUnsubscribe || symbol
-      });
-    }
-  };
-
-  return {
-    isConnected,
-    stockData,
-    subscribeToStock,
-    unsubscribeFromStock,
-  };
->>>>>>> b00e09d3 (update profile)
 }
