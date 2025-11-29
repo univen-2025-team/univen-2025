@@ -98,10 +98,24 @@ class VNStockDataFetcher:
             change = price - previous_close
             change_percent = (change / previous_close * 100) if previous_close > 0 else 0
             
+            # Fetch intraday data for the prices array
+            # Fetch intraday data using the dedicated method (handles pagination and filtering)
+            intraday_data = self.fetch_intraday_data(symbol)
+            prices = []
+            
+            if intraday_data:
+                for item in intraday_data:
+                    prices.append({
+                        'time': item['time'],
+                        'price': item['close'],
+                        'volume': item['volume']
+                    })
+
             return {
                 'symbol': symbol,
                 'companyName': COMPANY_NAMES.get(symbol, 'Công ty Cổ phần'),
                 'price': round(price, 2),
+                'prices': prices, # Add the prices array
                 'change': round(change, 2),
                 'changePercent': round(change_percent, 2),
                 'volume': int(latest['volume']),
@@ -126,12 +140,16 @@ class VNStockDataFetcher:
         """
         stocks_data = []
         
+        import time
         for symbol in VN30_SYMBOLS:
             logger.info(f"Fetching data for {symbol}...")
             stock_data = self.fetch_stock_data(symbol)
             
             if stock_data:
                 stocks_data.append(stock_data)
+            
+            # Add delay to avoid rate limiting (TCBS is strict)
+            time.sleep(2)
         
         logger.info(f"Successfully fetched {len(stocks_data)}/{len(VN30_SYMBOLS)} stocks")
         return stocks_data
@@ -202,6 +220,35 @@ class VNStockDataFetcher:
                 logger.error("Failed to fetch stock data")
                 return None
             
+            # Fetch VN30 intraday data (minute data)
+            logger.info("Fetching VN30 index intraday data...")
+            vn30_intraday = self.fetch_intraday_data('VN30')
+            
+            if vn30_intraday:
+                # Create a pseudo-stock object for VN30 to store in stock_data collection
+                # vn30_intraday items have 'time' key as string 'YYYY-MM-DD HH:MM:SS'
+                date_str = vn30_intraday[0]['time'].split(' ')[0] if vn30_intraday else datetime.now().strftime('%Y-%m-%d')
+                
+                vn30_stock_data = {
+                    'symbol': 'VN30',
+                    'date': date_str,
+                    'price': vn30_index.get('index'),
+                    'change': vn30_index.get('change'),
+                    'changePercent': vn30_index.get('changePercent'),
+                    'prices': vn30_intraday,
+                    'volume': sum(item.get('volume', 0) for item in vn30_intraday),
+                    # Other fields can be defaulted
+                    'high': max(item.get('price', 0) for item in vn30_intraday) if vn30_intraday else 0,
+                    'low': min(item.get('price', 0) for item in vn30_intraday) if vn30_intraday else 0,
+                    'open': vn30_intraday[0].get('price', 0) if vn30_intraday else 0,
+                    'close': vn30_intraday[-1].get('price', 0) if vn30_intraday else 0,
+                }
+                # Append to stocks list so it gets saved to stock_data collection
+                stocks.append(vn30_stock_data)
+                logger.info(f"Added VN30 index data with {len(vn30_intraday)} minute records")
+            else:
+                logger.warning("Failed to fetch VN30 intraday data")
+            
             # Get actual date from first stock (all should have same date)
             actual_date = stocks[0]['date'] if stocks else datetime.now().strftime('%Y-%m-%d')
             
@@ -224,3 +271,136 @@ class VNStockDataFetcher:
         except Exception as e:
             logger.error(f"Error fetching market overview: {str(e)}")
             return None
+
+    def fetch_intraday_data(self, symbol: str, get_previous_day: bool = False) -> List[Dict]:
+        """
+        Fetch intraday data for a specific symbol.
+        
+        Args:
+            symbol: Stock symbol or 'VN30'
+            get_previous_day: If True, fetch data for the previous trading day instead of the latest.
+            
+        Returns:
+            List of intraday data points
+        """
+        try:
+            from vnstock3 import Vnstock
+            import pandas as pd
+            from unittest.mock import patch
+            
+            # Fetch 1-minute data directly from TCBS API
+            # This avoids fetching thousands of ticks and aggregating them
+            import requests
+            import time
+            
+            end_stamp = int(time.time())
+            # resolution=1 means 1 minute
+            
+            # Fetch data in batches to overcome 250 item limit
+            # We need about 255 items for a full trading day.
+            # If get_previous_day is True, we need to fetch enough to cover 2 days (approx 510 items).
+            # Strategy: Fetch batches of 160 items. 2 batches for today, 4 batches for previous day.
+            
+            num_batches = 4 if get_previous_day else 2
+            # Determine type based on symbol
+            type_param = 'index' if symbol == 'VN30' else 'stock'
+            
+            # Calculate time range
+            # End time is now
+            end_stamp = int(time.time())
+            
+            # URL for direct API access (same as vnstock uses internally)
+            # We fetch in batches to ensure we get enough data
+            # Each request gets 'countBack' items
+            all_items = []
+            
+            current_to = end_stamp
+            
+            for i in range(num_batches):
+                try:
+                    # Update URL with current 'to' timestamp and correct type
+                    url = f"https://apipubaws.tcbs.com.vn/stock-insight/v2/stock/bars?resolution=1&ticker={symbol}&type={type_param}&to={current_to}&countBack=160"
+                    response = requests.get(url, timeout=10)
+                    
+                    if response.status_code == 200:
+                        data = response.json().get('data', [])
+                        if data:
+                            all_items.extend(data)
+                            
+                            # Prepare for next batch
+                            oldest_item = data[0]
+                            dt = datetime.strptime(oldest_item['tradingDate'].split('.')[0], "%Y-%m-%dT%H:%M:%S")
+                            import calendar
+                            current_to = calendar.timegm(dt.timetuple())
+                        else:
+                            break # No more data
+                    else:
+                        logger.warning(f"Failed to fetch batch {i+1} for {symbol}: {response.status_code}")
+                        break
+                except Exception as e:
+                    logger.error(f"Error fetching batch {i+1} for {symbol}: {e}")
+                    break
+                
+            if all_items:
+                # Deduplicate based on tradingDate
+                unique_items = {item['tradingDate']: item for item in all_items}.values()
+                # Sort by tradingDate
+                sorted_items = sorted(unique_items, key=lambda x: x['tradingDate'])
+                
+                # Filter logic
+                if sorted_items:
+                    # Group by date
+                    dates = sorted(list(set(item['tradingDate'].split('T')[0] for item in sorted_items)))
+                    
+                    target_date = None
+                    if get_previous_day:
+                        if len(dates) >= 2:
+                            target_date = dates[-2] # Second latest date
+                            logger.info(f"Fetching previous day data. Found dates: {dates}. Target: {target_date}")
+                        else:
+                            logger.warning(f"Requested previous day but only found dates: {dates}")
+                            # Fallback to latest if only one day found (or return empty?)
+                            # Let's return empty to be strict about "previous day"
+                            return []
+                    else:
+                        target_date = dates[-1] # Latest date
+                        
+                    if target_date:
+                        sorted_items = [item for item in sorted_items if item['tradingDate'].startswith(target_date)]
+                        logger.info(f"Filtered to keep only data for {target_date}: {len(sorted_items)} items")
+                
+                logger.info(f"Fetched total {len(sorted_items)} minute candles for {symbol}")
+                
+                # Convert to result format
+                result = []
+                for item in sorted_items:
+                    # Parse tradingDate (e.g. "2025-11-28T06:21:00.000Z")
+                    # Convert to local time string
+                    try:
+                        dt = datetime.strptime(item['tradingDate'].split('.')[0], "%Y-%m-%dT%H:%M:%S")
+                        # Add 7 hours for GMT+7 (simple adjustment since source is Z/UTC)
+                        dt = dt + timedelta(hours=7)
+                        time_str = dt.strftime("%Y-%m-%d %H:%M:%S")
+                        
+                        result.append({
+                            'time': time_str,
+                            'open': float(item['open']),
+                            'high': float(item['high']),
+                            'low': float(item['low']),
+                            'close': float(item['close']),
+                            'volume': int(item['volume'])
+                        })
+                    except Exception as e:
+                        logger.warning(f"Error parsing item for {symbol}: {e}")
+                        continue
+                        
+                if result:
+                    logger.info(f"Sample data: {result[:2]}")
+                return result
+            else:
+                logger.warning(f"No minute data returned for {symbol}")
+                return []
+            
+        except Exception as e:
+            logger.error(f"Error fetching intraday data for {symbol}: {str(e)}")
+            return []

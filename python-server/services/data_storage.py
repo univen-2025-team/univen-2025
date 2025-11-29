@@ -115,6 +115,7 @@ class MarketDataStorage:
                     'date': date,
                     'companyName': stock.get('companyName', ''),
                     'price': stock.get('price', 0),
+                    'prices': stock.get('prices', []), # Save the prices array
                     'change': stock.get('change', 0),
                     'changePercent': stock.get('changePercent', 0),
                     'volume': stock.get('volume', 0),
@@ -318,3 +319,96 @@ class MarketDataStorage:
         except Exception as e:
             logger.error(f"Error deleting old data: {str(e)}")
             return False
+
+    def save_intraday_data(self, symbol: str, data: List[Dict]) -> bool:
+        """
+        Save intraday data to MongoDB.
+        
+        Args:
+            symbol: Stock symbol
+            data: List of intraday data points
+            
+        Returns:
+            True if successful
+        """
+        if self.db is None:
+            logger.warning("Database not available")
+            return False
+            
+        try:
+            collection = self.db['market_intraday']
+            
+            # Create index if not exists
+            collection.create_index([('symbol', 1), ('time', 1)], unique=True)
+            
+            from pymongo import UpdateOne
+            
+            operations = []
+            for point in data:
+                operations.append(
+                    UpdateOne(
+                        {'symbol': symbol, 'time': point['time']},
+                        {'$set': {
+                            'symbol': symbol,
+                            'time': point['time'],
+                            'open': point['open'],
+                            'high': point['high'],
+                            'low': point['low'],
+                            'close': point['close'],
+                            'volume': point['volume'],
+                            'updatedAt': datetime.now()
+                        }},
+                        upsert=True
+                    )
+                )
+            
+            if operations:
+                result = collection.bulk_write(operations)
+                logger.info(f"Saved {len(operations)} intraday points for {symbol}")
+                return True
+                
+            return False
+            
+        except Exception as e:
+            logger.error(f"Error saving intraday data for {symbol}: {str(e)}")
+            return False
+
+    def get_intraday_data(self, symbol: str, limit: int = 100) -> List[Dict]:
+        """
+        Get intraday data for a symbol.
+        
+        Args:
+            symbol: Stock symbol
+            limit: Number of points to return
+            
+        Returns:
+            List of intraday data points
+        """
+        if self.db is None:
+            return []
+            
+        try:
+            collection = self.db['market_intraday']
+            
+            results = collection.find(
+                {'symbol': symbol},
+                {'_id': 0}
+            ).sort('time', 1).limit(limit) # Sort ascending for chart
+            
+            # If we want the LATEST 'limit' points, we should sort desc, limit, then reverse
+            # But usually for charts we want a specific range. 
+            # For now let's get the latest 'limit' points
+            
+            results = collection.find(
+                {'symbol': symbol},
+                {'_id': 0}
+            ).sort('time', -1).limit(limit)
+            
+            data = list(results)
+            data.reverse() # Return in chronological order
+            
+            return data
+            
+        except Exception as e:
+            logger.error(f"Error getting intraday data for {symbol}: {str(e)}")
+            return []

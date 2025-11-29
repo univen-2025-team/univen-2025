@@ -1,161 +1,118 @@
-# Python Server for VNStock Data
+# Python VNStock Data Caching Server
 
-This Python Flask server fetches real Vietnamese stock market data using the `vnstock` library and provides RESTful APIs for the NestJS backend.
+Automated cronjob service that fetches stock market data from VNStock and caches it in MongoDB.
+
+## Purpose
+
+This Python server runs a daily cronjob to:
+
+-   Fetch latest VN30 stock market data from VNStock (TCBS source)
+-   Save data to MongoDB in two collections: `market_data` and `stock_data`
+-   Provide cached data with minute-level price intervals
+
+**Note**: This server has NO API endpoints. API access is provided by the Node.js server which reads from the same MongoDB database.
 
 ## Features
 
-- Real-time stock data from Vietnamese stock market
-- VN30 index tracking
-- Individual stock details with historical data
-- Technical indicators (MA, RSI, MACD)
-- RESTful API endpoints
+-   **Daily Auto-Update**: Scheduled cronjob runs at 1:00 AM (Vietnam time)
+-   **Minute-Level Data**: Fetches ~257 minute intervals per trading day (9:15 AM - 3:00 PM)
+-   **VN30 Coverage**: All 30 VN30 index stocks
+-   **MongoDB Storage**: Two schemas for market overview and individual stock data
+-   **Auto-Cleanup**: Keeps last 30 days of data
+
+## MongoDB Schemas
+
+### `market_data` Collection
+
+Stores daily market overview:
+
+```javascript
+{
+  date: "2025-11-28",
+  vn30Index: { index, change, changePercent },
+  topGainers: [...],
+  topLosers: [...],
+  totalStocks: 30
+}
+```
+
+### `stock_data` Collection
+
+Stores individual stock data with minute prices:
+
+```javascript
+{
+  symbol: "ACB",
+  date: "2025-11-28",
+  price: 24.25,
+  prices: [
+    { time: "2025-11-28 09:15:00", price: 24.40, volume: 22800 },
+    // ~257 minute data points
+  ],
+  change, changePercent, volume, high, low, open, close
+}
+```
 
 ## Setup
 
-### Prerequisites
+1. **Install Dependencies**
 
-- Python 3.8+
-- pip
-
-### Installation
-
-1. Create a virtual environment:
 ```bash
-python3 -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-```
-
-2. Install dependencies:
-```bash
+conda activate steganography  # Or your Python environment
 pip install -r requirements.txt
 ```
 
-3. Create environment file:
+2. **Configure Environment**
+
 ```bash
 cp .env.example .env
+# Edit .env with your MongoDB connection string
 ```
 
-4. Edit `.env` to configure:
-```
-FLASK_PORT=5000
-FLASK_HOST=0.0.0.0
-FLASK_ENV=development
-CORS_ORIGINS=http://localhost:3000,http://localhost:4000
-# Data source: TCBS (free, no API key), VCI, or MSN
-VNSTOCK_SOURCE=TCBS
-# Optional API key for premium sources
-# VNSTOCK_API_KEY=your_api_key_here
-```
+3. **Run Server**
 
-**Note on Data Sources:**
-- **TCBS** (default): Free source, no API key required. This is the recommended source for development and production.
-- **VCI**: Requires authentication and may return 403 Forbidden errors without proper credentials.
-- **MSN**: Alternative source, may have different rate limits.
-
-The application uses TCBS by default to avoid authentication issues. The original 403 errors were caused by using VCI without proper authentication.
-
-### Running the Server
-
-#### Development
 ```bash
 python app.py
 ```
 
-#### Production
-```bash
-gunicorn -w 4 -b 0.0.0.0:5000 app:app
+The server will:
+
+-   Check if today's data exists
+-   Run initial fetch if needed
+-   Schedule daily updates at 1:00 AM
+
+## Environment Variables
+
+```
+DB_URL=mongodb://localhost:27017/stock-db
+DB_MIN_POOL_SIZE=10
+DB_MAX_POOL_SIZE=50
+CRONJOB_ENABLED=true
+VNSTOCK_SOURCE=TCBS  # Free source, no API key needed
 ```
 
-## API Endpoints
+## Architecture
 
-### Health Check
 ```
-GET /health
-```
-
-### Get Market Data
-```
-GET /api/market?sortBy=price&order=desc&limit=30
-```
-
-Query Parameters:
-- `sortBy`: price, change, changePercent, volume (default: price)
-- `order`: asc, desc (default: desc)
-- `limit`: number of stocks to return (default: 30)
-
-Response:
-```json
-{
-  "success": true,
-  "data": {
-    "vn30Index": {
-      "index": 1250.50,
-      "change": 5.25,
-      "changePercent": 0.42
-    },
-    "stocks": [...],
-    "topGainers": [...],
-    "topLosers": [...],
-    "total": 30,
-    "timestamp": "2024-01-01T00:00:00"
-  }
-}
+python-server/
+├── app.py                      # Main cronjob scheduler
+├── db.py                       # MongoDB connection manager
+├── requirements.txt            # Python dependencies
+├── .env                        # Configuration
+├── jobs/
+│   └── daily_cache_job.py     # Daily caching logic
+└── services/
+    ├── data_fetcher.py         # VNStock data fetching
+    └── data_storage.py         # MongoDB storage operations
 ```
 
-### Get Stock Detail
-```
-GET /api/market/{symbol}?timeRange=1D
-```
+## Tech Stack
 
-Query Parameters:
-- `timeRange`: 1D, 1W, 1M, 3M, 1Y (default: 1D)
-
-Response:
-```json
-{
-  "success": true,
-  "data": {
-    "stock": {
-      "symbol": "VCB",
-      "companyName": "Ngân hàng TMCP Ngoại thương Việt Nam",
-      "price": 85000,
-      "change": 500,
-      "changePercent": 0.59,
-      ...
-    },
-    "priceHistory": [...],
-    "technicalIndicators": {
-      "ma5": 84500,
-      "ma10": 84000,
-      "ma20": 83500,
-      "rsi": 55.5,
-      "macd": 100
-    }
-  }
-}
-```
-
-## Integration with NestJS
-
-The NestJS server should proxy requests to this Python server to fetch real stock data.
-
-## Troubleshooting
-
-### 403 Forbidden Errors
-If you see "Failed to fetch data: 403 - Forbidden" errors:
-1. Make sure `VNSTOCK_SOURCE=TCBS` is set in your `.env` file
-2. The VCI source requires authentication and will return 403 errors without proper credentials
-3. TCBS is the recommended free source that doesn't require an API key
-4. Restart the server after changing the source
-
-### vnstock library issues
-If you encounter issues with vnstock, make sure you're using vnstock3:
-```bash
-pip install --upgrade vnstock3
-```
-
-### CORS issues
-Make sure CORS_ORIGINS in .env includes your frontend URL.
+-   **Python 3.10+**
+-   **VNStock3**: Vietnam stock market data API
+-   **PyMongo**: MongoDB driver
+-   **APScheduler**: Cron job scheduling
+-   **TCBS API**: Data source (via VNStock)
 
 ## License
 

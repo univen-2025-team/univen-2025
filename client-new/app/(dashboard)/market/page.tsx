@@ -24,6 +24,11 @@ interface StockData {
     symbol: string;
     companyName?: string;
     price: number;
+    prices?: Array<{
+        time: string;
+        price: number;
+        volume: number;
+    }>;
     change: number;
     changePercent: number;
     volume: number;
@@ -69,6 +74,7 @@ export default function MarketPage() {
     const [buyStock, setBuyStock] = useState<StockData | null>(null);
     const [isBuyModalOpen, setIsBuyModalOpen] = useState(false);
     const [viewMode, setViewMode] = useState<'all' | 'watchlist'>('all');
+    const [historyRange, setHistoryRange] = useState('1M');
 
     // Socket connection
     const {
@@ -77,6 +83,62 @@ export default function MarketPage() {
         subscribeToMarket,
         unsubscribeFromMarket
     } = useMarketSocket();
+
+    // Fetch history data
+    const fetchHistory = async (range: string) => {
+        try {
+            setHistoryRange(range);
+
+            // Map range to limit (days)
+            let limit = 300; // Default to full day minutes
+            let type = 'intraday'; // Always use intraday as requested
+
+            switch (range) {
+                case '1H':
+                    limit = 60;
+                    break;
+                case '3H':
+                    limit = 180;
+                    break;
+                case '6H':
+                    limit = 360;
+                    break;
+                case '1D':
+                    limit = 300;
+                    break;
+                case '1W':
+                    limit = 300; // Show latest day for now
+                    break;
+                case '1M':
+                    limit = 300;
+                    break;
+                case '3M':
+                    limit = 300;
+                    break;
+                case '6M':
+                    limit = 300;
+                    break;
+                case '1Y':
+                    limit = 300;
+                    break;
+                default:
+                    limit = 300;
+            }
+
+            // Use the updated API function with type parameter
+            // We need to update the call here. Since we imported getVN30History from api/market-cache,
+            // we should use that if possible, or use axios directly with the new param.
+            // The previous code used axios directly. Let's update it to use the new param.
+
+            const response = await axios.get(`/market/history/vn30?limit=${limit}&type=${type}`);
+            if (response.data?.metadata?.history) {
+                setIndexHistory(response.data.metadata.history);
+            }
+        } catch (error) {
+            console.error('Error fetching history:', error);
+            showToast('error', 'Không thể tải dữ liệu lịch sử', 3000);
+        }
+    };
 
     // Fetch market data
     const fetchMarketData = async () => {
@@ -102,6 +164,13 @@ export default function MarketPage() {
 
                 console.log('✅ Setting marketData:', marketDataFormatted);
                 setMarketData(marketDataFormatted);
+
+                // Set history if available
+                if (metadata.vn30History && Array.isArray(metadata.vn30History)) {
+                    console.log('✅ Setting indexHistory:', metadata.vn30History);
+                    setIndexHistory(metadata.vn30History);
+                }
+
                 setError(null);
             } else {
                 console.warn('⚠️ No metadata in response');
@@ -117,6 +186,7 @@ export default function MarketPage() {
 
     useEffect(() => {
         fetchMarketData();
+        fetchHistory(historyRange);
     }, []);
 
     // Real-time updates
@@ -145,7 +215,9 @@ export default function MarketPage() {
                         }),
                         index: socketMarketData.vn30Index.index
                     };
-                    return [...prev.slice(-29), newPoint];
+                    // Keep only last N points based on range, but for realtime we just append
+                    // Ideally we should merge with historical data but for now simple append
+                    return [...prev, newPoint].slice(-100);
                 });
             }
         }
@@ -273,17 +345,21 @@ export default function MarketPage() {
             {/* Market Stats */}
             <MarketStats {...marketStats} />
 
-            {/* VN30 Index + Charts Row */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <VN30IndexCard
-                    {...marketData.vn30Index}
-                    isConnected={isConnected}
-                    realtimeEnabled={realtimeEnabled}
-                    onToggleRealtime={() => setRealtimeEnabled(!realtimeEnabled)}
-                    lastUpdate={new Date().toLocaleTimeString('vi-VN')}
-                />
-                <VN30TrendChart data={indexHistory} />
-            </div>
+            {/* VN30 Index Card */}
+            <VN30IndexCard
+                {...marketData.vn30Index}
+                isConnected={isConnected}
+                realtimeEnabled={realtimeEnabled}
+                onToggleRealtime={() => setRealtimeEnabled(!realtimeEnabled)}
+                lastUpdate={new Date().toLocaleTimeString('vi-VN')}
+            />
+
+            {/* VN30 Trend Chart - Full Width */}
+            <VN30TrendChart
+                data={indexHistory}
+                onRangeChange={fetchHistory}
+                selectedRange={historyRange}
+            />
 
             {/* Top Stocks Chart */}
             <TopStocksChart stocks={marketData.stocks} />
