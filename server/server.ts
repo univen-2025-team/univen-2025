@@ -15,7 +15,6 @@ import MongoDB from './src/app/db.app.js';
 
 // Socket.IO
 import SocketIOService from '@/services/socketio.service.js';
-import MarketSocketService from '@/services/market-socket.service.js';
 import RBACService from '@/services/rbac.service';
 
 // await new Promise((resolve) => {
@@ -51,9 +50,6 @@ const server = app.listen(Number(PORT), () => {
 /* ---------------------------------------------------------- */
 // Initialize Socket.IO service
 SocketIOService.getInstance().initialize(server);
-
-// Initialize Market Socket service for real-time stock data
-MarketSocketService.getInstance().initialize();
 
 server.on('close', () => {
     // Close database connection

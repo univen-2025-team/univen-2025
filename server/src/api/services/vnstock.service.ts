@@ -53,9 +53,9 @@ export default class VNStockService {
             const vnstockModule = await import('vnstock-js');
             this.vnstock = vnstockModule;
             this.initialized = true;
-            
+
             LoggerService.getInstance().info('VNStock service initialized successfully');
-        } catch (error) {
+        } catch (error: any) {
             LoggerService.getInstance().error('Failed to initialize VNStock service', error);
             this.initialized = false;
         }
@@ -69,7 +69,7 @@ export default class VNStockService {
 
     public async getStockPrice(symbol: string): Promise<VNStockData | null> {
         await this.waitForInitialization();
-        
+
         if (!this.initialized || !this.vnstock) {
             return null;
         }
@@ -77,7 +77,7 @@ export default class VNStockService {
         try {
             // Fetch price board data for the stock
             const data = await this.vnstock.stock.priceBoard({ ticker: symbol });
-            
+
             if (!data || !data.price) {
                 return null;
             }
@@ -97,9 +97,9 @@ export default class VNStockService {
                 high: parseFloat(data.high) || currentPrice,
                 low: parseFloat(data.low) || currentPrice,
                 open: parseFloat(data.open) || currentPrice,
-                close: currentPrice,
+                close: currentPrice
             };
-        } catch (error) {
+        } catch (error: any) {
             // Silently fail and return null - let caller handle fallback
             LoggerService.getInstance().debug(`Failed to fetch stock data for ${symbol}`, error);
             return null;
@@ -108,7 +108,7 @@ export default class VNStockService {
 
     public async getVN30Index(): Promise<VN30IndexData | null> {
         await this.waitForInitialization();
-        
+
         if (!this.initialized || !this.vnstock) {
             return null;
         }
@@ -116,7 +116,7 @@ export default class VNStockService {
         try {
             // Fetch VN30 index data using price board
             const data = await this.vnstock.stock.priceBoard({ ticker: 'VN30' });
-            
+
             if (!data || !data.price) {
                 return null;
             }
@@ -129,9 +129,9 @@ export default class VNStockService {
             return {
                 index: currentIndex,
                 change: change,
-                changePercent: parseFloat(changePercent.toFixed(2)),
+                changePercent: parseFloat(changePercent.toFixed(2))
             };
-        } catch (error) {
+        } catch (error: any) {
             // Silently fail and return null
             LoggerService.getInstance().debug('Failed to fetch VN30 index data', error);
             return null;
@@ -144,7 +144,7 @@ export default class VNStockService {
         endDate: string
     ): Promise<any[]> {
         await this.waitForInitialization();
-        
+
         if (!this.initialized || !this.vnstock) {
             return [];
         }
@@ -153,11 +153,11 @@ export default class VNStockService {
             const data = await this.vnstock.stock.quote({
                 ticker: symbol,
                 start: startDate,
-                end: endDate,
+                end: endDate
             });
-            
+
             return data || [];
-        } catch (error) {
+        } catch (error: any) {
             LoggerService.getInstance().debug(
                 `Failed to fetch historical data for ${symbol}`,
                 error
@@ -177,17 +177,19 @@ export default class VNStockService {
         try {
             const response = await fetch(`${this.pythonServerUrl}/health`, {
                 method: 'GET',
-                signal: AbortSignal.timeout(5000),
+                signal: AbortSignal.timeout(5000)
             });
-            
+
             if (response.ok) {
                 LoggerService.getInstance().info('Successfully connected to Python vnstock server');
                 return true;
             } else {
-                LoggerService.getInstance().warn(`Python vnstock server health check failed with status ${response.status}`);
+                LoggerService.getInstance().warn(
+                    `Python vnstock server health check failed with status ${response.status}`
+                );
                 return false;
             }
-        } catch (error) {
+        } catch (error: any) {
             LoggerService.getInstance().warn('Failed to connect to Python vnstock server', error);
             return false;
         }
@@ -210,27 +212,34 @@ export default class VNStockService {
             const response = await fetch(url.toString(), {
                 method: 'GET',
                 headers: {
-                    'Content-Type': 'application/json',
+                    'Content-Type': 'application/json'
                 },
-                signal: AbortSignal.timeout(10000),
+                signal: AbortSignal.timeout(10000)
             });
 
             if (!response.ok) {
-                LoggerService.getInstance().error(`Python server responded with status: ${response.status}`);
+                LoggerService.getInstance().error(
+                    `Python server responded with status: ${response.status}`
+                );
                 return null;
             }
 
-            const result = await response.json();
-            
+            const result: any = await response.json();
+
             if (result.success && result.data) {
-                LoggerService.getInstance().debug('Successfully fetched market data from Python server');
+                LoggerService.getInstance().debug(
+                    'Successfully fetched market data from Python server'
+                );
                 return result.data;
             }
 
             LoggerService.getInstance().error('Python server response was not successful');
             return null;
-        } catch (error) {
-            LoggerService.getInstance().error('Error fetching market data from Python server', error);
+        } catch (error: any) {
+            LoggerService.getInstance().error(
+                'Error fetching market data from Python server',
+                error
+            );
             return null;
         }
     }
@@ -238,10 +247,7 @@ export default class VNStockService {
     /**
      * Get detailed stock data from Python vnstock server
      */
-    public async getStockDetail(
-        symbol: string,
-        timeRange: string = '1D'
-    ): Promise<any | null> {
+    public async getStockDetail(symbol: string, timeRange: string = '1D'): Promise<any | null> {
         try {
             const url = new URL(`/api/market/${symbol}`, this.pythonServerUrl);
             url.searchParams.set('timeRange', timeRange);
@@ -249,26 +255,32 @@ export default class VNStockService {
             const response = await fetch(url.toString(), {
                 method: 'GET',
                 headers: {
-                    'Content-Type': 'application/json',
+                    'Content-Type': 'application/json'
                 },
-                signal: AbortSignal.timeout(10000),
+                signal: AbortSignal.timeout(10000)
             });
 
             if (!response.ok) {
-                LoggerService.getInstance().error(`Python server responded with status: ${response.status} for ${symbol}`);
+                LoggerService.getInstance().error(
+                    `Python server responded with status: ${response.status} for ${symbol}`
+                );
                 return null;
             }
 
-            const result = await response.json();
-            
+            const result: any = await response.json();
+
             if (result.success && result.data) {
-                LoggerService.getInstance().debug(`Successfully fetched stock detail for ${symbol}`);
+                LoggerService.getInstance().debug(
+                    `Successfully fetched stock detail for ${symbol}`
+                );
                 return result.data;
             }
 
-            LoggerService.getInstance().error(`Python server response was not successful for ${symbol}`);
+            LoggerService.getInstance().error(
+                `Python server response was not successful for ${symbol}`
+            );
             return null;
-        } catch (error) {
+        } catch (error: any) {
             LoggerService.getInstance().error(`Error fetching stock detail for ${symbol}`, error);
             return null;
         }
