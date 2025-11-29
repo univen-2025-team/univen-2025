@@ -39,13 +39,8 @@ export default class AuthController {
         new OkResponse({
             message: 'Login with Google success!',
             metadata: user
-<<<<<<< HEAD
-        }).sendAuth(res, "http://localhost:3000/auth/google/callback");
-    }
-=======
         }).sendAuth(res, `${CLIENT_URL}/auth/google/callback`);
     };
->>>>>>> ea92ef4d712de077556c73c19678cf028ca8fded
 
     /* ------------------------------------------------------ */
     /*                         Logout                         */
