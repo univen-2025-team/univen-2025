@@ -1,14 +1,17 @@
 """
-Flask server for fetching Vietnamese stock market data using vnstock library.
-This server provides real-time stock data for the VN30 index and individual stocks.
+Python Server for VNStock Data Caching
+Runs cronjob to fetch market data from vnstock and cache in MongoDB.
+No API endpoints - Node.js server provides the API.
 """
 
 import os
 import logging
 from datetime import datetime
-from flask import Flask, jsonify, request
-from flask_cors import CORS
 from dotenv import load_dotenv
+from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.triggers.cron import CronTrigger
+import atexit
+import time
 
 # Import MongoDB connection manager
 from db import MongoDB
@@ -16,32 +19,43 @@ from db import MongoDB
 # Load environment variables
 load_dotenv()
 
-# Initialize Flask app
-app = Flask(__name__)
-
-# Initialize MongoDB connection
-mongodb = MongoDB.get_instance()
-mongodb.connect()
-
-# Register cleanup handler for graceful shutdown
-@app.teardown_appcontext
-def shutdown_db(exception=None):
-    """Close MongoDB connection when app context ends."""
-    if exception:
-        logger.error(f'App context ended with exception: {exception}')
-    # Note: MongoDB connection will be closed when the process exits
-    # PyMongo handles connection pooling automatically
-
-# Configure CORS
-cors_origins = os.getenv('CORS_ORIGINS', '*').split(',')
-CORS(app, resources={r"/*": {"origins": cors_origins}})
-
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
+
+# Initialize MongoDB connection
+logger.info("Initializing MongoDB connection...")
+mongodb = MongoDB.get_instance()
+mongodb.connect()
+
+# Initialize cronjob scheduler
+scheduler = BackgroundScheduler(daemon=True)
+
+# Import and schedule daily caching job
+from jobs.daily_cache_job import fetch_and_cache_market_data
+
+# Schedule job to run daily at 1:00 AM Vietnamese time
+if os.getenv('CRONJOB_ENABLED', 'true').lower() == 'true':
+    scheduler.add_job(
+        func=fetch_and_cache_market_data,
+        trigger=CronTrigger(hour=1, minute=0, timezone='Asia/Ho_Chi_Minh'),
+        id='daily_market_cache',
+        name='Daily Market Data Caching',
+        replace_existing=True
+    )
+    scheduler.start()
+    logger.info("=" * 60)
+    logger.info("Cronjob scheduler started successfully")
+    logger.info("Daily market data caching scheduled at 1:00 AM (Vietnamese time)")
+    logger.info("=" * 60)
+    
+    # Shutdown scheduler when app exits
+    atexit.register(lambda: scheduler.shutdown())
+else:
+    logger.warning("Cronjob is disabled in environment configuration")
 
 # VNStock configuration
 # TCBS is the default free source that doesn't require an API key
@@ -90,343 +104,39 @@ COMPANY_NAMES = {
     'VPB': 'Ngân hàng TMCP Việt Nam Thịnh Vượng',
 }
 
-def get_stock_data(symbol):
-    """
-    Fetch stock data for a given symbol using vnstock library.
-    """
-    try:
-        from vnstock3 import Vnstock
-        
-        # Use configured source (default: TCBS which is free)
-        stock = Vnstock().stock(symbol=symbol, source=VNSTOCK_SOURCE)
-        
-        # Get quote data
-        quote = stock.quote.history(symbol=symbol, start='2024-01-01', end=datetime.now().strftime('%Y-%m-%d'))
-        
-        if quote is None or len(quote) == 0:
-            logger.warning(f"No data found for symbol {symbol}")
-            return None
-            
-        # Get the latest data
-        latest = quote.iloc[-1]
-        previous = quote.iloc[-2] if len(quote) > 1 else latest
-        
-        # Calculate values
-        price = float(latest['close'])
-        open_price = float(latest['open'])
-        high = float(latest['high'])
-        low = float(latest['low'])
-        volume = int(latest['volume'])
-        previous_close = float(previous['close'])
-        change = price - previous_close
-        change_percent = (change / previous_close * 100) if previous_close > 0 else 0
-        
-        return {
-            'symbol': symbol,
-            'price': round(price, 2),
-            'change': round(change, 2),
-            'changePercent': round(change_percent, 2),
-            'volume': volume,
-            'high': round(high, 2),
-            'low': round(low, 2),
-            'open': round(open_price, 2),
-            'close': round(price, 2),
-        }
-    except Exception as e:
-        logger.error(f"Error fetching data for {symbol}: {str(e)}")
-        return None
-
-def get_stock_detail(symbol, time_range='1D'):
-    """
-    Fetch detailed stock data including historical prices.
-    """
-    try:
-        from vnstock3 import Vnstock
-        import pandas as pd
-        
-        # Use configured source (default: TCBS which is free)
-        stock = Vnstock().stock(symbol=symbol, source=VNSTOCK_SOURCE)
-        
-        # Calculate date range based on time_range
-        end_date = datetime.now()
-        if time_range == '1D':
-            start_date = end_date.replace(hour=0, minute=0, second=0, microsecond=0)
-        elif time_range == '1W':
-            start_date = end_date - pd.Timedelta(days=7)
-        elif time_range == '1M':
-            start_date = end_date - pd.Timedelta(days=30)
-        elif time_range == '3M':
-            start_date = end_date - pd.Timedelta(days=90)
-        elif time_range == '1Y':
-            start_date = end_date - pd.Timedelta(days=365)
-        else:
-            start_date = end_date - pd.Timedelta(days=30)
-        
-        # Get historical data
-        history = stock.quote.history(
-            symbol=symbol, 
-            start=start_date.strftime('%Y-%m-%d'), 
-            end=end_date.strftime('%Y-%m-%d')
-        )
-        
-        if history is None or len(history) == 0:
-            logger.warning(f"No historical data found for symbol {symbol}")
-            return None
-        
-        # Get latest data
-        latest = history.iloc[-1]
-        previous = history.iloc[-2] if len(history) > 1 else latest
-        
-        price = float(latest['close'])
-        previous_close = float(previous['close'])
-        change = price - previous_close
-        change_percent = (change / previous_close * 100) if previous_close > 0 else 0
-        
-        # Build price history
-        price_history = []
-        for idx, row in history.iterrows():
-            time_str = row['time'].strftime('%H:%M') if time_range == '1D' else row['time'].strftime('%d/%m')
-            price_history.append({
-                'time': time_str,
-                'price': round(float(row['close']), 2),
-                'volume': int(row['volume'])
-            })
-        
-        # Get company info (basic calculation)
-        market_cap = price * int(latest['volume']) * 1000  # Rough estimate
-        pe = 15.5  # Mock value - would need fundamental data
-        eps = price / pe if pe > 0 else 0
-        
-        stock_detail = {
-            'symbol': symbol,
-            'companyName': COMPANY_NAMES.get(symbol, 'Công ty Cổ phần'),
-            'price': round(price, 2),
-            'change': round(change, 2),
-            'changePercent': round(change_percent, 2),
-            'volume': int(latest['volume']),
-            'high': round(float(latest['high']), 2),
-            'low': round(float(latest['low']), 2),
-            'open': round(float(latest['open']), 2),
-            'close': round(price, 2),
-            'previousClose': round(previous_close, 2),
-            'marketCap': round(market_cap, 2),
-            'pe': round(pe, 2),
-            'eps': round(eps, 2),
-            'lastUpdate': datetime.now().isoformat(),
-        }
-        
-        # Calculate technical indicators
-        prices = [float(row['close']) for _, row in history.iterrows()]
-        
-        ma5 = sum(prices[-5:]) / 5 if len(prices) >= 5 else price
-        ma10 = sum(prices[-10:]) / 10 if len(prices) >= 10 else price
-        ma20 = sum(prices[-20:]) / 20 if len(prices) >= 20 else price
-        
-        # Simple RSI calculation
-        gains = []
-        losses = []
-        for i in range(1, min(14, len(prices))):
-            change = prices[-i] - prices[-i-1]
-            if change > 0:
-                gains.append(change)
-            else:
-                losses.append(abs(change))
-        
-        avg_gain = sum(gains) / 14 if gains else 0
-        avg_loss = sum(losses) / 14 if losses else 0.01
-        rs = avg_gain / avg_loss
-        rsi = 100 - (100 / (1 + rs))
-        
-        # MACD
-        ema12 = sum(prices[-12:]) / 12 if len(prices) >= 12 else price
-        ema26 = sum(prices[-26:]) / 26 if len(prices) >= 26 else price
-        macd = ema12 - ema26
-        
-        technical_indicators = {
-            'ma5': round(ma5, 2),
-            'ma10': round(ma10, 2),
-            'ma20': round(ma20, 2),
-            'rsi': round(rsi, 2),
-            'macd': round(macd, 2),
-        }
-        
-        return {
-            'stock': stock_detail,
-            'priceHistory': price_history,
-            'technicalIndicators': technical_indicators,
-        }
-    except Exception as e:
-        logger.error(f"Error fetching detail for {symbol}: {str(e)}")
-        return None
-
-def get_vn30_index():
-    """
-    Get VN30 index data.
-    """
-    try:
-        from vnstock3 import Vnstock
-        
-        # Fetch VN30 index data using configured source
-        stock = Vnstock().stock(symbol='VN30', source=VNSTOCK_SOURCE)
-        index_data = stock.quote.history(symbol='VN30', start='2024-01-01', end=datetime.now().strftime('%Y-%m-%d'))
-        
-        if index_data is None or len(index_data) == 0:
-            logger.warning("No VN30 index data found")
-            return None
-        
-        latest = index_data.iloc[-1]
-        previous = index_data.iloc[-2] if len(index_data) > 1 else latest
-        
-        index_value = float(latest['close'])
-        previous_value = float(previous['close'])
-        change = index_value - previous_value
-        change_percent = (change / previous_value * 100) if previous_value > 0 else 0
-        
-        return {
-            'index': round(index_value, 2),
-            'change': round(change, 2),
-            'changePercent': round(change_percent, 2),
-        }
-    except Exception as e:
-        logger.error(f"Error fetching VN30 index: {str(e)}")
-        return None
-
-@app.route('/health', methods=['GET'])
-def health_check():
-    """Health check endpoint."""
-    return jsonify({
-        'status': 'healthy',
-        'timestamp': datetime.now().isoformat(),
-        'mongodb': 'connected' if mongodb.is_connected() else 'disconnected',
-    })
-
-@app.route('/api/market', methods=['GET'])
-def get_market_data():
-    """
-    Get VN30 market data including all stocks.
-    Query params:
-    - sortBy: price, change, changePercent, volume (default: price)
-    - order: asc, desc (default: desc)
-    - limit: number of stocks to return (default: 30)
-    """
-    try:
-        sort_by = request.args.get('sortBy', 'price')
-        order = request.args.get('order', 'desc')
-        limit = int(request.args.get('limit', 30))
-        
-        logger.info(f"Fetching market data: sortBy={sort_by}, order={order}, limit={limit}")
-        
-        # Fetch VN30 index
-        vn30_index = get_vn30_index()
-        if vn30_index is None:
-            # Fallback to mock data if API fails
-            vn30_index = {
-                'index': 1250.50,
-                'change': 5.25,
-                'changePercent': 0.42,
-            }
-        
-        # Fetch all VN30 stocks
-        stocks = []
-        for symbol in VN30_SYMBOLS:
-            stock_data = get_stock_data(symbol)
-            if stock_data:
-                stocks.append(stock_data)
-        
-        # Sort stocks
-        reverse = (order == 'desc')
-        if sort_by in ['price', 'change', 'changePercent', 'volume']:
-            stocks.sort(key=lambda x: x.get(sort_by, 0), reverse=reverse)
-        
-        # Limit results
-        stocks = stocks[:limit]
-        
-        # Calculate top gainers and losers
-        sorted_by_change = sorted(stocks, key=lambda x: x['changePercent'], reverse=True)
-        top_gainers = sorted_by_change[:5]
-        top_losers = sorted_by_change[-5:]
-        top_losers.reverse()
-        
-        return jsonify({
-            'success': True,
-            'data': {
-                'vn30Index': vn30_index,
-                'stocks': stocks,
-                'topGainers': top_gainers,
-                'topLosers': top_losers,
-                'total': len(stocks),
-                'timestamp': datetime.now().isoformat(),
-            }
-        })
-    except Exception as e:
-        logger.error(f"Error in get_market_data: {str(e)}")
-        return jsonify({
-            'success': False,
-            'error': 'Failed to fetch market data',
-            'message': str(e),
-        }), 500
-
-@app.route('/api/market/<symbol>', methods=['GET'])
-def get_stock_data_endpoint(symbol):
-    """
-    Get detailed stock data for a specific symbol.
-    Query params:
-    - timeRange: 1D, 1W, 1M, 3M, 1Y (default: 1D)
-    """
-    try:
-        symbol = symbol.upper()
-        time_range = request.args.get('timeRange', '1D')
-        
-        logger.info(f"Fetching stock detail: symbol={symbol}, timeRange={time_range}")
-        
-        stock_detail = get_stock_detail(symbol, time_range)
-        
-        if stock_detail is None:
-            return jsonify({
-                'success': False,
-                'error': f'Failed to fetch data for {symbol}',
-                'message': 'No data available',
-            }), 404
-        
-        return jsonify({
-            'success': True,
-            'data': stock_detail,
-        })
-    except Exception as e:
-        logger.error(f"Error in get_stock_data_endpoint: {str(e)}")
-        return jsonify({
-            'success': False,
-            'error': f'Failed to fetch data for {symbol}',
-            'message': str(e),
-        }), 500
-
-@app.errorhandler(404)
-def not_found(error):
-    """Handle 404 errors."""
-    return jsonify({
-        'success': False,
-        'error': 'Not found',
-        'message': 'The requested resource was not found',
-    }), 404
-
-@app.errorhandler(500)
-def internal_error(error):
-    """Handle 500 errors."""
-    return jsonify({
-        'success': False,
-        'error': 'Internal server error',
-        'message': str(error),
-    }), 500
-
 if __name__ == '__main__':
-    port = int(os.getenv('FLASK_PORT', 5000))
-    host = os.getenv('FLASK_HOST', '0.0.0.0')
-    debug = os.getenv('FLASK_ENV', 'production') == 'development'
+    logger.info("Python VNStock Caching Server running...")
+    logger.info("Press Ctrl+C to stop")
     
-    logger.info(f"Starting Flask server on {host}:{port}")
+    # Check if we need to run the cronjob immediately
+    try:
+        from services.data_storage import MarketDataStorage
+        from datetime import datetime
+        
+        storage = MarketDataStorage()
+        today = datetime.now().strftime('%Y-%m-%d')
+        
+        # Check if data exists for today
+        existing_data = storage.get_market_data_by_date(today)
+        
+        if existing_data is not None:
+            logger.info(f"✓ Data for {today} already exists in cache")
+        else:
+            logger.info(f"⚠️ No data found for {today}, running initial cache job...")
+            # Run the cronjob immediately
+            success = fetch_and_cache_market_data()
+            if success:
+                logger.info("✓ Initial cache job completed successfully")
+            else:
+                logger.warning("⚠️ Initial cache job failed, will retry at scheduled time")
+    except Exception as e:
+        logger.error(f"Error checking/running initial cache: {str(e)}")
     
     try:
-        app.run(host=host, port=port, debug=debug)
-    finally:
-        # Ensure MongoDB connection is closed on shutdown
+        # Keep the process running
+        while True:
+            time.sleep(1)
+    except (KeyboardInterrupt, SystemExit):
+        logger.info("Shutting down...")
         mongodb.disconnect()
+        logger.info("Server stopped")
