@@ -6,7 +6,10 @@ export const API_VERSION = 'v1';
 // Server configs
 export const PORT = process.env.PORT || 4000;
 export const HOST = process.env.HOST || '0.0.0.0';
-export const BASE_URL = `https://${HOST}:${PORT}`;
+export const BASE_URL = `http://${HOST}:${PORT}`;
+
+// Client config
+export const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:3000';
 
 // Environment
 export const NODE_ENV = (process.env.NODE_ENV || 'development') as 'development' | 'production';
