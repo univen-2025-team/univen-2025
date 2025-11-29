@@ -3,6 +3,7 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { TrendingUp, TrendingDown, Minus, ShoppingCart, Building2 } from 'lucide-react';
+import { WatchlistButton } from './watchlist-button';
 
 interface StockData {
     symbol: string;
@@ -23,9 +24,18 @@ interface StockDetailModalProps {
     isOpen: boolean;
     onClose: () => void;
     onBuy?: (stock: StockData) => void;
+    isInWatchlist?: boolean;
+    onToggleWatchlist?: () => void;
 }
 
-export function StockDetailModal({ stock, isOpen, onClose, onBuy }: StockDetailModalProps) {
+export function StockDetailModal({
+    stock,
+    isOpen,
+    onClose,
+    onBuy,
+    isInWatchlist = false,
+    onToggleWatchlist
+}: StockDetailModalProps) {
     if (!stock) return null;
 
     const isPositive = stock.change > 0;
@@ -55,6 +65,15 @@ export function StockDetailModal({ stock, isOpen, onClose, onBuy }: StockDetailM
                             <div className="flex items-center gap-2 mb-2">
                                 <Building2 className="h-5 w-5 text-gray-600" />
                                 <div className="text-2xl font-bold">{stock.symbol}</div>
+                                {onToggleWatchlist && (
+                                    <WatchlistButton
+                                        symbol={stock.symbol}
+                                        isInWatchlist={isInWatchlist}
+                                        onToggle={onToggleWatchlist}
+                                        size="default"
+                                        variant="ghost"
+                                    />
+                                )}
                             </div>
                             {stock.companyName && (
                                 <div className="text-base text-gray-600 font-normal">
