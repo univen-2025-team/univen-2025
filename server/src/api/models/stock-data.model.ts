@@ -16,7 +16,10 @@ export interface IStockData extends Document {
     price: number;
     prices: Array<{
         time: string;
-        price: number;
+        open: number;
+        high: number;
+        low: number;
+        close: number;
         volume: number;
     }>;
     change: number;
@@ -62,7 +65,10 @@ const StockDataSchema = new Schema(
         prices: [
             {
                 time: String,
-                price: Number,
+                open: Number,
+                high: Number,
+                low: Number,
+                close: Number,
                 volume: Number
             }
         ],
