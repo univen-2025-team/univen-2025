@@ -116,15 +116,10 @@ export default class AuthService {
         if (!user)
             throw new NotFoundErrorResponse({ message: 'Username or password is not correct!' });
 
-<<<<<<< HEAD
-        if (!user.password) 
-            throw new ForbiddenErrorResponse({ message: 'This account already uses Google login!' });
-=======
         if (!user.password)
             throw new ForbiddenErrorResponse({
                 message: 'This account already uses Google login!'
             });
->>>>>>> ea92ef4d712de077556c73c19678cf028ca8fded
 
         /* ------------------ Check password ------------------ */
         const hashPassword = user.password;
@@ -189,10 +184,7 @@ export default class AuthService {
             const newUser = UserService.newInstance({
                 googleId: googleProfile.googleId,
                 email: googleProfile.email,
-<<<<<<< HEAD
-=======
                 balance: USER_INIT_BALANCE,
->>>>>>> ea92ef4d712de077556c73c19678cf028ca8fded
                 password: '',
 
                 user_fullName: googleProfile.user_fullName,

@@ -19,8 +19,6 @@ interface VN30IndexData {
     changePercent: number;
 }
 
-<<<<<<< HEAD
-=======
 interface MarketData {
     vn30Index: VN30IndexData;
     stocks: VNStockData[];
@@ -30,21 +28,15 @@ interface MarketData {
     timestamp: string;
 }
 
->>>>>>> ea92ef4d712de077556c73c19678cf028ca8fded
 export default class VNStockService {
     private static instance: VNStockService;
     private vnstock: any = null;
     private initialized: boolean = false;
     private initPromise: Promise<void> | null = null;
-<<<<<<< HEAD
-
-    private constructor() {
-=======
     private pythonServerUrl: string;
 
     private constructor() {
         this.pythonServerUrl = process.env.VNSTOCK_API_URL || 'http://localhost:5000';
->>>>>>> ea92ef4d712de077556c73c19678cf028ca8fded
         this.initPromise = this.initialize();
     }
 
@@ -61,15 +53,9 @@ export default class VNStockService {
             const vnstockModule = await import('vnstock-js');
             this.vnstock = vnstockModule;
             this.initialized = true;
-<<<<<<< HEAD
-            
-            LoggerService.getInstance().info('VNStock service initialized successfully');
-        } catch (error) {
-=======
 
             LoggerService.getInstance().info('VNStock service initialized successfully');
         } catch (error: any) {
->>>>>>> ea92ef4d712de077556c73c19678cf028ca8fded
             LoggerService.getInstance().error('Failed to initialize VNStock service', error);
             this.initialized = false;
         }
@@ -83,11 +69,6 @@ export default class VNStockService {
 
     public async getStockPrice(symbol: string): Promise<VNStockData | null> {
         await this.waitForInitialization();
-<<<<<<< HEAD
-        
-=======
-
->>>>>>> ea92ef4d712de077556c73c19678cf028ca8fded
         if (!this.initialized || !this.vnstock) {
             return null;
         }
@@ -95,11 +76,6 @@ export default class VNStockService {
         try {
             // Fetch price board data for the stock
             const data = await this.vnstock.stock.priceBoard({ ticker: symbol });
-<<<<<<< HEAD
-            
-=======
-
->>>>>>> ea92ef4d712de077556c73c19678cf028ca8fded
             if (!data || !data.price) {
                 return null;
             }
@@ -119,15 +95,9 @@ export default class VNStockService {
                 high: parseFloat(data.high) || currentPrice,
                 low: parseFloat(data.low) || currentPrice,
                 open: parseFloat(data.open) || currentPrice,
-<<<<<<< HEAD
-                close: currentPrice,
-            };
-        } catch (error) {
-=======
                 close: currentPrice
             };
         } catch (error: any) {
->>>>>>> ea92ef4d712de077556c73c19678cf028ca8fded
             // Silently fail and return null - let caller handle fallback
             LoggerService.getInstance().debug(`Failed to fetch stock data for ${symbol}`, error);
             return null;
@@ -136,11 +106,6 @@ export default class VNStockService {
 
     public async getVN30Index(): Promise<VN30IndexData | null> {
         await this.waitForInitialization();
-<<<<<<< HEAD
-        
-=======
-
->>>>>>> ea92ef4d712de077556c73c19678cf028ca8fded
         if (!this.initialized || !this.vnstock) {
             return null;
         }
@@ -148,11 +113,6 @@ export default class VNStockService {
         try {
             // Fetch VN30 index data using price board
             const data = await this.vnstock.stock.priceBoard({ ticker: 'VN30' });
-<<<<<<< HEAD
-            
-=======
-
->>>>>>> ea92ef4d712de077556c73c19678cf028ca8fded
             if (!data || !data.price) {
                 return null;
             }
@@ -165,15 +125,9 @@ export default class VNStockService {
             return {
                 index: currentIndex,
                 change: change,
-<<<<<<< HEAD
-                changePercent: parseFloat(changePercent.toFixed(2)),
-            };
-        } catch (error) {
-=======
                 changePercent: parseFloat(changePercent.toFixed(2))
             };
         } catch (error: any) {
->>>>>>> ea92ef4d712de077556c73c19678cf028ca8fded
             // Silently fail and return null
             LoggerService.getInstance().debug('Failed to fetch VN30 index data', error);
             return null;
@@ -186,11 +140,6 @@ export default class VNStockService {
         endDate: string
     ): Promise<any[]> {
         await this.waitForInitialization();
-<<<<<<< HEAD
-        
-=======
-
->>>>>>> ea92ef4d712de077556c73c19678cf028ca8fded
         if (!this.initialized || !this.vnstock) {
             return [];
         }
@@ -199,19 +148,11 @@ export default class VNStockService {
             const data = await this.vnstock.stock.quote({
                 ticker: symbol,
                 start: startDate,
-<<<<<<< HEAD
-                end: endDate,
-            });
-            
-            return data || [];
-        } catch (error) {
-=======
                 end: endDate
             });
 
             return data || [];
         } catch (error: any) {
->>>>>>> ea92ef4d712de077556c73c19678cf028ca8fded
             LoggerService.getInstance().debug(
                 `Failed to fetch historical data for ${symbol}`,
                 error
@@ -223,8 +164,6 @@ export default class VNStockService {
     public isInitialized(): boolean {
         return this.initialized;
     }
-<<<<<<< HEAD
-=======
 
     /**
      * Test connection to Python vnstock server
@@ -341,5 +280,4 @@ export default class VNStockService {
             return null;
         }
     }
->>>>>>> ea92ef4d712de077556c73c19678cf028ca8fded
 }
