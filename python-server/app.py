@@ -10,11 +10,27 @@ from flask import Flask, jsonify, request
 from flask_cors import CORS
 from dotenv import load_dotenv
 
+# Import MongoDB connection manager
+from db import MongoDB
+
 # Load environment variables
 load_dotenv()
 
 # Initialize Flask app
 app = Flask(__name__)
+
+# Initialize MongoDB connection
+mongodb = MongoDB.get_instance()
+mongodb.connect()
+
+# Register cleanup handler for graceful shutdown
+@app.teardown_appcontext
+def shutdown_db(exception=None):
+    """Close MongoDB connection when app context ends."""
+    if exception:
+        logger.error(f'App context ended with exception: {exception}')
+    # Note: MongoDB connection will be closed when the process exits
+    # PyMongo handles connection pooling automatically
 
 # Configure CORS
 cors_origins = os.getenv('CORS_ORIGINS', '*').split(',')
@@ -281,6 +297,7 @@ def health_check():
     return jsonify({
         'status': 'healthy',
         'timestamp': datetime.now().isoformat(),
+        'mongodb': 'connected' if mongodb.is_connected() else 'disconnected',
     })
 
 @app.route('/api/market', methods=['GET'])
@@ -407,4 +424,9 @@ if __name__ == '__main__':
     debug = os.getenv('FLASK_ENV', 'production') == 'development'
     
     logger.info(f"Starting Flask server on {host}:{port}")
-    app.run(host=host, port=port, debug=debug)
+    
+    try:
+        app.run(host=host, port=port, debug=debug)
+    finally:
+        # Ensure MongoDB connection is closed on shutdown
+        mongodb.disconnect()
