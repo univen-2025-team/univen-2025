@@ -3,7 +3,7 @@
     "version": "0.1.0",
     "private": true,
     "scripts": {
-        "dev": "cross-env next dev --turbo --experimental-https",
+        "dev": "cross-env next dev --turbo",
         "build": "next build",
         "start": "cross-env NODE_ENV=production bun server.js",
         "start:https": "cross-env NODE_ENV=production bun server.js",

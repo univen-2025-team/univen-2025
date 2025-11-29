@@ -6,7 +6,7 @@ export const API_VERSION = 'v1';
 // Server configs
 export const PORT = process.env.PORT || 4000;
 export const HOST = process.env.HOST || '0.0.0.0';
-export const BASE_URL = `https://${HOST}:${PORT}`;
+export const BASE_URL = `http://${HOST}:${PORT}`;
 
 // Environment
 export const NODE_ENV = (process.env.NODE_ENV || 'development') as 'development' | 'production';
@@ -22,5 +22,6 @@ export const ITEM_PER_PAGE = 48; // Chia hết cho tá để dễ phân layout
 // File
 export const PUBLIC_PATH = path.join(import.meta.dirname, '../../public');
 
-//AI 
-export const AI_CHAT_SERVICE_URL = process.env.AI_CHAT_SERVICE_URL || 'http://localhost:5000/api/v1/chat';
+//AI
+export const AI_CHAT_SERVICE_URL =
+    process.env.AI_CHAT_SERVICE_URL || 'http://localhost:5000/api/v1/chat';
