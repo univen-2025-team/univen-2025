@@ -32,7 +32,10 @@ type StockDataLean = {
     price: number;
     prices: Array<{
         time: string;
-        price: number;
+        open: number;
+        high: number;
+        low: number;
+        close: number;
         volume: number;
     }>;
     change: number;

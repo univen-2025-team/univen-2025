@@ -1,6 +1,7 @@
 import SocketIOService from './socketio.service.js';
 import LoggerService from './logger.service.js';
 import VNStockService from './vnstock.service.js';
+import StockDataModel from '@/models/stock-data.model';
 
 interface StockData {
     symbol: string;
@@ -41,9 +42,36 @@ interface StockDetailUpdate {
 
 // VN30 stock symbols
 const VN30_SYMBOLS = [
-    'ACB', 'BCM', 'BID', 'BVH', 'CTG', 'FPT', 'GAS', 'GVR', 'HDB', 'HPG',
-    'KDH', 'MBB', 'MSN', 'MWG', 'NVL', 'PDR', 'PLX', 'POW', 'SAB', 'SSI',
-    'STB', 'TCB', 'TPB', 'VCB', 'VHM', 'VIB', 'VIC', 'VJC', 'VNM', 'VPB'
+    'ACB',
+    'BCM',
+    'BID',
+    'BVH',
+    'CTG',
+    'FPT',
+    'GAS',
+    'GVR',
+    'HDB',
+    'HPG',
+    'KDH',
+    'MBB',
+    'MSN',
+    'MWG',
+    'NVL',
+    'PDR',
+    'PLX',
+    'POW',
+    'SAB',
+    'SSI',
+    'STB',
+    'TCB',
+    'TPB',
+    'VCB',
+    'VHM',
+    'VIB',
+    'VIC',
+    'VJC',
+    'VNM',
+    'VPB'
 ];
 
 export default class MarketSocketService {
@@ -82,11 +110,13 @@ export default class MarketSocketService {
             // Subscribe to market updates
             socket.on('subscribe:market', async () => {
                 socket.join('market');
-                LoggerService.getInstance().info(`Client ${socket.id} subscribed to market updates`);
-                
+                LoggerService.getInstance().info(
+                    `Client ${socket.id} subscribed to market updates`
+                );
+
                 // Send initial data
                 await this.sendMarketUpdate();
-                
+
                 // Start broadcasting if not already started
                 if (!this.updateIntervals.has('market')) {
                     this.startMarketBroadcast();
@@ -115,7 +145,9 @@ export default class MarketSocketService {
             // Unsubscribe from market updates
             socket.on('unsubscribe:market', () => {
                 socket.leave('market');
-                LoggerService.getInstance().info(`Client ${socket.id} unsubscribed from market updates`);
+                LoggerService.getInstance().info(
+                    `Client ${socket.id} unsubscribed from market updates`
+                );
             });
 
             // Unsubscribe from stock updates
@@ -134,14 +166,14 @@ export default class MarketSocketService {
         LoggerService.getInstance().info('Market Socket Service initialized');
     }
 
-    private initializeStockCache(): void {
+    private async initializeStockCache(): Promise<void> {
         // Initialize cache with mock data
-        VN30_SYMBOLS.forEach(symbol => {
+        VN30_SYMBOLS.forEach((symbol) => {
             this.stockPriceCache.set(symbol, this.generateStockData(symbol));
         });
 
-        // Initialize VN30 index
-        this.vn30IndexCache = this.generateVN30Index();
+        // Initialize VN30 index from MongoDB
+        this.vn30IndexCache = await this.getVN30FromMongoDB();
     }
 
     private generateStockData(symbol: string): StockData {
@@ -158,7 +190,7 @@ export default class MarketSocketService {
             high: Math.round(basePrice + Math.abs(change)),
             low: Math.round(basePrice - Math.abs(change)),
             open: Math.round(basePrice - change / 2),
-            close: Math.round(basePrice),
+            close: Math.round(basePrice)
         };
     }
 
@@ -199,58 +231,96 @@ export default class MarketSocketService {
             volume: current.volume + Math.round(Math.random() * 1000000),
             high: Math.max(current.high, Math.round(newPrice)),
             low: Math.min(current.low, Math.round(newPrice)),
-            close: Math.round(newPrice),
+            close: Math.round(newPrice)
         };
 
         this.stockPriceCache.set(symbol, updated);
         return updated;
     }
 
-    private generateVN30Index(): VN30Index {
-        const baseIndex = 1200 + Math.random() * 50;
-        const change = (Math.random() - 0.5) * 20;
+    private async getVN30FromMongoDB(): Promise<VN30Index | null> {
+        try {
+            // Get current minute (HH:MM)
+            const now = new Date();
+            const currentHour = now.getHours().toString().padStart(2, '0');
+            const currentMinute = now.getMinutes().toString().padStart(2, '0');
+            const timePattern = `${currentHour}:${currentMinute}`;
 
-        return {
-            index: parseFloat(baseIndex.toFixed(2)),
-            change: parseFloat(change.toFixed(2)),
-            changePercent: parseFloat(((change / baseIndex) * 100).toFixed(2)),
-        };
+            // Find latest VN30 data in stock_data collection
+            const vn30Data = await StockDataModel.findOne({ symbol: 'VN30' })
+                .sort({ date: -1 })
+                .lean()
+                .exec();
+
+            if (!vn30Data || !vn30Data.prices) {
+                return null;
+            }
+
+            // Find matching minute in prices array
+            const matchingPrice = vn30Data.prices.find((p: any) => {
+                // Extract HH:MM from time string "YYYY-MM-DD HH:MM:SS"
+                if (p.time && typeof p.time === 'string') {
+                    const timePart = p.time.split(' ')[1]; // Get "HH:MM:SS"
+                    const timeHHMM = timePart?.substring(0, 5); // Get "HH:MM"
+                    return timeHHMM === timePattern;
+                }
+                return false;
+            });
+
+            if (matchingPrice) {
+                // Calculate change from opening price
+                const openPrice = vn30Data.open || matchingPrice.close;
+                const change = matchingPrice.close - openPrice;
+                const changePercent = (change / openPrice) * 100;
+
+                return {
+                    index: parseFloat(matchingPrice.close.toFixed(2)),
+                    change: parseFloat(change.toFixed(2)),
+                    changePercent: parseFloat(changePercent.toFixed(2))
+                };
+            }
+
+            // If no matching minute, return latest price
+            const latestPrice = vn30Data.prices[vn30Data.prices.length - 1];
+            if (latestPrice) {
+                const openPrice = vn30Data.open || latestPrice.close;
+                const change = latestPrice.close - openPrice;
+                const changePercent = (change / openPrice) * 100;
+
+                return {
+                    index: parseFloat(latestPrice.close.toFixed(2)),
+                    change: parseFloat(change.toFixed(2)),
+                    changePercent: parseFloat(changePercent.toFixed(2))
+                };
+            }
+
+            return null;
+        } catch (error) {
+            LoggerService.getInstance().error('Error fetching VN30 from MongoDB', error);
+            return null;
+        }
     }
 
     private async updateVN30Index(): Promise<VN30Index> {
-        // Try to fetch real data if enabled
-        if (this.useRealData && this.vnstockService.isInitialized()) {
-            try {
-                const realData = await this.vnstockService.getVN30Index();
-                if (realData) {
-                    this.vn30IndexCache = realData;
-                    return realData;
-                }
-            } catch (error) {
-                LoggerService.getInstance().warn(
-                    'Failed to fetch real VN30 index data, using mock data',
-                    error
-                );
-            }
+        // Fetch VN30 data from MongoDB matching current minute
+        const mongoData = await this.getVN30FromMongoDB();
+
+        if (mongoData) {
+            this.vn30IndexCache = mongoData;
+            return mongoData;
         }
 
-        // Fallback to mock data
-        if (!this.vn30IndexCache) {
-            return this.generateVN30Index();
+        // Fallback: if we have cache, return it
+        if (this.vn30IndexCache) {
+            return this.vn30IndexCache;
         }
 
-        const indexChange = (Math.random() - 0.5) * 2; // Small change
-        const newIndex = this.vn30IndexCache.index + indexChange;
-        const change = newIndex - 1200; // Assume base is 1200
-
-        const updated: VN30Index = {
-            index: parseFloat(newIndex.toFixed(2)),
-            change: parseFloat(change.toFixed(2)),
-            changePercent: parseFloat(((change / 1200) * 100).toFixed(2)),
+        // Last resort: return a default value
+        return {
+            index: 0,
+            change: 0,
+            changePercent: 0
         };
-
-        this.vn30IndexCache = updated;
-        return updated;
     }
 
     private startMarketBroadcast(interval: number = 5000): void {
@@ -264,13 +334,15 @@ export default class MarketSocketService {
 
     private startStockBroadcast(symbol: string, interval: number): void {
         const key = `stock:${symbol}:${interval}`;
-        
+
         const updateInterval = setInterval(async () => {
             await this.sendStockUpdate(symbol);
         }, interval);
 
         this.updateIntervals.set(key, updateInterval);
-        LoggerService.getInstance().info(`Stock broadcast started for ${symbol} with interval ${interval}ms`);
+        LoggerService.getInstance().info(
+            `Stock broadcast started for ${symbol} with interval ${interval}ms`
+        );
     }
 
     private async sendMarketUpdate(): Promise<void> {
@@ -279,9 +351,9 @@ export default class MarketSocketService {
 
         try {
             // Update all stocks in parallel
-            const stockPromises = VN30_SYMBOLS.map(symbol => this.updateStockData(symbol));
+            const stockPromises = VN30_SYMBOLS.map((symbol) => this.updateStockData(symbol));
             const stocks = await Promise.all(stockPromises);
-            
+
             // Update VN30 index
             const vn30Index = await this.updateVN30Index();
 
@@ -295,7 +367,7 @@ export default class MarketSocketService {
                 stocks,
                 topGainers,
                 topLosers,
-                timestamp: new Date().toISOString(),
+                timestamp: new Date().toISOString()
             };
 
             io.of('/market').to('market').emit('market:update', marketUpdate);
@@ -321,7 +393,7 @@ export default class MarketSocketService {
                 volume: stockData.volume,
                 high: stockData.high,
                 low: stockData.low,
-                timestamp: new Date().toISOString(),
+                timestamp: new Date().toISOString()
             };
 
             io.of('/market').to(room).emit('stock:update', stockUpdate);
