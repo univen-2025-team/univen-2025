@@ -35,6 +35,7 @@ interface StockData {
     low: number;
     open: number;
     close: number;
+    previousClose?: number;
 }
 
 interface VN30Index {
@@ -712,6 +713,9 @@ export default function MarketPage() {
                                 <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">
                                     Mã CK
                                 </th>
+                                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">
+                                    Công ty
+                                </th>
                                 <th className="px-4 py-3 text-right text-sm font-semibold text-gray-900">
                                     Giá
                                 </th>
@@ -722,13 +726,13 @@ export default function MarketPage() {
                                     % Thay đổi
                                 </th>
                                 <th className="px-4 py-3 text-right text-sm font-semibold text-gray-900">
+                                    Giá TC
+                                </th>
+                                <th className="px-4 py-3 text-right text-sm font-semibold text-gray-900">
+                                    Biên độ
+                                </th>
+                                <th className="px-4 py-3 text-right text-sm font-semibold text-gray-900">
                                     Khối lượng
-                                </th>
-                                <th className="px-4 py-3 text-right text-sm font-semibold text-gray-900">
-                                    Cao
-                                </th>
-                                <th className="px-4 py-3 text-right text-sm font-semibold text-gray-900">
-                                    Thấp
                                 </th>
                                 <th className="px-4 py-3 text-center text-sm font-semibold text-gray-900">
                                     Hành động
@@ -736,59 +740,85 @@ export default function MarketPage() {
                             </tr>
                         </thead>
                         <tbody>
-                            {filteredStocks.map((stock) => (
-                                <tr
-                                    key={stock.symbol}
-                                    className="border-b border-gray-100 hover:bg-blue-50 transition-colors cursor-pointer"
-                                    onClick={() => handleStockClick(stock)}
-                                >
-                                    <td className="px-4 py-3">
-                                        <span className="font-bold text-blue-600 hover:text-blue-800">
-                                            {stock.symbol}
-                                        </span>
-                                    </td>
-                                    <td
-                                        className={`px-4 py-3 text-right font-semibold ${getChangeColor(
-                                            stock.change
-                                        )}`}
+                            {filteredStocks.map((stock) => {
+                                const dayRange =
+                                    stock.high && stock.low
+                                        ? `${formatPrice(stock.low)} - ${formatPrice(stock.high)}`
+                                        : '-';
+                                const priceChange = stock.previousClose
+                                    ? ((stock.price - stock.previousClose) / stock.previousClose) *
+                                      100
+                                    : stock.changePercent;
+
+                                return (
+                                    <tr
+                                        key={stock.symbol}
+                                        className="border-b border-gray-100 hover:bg-blue-50 transition-colors cursor-pointer"
+                                        onClick={() => handleStockClick(stock)}
                                     >
-                                        {formatPrice(stock.price)}
-                                    </td>
-                                    <td
-                                        className={`px-4 py-3 text-right font-semibold ${getChangeColor(
-                                            stock.change
-                                        )}`}
-                                    >
-                                        {stock.change > 0 ? '+' : ''}
-                                        {formatNumber(stock.change)}
-                                    </td>
-                                    <td
-                                        className={`px-4 py-3 text-right font-semibold ${getChangeColor(
-                                            stock.changePercent
-                                        )}`}
-                                    >
-                                        {stock.changePercent > 0 ? '+' : ''}
-                                        {stock.changePercent}%
-                                    </td>
-                                    <td className="px-4 py-3 text-right text-gray-700">
-                                        {formatNumber(stock.volume)}
-                                    </td>
-                                    <td className="px-4 py-3 text-right text-gray-700">
-                                        {formatPrice(stock.high)}
-                                    </td>
-                                    <td className="px-4 py-3 text-right text-gray-700">
-                                        {formatPrice(stock.low)}
-                                    </td>
-                                    <td className="px-4 py-3 text-center">
-                                        <QuickTradeButton
-                                            symbol={stock.symbol}
-                                            price={stock.price}
-                                            onClick={() => handleBuyClick(stock)}
-                                            variant="buy"
-                                        />
-                                    </td>
-                                </tr>
-                            ))}
+                                        <td className="px-4 py-3">
+                                            <div>
+                                                <span className="font-bold text-blue-600 hover:text-blue-800 block">
+                                                    {stock.symbol}
+                                                </span>
+                                            </div>
+                                        </td>
+                                        <td className="px-4 py-3 text-left">
+                                            <span
+                                                className="text-sm text-gray-700 line-clamp-1"
+                                                title={stock.companyName}
+                                            >
+                                                {stock.companyName || '-'}
+                                            </span>
+                                        </td>
+                                        <td
+                                            className={`px-4 py-3 text-right font-bold text-lg ${getChangeColor(
+                                                stock.change
+                                            )}`}
+                                        >
+                                            {formatPrice(stock.price)}
+                                        </td>
+                                        <td
+                                            className={`px-4 py-3 text-right font-semibold ${getChangeColor(
+                                                stock.change
+                                            )}`}
+                                        >
+                                            {stock.change > 0 ? '+' : ''}
+                                            {formatNumber(stock.change)}
+                                        </td>
+                                        <td
+                                            className={`px-4 py-3 text-right font-semibold ${getChangeColor(
+                                                stock.changePercent
+                                            )}`}
+                                        >
+                                            {stock.changePercent > 0 ? '+' : ''}
+                                            {stock.changePercent}%
+                                        </td>
+                                        <td className="px-4 py-3 text-right text-gray-600 text-sm">
+                                            {stock.previousClose
+                                                ? formatPrice(stock.previousClose)
+                                                : '-'}
+                                        </td>
+                                        <td className="px-4 py-3 text-right text-gray-600 text-sm">
+                                            {dayRange}
+                                        </td>
+                                        <td className="px-4 py-3 text-right text-gray-700">
+                                            {formatNumber(stock.volume)}
+                                        </td>
+                                        <td
+                                            className="px-4 py-3 text-center"
+                                            onClick={(e) => e.stopPropagation()}
+                                        >
+                                            <QuickTradeButton
+                                                symbol={stock.symbol}
+                                                price={stock.price}
+                                                onClick={() => handleBuyClick(stock)}
+                                                variant="buy"
+                                            />
+                                        </td>
+                                    </tr>
+                                );
+                            })}
                         </tbody>
                     </table>
 
