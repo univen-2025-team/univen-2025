@@ -24,7 +24,6 @@ import {
 } from '@/components/ui/select'
 import { Progress } from '@/components/ui/progress'
 import { ArrowLeft, CheckCircle2, XCircle } from 'lucide-react'
-import { TransactionGuideCard } from '@/components/trade/TransactionGuideCard'
 import { BuyStockData } from '@/features/types/features'
 import { transactionApi } from '@/lib/api/transaction.api'
 import { useAppSelector } from '@/lib/store/hooks'
@@ -385,9 +384,6 @@ export function BuyStockWizard({ data, onBack }: BuyStockWizardProps) {
               </div>
             </CardContent>
           </Card>
-
-      {/* Card Hướng dẫn */}
-      <TransactionGuideCard />
     </div>
   )
 }
