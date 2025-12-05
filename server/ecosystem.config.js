@@ -1,10 +1,12 @@
+const path = require('path');
+
 module.exports = {
     apps: [
         {
-            name: 'do-an-1-server',
+            name: 'univen-2025-server',
             script: 'server.ts',
             interpreter: 'tsx',
-            cwd: '/home/tranv/Workspace/do-an-1-v2/server',
+            cwd: __dirname,
             instances: 1,
             exec_mode: 'fork',
             env: {
@@ -54,11 +56,11 @@ module.exports = {
 
     deploy: {
         production: {
-            user: 'tranv',
-            host: 'localhost',
-            ref: 'origin/main',
-            repo: 'https://github.com/tranconcoder/do-an-1',
-            path: '/home/tranv/Workspace/do-an-1-v2',
+            user: process.env.DEPLOY_USER || 'ubuntu',
+            host: process.env.DEPLOY_HOST || 'localhost',
+            ref: 'origin/master',
+            repo: 'https://github.com/univen-2025-team/univen-2025.git',
+            path: process.env.DEPLOY_PATH || '/var/www/univen-2025',
             'pre-deploy-local': '',
             'post-deploy':
                 'cd server && npm install && pm2 reload ecosystem.config.js --env production',
