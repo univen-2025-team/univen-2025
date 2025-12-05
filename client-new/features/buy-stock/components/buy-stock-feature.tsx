@@ -260,19 +260,19 @@ export function BuyStockFeature({ data, onBack }: BuyStockFeatureProps) {
         </div>
 
         {/* Result Card */}
-        <Card className="bg-gradient-to-br from-card to-card/95 border border-border/50 shadow-lg">
+        <Card className="bg-card border border-border/50 shadow-lg">
           <CardHeader>
             <div className="flex items-center justify-center py-4">
               {transactionResult.success ? (
-                <CheckCircle2 className="h-20 w-20 text-green-600" />
+                <CheckCircle2 className="h-20 w-20 text-success" />
               ) : (
-                <XCircle className="h-20 w-20 text-red-600" />
+                <XCircle className="h-20 w-20 text-error" />
               )}
             </div>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="text-center space-y-2">
-              <h2 className={`text-2xl font-bold ${transactionResult.success ? 'text-green-600' : 'text-red-600'}`}>
+              <h2 className={`text-2xl font-bold ${transactionResult.success ? 'text-success' : 'text-error'}`}>
                 {transactionResult.success ? '✅ Giao dịch thành công!' : '❌ Giao dịch thất bại'}
               </h2>
               <p className="text-muted-foreground">{transactionResult.message}</p>
@@ -307,7 +307,7 @@ export function BuyStockFeature({ data, onBack }: BuyStockFeatureProps) {
             )}
 
             {transactionResult.success && transactionResult.balance_after !== undefined && (
-              <div className="rounded-lg border border-green-200 bg-green-50 p-4">
+              <div className="rounded-lg border border-success bg-success-light p-4">
                 <h3 className="font-semibold text-green-800 mb-2">💰 Thông tin tài khoản sau giao dịch</h3>
                 <div className="space-y-1">
                   <div className="flex items-center justify-between">
@@ -316,7 +316,7 @@ export function BuyStockFeature({ data, onBack }: BuyStockFeatureProps) {
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-green-700">Số tiền đã chi</span>
-                    <span className="font-semibold text-red-600">-{estimatedCost.toLocaleString('vi-VN')} VND</span>
+                    <span className="font-semibold text-error">-{estimatedCost.toLocaleString('vi-VN')} VND</span>
                   </div>
                   <div className="flex items-center justify-between pt-2 border-t border-green-300">
                     <span className="text-sm font-semibold text-green-700">Số dư hiện tại</span>
@@ -329,9 +329,9 @@ export function BuyStockFeature({ data, onBack }: BuyStockFeatureProps) {
             )}
 
             {!transactionResult.success && (
-              <div className="rounded-lg border border-red-200 bg-red-50 p-4">
+              <div className="rounded-lg border border-error bg-error-light p-4">
                 <div className="flex items-start gap-3">
-                  <AlertTriangle className="h-5 w-5 text-red-600 mt-0.5" />
+                  <AlertTriangle className="h-5 w-5 text-error mt-0.5" />
                   <div className="flex-1">
                     <h3 className="font-semibold text-red-800 mb-1">Lý do thất bại</h3>
                     <p className="text-sm text-red-700">{transactionResult.message}</p>
@@ -382,7 +382,7 @@ export function BuyStockFeature({ data, onBack }: BuyStockFeatureProps) {
       </div>
 
       {/* Main Card */}
-      <Card className="bg-gradient-to-br from-card to-card/95 border border-border/50 shadow-lg">
+      <Card className="bg-card border border-border/50 shadow-lg">
         <CardHeader>
           <div className="space-y-2">
             <CardTitle>
@@ -395,7 +395,7 @@ export function BuyStockFeature({ data, onBack }: BuyStockFeatureProps) {
         </CardHeader>
         <CardContent className="space-y-6">
           {balanceWarning && (
-            <div className="rounded-lg border border-orange-200 bg-orange-50 px-4 py-3 text-sm font-medium text-orange-800">
+            <div className="rounded-lg border border-warning bg-warning-light px-4 py-3 text-sm font-medium text-warning">
               {balanceWarning}
             </div>
           )}
@@ -408,8 +408,8 @@ export function BuyStockFeature({ data, onBack }: BuyStockFeatureProps) {
                 <CardDescription className="text-base">{currentStep.description}</CardDescription>
 
                 {currentStep.helperText && (
-                  <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 dark:bg-blue-950 dark:border-blue-800">
-                    <p className="text-sm text-blue-800 dark:text-blue-200">
+                  <div className="rounded-lg border border-primary/20 bg-primary/5 p-4 dark:bg-primary/10 dark:border-primary/30">
+                    <p className="text-sm text-primary dark:text-primary-foreground/80">
                       💡 {currentStep.helperText}
                     </p>
                   </div>
@@ -499,7 +499,7 @@ export function BuyStockFeature({ data, onBack }: BuyStockFeatureProps) {
                 )}
                 <div className="flex items-center justify-between pt-2 border-t text-lg font-bold">
                   <span>Tổng giá trị</span>
-                  <span className="text-blue-600">
+                  <span className="text-primary">
                     {estimatedCost > 0 ? estimatedCost.toLocaleString('vi-VN') : '—'} VND
                   </span>
                 </div>
@@ -514,7 +514,7 @@ export function BuyStockFeature({ data, onBack }: BuyStockFeatureProps) {
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-slate-600">Số dư sau giao dịch</span>
-                  <span className={`font-semibold ${estimatedCost > availableBalance ? 'text-red-600' : 'text-green-600'}`}>
+                  <span className={`font-semibold ${estimatedCost > availableBalance ? 'text-error' : 'text-success'}`}>
                     {(availableBalance - estimatedCost).toLocaleString('vi-VN')} VND
                   </span>
                 </div>

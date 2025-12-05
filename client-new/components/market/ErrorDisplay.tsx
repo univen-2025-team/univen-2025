@@ -12,7 +12,7 @@ export default function ErrorDisplay({ error, onRetry }: ErrorDisplayProps) {
           <span className="block sm:inline"> {error}</span>
           <button
             onClick={onRetry}
-            className="mt-4 bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+            className="mt-4 bg-error text-white px-4 py-2 rounded hover:bg-red-700"
           >
             Thử lại
           </button>

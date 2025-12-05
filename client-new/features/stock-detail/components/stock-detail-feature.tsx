@@ -262,7 +262,7 @@ export function StockDetailFeature({ data, onBack, onBuyClick }: StockDetailFeat
       <div className="flex items-center justify-between">
         <div>{onBack && <StockBackButton onBack={onBack} />}</div>
         {onBuyClick && (
-          <Button onClick={() => onBuyClick(stockData.symbol)} className="bg-blue-600 text-white">
+          <Button onClick={() => onBuyClick(stockData.symbol)} className="bg-primary text-white">
             Mua ngay
           </Button>
         )}

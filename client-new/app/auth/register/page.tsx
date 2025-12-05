@@ -51,7 +51,7 @@ export default function RegisterPage() {
     <form onSubmit={formik.handleSubmit} className="space-y-5">
       {/* Error Message */}
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg flex items-start">
+        <div className="bg-error-light border border-error text-error px-4 py-3 rounded-lg flex items-start">
           <svg className="w-5 h-5 mr-2 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
             <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
           </svg>
@@ -62,7 +62,7 @@ export default function RegisterPage() {
             {/* Full Name */}
             <div>
               <label htmlFor="user_fullName" className="block text-sm font-semibold text-gray-700 mb-2">
-                Họ và tên <span className="text-red-500">*</span>
+                Họ và tên <span className="text-error">*</span>
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -80,14 +80,14 @@ export default function RegisterPage() {
                   onBlur={formik.handleBlur}
                   className={`block w-full pl-10 pr-3 py-3 border ${
                     formik.touched.user_fullName && formik.errors.user_fullName
-                      ? 'border-red-500 focus:ring-red-500'
-                      : 'border-gray-300 focus:ring-blue-500'
+                      ? 'border-error focus:ring-error'
+                      : 'border-gray-300 focus:ring-ring'
                   } rounded-lg focus:outline-none focus:ring-2 focus:border-transparent transition-all text-gray-900 placeholder-gray-400`}
                   placeholder="Nguyễn Văn A"
                 />
               </div>
               {formik.touched.user_fullName && formik.errors.user_fullName && (
-                <p className="mt-2 text-sm text-red-600 flex items-center">
+                <p className="mt-2 text-sm text-error flex items-center">
                   <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                   </svg>
@@ -99,7 +99,7 @@ export default function RegisterPage() {
             {/* Email */}
             <div>
               <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-2">
-                Email <span className="text-red-500">*</span>
+                Email <span className="text-error">*</span>
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -117,14 +117,14 @@ export default function RegisterPage() {
                   onBlur={formik.handleBlur}
                   className={`block w-full pl-10 pr-3 py-3 border ${
                     formik.touched.email && formik.errors.email
-                      ? 'border-red-500 focus:ring-red-500'
-                      : 'border-gray-300 focus:ring-blue-500'
+                      ? 'border-error focus:ring-error'
+                      : 'border-gray-300 focus:ring-ring'
                   } rounded-lg focus:outline-none focus:ring-2 focus:border-transparent transition-all text-gray-900 placeholder-gray-400`}
                   placeholder="example@email.com"
                 />
               </div>
               {formik.touched.email && formik.errors.email && (
-                <p className="mt-2 text-sm text-red-600 flex items-center">
+                <p className="mt-2 text-sm text-error flex items-center">
                   <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                   </svg>
@@ -136,7 +136,7 @@ export default function RegisterPage() {
             {/* Password */}
             <div>
               <label htmlFor="password" className="block text-sm font-semibold text-gray-700 mb-2">
-                Mật khẩu <span className="text-red-500">*</span>
+                Mật khẩu <span className="text-error">*</span>
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -154,14 +154,14 @@ export default function RegisterPage() {
                   onBlur={formik.handleBlur}
                   className={`block w-full pl-10 pr-3 py-3 border ${
                     formik.touched.password && formik.errors.password
-                      ? 'border-red-500 focus:ring-red-500'
-                      : 'border-gray-300 focus:ring-blue-500'
+                      ? 'border-error focus:ring-error'
+                      : 'border-gray-300 focus:ring-ring'
                   } rounded-lg focus:outline-none focus:ring-2 focus:border-transparent transition-all text-gray-900 placeholder-gray-400`}
                   placeholder="••••••••"
                 />
               </div>
               {formik.touched.password && formik.errors.password && (
-                <p className="mt-2 text-sm text-red-600 flex items-center">
+                <p className="mt-2 text-sm text-error flex items-center">
                   <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                   </svg>
@@ -173,7 +173,7 @@ export default function RegisterPage() {
             {/* Confirm Password */}
             <div>
               <label htmlFor="confirmPassword" className="block text-sm font-semibold text-gray-700 mb-2">
-                Xác nhận mật khẩu <span className="text-red-500">*</span>
+                Xác nhận mật khẩu <span className="text-error">*</span>
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -191,14 +191,14 @@ export default function RegisterPage() {
                   onBlur={formik.handleBlur}
                   className={`block w-full pl-10 pr-3 py-3 border ${
                     formik.touched.confirmPassword && formik.errors.confirmPassword
-                      ? 'border-red-500 focus:ring-red-500'
-                      : 'border-gray-300 focus:ring-blue-500'
+                      ? 'border-error focus:ring-error'
+                      : 'border-gray-300 focus:ring-ring'
                   } rounded-lg focus:outline-none focus:ring-2 focus:border-transparent transition-all text-gray-900 placeholder-gray-400`}
                   placeholder="••••••••"
                 />
               </div>
               {formik.touched.confirmPassword && formik.errors.confirmPassword && (
-                <p className="mt-2 text-sm text-red-600 flex items-center">
+                <p className="mt-2 text-sm text-error flex items-center">
                   <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                   </svg>
@@ -217,22 +217,22 @@ export default function RegisterPage() {
                   checked={formik.values.terms}
                   onChange={formik.handleChange}
                   onBlur={formik.handleBlur}
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded transition-colors"
+                  className="h-4 w-4 text-primary focus:ring-ring border-gray-300 rounded transition-colors"
                 />
               </div>
               <label htmlFor="terms" className="ml-3 text-sm text-gray-600">
                 Tôi đồng ý với{' '}
-                <a href="#" className="font-medium text-blue-600 hover:text-blue-500 transition-colors">
+                <a href="#" className="font-medium text-primary hover:text-primary/90 transition-colors">
                   Điều khoản dịch vụ
                 </a>{' '}
                 và{' '}
-                <a href="#" className="font-medium text-blue-600 hover:text-blue-500 transition-colors">
+                <a href="#" className="font-medium text-primary hover:text-primary/90 transition-colors">
                   Chính sách bảo mật
                 </a>
               </label>
             </div>
             {formik.touched.terms && formik.errors.terms && (
-              <p className="text-sm text-red-600 flex items-center -mt-2">
+              <p className="text-sm text-error flex items-center -mt-2">
                 <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                 </svg>
@@ -244,7 +244,7 @@ export default function RegisterPage() {
             <button
               type="submit"
               disabled={formik.isSubmitting || isLoading}
-              className="w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-lg shadow-lg text-sm font-semibold text-white bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+              className="w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-lg shadow-lg text-sm font-semibold text-white bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ring transition-all transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
             >
               {(formik.isSubmitting || isLoading) ? (
                 <>

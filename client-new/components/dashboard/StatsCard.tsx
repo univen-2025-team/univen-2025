@@ -20,8 +20,8 @@ export default function StatsCard({
   iconBgColor,
 }: StatsCardProps) {
   const changeColorMap = {
-    positive: "text-green-600",
-    negative: "text-red-600",
+    positive: "text-success",
+    negative: "text-error",
     neutral: "text-gray-600",
   };
 

@@ -17,7 +17,7 @@ const activities: ActivityItem[] = [
     description: "100 cổ phiếu • 09:30 AM",
     amount: "+5,250,000 ₫",
     price: "52,500 ₫/CP",
-    iconColor: "text-green-600",
+    iconColor: "text-success",
     iconBgColor: "bg-green-100",
   },
   {
@@ -27,7 +27,7 @@ const activities: ActivityItem[] = [
     description: "50 cổ phiếu • 08:15 AM",
     amount: "-1,575,000 ₫",
     price: "31,500 ₫/CP",
-    iconColor: "text-red-600",
+    iconColor: "text-error",
     iconBgColor: "bg-red-100",
   },
   {
@@ -37,8 +37,8 @@ const activities: ActivityItem[] = [
     description: "200 cổ phiếu • Hôm qua",
     amount: "+600,000 ₫",
     price: "3,000 ₫/CP",
-    iconColor: "text-blue-600",
-    iconBgColor: "bg-blue-100",
+    iconColor: "text-primary",
+    iconBgColor: "bg-primary/10",
   },
   {
     id: "4",
@@ -47,8 +47,8 @@ const activities: ActivityItem[] = [
     description: "75 cổ phiếu • 2 ngày trước",
     amount: "Hoàn tất",
     price: "85,500 ₫/CP",
-    iconColor: "text-purple-600",
-    iconBgColor: "bg-purple-100",
+    iconColor: "text-accent",
+    iconBgColor: "bg-accent/10",
   },
 ];
 
@@ -76,13 +76,13 @@ const getIcon = (type: ActivityItem["type"]) => {
 const getAmountColor = (type: ActivityItem["type"]) => {
   switch (type) {
     case "buy":
-      return "text-green-600";
+      return "text-success";
     case "sell":
-      return "text-red-600";
+      return "text-error";
     case "dividend":
-      return "text-blue-600";
+      return "text-primary";
     case "completed":
-      return "text-purple-600";
+      return "text-accent";
   }
 };
 
@@ -91,7 +91,7 @@ export default function RecentActivity() {
     <div className="lg:col-span-2 bg-white rounded-xl shadow-lg p-6">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-xl font-bold text-gray-900">Hoạt động gần đây</h2>
-        <button className="text-blue-600 hover:text-blue-700 text-sm font-semibold">
+        <button className="text-primary hover:text-primary text-sm font-semibold">
           Xem tất cả →
         </button>
       </div>

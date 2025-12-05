@@ -44,7 +44,7 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      <WelcomeHeader userName={userName} />
+      {/* <WelcomeHeader userName={userName} /> */}
       <StatsGrid />
 
       {/* Quick Actions & Recent Activity */}

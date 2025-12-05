@@ -28,14 +28,14 @@ export default function StockHeaderCard({ stock, showRealtimeBadge }: StockHeade
 
   return (
     <>
-      <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl shadow-xl p-8 text-white">
+      <div className="bg-primary rounded-2xl shadow-xl p-8 text-white">
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
           <div className="flex-1">
             <div className="flex items-center gap-3 mb-2">
               <h1 className="text-4xl font-bold">{stock.symbol}</h1>
-              <span className="text-lg text-blue-100">{stock.companyName}</span>
+              <span className="text-lg text-primary-foreground/80">{stock.companyName}</span>
               {showRealtimeBadge && (
-                <span className="flex items-center text-xs bg-green-500 px-2 py-1 rounded-full">
+                <span className="flex items-center text-xs bg-success-light0 px-2 py-1 rounded-full">
                   <span className="w-2 h-2 bg-white rounded-full mr-1 animate-pulse"></span>
                   Trực tiếp
                 </span>
@@ -53,20 +53,20 @@ export default function StockHeaderCard({ stock, showRealtimeBadge }: StockHeade
               </div>
             </div>
             <div className="mt-6 flex flex-col gap-2 sm:flex-row">
-              <Button onClick={() => handleOpenTrade("BUY")} className="bg-white text-blue-600 hover:bg-blue-50">
+              <Button onClick={() => handleOpenTrade("BUY")} className="bg-white text-primary hover:bg-primary/5">
                 Mua ngay
               </Button>
               <Button
                 variant="outline"
                 onClick={() => handleOpenTrade("SELL")}
-                className="border-white/60 text-white hover:text-blue-600 hover:bg-white"
+                className="border-white/60 text-white hover:text-primary hover:bg-white"
               >
                 Bán ngay
               </Button>
             </div>
           </div>
           <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4 w-full md:w-auto">
-            <div className="text-sm text-blue-100 mb-1">Cập nhật lần cuối</div>
+            <div className="text-sm text-primary-foreground/80 mb-1">Cập nhật lần cuối</div>
             <div className="font-semibold">{new Date(stock.lastUpdate).toLocaleString("vi-VN")}</div>
           </div>
         </div>

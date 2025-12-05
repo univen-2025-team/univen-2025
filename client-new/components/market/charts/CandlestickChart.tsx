@@ -223,12 +223,12 @@ export default function CandlestickChart({ data, valueFormatter }: CandlestickCh
                         {typeof lastClose === "number" && (
                             <ReferenceLine
                                 y={lastClose}
-                                stroke="#2563eb"
+                                stroke="#0E1A3C"
                                 strokeDasharray="3 3"
                                 label={{
                                     position: "left",
                                     value: valueFormatter(lastClose),
-                                    fill: "#2563eb",
+                                    fill: "#0E1A3C",
                                     fontSize: 12,
                                 }}
                             />

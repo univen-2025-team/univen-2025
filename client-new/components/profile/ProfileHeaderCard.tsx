@@ -12,7 +12,7 @@ const formatBalance = (balance: number): string => {
 
 export default function ProfileHeaderCard({ profile }: ProfileHeaderCardProps) {
   return (
-    <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl p-8 text-white">
+    <div className="bg-primary rounded-xl p-8 text-white">
       <div className="flex items-center gap-6">
         {/* Avatar */}
         <div className="relative">

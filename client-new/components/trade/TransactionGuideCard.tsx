@@ -16,7 +16,7 @@ export function TransactionGuideCard() {
             <CardContent className="space-y-3 text-sm text-gray-600">
                 {GUIDELINES.map((tip) => (
                     <div key={tip} className="flex gap-3">
-                        <span className="mt-1 inline-flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-blue-50 text-xs font-semibold text-blue-600">
+                        <span className="mt-1 inline-flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-primary/5 text-xs font-semibold text-primary">
                             •
                         </span>
                         <p>{tip}</p>

@@ -7,8 +7,8 @@ type StockMetricsGridProps = {
 
 const metrics = [
   { label: "Mở cửa", key: "open", className: "text-gray-900" },
-  { label: "Cao nhất", key: "high", className: "text-green-600" },
-  { label: "Thấp nhất", key: "low", className: "text-red-600" },
+  { label: "Cao nhất", key: "high", className: "text-success" },
+  { label: "Thấp nhất", key: "low", className: "text-error" },
   { label: "Đóng cửa", key: "close", className: "text-gray-900" },
 ];
 

@@ -79,7 +79,7 @@ export function TransactionSummaryCard({
                             <CurrencyText value={balanceAfter || balance} />
                         </div>
                         {insufficientBalance && (
-                            <p className="mt-2 text-sm font-medium text-red-600">
+                            <p className="mt-2 text-sm font-medium text-error">
                                 Số dư hiện tại không đủ để thực hiện lệnh mua.
                             </p>
                         )}
@@ -88,20 +88,20 @@ export function TransactionSummaryCard({
 
                 <Button
                     type="submit"
-                    className="w-full bg-blue-600 text-white hover:bg-blue-700"
+                    className="w-full bg-primary text-white hover:bg-primary/90"
                     disabled={isSubmitting || insufficientBalance || quantity <= 0 || pricePerUnit <= 0}
                 >
                     {isSubmitting ? "Đang thực hiện..." : transactionType === "BUY" ? "Đặt lệnh mua" : "Đặt lệnh bán"}
                 </Button>
 
                 {successMessage && (
-                    <div className="rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
+                    <div className="rounded-lg border border-success bg-success-light px-4 py-3 text-sm text-green-800">
                         {successMessage}
                     </div>
                 )}
 
                 {lastTransaction && (
-                    <div className="rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-xs text-green-900">
+                    <div className="rounded-lg border border-success bg-success-light px-4 py-3 text-xs text-green-900">
                         <p className="font-semibold">Lệnh gần nhất</p>
                         <p>
                             {lastTransaction.transaction_type} {lastTransaction.stock_code} •{" "}

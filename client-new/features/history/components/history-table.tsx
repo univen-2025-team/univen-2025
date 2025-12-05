@@ -25,7 +25,7 @@ export const HistoryTable: FC<HistoryTableProps> = ({ transactions, isLoading, i
                         </div>
                     ) : (
                         <button
-                            className="text-blue-600 hover:text-blue-700 text-sm font-medium disabled:opacity-40"
+                            className="text-primary hover:text-primary text-sm font-medium disabled:opacity-40"
                             type="button"
                             disabled
                             title="Tính năng đang được phát triển"
@@ -65,7 +65,7 @@ export const HistoryTable: FC<HistoryTableProps> = ({ transactions, isLoading, i
                             const typeInfo = TRANSACTION_TYPE_INFO[transaction.transaction_type];
                             const statusInfo = TRANSACTION_STATUS_INFO[transaction.transaction_status];
                             const amountClass =
-                                transaction.transaction_type === 'SELL' ? 'text-green-600' : 'text-red-600';
+                                transaction.transaction_type === 'SELL' ? 'text-success' : 'text-error';
                             const amountPrefix = transaction.transaction_type === 'SELL' ? '+' : '-';
                             const timestamp = transaction.executed_at ?? transaction.createdAt;
 
@@ -107,7 +107,7 @@ export const HistoryTable: FC<HistoryTableProps> = ({ transactions, isLoading, i
                                     <td className="px-6 py-4 whitespace-nowrap text-right">
                                         <button
                                             type="button"
-                                            className="text-blue-600 hover:text-blue-700 text-sm font-medium disabled:opacity-40"
+                                            className="text-primary hover:text-primary text-sm font-medium disabled:opacity-40"
                                             disabled
                                             title="Tính năng chi tiết đang phát triển"
                                         >
@@ -136,7 +136,7 @@ export const HistoryTable: FC<HistoryTableProps> = ({ transactions, isLoading, i
                     const typeInfo = TRANSACTION_TYPE_INFO[transaction.transaction_type];
                     const statusInfo = TRANSACTION_STATUS_INFO[transaction.transaction_status];
                     const amountClass =
-                        transaction.transaction_type === 'SELL' ? 'text-green-600' : 'text-red-600';
+                        transaction.transaction_type === 'SELL' ? 'text-success' : 'text-error';
                     const amountPrefix = transaction.transaction_type === 'SELL' ? '+' : '-';
                     const timestamp = transaction.executed_at ?? transaction.createdAt;
 
@@ -171,7 +171,7 @@ export const HistoryTable: FC<HistoryTableProps> = ({ transactions, isLoading, i
                             <div className="mt-3">
                                 <button
                                     type="button"
-                                    className="text-blue-600 hover:text-blue-700 text-sm font-medium disabled:opacity-40"
+                                    className="text-primary hover:text-primary text-sm font-medium disabled:opacity-40"
                                     disabled
                                     title="Tính năng chi tiết đang phát triển"
                                 >

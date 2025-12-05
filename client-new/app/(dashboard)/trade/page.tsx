@@ -148,17 +148,17 @@ export default function TradePage() {
     return (
         <div className="space-y-6 pb-8">
             {/* Header styled similar to Market page */}
-            <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl shadow-xl p-8 text-white">
+            <div className="bg-primary rounded-2xl shadow-xl p-8 text-white">
                 <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
                     <div>
                         <h1 className="text-3xl md:text-4xl font-bold mb-2">Giao dịch cổ phiếu</h1>
-                        <p className="text-blue-100 text-lg">
+                        <p className="text-primary-foreground/80 text-lg">
                             Đặt lệnh mua / bán cổ phiếu
                         </p>
                     </div>
                     <div className="flex items-center gap-4">
                         <div className="rounded-xl bg-white/10 backdrop-blur-sm px-6 py-4 text-center border border-white/20">
-                            <p className="text-sm text-blue-100">Số dư khả dụng</p>
+                            <p className="text-sm text-primary-foreground/80">Số dư khả dụng</p>
                             <p className="text-2xl font-semibold text-white">{formattedBalance} VND</p>
                         </div>
                     </div>
@@ -172,13 +172,13 @@ export default function TradePage() {
             )}
 
             {submitError && (
-                <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                <div className="rounded-lg border border-error bg-error-light px-4 py-3 text-sm text-error">
                     {submitError}
                 </div>
             )}
 
             {successMessage && (
-                <div className="rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
+                <div className="rounded-lg border border-success bg-success-light px-4 py-3 text-sm text-success">
                     {successMessage}
                 </div>
             )}

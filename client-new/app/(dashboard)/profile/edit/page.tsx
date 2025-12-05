@@ -192,7 +192,7 @@ export default function EditProfilePage() {
                   name="user_gender"
                   checked={formik.values.user_gender === true}
                   onChange={() => formik.setFieldValue("user_gender", true)}
-                  className="w-4 h-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                  className="w-4 h-4 text-primary focus:ring-ring border-gray-300"
                 />
                 <span className="ml-2 text-gray-700">Nam</span>
               </label>
@@ -202,7 +202,7 @@ export default function EditProfilePage() {
                   name="user_gender"
                   checked={formik.values.user_gender === false}
                   onChange={() => formik.setFieldValue("user_gender", false)}
-                  className="w-4 h-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                  className="w-4 h-4 text-primary focus:ring-ring border-gray-300"
                 />
                 <span className="ml-2 text-gray-700">Nữ</span>
               </label>
@@ -232,7 +232,7 @@ export default function EditProfilePage() {
             <button
               type="submit"
               disabled={formik.isSubmitting || !formik.isValid}
-              className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+              className="flex-1 px-6 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
             >
               {formik.isSubmitting ? (
                 <>

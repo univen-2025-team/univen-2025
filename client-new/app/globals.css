@@ -1,76 +1,133 @@
 @import 'tailwindcss';
 
 :root {
-    /* Galaxy theme - Navy, Indigo, Purple tones */
-    --background: oklch(0.97 0.01 260);
-    --foreground: oklch(0.15 0.02 270);
-    --card: oklch(0.99 0.01 265);
-    --card-foreground: oklch(0.15 0.02 270);
-    --popover: oklch(0.99 0.01 265);
-    --popover-foreground: oklch(0.15 0.02 270);
-    --primary: oklch(0.45 0.18 265);
-    --primary-foreground: oklch(0.98 0.01 265);
-    --secondary: oklch(0.88 0.05 270);
-    --secondary-foreground: oklch(0.25 0.08 270);
-    --muted: oklch(0.92 0.02 265);
-    --muted-foreground: oklch(0.52 0.04 265);
-    --accent: oklch(0.55 0.22 280);
-    --accent-foreground: oklch(0.98 0.01 280);
-    --destructive: oklch(0.577 0.245 27.325);
-    --destructive-foreground: oklch(0.98 0.01 27);
-    --border: oklch(0.90 0.02 265);
-    --input: oklch(0.95 0.02 265);
-    --ring: oklch(0.55 0.18 270);
-    --chart-1: oklch(0.50 0.20 265);
-    --chart-2: oklch(0.55 0.18 280);
-    --chart-3: oklch(0.60 0.22 275);
-    --chart-4: oklch(0.65 0.15 260);
-    --chart-5: oklch(0.58 0.18 285);
+    /* Simple Navy Blue Theme - 3 Levels */
+    /* Dark Navy: #1e3a8a, Medium Navy: #3b82f6, Light Navy: #93c5fd */
+    
+    --background: oklch(0.99 0.002 240);
+    --foreground: oklch(0.30 0.10 250);
+    --card: oklch(1 0 0);
+    --card-foreground: oklch(0.30 0.10 250);
+    --popover: oklch(1 0 0);
+    --popover-foreground: oklch(0.30 0.10 250);
+    
+    /* Primary: Dark Navy #1e3a8a */
+    --primary: oklch(0.42 0.15 260);
+    --primary-foreground: oklch(1 0 0);
+    
+    /* Secondary: Light Navy #93c5fd */
+    --secondary: oklch(0.80 0.08 250);
+    --secondary-foreground: oklch(0.30 0.10 250);
+    
+    /* Muted: Very light blue */
+    --muted: oklch(0.96 0.01 250);
+    --muted-foreground: oklch(0.55 0.08 250);
+    
+    /* Accent: Medium Navy #3b82f6 */
+    --accent: oklch(0.62 0.18 255);
+    --accent-foreground: oklch(1 0 0);
+    
+    /* Destructive: Red for errors */
+    --destructive: oklch(0.56 0.22 25);
+    --destructive-foreground: oklch(1 0 0);
+    
+    /* Borders & Inputs */
+    --border: oklch(0.88 0.01 250);
+    --input: oklch(0.96 0.01 250);
+    --ring: oklch(0.62 0.18 255);
+    
+    /* Charts: 3 Navy levels */
+    --chart-1: oklch(0.42 0.15 260);
+    --chart-2: oklch(0.62 0.18 255);
+    --chart-3: oklch(0.80 0.08 250);
+    --chart-4: oklch(0.55 0.08 250);
+    --chart-5: oklch(0.35 0.12 258);
+    
     --radius: 0.625rem;
-    --sidebar: oklch(0.96 0.02 265);
-    --sidebar-foreground: oklch(0.20 0.04 270);
-    --sidebar-primary: oklch(0.45 0.18 265);
-    --sidebar-primary-foreground: oklch(0.98 0.01 265);
-    --sidebar-accent: oklch(0.94 0.03 270);
-    --sidebar-accent-foreground: oklch(0.30 0.08 270);
-    --sidebar-border: oklch(0.88 0.03 265);
-    --sidebar-ring: oklch(0.65 0.08 270);
+    
+    /* Sidebar: Light background with navy accent */
+    --sidebar: oklch(0.99 0.002 240);
+    --sidebar-foreground: oklch(0.42 0.15 260);
+    --sidebar-primary: oklch(0.42 0.15 260);
+    --sidebar-primary-foreground: oklch(1 0 0);
+    --sidebar-accent: oklch(0.96 0.01 250);
+    --sidebar-accent-foreground: oklch(0.42 0.15 260);
+    --sidebar-border: oklch(0.88 0.01 250);
+    --sidebar-ring: oklch(0.62 0.18 255);
+    
+    /* Semantic colors - Using navy shades */
+    /* Success: Medium Navy (positive) */
+    --success: oklch(0.62 0.18 255);
+    --success-foreground: oklch(1 0 0);
+    /* Error: Red (negative) */
+    --error: oklch(0.56 0.22 25);
+    --error-foreground: oklch(1 0 0);
+    /* Warning: Light Navy */
+    --warning: oklch(0.80 0.08 250);
+    --warning-foreground: oklch(0.30 0.10 250);
 }
 
 .dark {
-    /* Galaxy theme - Dark mode with deep navy background */
-    --background: oklch(0.15 0.03 265);
-    --foreground: oklch(0.95 0.02 270);
-    --card: oklch(0.18 0.04 268);
-    --card-foreground: oklch(0.95 0.02 270);
-    --popover: oklch(0.16 0.03 265);
-    --popover-foreground: oklch(0.95 0.02 270);
-    --primary: oklch(0.68 0.22 270);
-    --primary-foreground: oklch(0.15 0.03 265);
-    --secondary: oklch(0.32 0.10 275);
-    --secondary-foreground: oklch(0.95 0.02 270);
-    --muted: oklch(0.25 0.06 268);
-    --muted-foreground: oklch(0.65 0.08 270);
-    --accent: oklch(0.62 0.25 285);
-    --accent-foreground: oklch(0.98 0.01 285);
-    --destructive: oklch(0.396 0.141 25.723);
-    --destructive-foreground: oklch(0.637 0.237 25.331);
-    --border: oklch(0.28 0.08 270);
-    --input: oklch(0.25 0.06 268);
-    --ring: oklch(0.65 0.22 275);
-    --chart-1: oklch(0.65 0.22 270);
-    --chart-2: oklch(0.70 0.20 280);
-    --chart-3: oklch(0.60 0.25 285);
-    --chart-4: oklch(0.55 0.18 265);
-    --chart-5: oklch(0.68 0.20 275);
-    --sidebar: oklch(0.17 0.04 266);
-    --sidebar-foreground: oklch(0.93 0.02 270);
-    --sidebar-primary: oklch(0.65 0.22 270);
-    --sidebar-primary-foreground: oklch(0.98 0.01 270);
-    --sidebar-accent: oklch(0.24 0.08 272);
-    --sidebar-accent-foreground: oklch(0.90 0.03 275);
-    --sidebar-border: oklch(0.28 0.08 270);
-    --sidebar-ring: oklch(0.60 0.18 275);
+    /* Dark Mode - Navy Blue Theme */
+    --background: oklch(0.20 0.08 255);
+    --foreground: oklch(0.95 0.01 240);
+    --card: oklch(0.25 0.09 258);
+    --card-foreground: oklch(0.95 0.01 240);
+    --popover: oklch(0.22 0.08 256);
+    --popover-foreground: oklch(0.95 0.01 240);
+    
+    /* Primary: Medium Navy (lighter for dark mode) */
+    --primary: oklch(0.62 0.18 255);
+    --primary-foreground: oklch(0.98 0 0);
+    
+    /* Secondary: Dark blue-gray */
+    --secondary: oklch(0.35 0.10 255);
+    --secondary-foreground: oklch(0.95 0.01 240);
+    
+    /* Muted: Dark navy */
+    --muted: oklch(0.28 0.09 258);
+    --muted-foreground: oklch(0.70 0.05 250);
+    
+    /* Accent: Light Navy */
+    --accent: oklch(0.80 0.08 250);
+    --accent-foreground: oklch(0.20 0.08 255);
+    
+    /* Destructive: Red */
+    --destructive: oklch(0.58 0.24 25);
+    --destructive-foreground: oklch(0.98 0 0);
+    
+    /* Borders & Inputs */
+    --border: oklch(0.35 0.10 255);
+    --input: oklch(0.28 0.09 258);
+    --ring: oklch(0.62 0.18 255);
+    
+    /* Charts: 3 Navy levels */
+    --chart-1: oklch(0.62 0.18 255);
+    --chart-2: oklch(0.80 0.08 250);
+    --chart-3: oklch(0.42 0.15 260);
+    --chart-4: oklch(0.55 0.08 250);
+    --chart-5: oklch(0.70 0.12 253);
+    
+    /* Sidebar: Deep navy background */
+    --sidebar: oklch(0.22 0.08 256);
+    --sidebar-foreground: oklch(0.92 0.01 240);
+    --sidebar-primary: oklch(0.62 0.18 255);
+    --sidebar-primary-foreground: oklch(0.98 0 0);
+    --sidebar-accent: oklch(0.28 0.09 258);
+    --sidebar-accent-foreground: oklch(0.88 0.01 240);
+    --sidebar-border: oklch(0.35 0.10 255);
+    --sidebar-ring: oklch(0.62 0.18 255);
+    
+    /* Semantic colors - Navy shades */
+    /* Success: Medium Navy */
+    --success: oklch(0.62 0.18 255);
+    --success-foreground: oklch(0.98 0 0);
+    /* Error: Red */
+    --error: oklch(0.58 0.24 25);
+    --error-foreground: oklch(0.98 0 0);
+    /* Warning: Light Navy */
+    --warning: oklch(0.80 0.08 250);
+    --warning-foreground: oklch(0.20 0.08 255);
 }
 
 @theme inline {
@@ -113,6 +170,12 @@
     --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
     --color-sidebar-border: var(--sidebar-border);
     --color-sidebar-ring: var(--sidebar-ring);
+    --color-success: var(--success);
+    --color-success-foreground: var(--success-foreground);
+    --color-error: var(--error);
+    --color-error-foreground: var(--error-foreground);
+    --color-warning: var(--warning);
+    --color-warning-foreground: var(--warning-foreground);
 }
 
 :root {
@@ -141,5 +204,116 @@
     }
     body {
         @apply bg-background text-foreground;
+    }
+}
+
+/* Galaxy theme utility classes - Use these instead of hard-coded colors */
+@layer utilities {
+    /* Primary colors (Indigo/Purple) */
+    .bg-primary-solid {
+        background-color: oklch(var(--primary));
+    }
+    .text-primary-solid {
+        color: oklch(var(--primary));
+    }
+    .border-primary-solid {
+        border-color: oklch(var(--primary));
+    }
+    .hover\:bg-primary-solid:hover {
+        background-color: oklch(var(--primary) / 0.9);
+    }
+    .hover\:text-primary-solid:hover {
+        color: oklch(var(--primary) / 0.9);
+    }
+    
+    /* Accent colors (Purple) */
+    .bg-accent-solid {
+        background-color: oklch(var(--accent));
+    }
+    .text-accent-solid {
+        color: oklch(var(--accent));
+    }
+    .border-accent-solid {
+        border-color: oklch(var(--accent));
+    }
+    .hover\:bg-accent-solid:hover {
+        background-color: oklch(var(--accent) / 0.9);
+    }
+    
+    /* Light variations */
+    .bg-primary-light {
+        background-color: oklch(var(--primary) / 0.1);
+    }
+    .text-primary-light {
+        color: oklch(var(--primary) / 0.7);
+    }
+    .hover\:bg-primary-light:hover {
+        background-color: oklch(var(--primary) / 0.15);
+    }
+    
+    /* Button styles */
+    .btn-primary {
+        background-color: oklch(var(--primary));
+        color: oklch(var(--primary-foreground));
+    }
+    .btn-primary:hover {
+        background-color: oklch(var(--primary) / 0.9);
+    }
+    
+    /* Loading spinner */
+    .spinner-primary {
+        border-color: oklch(var(--primary) / 0.2);
+        border-top-color: oklch(var(--primary));
+    }
+    
+    /* Success colors (Stock increase, positive status) */
+    .text-success {
+        color: oklch(var(--success));
+    }
+    .bg-success {
+        background-color: oklch(var(--success));
+    }
+    .bg-success-light {
+        background-color: oklch(var(--success) / 0.1);
+    }
+    .border-success {
+        border-color: oklch(var(--success) / 0.3);
+    }
+    .hover\:bg-success:hover {
+        background-color: oklch(var(--success) / 0.9);
+    }
+    
+    /* Error colors (Stock decrease, negative status) */
+    .text-error {
+        color: oklch(var(--error));
+    }
+    .bg-error {
+        background-color: oklch(var(--error));
+    }
+    .bg-error-light {
+        background-color: oklch(var(--error) / 0.1);
+    }
+    .border-error {
+        border-color: oklch(var(--error) / 0.3);
+    }
+    .hover\:bg-error:hover {
+        background-color: oklch(var(--error) / 0.9);
+    }
+    
+    /* Warning colors (Neutral/pending status) */
+    .text-warning {
+        color: oklch(var(--warning));
+    }
+    .bg-warning {
+        background-color: oklch(var(--warning));
+    }
+    .bg-warning-light {
+        background-color: oklch(var(--warning) / 0.1);
+    }
+    .border-warning {
+        border-color: oklch(var(--warning) / 0.3);
+    }
+    .hover\:bg-warning:hover {
+        background-color: oklch(var(--warning) / 0.9);
     }
 }

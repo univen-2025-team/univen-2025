@@ -47,7 +47,7 @@ export default function LoginPage() {
     <form onSubmit={formik.handleSubmit} className="space-y-5">
       {/* Error Message */}
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg flex items-start">
+        <div className="bg-error-light border border-error text-error px-4 py-3 rounded-lg flex items-start">
           <svg className="w-5 h-5 mr-2 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
             <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
           </svg>
@@ -76,14 +76,14 @@ export default function LoginPage() {
                   onBlur={formik.handleBlur}
                   className={`block w-full pl-10 pr-3 py-3 border ${
                     formik.touched.email && formik.errors.email
-                      ? 'border-red-500 focus:ring-red-500'
-                      : 'border-gray-300 focus:ring-blue-500'
+                      ? 'border-error focus:ring-error'
+                      : 'border-gray-300 focus:ring-ring'
                   } rounded-lg focus:outline-none focus:ring-2 focus:border-transparent transition-all text-gray-900 placeholder-gray-400`}
                   placeholder="example@email.com"
                 />
               </div>
               {formik.touched.email && formik.errors.email && (
-                <p className="mt-2 text-sm text-red-600 flex items-center">
+                <p className="mt-2 text-sm text-error flex items-center">
                   <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                   </svg>
@@ -113,14 +113,14 @@ export default function LoginPage() {
                   onBlur={formik.handleBlur}
                   className={`block w-full pl-10 pr-3 py-3 border ${
                     formik.touched.password && formik.errors.password
-                      ? 'border-red-500 focus:ring-red-500'
-                      : 'border-gray-300 focus:ring-blue-500'
+                      ? 'border-error focus:ring-error'
+                      : 'border-gray-300 focus:ring-ring'
                   } rounded-lg focus:outline-none focus:ring-2 focus:border-transparent transition-all text-gray-900 placeholder-gray-400`}
                   placeholder="••••••••"
                 />
               </div>
               {formik.touched.password && formik.errors.password && (
-                <p className="mt-2 text-sm text-red-600 flex items-center">
+                <p className="mt-2 text-sm text-error flex items-center">
                   <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                   </svg>
@@ -136,7 +136,7 @@ export default function LoginPage() {
                   id="remember-me"
                   name="remember-me"
                   type="checkbox"
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded transition-colors"
+                  className="h-4 w-4 text-primary focus:ring-ring border-gray-300 rounded transition-colors"
                 />
                 <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700">
                   Ghi nhớ đăng nhập
@@ -144,7 +144,7 @@ export default function LoginPage() {
               </div>
 
               <div className="text-sm">
-                <Link href="/auth/forgot-password" className="font-semibold text-blue-600 hover:text-blue-500 transition-colors">
+                <Link href="/auth/forgot-password" className="font-semibold text-primary hover:text-primary/90 transition-colors">
                   Quên mật khẩu?
                 </Link>
               </div>
@@ -154,7 +154,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={formik.isSubmitting || isLoading}
-              className="w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-lg shadow-lg text-sm font-semibold text-white bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+              className="w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-lg shadow-lg text-sm font-semibold text-white bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ring transition-all transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
             >
               {(formik.isSubmitting || isLoading) ? (
                 <>

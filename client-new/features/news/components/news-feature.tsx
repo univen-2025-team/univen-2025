@@ -29,7 +29,7 @@ export function NewsFeature({ data, onBack }: NewsFeatureProps) {
       </div>
 
       {/* News List */}
-      <Card className="bg-gradient-to-br from-card to-card/95 border border-border/50 shadow-lg">
+      <Card className="bg-card border border-border/50 shadow-lg">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <TrendingUp className="h-5 w-5" />

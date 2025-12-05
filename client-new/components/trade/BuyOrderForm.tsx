@@ -34,7 +34,7 @@ export function BuyOrderForm({
 }: BuyOrderFormProps) {
     const renderError = (field: keyof BuyStockFormValues) => {
         if (!formik.touched[field] || !formik.errors[field]) return null;
-        return <p className="text-sm text-red-600">{formik.errors[field]}</p>;
+        return <p className="text-sm text-error">{formik.errors[field]}</p>;
     };
 
     const isBuyTransaction = formik.values.transaction_type === "BUY";
@@ -212,7 +212,7 @@ export function BuyOrderForm({
                     name="notes"
                     rows={3}
                     placeholder="Ví dụ: Khớp lệnh theo báo cáo phân tích, cân nhắc giữ tối thiểu 3 tháng..."
-                    className="w-full rounded-md border border-gray-200 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                    className="w-full rounded-md border border-gray-200 px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-blue-100"
                     value={formik.values.notes}
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}

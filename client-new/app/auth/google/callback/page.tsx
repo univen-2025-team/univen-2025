@@ -65,13 +65,13 @@ export default function GoogleCallbackPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full mx-4">
           <div className="text-center">
             {/* Error Icon */}
-            <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-red-100 mb-4">
+            <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-error-light mb-4">
               <svg
-                className="h-10 w-10 text-red-600"
+                className="h-10 w-10 text-error"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -112,7 +112,7 @@ export default function GoogleCallbackPage() {
             {/* Manual Redirect Button */}
             <button
               onClick={() => router.push('/auth/login')}
-              className="w-full py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-semibold text-white bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all"
+              className="w-full py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-semibold text-white bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ring transition-all"
             >
               Return to Login
             </button>
@@ -124,11 +124,11 @@ export default function GoogleCallbackPage() {
 
   if (isProcessing) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full mx-4">
           <div className="text-center">
             {/* Google Icon */}
-            <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 mb-4 animate-pulse">
+            <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-primary mb-4 animate-pulse">
               <svg className="w-8 h-8 text-white" viewBox="0 0 24 24">
                 <path
                   fill="currentColor"
@@ -166,7 +166,7 @@ export default function GoogleCallbackPage() {
             <div className="mt-6">
               <div className="flex items-center justify-center space-x-2 text-sm text-gray-500">
                 <div className="flex items-center space-x-1">
-                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                  <div className="w-2 h-2 bg-success rounded-full animate-pulse"></div>
                   <span>Verifying credentials</span>
                 </div>
               </div>

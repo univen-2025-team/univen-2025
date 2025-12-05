@@ -55,7 +55,7 @@ export function BuyFlowWidget({
         <p className="text-sm text-slate-700">{currentStep.description}</p>
 
         {currentStep.helperText && (
-          <p className="text-xs text-slate-500 bg-blue-50 p-2 rounded border border-blue-200">
+          <p className="text-xs text-slate-500 bg-primary/5 p-2 rounded border border-primary/20">
             💡 {currentStep.helperText}
           </p>
         )}
@@ -115,7 +115,7 @@ export function BuyFlowWidget({
       <div className="flex gap-2 pt-2">
         <Button
           onClick={handleSubmit}
-          className="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-sm"
+          className="flex-1 bg-primary hover:bg-primary/90 text-white text-sm"
         >
           {currentStepIndex === steps.length - 1 ? 'Confirm' : 'Next'}
         </Button>
