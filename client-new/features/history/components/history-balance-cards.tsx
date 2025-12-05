@@ -16,10 +16,10 @@ export const HistoryBalanceCards: FC<HistoryBalanceCardsProps> = ({
 
     return (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl p-6 text-white shadow-lg">
+            <div className="bg-primary rounded-xl p-6 text-white shadow-lg">
                 <div className="flex items-center justify-between mb-2">
-                    <span className="text-blue-100 text-sm font-medium">Tổng giá trị</span>
-                    <svg className="w-8 h-8 text-blue-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <span className="text-primary-foreground/80 text-sm font-medium">Tổng giá trị</span>
+                    <svg className="w-8 h-8 text-primary-foreground/80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path
                             strokeLinecap="round"
                             strokeLinejoin="round"
@@ -31,10 +31,10 @@ export const HistoryBalanceCards: FC<HistoryBalanceCardsProps> = ({
                 <p className="text-3xl font-bold">{formatCurrency(total)}</p>
             </div>
 
-            <div className="bg-white rounded-xl p-6 border-2 border-green-200 shadow-md">
+            <div className="bg-white rounded-xl p-6 border-2 border-success shadow-md">
                 <div className="flex items-center justify-between mb-2">
                     <span className="text-gray-600 text-sm font-medium">Khả dụng</span>
-                    <svg className="w-8 h-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-8 h-8 text-success" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path
                             strokeLinecap="round"
                             strokeLinejoin="round"
@@ -44,13 +44,13 @@ export const HistoryBalanceCards: FC<HistoryBalanceCardsProps> = ({
                     </svg>
                 </div>
                 <p className="text-2xl font-bold text-gray-900">{formatCurrency(availableBalance)}</p>
-                <p className="text-sm text-green-600 mt-1">Sẵn sàng giao dịch</p>
+                <p className="text-sm text-success mt-1">Sẵn sàng giao dịch</p>
             </div>
 
-            <div className="bg-white rounded-xl p-6 border-2 border-orange-200 shadow-md">
+            <div className="bg-white rounded-xl p-6 border-2 border-warning shadow-md">
                 <div className="flex items-center justify-between mb-2">
                     <span className="text-gray-600 text-sm font-medium">Đang chờ khớp</span>
-                    <svg className="w-8 h-8 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-8 h-8 text-warning" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path
                             strokeLinecap="round"
                             strokeLinejoin="round"
@@ -60,7 +60,7 @@ export const HistoryBalanceCards: FC<HistoryBalanceCardsProps> = ({
                     </svg>
                 </div>
                 <p className="text-2xl font-bold text-gray-900">{formatCurrency(pendingAmount)}</p>
-                <p className="text-sm text-orange-600 mt-1">Lệnh đang xử lý</p>
+                <p className="text-sm text-warning mt-1">Lệnh đang xử lý</p>
             </div>
         </div>
     );

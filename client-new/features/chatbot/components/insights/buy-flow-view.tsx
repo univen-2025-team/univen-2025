@@ -126,7 +126,7 @@ export function BuyFlowView({ buyFlow }: BuyFlowViewProps) {
   const progress = ((stepIndex + 1) / buyFlow.steps.length) * 100
 
   return (
-    <Card className="bg-gradient-to-br from-card to-card/95 border border-border/50 shadow-lg backdrop-blur-sm">
+    <Card className="bg-card border border-border/50 shadow-lg backdrop-blur-sm">
       <CardHeader>
         <CardTitle>
           Buy {buyFlow.symbol} – Step {stepIndex + 1}/{buyFlow.steps.length}
@@ -139,8 +139,8 @@ export function BuyFlowView({ buyFlow }: BuyFlowViewProps) {
           <p className="text-sm text-muted-foreground">{currentStep.description}</p>
 
           {currentStep.helperText && (
-            <div className="rounded-lg border border-blue-200 bg-blue-50 p-3">
-              <p className="text-xs text-blue-800">💡 {currentStep.helperText}</p>
+            <div className="rounded-lg border border-primary/20 bg-primary/5 p-3">
+              <p className="text-xs text-primary">💡 {currentStep.helperText}</p>
             </div>
           )}
         </div>
@@ -198,8 +198,8 @@ export function BuyFlowView({ buyFlow }: BuyFlowViewProps) {
         {(error || successMessage) && (
           <div
             className={`rounded-lg border px-4 py-3 text-sm ${error
-              ? 'border-red-200 bg-red-50 text-red-700'
-              : 'border-green-200 bg-green-50 text-green-700'
+              ? 'border-error bg-error-light text-red-700'
+              : 'border-success bg-success-light text-green-700'
               }`}
           >
             {error || successMessage}

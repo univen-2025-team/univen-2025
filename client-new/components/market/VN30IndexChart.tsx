@@ -17,7 +17,7 @@ export default function VN30IndexChart({ data }: VN30IndexChartProps) {
   return (
     <div className="bg-white rounded-xl shadow-lg p-6">
       <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
-        <svg className="w-6 h-6 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg className="w-6 h-6 text-primary mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
         </svg>
         Biểu đồ VN30 Index
@@ -48,9 +48,9 @@ export default function VN30IndexChart({ data }: VN30IndexChartProps) {
               <Line
                 type="monotone"
                 dataKey="index"
-                stroke="#2563eb"
+                stroke="#0E1A3C"
                 strokeWidth={2}
-                dot={{ fill: '#2563eb', r: 3 }}
+                dot={{ fill: '#0E1A3C', r: 3 }}
                 activeDot={{ r: 5 }}
                 name="VN30"
               />

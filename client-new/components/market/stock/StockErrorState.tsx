@@ -14,7 +14,7 @@ export default function StockErrorState({ error, onRetry, onBack }: StockErrorSt
           <div className="flex flex-wrap items-center justify-center gap-3 mt-4">
             <button
               onClick={onRetry}
-              className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition-colors"
+              className="bg-error text-white px-4 py-2 rounded hover:bg-red-700 transition-colors"
             >
               Thử lại
             </button>

@@ -50,7 +50,7 @@ export default function StockTable({
           </select>
           <button
             onClick={onRefresh}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+            className="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors text-sm font-medium"
           >
             Làm mới
           </button>
@@ -76,10 +76,10 @@ export default function StockTable({
               <tr
                 key={stock.symbol}
                 onClick={() => router.push(`/market/${stock.symbol}`)}
-                className="border-b border-gray-100 hover:bg-blue-50 transition-colors cursor-pointer"
+                className="border-b border-gray-100 hover:bg-primary/5 transition-colors cursor-pointer"
               >
                 <td className="px-4 py-3">
-                  <span className="font-bold text-blue-600 hover:text-blue-800">{stock.symbol}</span>
+                  <span className="font-bold text-primary hover:text-primary/90">{stock.symbol}</span>
                 </td>
                 <td className={`px-4 py-3 text-right font-semibold ${getChangeColor(stock.change)}`}>
                   {formatPrice(stock.price)}

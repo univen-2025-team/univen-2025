@@ -150,22 +150,22 @@ export default function MarketPage() {
     };
 
     const getChangeColor = (change: number): string => {
-        if (change > 0) return 'text-green-600';
-        if (change < 0) return 'text-red-600';
-        return 'text-yellow-600';
+        if (change > 0) return 'text-success';
+        if (change < 0) return 'text-error';
+        return 'text-warning';
     };
 
     const getChangeBgColor = (change: number): string => {
-        if (change > 0) return 'bg-green-50 border-green-200';
-        if (change < 0) return 'bg-red-50 border-red-200';
-        return 'bg-yellow-50 border-yellow-200';
+        if (change > 0) return 'bg-success-light border-success';
+        if (change < 0) return 'bg-error-light border-error';
+        return 'bg-warning-light border-warning';
     };
 
     if (loading && !marketData) {
         return (
             <div className="min-h-screen flex items-center justify-center">
                 <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
                     <p className="text-gray-600">Đang tải dữ liệu thị trường...</p>
                 </div>
             </div>
@@ -176,12 +176,12 @@ export default function MarketPage() {
         return (
             <div className="min-h-screen flex items-center justify-center">
                 <div className="text-center">
-                    <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative max-w-md">
+                    <div className="bg-error-light border border-error text-error px-4 py-3 rounded relative max-w-md">
                         <strong className="font-bold">Lỗi!</strong>
                         <span className="block sm:inline"> {error}</span>
                         <button
                             onClick={fetchMarketData}
-                            className="mt-4 bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+                            className="mt-4 bg-error text-white px-4 py-2 rounded hover:bg-error"
                         >
                             Thử lại
                         </button>
@@ -194,11 +194,11 @@ export default function MarketPage() {
     return (
         <div className="space-y-6 pb-8">
             {/* Header */}
-            <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl shadow-xl p-8 text-white">
+            <div className="bg-primary rounded-2xl shadow-xl p-8 text-white">
                 <div className="flex items-center justify-between">
                     <div>
                         <h1 className="text-3xl md:text-4xl font-bold mb-2">Thị trường VN30</h1>
-                        <p className="text-blue-100 text-lg">
+                        <p className="text-primary-foreground/80 text-lg">
                             Theo dõi 30 mã cổ phiếu vốn hóa lớn nhất thị trường Việt Nam
                         </p>
                     </div>
@@ -224,14 +224,14 @@ export default function MarketPage() {
 
             {/* VN30 Index Card */}
             {marketData && (
-                <div className="bg-white rounded-xl shadow-lg p-6 border-l-4 border-blue-500">
+                <div className="bg-white rounded-xl shadow-lg p-6 border-l-4 border-primary">
                     <div className="flex items-center justify-between mb-4">
                         <div className="flex-1">
                             <div className="flex items-center gap-3 mb-2">
                                 <p className="text-gray-600 text-sm font-medium">Chỉ số VN30</p>
                                 {isConnected && realtimeEnabled && (
-                                    <span className="flex items-center text-xs text-green-600 bg-green-50 px-2 py-1 rounded-full">
-                                        <span className="w-2 h-2 bg-green-600 rounded-full mr-1 animate-pulse"></span>
+                                    <span className="flex items-center text-xs text-success bg-success-light px-2 py-1 rounded-full">
+                                        <span className="w-2 h-2 bg-success rounded-full mr-1 animate-pulse"></span>
                                         Trực tiếp
                                     </span>
                                 )}
@@ -268,7 +268,7 @@ export default function MarketPage() {
                             onClick={() => setRealtimeEnabled(!realtimeEnabled)}
                             className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
                                 realtimeEnabled
-                                    ? 'bg-green-600 text-white hover:bg-green-700'
+                                    ? 'bg-success text-white hover:bg-success'
                                     : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                             }`}
                         >
@@ -298,7 +298,7 @@ export default function MarketPage() {
                     <div className="bg-white rounded-xl shadow-lg p-6">
                         <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
                             <svg
-                                className="w-6 h-6 text-blue-600 mr-2"
+                                className="w-6 h-6 text-primary mr-2"
                                 fill="none"
                                 stroke="currentColor"
                                 viewBox="0 0 24 24"
@@ -338,9 +338,9 @@ export default function MarketPage() {
                                         <Line
                                             type="monotone"
                                             dataKey="index"
-                                            stroke="#2563eb"
+                                            stroke="#0E1A3C"
                                             strokeWidth={2}
-                                            dot={{ fill: '#2563eb', r: 3 }}
+                                            dot={{ fill: '#0E1A3C', r: 3 }}
                                             activeDot={{ r: 5 }}
                                             name="VN30"
                                         />
@@ -358,7 +358,7 @@ export default function MarketPage() {
                     <div className="bg-white rounded-xl shadow-lg p-6">
                         <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
                             <svg
-                                className="w-6 h-6 text-indigo-600 mr-2"
+                                className="w-6 h-6 text-accent mr-2"
                                 fill="none"
                                 stroke="currentColor"
                                 viewBox="0 0 24 24"
@@ -393,7 +393,7 @@ export default function MarketPage() {
                                     />
                                     <Bar
                                         dataKey="price"
-                                        fill="#6366f1"
+                                        fill="#0E1A3C"
                                         radius={[8, 8, 0, 0]}
                                         name="Giá"
                                     />
@@ -411,7 +411,7 @@ export default function MarketPage() {
                     <div className="bg-white rounded-xl shadow-lg p-6">
                         <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
                             <svg
-                                className="w-6 h-6 text-blue-600 mr-2"
+                                className="w-6 h-6 text-primary mr-2"
                                 fill="none"
                                 stroke="currentColor"
                                 viewBox="0 0 24 24"
@@ -451,9 +451,9 @@ export default function MarketPage() {
                                         <Line
                                             type="monotone"
                                             dataKey="index"
-                                            stroke="#2563eb"
+                                            stroke="#0E1A3C"
                                             strokeWidth={2}
-                                            dot={{ fill: '#2563eb', r: 3 }}
+                                            dot={{ fill: '#0E1A3C', r: 3 }}
                                             activeDot={{ r: 5 }}
                                             name="VN30"
                                         />
@@ -471,7 +471,7 @@ export default function MarketPage() {
                     <div className="bg-white rounded-xl shadow-lg p-6">
                         <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
                             <svg
-                                className="w-6 h-6 text-indigo-600 mr-2"
+                                className="w-6 h-6 text-accent mr-2"
                                 fill="none"
                                 stroke="currentColor"
                                 viewBox="0 0 24 24"
@@ -506,7 +506,7 @@ export default function MarketPage() {
                                     />
                                     <Bar
                                         dataKey="price"
-                                        fill="#6366f1"
+                                        fill="#0E1A3C"
                                         radius={[8, 8, 0, 0]}
                                         name="Giá"
                                     />
@@ -524,7 +524,7 @@ export default function MarketPage() {
                     <div className="bg-white rounded-xl shadow-lg p-6">
                         <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
                             <svg
-                                className="w-6 h-6 text-green-600 mr-2"
+                                className="w-6 h-6 text-success mr-2"
                                 fill="none"
                                 stroke="currentColor"
                                 viewBox="0 0 24 24"
@@ -554,10 +554,10 @@ export default function MarketPage() {
                                         </p>
                                     </div>
                                     <div className="text-right">
-                                        <p className="font-bold text-green-600">
+                                        <p className="font-bold text-success">
                                             +{formatNumber(stock.change)}
                                         </p>
-                                        <p className="text-sm font-semibold text-green-600">
+                                        <p className="text-sm font-semibold text-success">
                                             +{stock.changePercent}%
                                         </p>
                                     </div>
@@ -570,7 +570,7 @@ export default function MarketPage() {
                     <div className="bg-white rounded-xl shadow-lg p-6">
                         <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
                             <svg
-                                className="w-6 h-6 text-red-600 mr-2"
+                                className="w-6 h-6 text-error mr-2"
                                 fill="none"
                                 stroke="currentColor"
                                 viewBox="0 0 24 24"
@@ -600,10 +600,10 @@ export default function MarketPage() {
                                         </p>
                                     </div>
                                     <div className="text-right">
-                                        <p className="font-bold text-red-600">
+                                        <p className="font-bold text-error">
                                             {formatNumber(stock.change)}
                                         </p>
-                                        <p className="text-sm font-semibold text-red-600">
+                                        <p className="text-sm font-semibold text-error">
                                             {stock.changePercent}%
                                         </p>
                                     </div>
@@ -631,7 +631,7 @@ export default function MarketPage() {
                                         | 'volume'
                                 )
                             }
-                            className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                         >
                             <option value="price">Giá</option>
                             <option value="change">Thay đổi</option>
@@ -641,14 +641,14 @@ export default function MarketPage() {
                         <select
                             value={order}
                             onChange={(e) => setOrder(e.target.value as 'asc' | 'desc')}
-                            className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                         >
                             <option value="desc">Giảm dần</option>
                             <option value="asc">Tăng dần</option>
                         </select>
                         <button
                             onClick={fetchMarketData}
-                            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+                            className="bg-primary text-primary-foreground px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors text-sm font-medium"
                         >
                             Làm mới
                         </button>
@@ -688,10 +688,10 @@ export default function MarketPage() {
                                 <tr
                                     key={stock.symbol}
                                     onClick={() => router.push(`/market/${stock.symbol}`)}
-                                    className="border-b border-gray-100 hover:bg-blue-50 transition-colors cursor-pointer"
+                                    className="border-b border-gray-100 hover:bg-primary/5 transition-colors cursor-pointer"
                                 >
                                     <td className="px-4 py-3">
-                                        <span className="font-bold text-blue-600 hover:text-blue-800">
+                                        <span className="font-bold text-primary hover:text-primary/90">
                                             {stock.symbol}
                                         </span>
                                     </td>

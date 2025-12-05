@@ -17,7 +17,7 @@ export default function TopGainersLosers({ topGainers, topLosers }: TopGainersLo
       {/* Top Gainers */}
       <div className="bg-white rounded-xl shadow-lg p-6">
         <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
-          <svg className="w-6 h-6 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-6 h-6 text-success mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
           </svg>
           Top mã tăng mạnh
@@ -34,10 +34,10 @@ export default function TopGainersLosers({ topGainers, topLosers }: TopGainersLo
                 <p className="text-sm text-gray-600">{formatPrice(stock.price)}</p>
               </div>
               <div className="text-right">
-                <p className="font-bold text-green-600">
+                <p className="font-bold text-success">
                   +{formatNumber(stock.change)}
                 </p>
-                <p className="text-sm font-semibold text-green-600">
+                <p className="text-sm font-semibold text-success">
                   +{stock.changePercent}%
                 </p>
               </div>
@@ -49,7 +49,7 @@ export default function TopGainersLosers({ topGainers, topLosers }: TopGainersLo
       {/* Top Losers */}
       <div className="bg-white rounded-xl shadow-lg p-6">
         <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
-          <svg className="w-6 h-6 text-red-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-6 h-6 text-error mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
           </svg>
           Top mã giảm mạnh
@@ -66,10 +66,10 @@ export default function TopGainersLosers({ topGainers, topLosers }: TopGainersLo
                 <p className="text-sm text-gray-600">{formatPrice(stock.price)}</p>
               </div>
               <div className="text-right">
-                <p className="font-bold text-red-600">
+                <p className="font-bold text-error">
                   {formatNumber(stock.change)}
                 </p>
-                <p className="text-sm font-semibold text-red-600">
+                <p className="text-sm font-semibold text-error">
                   {stock.changePercent}%
                 </p>
               </div>

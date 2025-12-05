@@ -19,7 +19,7 @@ export function ChatMessageList({ messages }: ChatMessageListProps) {
             <div
               className={`max-w-[75%] rounded-2xl px-3 py-2 text-sm shadow-sm ${
                 message.role === 'user'
-                  ? 'bg-blue-500 text-white rounded-br-none'
+                  ? 'bg-primary/50 text-white rounded-br-none'
                   : 'bg-gray-100 text-slate-900 rounded-bl-none'
               }`}
             >

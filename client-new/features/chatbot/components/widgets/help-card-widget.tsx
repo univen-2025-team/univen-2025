@@ -18,7 +18,7 @@ export function HelpCardWidget({ title, description, tips }: HelpCardWidgetProps
         <ul className="space-y-1 pt-2">
           {tips.map((tip, index) => (
             <li key={index} className="flex gap-2 text-xs text-slate-600">
-              <CheckCircle2 className="h-3 w-3 flex-shrink-0 mt-0.5 text-blue-500" />
+              <CheckCircle2 className="h-3 w-3 flex-shrink-0 mt-0.5 text-accent" />
               <span>{tip}</span>
             </li>
           ))}

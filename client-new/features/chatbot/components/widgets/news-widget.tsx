@@ -21,9 +21,9 @@ export function NewsWidget({ items }: NewsWidgetProps) {
             <div
               className={`w-2 h-2 rounded-full ${
                 item.sentiment === 'positive'
-                  ? 'bg-green-500'
+                  ? 'bg-success-light0'
                   : item.sentiment === 'negative'
-                    ? 'bg-red-500'
+                    ? 'bg-error-light0'
                     : 'bg-gray-400'
               }`}
             />

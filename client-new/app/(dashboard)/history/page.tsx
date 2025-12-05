@@ -114,7 +114,7 @@ export default function HistoryPage() {
                 </p>
                 <Link
                     href="/auth/login"
-                    className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700 transition-colors"
+                    className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-primary text-primary-foreground font-semibold hover:bg-primary/90 transition-colors"
                 >
                     Đăng nhập ngay
                 </Link>
@@ -139,7 +139,7 @@ export default function HistoryPage() {
             />
 
             {error && (
-                <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                <div className="rounded-xl border border-error bg-error-light px-4 py-3 text-sm text-error">
                     {error}
                 </div>
             )}

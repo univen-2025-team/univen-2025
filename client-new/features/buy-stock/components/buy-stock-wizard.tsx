@@ -172,15 +172,15 @@ export function BuyStockWizard({ data, onBack }: BuyStockWizardProps) {
           <CardHeader>
             <div className="flex items-center justify-center py-4">
               {transactionResult.success ? (
-                <CheckCircle2 className="h-20 w-20 text-green-600" />
+                <CheckCircle2 className="h-20 w-20 text-success" />
               ) : (
-                <XCircle className="h-20 w-20 text-red-600" />
+                <XCircle className="h-20 w-20 text-error" />
               )}
             </div>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="text-center space-y-2">
-              <h2 className={`text-2xl font-bold ${transactionResult.success ? 'text-green-600' : 'text-red-600'}`}>
+              <h2 className={`text-2xl font-bold ${transactionResult.success ? 'text-success' : 'text-error'}`}>
                 {transactionResult.success ? '✅ Giao dịch thành công!' : '❌ Giao dịch thất bại'}
               </h2>
               <p className="text-muted-foreground">{transactionResult.message}</p>
@@ -204,11 +204,11 @@ export function BuyStockWizard({ data, onBack }: BuyStockWizardProps) {
                   </div>
                   <div className="flex items-center justify-between pt-2 border-t">
                     <span className="text-muted-foreground">Tổng giá trị</span>
-                    <span className="font-semibold text-blue-600">{transactionResult.transaction.total_amount.toLocaleString('vi-VN')} VND</span>
+                    <span className="font-semibold text-primary">{transactionResult.transaction.total_amount.toLocaleString('vi-VN')} VND</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-muted-foreground">Số dư sau GD</span>
-                    <span className="font-semibold text-green-600">{transactionResult.transaction.balance_after.toLocaleString('vi-VN')} VND</span>
+                    <span className="font-semibold text-success">{transactionResult.transaction.balance_after.toLocaleString('vi-VN')} VND</span>
                   </div>
                   {transactionResult.transaction.transaction_id && (
                     <div className="flex items-center justify-between pt-2 border-t">
@@ -286,7 +286,7 @@ export function BuyStockWizard({ data, onBack }: BuyStockWizardProps) {
                   </div>
                   
                   {insufficientBalance && quantity > 0 && (
-                    <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+                    <div className="rounded-lg border border-error bg-error-light p-4 text-sm text-red-800">
                       ⚠️ Số dư không đủ! Cần {totalCost.toLocaleString('vi-VN')} VND nhưng chỉ có {availableBalance.toLocaleString('vi-VN')} VND
                     </div>
                   )}

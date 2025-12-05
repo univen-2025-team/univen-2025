@@ -14,7 +14,7 @@ type NewsViewProps = {
 
 export function NewsView({ news }: NewsViewProps) {
   return (
-    <Card className="bg-gradient-to-br from-card to-card/95 border border-border/50 shadow-lg backdrop-blur-sm">
+    <Card className="bg-card border border-border/50 shadow-lg backdrop-blur-sm">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <TrendingUp className="h-5 w-5" />

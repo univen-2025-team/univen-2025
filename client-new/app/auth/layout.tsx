@@ -31,11 +31,11 @@ export default function AuthLayout({
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+    <div className="min-h-screen bg-background flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
       {/* Animated Background Elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 left-10 w-72 h-72 bg-blue-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
-        <div className="absolute top-40 right-10 w-72 h-72 bg-purple-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
+        <div className="absolute top-20 left-10 w-72 h-72 bg-primary/20 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
+        <div className="absolute top-40 right-10 w-72 h-72 bg-accent/20 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
         <div className="absolute -bottom-8 left-1/2 w-72 h-72 bg-pink-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-4000"></div>
       </div>
 
@@ -43,12 +43,12 @@ export default function AuthLayout({
       <div className="relative z-10 max-w-md w-full">
         {/* Logo/Brand */}
         <div className="text-center mb-8 animate-fade-in-down">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-r from-blue-600 to-purple-600 mb-4 shadow-lg">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary mb-4 shadow-lg">
             <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
             </svg>
           </div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+          <h1 className="text-3xl font-bold bg-primary bg-clip-text text-transparent">
             UniVen Platform
           </h1>
           <p className="text-gray-600 mt-2 text-sm">Nền tảng giao dịch chứng khoán thông minh</p>
@@ -60,7 +60,7 @@ export default function AuthLayout({
           <div className="relative flex border-b border-gray-200 bg-gray-50">
             {/* Sliding Background Indicator */}
             <div 
-              className={`absolute bottom-0 h-1 bg-gradient-to-r from-blue-600 to-purple-600 transition-all duration-300 ease-out ${
+              className={`absolute bottom-0 h-1 bg-primary transition-all duration-300 ease-out ${
                 isLoginPage ? 'left-0 w-1/2' : 'left-1/2 w-1/2'
               }`}
             />
@@ -70,7 +70,7 @@ export default function AuthLayout({
               href="/auth/login"
               className={`flex-1 py-4 text-center font-semibold transition-all duration-300 relative ${
                 isLoginPage
-                  ? 'text-blue-600'
+                  ? 'text-primary'
                   : 'text-gray-500 hover:text-gray-700'
               }`}
             >
@@ -92,7 +92,7 @@ export default function AuthLayout({
               href="/auth/register"
               className={`flex-1 py-4 text-center font-semibold transition-all duration-300 relative ${
                 isRegisterPage
-                  ? 'text-blue-600'
+                  ? 'text-primary'
                   : 'text-gray-500 hover:text-gray-700'
               }`}
             >
@@ -140,7 +140,7 @@ export default function AuthLayout({
                 // Redirect to backend Google OAuth endpoint
                 window.location.href = 'http://localhost:4000/v1/api/auth/login/google';
               }}
-              className="w-full inline-flex justify-center items-center py-3 px-4 border-2 border-gray-200 rounded-lg shadow-sm bg-white text-sm font-semibold text-gray-700 hover:bg-gray-50 hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all transform hover:scale-[1.02] active:scale-[0.98]"
+              className="w-full inline-flex justify-center items-center py-3 px-4 border-2 border-gray-200 rounded-lg shadow-sm bg-white text-sm font-semibold text-gray-700 hover:bg-gray-50 hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ring transition-all transform hover:scale-[1.02] active:scale-[0.98]"
             >
               <svg className="w-5 h-5 mr-3" viewBox="0 0 24 24">
                 <path
@@ -166,12 +166,12 @@ export default function AuthLayout({
         </div>
 
         {/* Security Note */}
-        <div className="mt-6 bg-blue-50 rounded-lg p-4 border border-blue-100 animate-fade-in">
+        <div className="mt-6 bg-primary/5 rounded-lg p-4 border border-primary/20 animate-fade-in">
           <div className="flex">
-            <svg className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+            <svg className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
             </svg>
-            <p className="ml-3 text-xs text-blue-800">
+            <p className="ml-3 text-xs text-primary">
               Thông tin của bạn được mã hóa và bảo mật an toàn
             </p>
           </div>

@@ -62,7 +62,7 @@ export function ChartView({ chart }: ChartViewProps) {
             <p className="text-4xl font-bold text-primary">${latestPrice.toLocaleString()}</p>
             <p
               className={`mt-1 text-sm font-medium ${
-                change >= 0 ? 'text-green-600' : 'text-red-600'
+                change >= 0 ? 'text-success' : 'text-error'
               }`}
             >
               {change >= 0 ? '+' : ''}

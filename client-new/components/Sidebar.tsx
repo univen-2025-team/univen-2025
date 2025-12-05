@@ -69,7 +69,7 @@ export function Sidebar() {
           {/* Header */}
           <div className="p-4 border-b border-gray-200 flex items-center justify-between gap-2">
             <div className="flex items-center gap-3">
-              <div className={`h-10 w-10 rounded-md flex items-center justify-center text-white bg-gradient-to-r from-blue-500 to-indigo-600 text-sm font-bold`}>
+              <div className={`h-10 w-10 rounded-md flex items-center justify-center text-white bg-primary text-sm font-bold`}>
                 {isCollapsed ? appConfig.shortName.charAt(0) : appConfig.shortName.substring(0, 2)}
               </div>
               {!isCollapsed && (
@@ -103,10 +103,10 @@ export function Sidebar() {
                     key={route.path}
                     href={route.path}
                     onClick={() => setIsOpen(false)}
-                    className={`group flex items-center gap-3 p-3 rounded-md relative transition-colors ${active ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow" : "text-gray-700 hover:bg-gray-100"} ${isCollapsed ? "justify-center" : ""}`}
+                    className={`group flex items-center gap-3 p-3 rounded-md relative transition-colors ${active ? "bg-primary text-white shadow" : "text-gray-700 hover:bg-gray-100"} ${isCollapsed ? "justify-center" : ""}`}
                   >
                     {/* Active indicator */}
-                    {active && !isCollapsed && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-blue-500 rounded-r-full" />}
+                    {active && !isCollapsed && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-primary/50 rounded-r-full" />}
 
                     <div className={`flex-shrink-0 ${active ? "text-white" : "text-gray-600"}`}>
                       {route.icon}
@@ -116,7 +116,7 @@ export function Sidebar() {
                       <>
                         <span className="flex-1 font-medium">{route.name}</span>
                         {route.badge && (
-                          <span className={`ml-2 px-2 py-0.5 rounded-full text-xs font-semibold ${active ? "bg-white text-blue-600" : "bg-blue-600 text-white"}`}>
+                          <span className={`ml-2 px-2 py-0.5 rounded-full text-xs font-semibold ${active ? "bg-white text-primary" : "bg-primary text-white"}`}>
                             {route.badge}
                           </span>
                         )}
@@ -150,7 +150,7 @@ export function Sidebar() {
                   className="w-9 h-9 rounded-full object-cover"
                 />
               ) : (
-                <div className="w-9 h-9 rounded-full bg-gradient-to-r from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold">
+                <div className="w-9 h-9 rounded-full bg-primary flex items-center justify-center text-white font-bold">
                   {user?.user_fullName?.charAt(0).toUpperCase() || "U"}
                 </div>
               )}
@@ -206,7 +206,7 @@ export function Sidebar() {
 
                 <button
                   onClick={handleLogout}
-                  className="w-full flex items-center gap-3 px-4 py-2 hover:bg-red-50 transition-colors text-red-600"
+                  className="w-full flex items-center gap-3 px-4 py-2 hover:bg-error-light transition-colors text-error"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
@@ -246,7 +246,7 @@ export function Sidebar() {
 
                 <button
                   onClick={handleLogout}
-                  className="w-full flex items-center gap-3 px-4 py-2 hover:bg-red-50 transition-colors text-red-600"
+                  className="w-full flex items-center gap-3 px-4 py-2 hover:bg-error-light transition-colors text-error"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />

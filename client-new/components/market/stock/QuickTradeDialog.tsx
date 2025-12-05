@@ -145,7 +145,7 @@ export function QuickTradeDialog({
 
                 <div className="space-y-6">
                     {errorMessage && (
-                        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                        <div className="rounded-lg border border-error bg-error-light px-4 py-3 text-sm text-red-700">
                             {errorMessage}
                         </div>
                     )}

@@ -136,7 +136,7 @@ export default function ProfilePage() {
             label="Trạng thái"
             value={
               <div className="flex items-center gap-2">
-                <div className={`w-3 h-3 rounded-full ${displayProfileData.user_status === "ACTIVE" ? "bg-green-500" : "bg-red-500"
+                <div className={`w-3 h-3 rounded-full ${displayProfileData.user_status === "ACTIVE" ? "bg-success" : "bg-error"
                   }`}></div>
                 <span>{displayProfileData.user_status === "ACTIVE" ? "Đang hoạt động" : "Không hoạt động"}</span>
               </div>

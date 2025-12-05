@@ -17,14 +17,14 @@ export default function VN30IndexCard({
   onToggleRealtime,
 }: VN30IndexCardProps) {
   return (
-    <div className="bg-white rounded-xl shadow-lg p-6 border-l-4 border-blue-500">
+    <div className="bg-white rounded-xl shadow-lg p-6 border-l-4 border-primary">
       <div className="flex items-center justify-between mb-4">
         <div className="flex-1">
           <div className="flex items-center gap-3 mb-2">
             <p className="text-gray-600 text-sm font-medium">Chỉ số VN30</p>
             {isConnected && realtimeEnabled && (
-              <span className="flex items-center text-xs text-green-600 bg-green-50 px-2 py-1 rounded-full">
-                <span className="w-2 h-2 bg-green-600 rounded-full mr-1 animate-pulse"></span>
+              <span className="flex items-center text-xs text-success bg-success-light px-2 py-1 rounded-full">
+                <span className="w-2 h-2 bg-success rounded-full mr-1 animate-pulse"></span>
                 Trực tiếp
               </span>
             )}
@@ -51,7 +51,7 @@ export default function VN30IndexCard({
         <button
           onClick={onToggleRealtime}
           className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${realtimeEnabled
-            ? 'bg-green-600 text-white hover:bg-green-700'
+            ? 'bg-success text-white hover:bg-green-700'
             : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
             }`}
         >
