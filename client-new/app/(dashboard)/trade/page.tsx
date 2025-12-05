@@ -9,6 +9,7 @@ import { userApi, type UserProfile } from "@/lib/api/user.api";
 import { transactionApi } from "@/lib/api/transaction.api";
 import { useAppSelector } from "@/lib/store/hooks";
 import { selectUser } from "@/lib/store/authSlice";
+import PageHeader from '@/components/dashboard/PageHeader';
 import type {
     BuyStockFormValues,
     TransactionMetadata,
@@ -147,23 +148,10 @@ export default function TradePage() {
 
     return (
         <div className="space-y-6 pb-8">
-            {/* Header styled similar to Market page */}
-            <div className="bg-primary rounded-2xl shadow-xl p-8 text-white">
-                <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
-                    <div>
-                        <h1 className="text-3xl md:text-4xl font-bold mb-2">Giao dịch cổ phiếu</h1>
-                        <p className="text-primary-foreground/80 text-lg">
-                            Đặt lệnh mua / bán cổ phiếu
-                        </p>
-                    </div>
-                    <div className="flex items-center gap-4">
-                        <div className="rounded-xl bg-white/10 backdrop-blur-sm px-6 py-4 text-center border border-white/20">
-                            <p className="text-sm text-primary-foreground/80">Số dư khả dụng</p>
-                            <p className="text-2xl font-semibold text-white">{formattedBalance} VND</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <PageHeader
+                title="Giao dịch cổ phiếu"
+                description="Đặt lệnh mua / bán cổ phiếu"
+            />
 
             {profileError && (
                 <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">

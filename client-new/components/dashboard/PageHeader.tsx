@@ -24,16 +24,11 @@ export default function PageHeader({ title, description, icon }: PageHeaderProps
   );
 
   return (
-    <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl shadow-xl p-8 text-white">
+    <div className="bg-primary rounded-2xl shadow-xl p-8 text-white">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl md:text-4xl font-bold mb-2">{title}</h1>
-          <p className="text-blue-100 text-lg">{description}</p>
-        </div>
-        <div className="hidden md:block">
-          <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4">
-            {icon || defaultIcon}
-          </div>
+          <p className="text-primary-foreground/80 text-lg">{description}</p>
         </div>
       </div>
     </div>
