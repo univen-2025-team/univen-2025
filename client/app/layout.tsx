@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import type { Metadata } from 'next';
 import './globals.css';
 import { ReduxProvider } from '@/lib/store/Provider';
@@ -36,4 +37,35 @@ export default function RootLayout({
             </body>
         </html>
     );
+=======
+import type { Metadata } from "next";
+import "./globals.css";
+import { ReduxProvider } from "@/lib/store/Provider";
+import { appConfig } from "@/config";
+
+export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'),
+  title: appConfig.seo.title,
+  description: appConfig.seo.description,
+  keywords: appConfig.seo.keywords,
+  openGraph: {
+    title: appConfig.seo.title,
+    description: appConfig.seo.description,
+    images: [appConfig.seo.ogImage],
+  },
+};
+
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
+  return (
+    <html lang={appConfig.settings.defaultLanguage}>
+      <body className="antialiased">
+        <ReduxProvider>{children}</ReduxProvider>
+      </body>
+    </html>
+  );
+>>>>>>> f255a1a0 (rename: client-new => client)
 }
