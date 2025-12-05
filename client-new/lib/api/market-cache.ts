@@ -3,7 +3,10 @@
  * Fetches cached market data from Node.js server
  */
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/v1/api';
+import { API_URL } from '@/config/app';
+
+const API_BASE_URL = API_URL;
+console.log({ API_BASE_URL });
 
 export interface CachedMarketData {
     date: string;

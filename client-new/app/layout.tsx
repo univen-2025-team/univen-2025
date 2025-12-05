@@ -3,9 +3,10 @@ import './globals.css';
 import { ReduxProvider } from '@/lib/store/Provider';
 import { ToastProvider } from '@/components/toast/toast-provider';
 import { appConfig } from '@/config';
+import { APP_URL } from '@/config/app';
 
 export const metadata: Metadata = {
-    metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'),
+    metadataBase: new URL(APP_URL),
     title: appConfig.seo.title,
     description: appConfig.seo.description,
     keywords: appConfig.seo.keywords,

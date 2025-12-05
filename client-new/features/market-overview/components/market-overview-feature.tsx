@@ -17,6 +17,7 @@ import {
     MarketSortOrder
 } from '@/lib/services/marketService';
 import { useMarketSocket } from '@/lib/hooks/useMarketSocket';
+import { API_URL } from '@/config/app';
 
 type MarketOverviewFeatureProps = {
     data: MarketOverviewData;
@@ -114,9 +115,7 @@ export function MarketOverviewFeature({ data }: MarketOverviewFeatureProps) {
 
             // Import dynamically to avoid circular dependency if any, or just use fetch
             const response = await fetch(
-                `${
-                    process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/v1/api'
-                }/market/history/vn30?limit=${limit}&type=${type}`
+                `${API_URL}/market/history/vn30?limit=${limit}&type=${type}`
             );
             if (response.ok) {
                 const result = await response.json();
