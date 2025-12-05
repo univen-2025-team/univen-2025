@@ -51,6 +51,7 @@ const server = app.listen(Number(PORT), () => {
 /* ---------------------------------------------------------- */
 // Initialize Socket.IO service
 SocketIOService.getInstance().initialize(server);
+console.log('CICD Test');
 
 // Initialize Market Socket service for real-time stock data
 MarketSocketService.getInstance().initialize();
