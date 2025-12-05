@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -13,10 +13,14 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Progress } from '@/components/ui/progress'
+import { transactionApi } from '@/lib/api/transaction.api'
+import { useAppSelector } from '@/lib/store/hooks'
+import { selectUser } from '@/lib/store/authSlice'
 
 type BuyFlowViewProps = {
   buyFlow: {
     symbol: string
+    currentPrice: number
     currentStepIndex: number
     steps: Array<{
       id: string
@@ -36,23 +40,96 @@ type BuyFlowViewProps = {
 }
 
 export function BuyFlowView({ buyFlow }: BuyFlowViewProps) {
+  const reduxUser = useAppSelector(selectUser)
   const [formValues, setFormValues] = useState<Record<string, any>>(buyFlow.draftValues || {})
-  const currentStep = buyFlow.steps[buyFlow.currentStepIndex]
+  const [stepIndex, setStepIndex] = useState(buyFlow.currentStepIndex || 0)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [successMessage, setSuccessMessage] = useState<string | null>(null)
+
+  useEffect(() => {
+    setFormValues(buyFlow.draftValues || {})
+    setStepIndex(buyFlow.currentStepIndex || 0)
+    setError(null)
+    setSuccessMessage(null)
+  }, [buyFlow])
+
+  const currentStep = buyFlow.steps[stepIndex]
 
   if (!currentStep) return null
 
-  const handleSubmit = () => {
-    // In real implementation, this would update the dashboard state
-    console.log(`Buy flow step submitted: ${currentStep.id}`, formValues)
+  const quantity = Number(formValues.quantity || 0)
+  const estimatedCost = useMemo(() => {
+    if (!quantity || quantity <= 0) return 0
+    return quantity * buyFlow.currentPrice
+  }, [quantity, buyFlow.currentPrice])
+
+  const userId = reduxUser?._id
+
+  const availableBalance = reduxUser?.balance ?? 0
+  const isMarketOrderInsufficient =
+    formValues.orderType === 'Market Order' &&
+    quantity > 0 &&
+    estimatedCost > availableBalance
+
+  const handleSubmit = async () => {
+    if (stepIndex < buyFlow.steps.length - 1) {
+      setError(null)
+      setSuccessMessage(null)
+      setStepIndex((prev) => Math.min(prev + 1, buyFlow.steps.length - 1))
+      return
+    }
+
+    if (!userId) {
+      setError('Vui lòng đăng nhập để thực hiện giao dịch.')
+      return
+    }
+
+    if (!quantity || quantity <= 0) {
+      setError('Vui lòng nhập số lượng hợp lệ trước khi đặt lệnh.')
+      return
+    }
+
+    if (estimatedCost > availableBalance) {
+      setError('Số dư không đủ để đặt lệnh mua. Vui lòng giảm số lượng hoặc nạp thêm tiền.')
+      return
+    }
+
+    setIsSubmitting(true)
+    setError(null)
+    setSuccessMessage(null)
+
+    try {
+      const response = await transactionApi.createTransaction({
+        userId,
+        stock_code: buyFlow.symbol,
+        stock_name: buyFlow.symbol,
+        quantity,
+        price_per_unit: buyFlow.currentPrice,
+        transaction_type: 'BUY',
+        notes: `Chatbot quick order (${formValues.orderType || 'Market'})`,
+      })
+
+      setSuccessMessage(
+        `Đặt lệnh mua ${quantity} cổ phiếu ${buyFlow.symbol} thành công. Số dư mới: ${response.transaction.balance_after.toLocaleString(
+          'vi-VN'
+        )} VND.`
+      )
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Không thể đặt lệnh mua.'
+      setError(message)
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
-  const progress = ((buyFlow.currentStepIndex + 1) / buyFlow.steps.length) * 100
+  const progress = ((stepIndex + 1) / buyFlow.steps.length) * 100
 
   return (
     <Card className="bg-gradient-to-br from-card to-card/95 border border-border/50 shadow-lg backdrop-blur-sm">
       <CardHeader>
         <CardTitle>
-          Buy {buyFlow.symbol} – Step {buyFlow.currentStepIndex + 1}/{buyFlow.steps.length}
+          Buy {buyFlow.symbol} – Step {stepIndex + 1}/{buyFlow.steps.length}
         </CardTitle>
         <Progress value={progress} className="h-2 mt-2" />
       </CardHeader>
@@ -118,11 +195,49 @@ export function BuyFlowView({ buyFlow }: BuyFlowViewProps) {
         )}
 
         {/* Action Button */}
+        {(error || successMessage) && (
+          <div
+            className={`rounded-lg border px-4 py-3 text-sm ${error
+              ? 'border-red-200 bg-red-50 text-red-700'
+              : 'border-green-200 bg-green-50 text-green-700'
+              }`}
+          >
+            {error || successMessage}
+          </div>
+        )}
+        {quantity > 0 && (
+          <div className="rounded-lg border border-border/40 bg-muted/10 p-3 text-sm text-muted-foreground space-y-1">
+            <div className="flex justify-between">
+              <span>Số dư khả dụng</span>
+              <span className="font-semibold text-foreground">
+                {availableBalance.toLocaleString('vi-VN')} VND
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span>Ước tính chi phí</span>
+              <span className={estimatedCost > availableBalance ? 'font-semibold text-rose-600' : 'font-semibold text-foreground'}>
+                {estimatedCost.toLocaleString('vi-VN')} VND
+              </span>
+            </div>
+            {isMarketOrderInsufficient && (
+              <p className="text-xs text-rose-600">
+                Số dư không đủ cho lệnh Market. Vui lòng giảm số lượng.
+              </p>
+            )}
+          </div>
+        )}
         <div className="flex gap-2 pt-2">
-          <Button onClick={handleSubmit} className="flex-1">
-            {buyFlow.currentStepIndex === buyFlow.steps.length - 1
-              ? 'Complete Order'
-              : 'Continue'}
+          <Button
+            onClick={handleSubmit}
+            className="flex-1"
+            disabled={
+              isSubmitting ||
+              quantity <= 0 ||
+              (stepIndex === buyFlow.steps.length - 1 && estimatedCost > availableBalance) ||
+              (stepIndex === 1 && isMarketOrderInsufficient)
+            }
+          >
+            {stepIndex === buyFlow.steps.length - 1 ? 'Đặt lệnh mua' : 'Tiếp tục'}
           </Button>
         </div>
       </CardContent>

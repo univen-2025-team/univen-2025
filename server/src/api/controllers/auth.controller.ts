@@ -5,6 +5,7 @@ import AuthService from '@/services/auth.service.js';
 import { CreatedResponse, OkResponse } from '@/response/success.response.js';
 import { ForbiddenErrorResponse } from '@/response/error.response.js';
 import { Profile } from 'passport-google-oauth20';
+import { CLIENT_URL } from '@/configs/server.config';
 
 export default class AuthController {
     /* ------------------------------------------------------ */
@@ -38,8 +39,8 @@ export default class AuthController {
         new OkResponse({
             message: 'Login with Google success!',
             metadata: user
-        }).sendAuth(res, "http://localhost:3000/auth/google/callback");
-    }
+        }).sendAuth(res, `${CLIENT_URL}/auth/google/callback`);
+    };
 
     /* ------------------------------------------------------ */
     /*                         Logout                         */

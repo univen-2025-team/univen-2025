@@ -25,7 +25,7 @@ import { findOneAndUpdateUser, findOneUser, findUserById } from '@/models/reposi
 import { RoleNames } from '@/enums/rbac.enum.js';
 import { deleteKeyToken } from './redis.service.js';
 import { findOneAndUpdateKeyToken } from '@/models/repository/keyToken/index.js';
-import { USER_PUBLIC_FIELDS } from '@/configs/user.config.js';
+import { USER_INIT_BALANCE, USER_PUBLIC_FIELDS } from '@/configs/user.config.js';
 import { roleService } from './rbac.service.js';
 import { changeMediaOwner } from '@/models/repository/media/index.js';
 import { NODE_ENV } from '@/configs/server.config.js';
@@ -60,6 +60,7 @@ export default class AuthService {
         const userInstance = UserService.newInstance({
             email,
             password: hashPassword,
+            balance: USER_INIT_BALANCE, // init balance
 
             user_avatar: '',
             user_fullName,
@@ -115,8 +116,10 @@ export default class AuthService {
         if (!user)
             throw new NotFoundErrorResponse({ message: 'Username or password is not correct!' });
 
-        if (!user.password) 
-            throw new ForbiddenErrorResponse({ message: 'This account already uses Google login!' });
+        if (!user.password)
+            throw new ForbiddenErrorResponse({
+                message: 'This account already uses Google login!'
+            });
 
         /* ------------------ Check password ------------------ */
         const hashPassword = user.password;
@@ -181,6 +184,7 @@ export default class AuthService {
             const newUser = UserService.newInstance({
                 googleId: googleProfile.googleId,
                 email: googleProfile.email,
+                balance: USER_INIT_BALANCE,
                 password: '',
 
                 user_fullName: googleProfile.user_fullName,
