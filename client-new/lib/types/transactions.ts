@@ -96,3 +96,22 @@ export interface TransactionStatsResponse {
     transaction_stats: TransactionStatsEntry[];
 }
 
+export interface UserRankingItem {
+    rank: number;
+    user_fullName: string;
+    total_profit: number;
+}
+
+export interface UserRankingPagination {
+    current_page: number;
+    limit: number;
+    total_users: number;
+    total_pages: number;
+    offset: number;
+}
+
+export interface UserRankingResponse {
+    ranking: UserRankingItem[];
+    pagination: UserRankingPagination;
+}
+

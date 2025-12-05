@@ -3,6 +3,7 @@
 import { useMarketSocket } from '@/lib/hooks/useMarketSocket';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
+import PageHeader from '@/components/dashboard/PageHeader';
 import {
     LineChart,
     Line,
@@ -194,6 +195,7 @@ export default function MarketPage() {
     return (
         <div className="space-y-6 pb-8">
             {/* Header */}
+<<<<<<< HEAD
             <div className="bg-primary rounded-2xl shadow-xl p-8 text-white">
                 <div className="flex items-center justify-between">
                     <div>
@@ -221,6 +223,12 @@ export default function MarketPage() {
                     </div>
                 </div>
             </div>
+=======
+            <PageHeader
+                title="Thị trường VN30"
+                description="Theo dõi 30 mã cổ phiếu vốn hóa lớn nhất thị trường Việt Nam"
+            />
+>>>>>>> 9456d0cc7241d2cfa7769d51b6a7b6de4a536991
 
             {/* VN30 Index Card */}
             {marketData && (
@@ -266,11 +274,18 @@ export default function MarketPage() {
                         </p>
                         <button
                             onClick={() => setRealtimeEnabled(!realtimeEnabled)}
+<<<<<<< HEAD
                             className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
                                 realtimeEnabled
                                     ? 'bg-success text-white hover:bg-success'
                                     : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                             }`}
+=======
+                            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${realtimeEnabled
+                                ? 'bg-green-600 text-white hover:bg-green-700'
+                                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                                }`}
+>>>>>>> 9456d0cc7241d2cfa7769d51b6a7b6de4a536991
                         >
                             <svg
                                 className="w-4 h-4"
@@ -625,10 +640,10 @@ export default function MarketPage() {
                             onChange={(e) =>
                                 setSortBy(
                                     e.target.value as
-                                        | 'price'
-                                        | 'change'
-                                        | 'changePercent'
-                                        | 'volume'
+                                    | 'price'
+                                    | 'change'
+                                    | 'changePercent'
+                                    | 'volume'
                                 )
                             }
                             className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
