@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import MarketHeader from '@/components/market/MarketHeader';
+import { MarketHeader } from './market-header';
 import VN30IndexCard from '@/components/market/VN30IndexCard';
 import VN30IndexChart from '@/components/market/VN30IndexChart';
 import TopStocksChart from '@/components/market/TopStocksChart';
