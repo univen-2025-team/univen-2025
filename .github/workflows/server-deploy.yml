@@ -1,0 +1,56 @@
+name: Deploy Server to EC2
+
+on:
+    push:
+        branches: [master, main]
+        paths:
+            - 'server/**'
+    workflow_dispatch:
+
+jobs:
+    deploy:
+        name: Deploy to EC2
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+
+            - name: Deploy to EC2 via SSH
+              uses: appleboy/ssh-action@v1.0.3
+              with:
+                  host: ${{ secrets.EC2_HOST }}
+                  username: ${{ secrets.EC2_USERNAME }}
+                  key: ${{ secrets.EC2_SSH_KEY }}
+                  port: 22
+                  script: |
+                      echo "🚀 Starting deployment..."
+
+                      # Navigate to project directory
+                      cd /home/ubuntu/univen-2025/server || {
+                        echo "Directory not found. Cloning repository..."
+                        cd /home/ubuntu
+                        git clone https://github.com/univen-2025-team/univen-2025.git
+                        cd univen-2025/server
+                      }
+
+                      # Pull latest code
+                      git fetch origin
+                      git reset --hard origin/master
+
+                      # Install dependencies
+                      echo "📦 Installing dependencies..."
+                      npm install --legacy-peer-deps
+
+                      # Create logs directory
+                      mkdir -p logs/pm2
+
+                      # Restart with PM2
+                      echo "🔄 Restarting server with PM2..."
+                      pm2 stop univen-2025-server 2>/dev/null || true
+                      pm2 delete univen-2025-server 2>/dev/null || true
+                      pm2 start ecosystem.config.js --env production
+                      pm2 save
+
+                      echo "✅ Deployment completed!"
+                      pm2 status
