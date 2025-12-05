@@ -58,8 +58,6 @@ export function ChatInterface({ onUiEffects }: ChatInterfaceProps) {
                 id: 'select-quantity',
                 title: 'Chọn số lượng cổ phiếu',
                 description: `Nhập số lượng cổ phiếu ${symbol} bạn muốn mua.`,
-                helperText:
-                  'Chỉ đầu tư số tiền bạn có thể chấp nhận mất. Đa dạng hóa danh mục đầu tư.',
                 fields: [
                   {
                     type: 'number',
@@ -87,7 +85,6 @@ export function ChatInterface({ onUiEffects }: ChatInterfaceProps) {
                 title: 'Xem xét và xác nhận',
                 description:
                   'Kiểm tra chi tiết đơn hàng trước khi gửi. Đây là mô phỏng.',
-                helperText: 'Kiểm tra kỹ tất cả thông tin để chính xác.',
               },
             ],
           },

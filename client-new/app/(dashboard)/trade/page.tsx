@@ -17,7 +17,6 @@ import type {
 } from "@/lib/types/transactions";
 import { BuyOrderForm } from "@/components/trade/BuyOrderForm";
 import { TransactionSummaryCard } from "@/components/trade/TransactionSummaryCard";
-import { TransactionGuideCard } from "@/components/trade/TransactionGuideCard";
 
 const INITIAL_FORM_VALUES: BuyStockFormValues = {
     stock_code: "",
@@ -198,7 +197,6 @@ export default function TradePage() {
                             isSubmitting={formik.isSubmitting}
                             lastTransaction={lastTransaction}
                         />
-                        {/* <TransactionGuideCard /> */}
                     </div>
                 </div>
             </form>
