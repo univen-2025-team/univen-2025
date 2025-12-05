@@ -84,11 +84,36 @@ export default function ProfilePage() {
         role_name: 'User'
     };
 
+    // Handle avatar change - refetch profile to get updated avatar
+    const handleAvatarChange = async () => {
+        try {
+            const data = await userApi.getProfile();
+            setProfile(data);
+
+            // Sync with Redux store
+            dispatch(
+                setUser({
+                    _id: data._id,
+                    email: data.email,
+                    user_fullName: data.user_fullName,
+                    user_avatar: data.user_avatar,
+                    user_role: data.user_role,
+                    balance: data.balance ?? 0,
+                    user_gender: data.user_gender,
+                    user_status: data.user_status,
+                    user_dayOfBirth: data.user_dayOfBirth
+                })
+            );
+        } catch (err) {
+            console.error('Error refetching profile:', err);
+        }
+    };
+
     return (
         <div className="max-w-4xl mx-auto space-y-6">
             <ProfilePageHeader />
 
-            <ProfileHeaderCard profile={displayProfileData} />
+            <ProfileHeaderCard profile={displayProfileData} onAvatarChange={handleAvatarChange} />
 
             {/* Details Section */}
             <div className="bg-white rounded-xl shadow-md p-6 space-y-6">
