@@ -1,0 +1,67 @@
+name: Deploy Python Server to EC2
+
+on:
+    push:
+        branches: [master, main]
+        paths:
+            - 'python-server/**'
+    workflow_dispatch:
+
+jobs:
+    deploy:
+        name: Deploy to EC2
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+
+            - name: Deploy to EC2 via SSH
+              uses: appleboy/ssh-action@v1.0.3
+              with:
+                  host: ${{ secrets.EC2_HOST }}
+                  username: ${{ secrets.EC2_USERNAME }}
+                  key: ${{ secrets.EC2_SSH_KEY }}
+                  port: 22
+                  script: |
+                      echo "🚀 Starting Python Server deployment..."
+
+                      # Navigate to project directory
+                      cd /home/ubuntu/univen-2025/python-server || {
+                        echo "Directory not found!"
+                        exit 1
+                      }
+
+                      # Pull latest code
+                      git fetch origin
+                      git reset --hard origin/master
+
+                      # Create virtual environment if not exists
+                      if [ ! -d "venv" ]; then
+                        echo "📦 Creating virtual environment..."
+                        python3 -m venv venv
+                      fi
+
+                      # Activate virtual environment and install dependencies
+                      echo "📦 Installing dependencies..."
+                      source venv/bin/activate
+                      pip install --upgrade pip
+                      pip install -r requirements.txt
+
+                      # Stop existing process
+                      echo "🔄 Restarting Python server..."
+                      pkill -f "python3 app.py" || true
+
+                      # Start server in background with nohup
+                      nohup python3 app.py > /home/ubuntu/univen-2025/python-server/logs/app.log 2>&1 &
+
+                      # Wait a bit and check if process is running
+                      sleep 3
+                      if pgrep -f "python3 app.py" > /dev/null; then
+                        echo "✅ Python server started successfully!"
+                        echo "PID: $(pgrep -f 'python3 app.py')"
+                      else
+                        echo "❌ Failed to start Python server"
+                        tail -20 /home/ubuntu/univen-2025/python-server/logs/app.log
+                        exit 1
+                      fi
