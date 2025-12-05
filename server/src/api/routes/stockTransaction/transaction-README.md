@@ -10,13 +10,14 @@ API endpoints for managing stock transactions (BUY/SELL operations). Handles tra
 
 ## Table of Contents
 
-1. [Create Transaction](#1-create-transaction)  
+1. [Create Transaction](#1-create-transaction)
 2. [Get Transaction History](#2-get-transaction-history)
 3. [Get Transaction by ID](#3-get-transaction-by-id)
 4. [Cancel Transaction](#4-cancel-transaction)
 5. [Get User Transaction Stats](#5-get-user-transaction-stats)
-6. [Error Codes](#error-codes)
-7. [Data Models](#data-models)
+6. [Get User Ranking](#6-get-user-ranking)
+7. [Error Codes](#error-codes)
+8. [Data Models](#data-models)
 
 ---
 
@@ -481,6 +482,172 @@ curl -X GET http://localhost:4000/v1/api/stock-transactions/transactions/6929304
 
 ---
 
+## 6. Get User Ranking
+
+**Retrieve user ranking by total profit from stock transactions**
+
+### Request
+
+```http
+GET /v1/api/stock-transactions/ranking?limit=10&page=1
+```
+
+### Query Parameters
+
+| Param   | Type   | Default | Max | Description                |
+| ------- | ------ | ------- | --- | -------------------------- |
+| `limit` | number | 10      | 100 | Number of users per page   |
+| `page`  | number | 1       | -   | Page number for pagination |
+
+### Success Response (200)
+
+```json
+{
+    "statusCode": 200,
+    "message": "Get user ranking by profit successfully",
+    "metadata": {
+        "ranking": [
+            {
+                "rank": 1,
+                "user_id": "69293046bcbc4ea01b8b76ce",
+                "user_fullName": "Đặng Đăng Khoa",
+                "user_avatar": "https://...",
+                "total_profit": 5250000,
+                "transaction_count": 8,
+                "stock_details": [
+                    {
+                        "stock_code": "VNM",
+                        "stock_name": "Vinamilk",
+                        "quantity": 10,
+                        "buy_price": 95000,
+                        "current_price": 98000,
+                        "profit_per_share": 3000,
+                        "total_profit": 30000
+                    },
+                    {
+                        "stock_code": "VCB",
+                        "stock_name": "Vietcombank",
+                        "quantity": 5,
+                        "buy_price": 80000,
+                        "current_price": 85000,
+                        "profit_per_share": 5000,
+                        "total_profit": 25000
+                    }
+                ]
+            },
+            {
+                "rank": 2,
+                "user_id": "69120691da032aef8ad6f7a6",
+                "user_fullName": "Nguyễn Văn A",
+                "user_avatar": "https://...",
+                "total_profit": 3750000,
+                "transaction_count": 5,
+                "stock_details": [
+                    {
+                        "stock_code": "FPT",
+                        "stock_name": "FPT Software",
+                        "quantity": 20,
+                        "buy_price": 120000,
+                        "current_price": 125000,
+                        "profit_per_share": 5000,
+                        "total_profit": 100000
+                    }
+                ]
+            }
+        ],
+        "pagination": {
+            "current_page": 1,
+            "limit": 10,
+            "total_users": 25,
+            "total_pages": 3,
+            "offset": 0
+        }
+    }
+}
+```
+
+### Ranking Fields
+
+| Field               | Type     | Description                                  |
+| ------------------- | -------- | -------------------------------------------- |
+| `rank`              | number   | Ranking position (1 = highest profit)        |
+| `user_id`           | ObjectId | User ID                                      |
+| `user_fullName`     | string   | User full name                               |
+| `user_avatar`       | string   | User avatar URL                              |
+| `total_profit`      | number   | Total profit from all BUY transactions (VND) |
+| `transaction_count` | number   | Total BUY transactions                       |
+| `stock_details`     | array    | Details of each stock holding                |
+
+### Stock Details Fields
+
+| Field              | Type   | Description                                               |
+| ------------------ | ------ | --------------------------------------------------------- |
+| `stock_code`       | string | Stock symbol (VNM, VCB, etc.)                             |
+| `stock_name`       | string | Stock full name                                           |
+| `quantity`         | number | Number of shares held                                     |
+| `buy_price`        | number | Original buy price per share (VND)                        |
+| `current_price`    | number | Current market price per share (VND)                      |
+| `profit_per_share` | number | Profit per share (current_price - buy_price)              |
+| `total_profit`     | number | Total profit for this stock (profit_per_share × quantity) |
+
+### Pagination Fields
+
+| Field          | Type   | Description           |
+| -------------- | ------ | --------------------- |
+| `current_page` | number | Current page number   |
+| `limit`        | number | Records per page      |
+| `total_users`  | number | Total number of users |
+| `total_pages`  | number | Total number of pages |
+| `offset`       | number | Offset from beginning |
+
+### Example Requests
+
+**Get top 10 users by profit**
+
+```bash
+curl "http://localhost:4000/v1/api/stock-transactions/ranking?limit=10&page=1"
+```
+
+**Get top 20 users (2nd page with limit 10)**
+
+```bash
+curl "http://localhost:4000/v1/api/stock-transactions/ranking?limit=10&page=2"
+```
+
+**Get top 5 users**
+
+```bash
+curl "http://localhost:4000/v1/api/stock-transactions/ranking?limit=5&page=1"
+```
+
+### Calculation Logic
+
+**Total Profit Calculation:**
+
+```
+For each BUY transaction:
+  profit = (current_market_price - buy_price) × quantity
+
+total_profit = sum of all profits from BUY transactions
+```
+
+**Data Source:**
+
+-   Historical buy prices from user's BUY transactions
+-   Current market prices fetched from VNStock API in real-time
+-   Only considers COMPLETED BUY transactions
+
+### Notes
+
+-   Profit is calculated only for BUY transactions (SELL transactions are excluded)
+-   Current prices are fetched in real-time from VNStock
+-   Only COMPLETED transactions are included in ranking
+-   Ranking is sorted by total_profit in descending order
+-   If VNStock API fails, profit for that stock cannot be calculated
+-   Users with no transactions or negative profit still appear in ranking
+
+---
+
 ## Error Codes
 
 ### Common HTTP Status Codes
@@ -567,6 +734,7 @@ curl -X GET http://localhost:4000/v1/api/stock-transactions/transactions/6929304
 | `/transactions/:transactionId` | GET | ✅ | transactionId | - | - | Transaction |
 | `/transactions/:transactionId/cancel` | PUT | ✅ | transactionId | - | reason | Transaction |
 | `/transactions/:userId/stats` | GET | ✅ | userId | - | - | Stats |
+| `/ranking` | GET | ❌ | - | limit, page | - | Ranking[] + Pagination |
 
 ---
 
@@ -635,6 +803,16 @@ curl http://localhost:4000/v1/api/stock-transactions/transactions/69293046bcbc4e
 
 ---
 
+### Example 6: Get User Ranking
+
+```bash
+curl "http://localhost:4000/v1/api/stock-transactions/ranking?limit=10&page=1"
+```
+
+**Response**: Top 10 users ranked by total profit with their stock holdings
+
+---
+
 ## Notes
 
 -   **Authentication**: Endpoints requiring auth use JWT Bearer tokens in `Authorization` header
@@ -644,6 +822,8 @@ curl http://localhost:4000/v1/api/stock-transactions/transactions/69293046bcbc4e
 -   **Validation**: Zod validation applied to all request payloads
 -   **Atomicity**: Transactions and balance updates are atomic operations
 -   **Indexes**: Queries optimized with MongoDB indexes on user_id, stock_code, created_at
+-   **Ranking Optimization**: Stock prices are fetched once and cached in memory during ranking calculation to minimize API calls
+-   **Error Handling**: If VNStock API fails for a stock, that stock's profit shows as null but doesn't block the ranking
 
 ---
 
