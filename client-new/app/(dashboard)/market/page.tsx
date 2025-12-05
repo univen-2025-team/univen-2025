@@ -208,16 +208,26 @@ export default function MarketPage() {
 
             if (socketMarketData.vn30Index) {
                 setIndexHistory((prev) => {
+                    // Format time to match historical data: "YYYY-MM-DD HH:MM:SS"
+                    const now = new Date();
+                    const timeStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+                    
                     const newPoint = {
-                        time: new Date().toLocaleTimeString('vi-VN', {
-                            hour: '2-digit',
-                            minute: '2-digit'
-                        }),
+                        time: timeStr,
                         index: socketMarketData.vn30Index.index
                     };
-                    // Keep only last N points based on range, but for realtime we just append
-                    // Ideally we should merge with historical data but for now simple append
-                    return [...prev, newPoint].slice(-100);
+                    
+                    // Check if this time already exists (avoid duplicates)
+                    const existingIndex = prev.findIndex(p => p.time.substring(0, 16) === timeStr.substring(0, 16));
+                    if (existingIndex >= 0) {
+                        // Update existing point
+                        const updated = [...prev];
+                        updated[existingIndex] = newPoint;
+                        return updated;
+                    }
+                    
+                    // Append new point without slicing to preserve historical data
+                    return [...prev, newPoint];
                 });
             }
         }
