@@ -10,6 +10,9 @@ import WelcomeHeader from "@/components/dashboard/WelcomeHeader";
 import StatsGrid from "@/components/dashboard/StatsGrid";
 import QuickActions from "@/components/dashboard/QuickActions";
 import RecentActivity from "@/components/dashboard/RecentActivity";
+import PageHeader from '@/components/dashboard/PageHeader';
+import { title } from "process";
+import ErrorMessage from "@/components/common/ErrorMessage";
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -42,16 +45,20 @@ export default function DashboardPage() {
 
   const userName = profile.user_fullName || "Admin";
 
-  return (
-    <div className="space-y-6">
-      {/* <WelcomeHeader userName={userName} /> */}
-      <StatsGrid />
+  return ( <>
+    <div className="space-y-6 pb-8">
+    <PageHeader
+        title="Tổng quan"
+        description="" /><div className="space-y-6">
+        {/* <WelcomeHeader userName={userName} /> */}
+        <StatsGrid />
 
-      {/* Quick Actions & Recent Activity */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <QuickActions onLogout={handleLogout} />
-        <RecentActivity />
+        {/* Quick Actions & Recent Activity */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <QuickActions onLogout={handleLogout} />
+          <RecentActivity />
+        </div>
       </div>
-    </div>
+    </div></>
   );
 }

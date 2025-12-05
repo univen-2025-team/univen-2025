@@ -145,7 +145,7 @@ export default function RankingPage() {
                                         </p>
                                     </div>
                                 </div>
-                                <span className="text-sm font-semibold" style={{ color: styles.text }}>
+                                <span className="text-5xl" style={{ color: styles.text }}>
                                     {item.rank === 1 && '🥇'}
                                     {item.rank === 2 && '🥈'}
                                     {item.rank === 3 && '🥉'}
