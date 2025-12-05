@@ -3,7 +3,6 @@
 import { FeatureState, FeatureInstruction } from '../types/features'
 import { MarketOverviewFeature } from '../market-overview/components/market-overview-feature'
 import { BuyStockWizard } from '../buy-stock/components/buy-stock-wizard'
-import { NewsFeature } from '../news/components/news-feature'
 import { StockDetailFeature } from '../stock-detail/components/stock-detail-feature'
 
 type FeatureAreaProps = {
@@ -38,13 +37,6 @@ export function FeatureArea({
     case 'BUY_STOCK':
       return state.buyStock ? (
         <BuyStockWizard data={state.buyStock} onBack={onBack} />
-      ) : (
-        <MarketOverviewFeature data={state.marketOverview} />
-      )
-
-    case 'VIEW_NEWS':
-      return state.news ? (
-        <NewsFeature data={state.news} onBack={onBack} />
       ) : (
         <MarketOverviewFeature data={state.marketOverview} />
       )
