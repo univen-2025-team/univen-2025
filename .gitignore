@@ -2,7 +2,6 @@
 # /**/public
 
 /**/.env.development.local
-/**/.env.production.local
 
 /**/.cursor/
 # Log files
