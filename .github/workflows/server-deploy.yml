@@ -49,7 +49,7 @@ jobs:
                       echo "🔄 Restarting server with PM2..."
                       pm2 stop univen-2025-server 2>/dev/null || true
                       pm2 delete univen-2025-server 2>/dev/null || true
-                      pm2 start ecosystem.config.js --env production
+                      pm2 start ecosystem.config.cjs --env production
                       pm2 save
 
                       echo "✅ Deployment completed!"
