@@ -121,6 +121,8 @@ export function VN30TrendChart({ data, onRangeChange, selectedRange = '1M' }: VN
                         stroke="#3b82f6"
                         strokeWidth={2}
                         dot={false}
+                        isAnimationActive={true}
+                        animationDuration={300}
                     />
                 </LineChart>
             </ResponsiveContainer>
