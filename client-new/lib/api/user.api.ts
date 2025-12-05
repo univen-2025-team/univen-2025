@@ -30,8 +30,16 @@ export const userApi = {
   /**
    * Get user profile
    */
-  getProfile: async (): Promise<UserProfile> => {
-    const response = await axiosInstance.get('/user/profile');
+  getProfile: async (accessTokenOverride?: string): Promise<UserProfile> => {
+    const config = accessTokenOverride
+      ? {
+        headers: {
+          Authorization: `Bearer ${accessTokenOverride}`,
+        },
+      }
+      : undefined;
+
+    const response = await axiosInstance.get('/user/profile', config);
     return response.data.metadata.user;
   },
 

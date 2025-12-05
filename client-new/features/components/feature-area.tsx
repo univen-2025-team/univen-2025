@@ -2,7 +2,7 @@
 
 import { FeatureState, FeatureInstruction } from '../types/features'
 import { MarketOverviewFeature } from '../market-overview/components/market-overview-feature'
-import { BuyStockFeature } from '../buy-stock/components/buy-stock-feature'
+import { BuyStockWizard } from '../buy-stock/components/buy-stock-wizard'
 import { NewsFeature } from '../news/components/news-feature'
 import { StockDetailFeature } from '../stock-detail/components/stock-detail-feature'
 
@@ -37,7 +37,7 @@ export function FeatureArea({
 
     case 'BUY_STOCK':
       return state.buyStock ? (
-        <BuyStockFeature data={state.buyStock} onBack={onBack} />
+        <BuyStockWizard data={state.buyStock} onBack={onBack} />
       ) : (
         <MarketOverviewFeature data={state.marketOverview} />
       )

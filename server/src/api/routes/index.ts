@@ -7,6 +7,7 @@ import userRoute from './user/index.js';
 import viewRoute from './views/index.js';
 import chatRoute from './chats/index.js';
 import stockTransactionRoute from './stockTransaction/index.js';
+import marketCacheRoute from './market-cache.route.js';
 
 const rootRoute = Router();
 
@@ -24,5 +25,8 @@ rootRoute.use('/chats', chatRoute);
 
 /* ---------------------- Stock Transaction ---------------------- */
 rootRoute.use('/stock-transactions', stockTransactionRoute);
+
+/* ---------------------- Market Cache (Cached Data) ---------------------- */
+rootRoute.use('/market', marketCacheRoute);
 
 export default rootRoute;

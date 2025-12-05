@@ -8,3 +8,12 @@
 # Log files
 **/logs/
 *.log
+
+# Lock files - chỉ giữ lock file của package manager chính
+# Server dùng Bun nên ignore npm lock
+server/package-lock.json
+server/yarn.lock
+
+# Client dùng npm/pnpm nên ignore bun lock
+client/bun.lock
+client-new/bun.lock
