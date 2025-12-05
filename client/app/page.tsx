@@ -111,7 +111,7 @@ export default function Home() {
           <div className="bg-white rounded-xl shadow-lg p-6 border-l-4 border-orange-500 hover:shadow-xl transition-shadow">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-600 text-sm font-medium">Cổ phiếu nắm giữ</p>
+                <p className="text-gray-600 text-sm font-medium">Cổ phiếu đang có</p>
                 <h3 className="text-2xl font-bold text-gray-900 mt-2">
                   12
                 </h3>

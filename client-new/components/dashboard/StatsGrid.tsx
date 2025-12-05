@@ -46,7 +46,7 @@ export default function StatsGrid() {
       />
 
       <StatsCard
-        title="Cổ phiếu nắm giữ"
+        title="Cổ phiếu đang có"
         value="12"
         change="Danh mục"
         changeType="neutral"
