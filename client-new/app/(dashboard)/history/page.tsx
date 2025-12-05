@@ -12,6 +12,7 @@ import { HistoryBalanceCards } from '@/features/history/components/history-balan
 import { HistoryFilters } from '@/features/history/components/history-filters';
 import { HistoryTable } from '@/features/history/components/history-table';
 import { HistoryPagination } from '@/features/history/components/history-pagination';
+import PageHeader from '@/components/dashboard/PageHeader';
 
 type FilterType = TransactionType | 'ALL';
 type FilterStatus = TransactionStatus | 'ALL';
@@ -124,10 +125,10 @@ export default function HistoryPage() {
 
     return (
         <div className="max-w-7xl mx-auto space-y-6">
-            <div>
-                <h1 className="text-3xl font-bold text-gray-900">Lịch sử giao dịch</h1>
-                <p className="text-gray-600 mt-1">Quản lý và theo dõi các lệnh mua bán của bạn</p>
-            </div>
+            <PageHeader
+                title="Lịch sử giao dịch"
+                description="Quản lý và theo dõi các lệnh mua bán của bạn"
+            />
 
             <HistoryBalanceCards availableBalance={availableBalance} pendingAmount={pendingAmount} />
 

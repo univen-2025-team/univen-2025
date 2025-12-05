@@ -15,7 +15,7 @@ export default function DashboardPage() {
   const router = useRouter();
   const dispatch = useAppDispatch();
   const isAuthenticated = useAppSelector(selectIsAuthenticated);
-  
+
   // Fetch profile data from API
   const { profile, isLoading, error } = useProfile(true);
 

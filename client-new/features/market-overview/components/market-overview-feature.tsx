@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import MarketHeader from '@/components/market/MarketHeader'
 import VN30IndexCard from '@/components/market/VN30IndexCard'
 import VN30IndexChart from '@/components/market/VN30IndexChart'
 import TopStocksChart from '@/components/market/TopStocksChart'
@@ -11,6 +10,7 @@ import MarketLoadingSpinner from '@/components/market/MarketLoadingSpinner'
 import ErrorDisplay from '@/components/market/ErrorDisplay'
 import { MarketOverviewData } from '@/features/types/features'
 import { MarketData, IndexHistoryPoint } from '@/lib/types/market'
+import PageHeader from '@/components/dashboard/PageHeader'
 import {
   fetchMarketDataService,
   MarketSortField,
@@ -143,7 +143,10 @@ export function MarketOverviewFeature({ data }: MarketOverviewFeatureProps) {
 
   return (
     <div className="space-y-6 pb-8">
-      <MarketHeader />
+      <PageHeader
+        title="Thị trường VN30"
+        description="Theo dõi 30 mã cổ phiếu vốn hóa lớn nhất thị trường Việt Nam"
+      />
 
       <VN30IndexCard
         vn30Index={marketData.vn30Index}
