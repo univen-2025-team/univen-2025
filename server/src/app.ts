@@ -23,8 +23,13 @@ import { NotFoundErrorResponse } from './api/response/error.response.js';
 // Handlebars
 import { engine } from 'express-handlebars';
 import path from 'path';
+import { fileURLToPath } from 'url';
 import viewRoute from '@/routes/views/index.js';
 import './api/services/passport.service.js';
+
+// ES Module compatibility - define __dirname
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 
@@ -84,7 +89,6 @@ await MongoDB.getInstance().connect();
 
 // Start service
 ScheduledService.startScheduledService();
-
 
 /* ---------------------------------------------------------- */
 /*                           Routes                           */
