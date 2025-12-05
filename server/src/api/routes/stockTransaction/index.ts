@@ -9,4 +9,5 @@ router.get('/transactions/:userId', StockTransactionController.getTransactionHis
 router.get('/transactions/:transactionId', StockTransactionController.getTransactionById);
 router.put('/transactions/:transactionId/cancel', StockTransactionController.cancelTransaction);
 router.get('/transactions/:userId/stats', StockTransactionController.getUserStats);
+router.get('/ranking', StockTransactionController.getUserRanking);
 export default router;

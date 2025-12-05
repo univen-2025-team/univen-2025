@@ -133,4 +133,34 @@ export default class StockTransactionController {
             throw error;
         }
     };
+
+    public static getUserRanking: RequestHandler = async (req, res, _) => {
+        try {
+            const { limit = 10, page = 1 } = req.query;
+
+            const pageNum = Math.max(1, parseInt(page as string) || 1);
+            const limitNum = Math.min(100, Math.max(1, parseInt(limit as string) || 10));
+            const offset = (pageNum - 1) * limitNum;
+
+            const result = await TransactionService.getUserRanking(limitNum, offset);
+
+            // Format ranking data - only include rank, user_fullName, user_avatar, total_profit
+            const formattedRanking = result.ranking.map(user => ({
+                rank: user.rank,
+                user_fullName: user.user_fullName,
+                total_profit: user.total_profit
+            }));
+
+            new OkResponse({
+                message: 'Get user ranking by profit successfully',
+                metadata: {
+                    ranking: formattedRanking,
+                    pagination: result.pagination
+                }
+            }).send(res);
+        } catch (error) {
+            console.error('getUserRanking error:', error);
+            throw error;
+        }
+    };
 }
