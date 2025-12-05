@@ -8,6 +8,7 @@ import viewRoute from './views/index.js';
 import chatRoute from './chats/index.js';
 import stockTransactionRoute from './stockTransaction/index.js';
 import marketCacheRoute from './market-cache.route.js';
+import mediaRoute from './media/index.js';
 
 const rootRoute = Router();
 
@@ -28,5 +29,8 @@ rootRoute.use('/stock-transactions', stockTransactionRoute);
 
 /* ---------------------- Market Cache (Cached Data) ---------------------- */
 rootRoute.use('/market', marketCacheRoute);
+
+/* -------------------------- Media -------------------------- */
+rootRoute.use('/media', mediaRoute);
 
 export default rootRoute;
