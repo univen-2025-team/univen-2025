@@ -1,3 +1,4 @@
+import { API_URL } from '@/config/app';
 import { MarketData } from '@/lib/types/market';
 import {
     PriceHistoryPoint,
@@ -84,7 +85,7 @@ export const fetchMarketDataService = async (
         if (params?.limit) searchParams.set('limit', String(params.limit));
 
         // Call Node.js backend directly
-        const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/v1/api';
+        const apiBaseUrl = API_URL;
         const response = await fetch(
             `${apiBaseUrl}/market${searchParams.toString() ? `?${searchParams.toString()}` : ''}`,
             {
@@ -154,7 +155,7 @@ export const fetchStockDetail = async (
         const { symbol, timeRange = '1m', signal } = params;
 
         // Call Node.js backend directly
-        const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/v1/api';
+        const apiBaseUrl = API_URL;
         const response = await fetch(
             `${apiBaseUrl}/market/stock/${symbol}?timeRange=${encodeURIComponent(timeRange)}`,
             {
