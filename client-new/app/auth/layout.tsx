@@ -165,7 +165,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
                             onClick={() => {
                                 console.log({ API_URL: process.env.APP_URL });
                                 // Redirect to backend Google OAuth endpoint
-                                window.location.href = API_URL + '/v1/api/auth/login/google';
+                                window.location.href = API_URL + '/auth/login/google';
                             }}
                             className="w-full inline-flex justify-center items-center py-3 px-4 border-2 border-gray-200 rounded-lg shadow-sm bg-white text-sm font-semibold text-gray-700 hover:bg-gray-50 hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ring transition-all transform hover:scale-[1.02] active:scale-[0.98]"
                         >
