@@ -144,9 +144,19 @@ export default class StockTransactionController {
 
             const result = await TransactionService.getUserRanking(limitNum, offset);
 
+            // Format ranking data - only include rank, user_fullName, user_avatar, total_profit
+            const formattedRanking = result.ranking.map(user => ({
+                rank: user.rank,
+                user_fullName: user.user_fullName,
+                total_profit: user.total_profit
+            }));
+
             new OkResponse({
                 message: 'Get user ranking by profit successfully',
-                metadata: result
+                metadata: {
+                    ranking: formattedRanking,
+                    pagination: result.pagination
+                }
             }).send(res);
         } catch (error) {
             console.error('getUserRanking error:', error);
