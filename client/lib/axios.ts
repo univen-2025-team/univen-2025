@@ -1,152 +1,170 @@
-import axios from 'axios';
+import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 import { API_URL } from '@/config/app';
 
-// Base URL cho API
-// Default to HTTP for local development (server runs on HTTP, not HTTPS)
-// Set NEXT_PUBLIC_API_URL in .env.local to override
 const BASE_URL = API_URL;
 
-// Tạo axios instance
+// Create axios instance
 const axiosInstance = axios.create({
     baseURL: BASE_URL,
-    timeout: 10000, // 10 seconds
+    timeout: 10000,
     headers: {
         'Content-Type': 'application/json'
     }
 });
 
+// Token refresh state
+let isRefreshing = false;
+let failedQueue: Array<{
+    resolve: (token: string) => void;
+    reject: (error: unknown) => void;
+}> = [];
+
+const processQueue = (error: unknown, token: string | null = null) => {
+    failedQueue.forEach((prom) => {
+        if (error) {
+            prom.reject(error);
+        } else {
+            prom.resolve(token!);
+        }
+    });
+    failedQueue = [];
+};
+
+// Helper to get tokens from storage
+const getTokens = () => {
+    if (typeof window === 'undefined') return { accessToken: null, refreshToken: null };
+
+    try {
+        const persistedState = localStorage.getItem('persist:root');
+        if (persistedState) {
+            const parsed = JSON.parse(persistedState);
+            const authState = JSON.parse(parsed.auth);
+            return {
+                accessToken: authState.accessToken || null,
+                refreshToken: authState.refreshToken || null
+            };
+        }
+    } catch {
+        // Fallback
+    }
+
+    return {
+        accessToken: localStorage.getItem('accessToken'),
+        refreshToken: localStorage.getItem('refreshToken')
+    };
+};
+
+// Helper to update tokens in storage
+const updateTokens = (accessToken: string, refreshToken: string) => {
+    if (typeof window === 'undefined') return;
+
+    localStorage.setItem('accessToken', accessToken);
+    localStorage.setItem('refreshToken', refreshToken);
+
+    try {
+        const persistedState = localStorage.getItem('persist:root');
+        if (persistedState) {
+            const parsed = JSON.parse(persistedState);
+            const authState = JSON.parse(parsed.auth);
+            authState.accessToken = accessToken;
+            authState.refreshToken = refreshToken;
+            parsed.auth = JSON.stringify(authState);
+            localStorage.setItem('persist:root', JSON.stringify(parsed));
+        }
+    } catch {
+        // Ignore parse errors
+    }
+};
+
+// Helper to clear auth and redirect
+const clearAuthAndRedirect = () => {
+    if (typeof window === 'undefined') return;
+
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
+    localStorage.removeItem('persist:root');
+
+    // Use replace to prevent back navigation to protected page
+    window.location.replace('/auth/login');
+};
+
 // Request interceptor
 axiosInstance.interceptors.request.use(
     (config) => {
-        // Get token from localStorage (Redux Persist stores it there)
-        let token = null;
+        const { accessToken } = getTokens();
 
-        if (typeof window !== 'undefined') {
-            // Try to get from Redux Persist storage first
-            const persistedState = localStorage.getItem('persist:root');
-            if (persistedState) {
-                try {
-                    const parsed = JSON.parse(persistedState);
-                    const authState = JSON.parse(parsed.auth);
-                    token = authState.accessToken;
-                } catch {
-                    // Fallback to direct localStorage access
-                    token = localStorage.getItem('accessToken');
-                }
-            } else {
-                token = localStorage.getItem('accessToken');
-            }
-        }
-
-        if (token) {
-            config.headers.Authorization = `Bearer ${token}`;
+        if (accessToken) {
+            config.headers.Authorization = `Bearer ${accessToken}`;
         }
 
         return config;
     },
-    (error) => {
-        return Promise.reject(error);
-    }
+    (error) => Promise.reject(error)
 );
 
 // Response interceptor
 axiosInstance.interceptors.response.use(
     (response) => response,
-    async (error) => {
-        const originalRequest = error.config;
+    async (error: AxiosError) => {
+        const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
 
-        // Handle network errors (server not reachable)
+        // Handle network errors
         if (!error.response) {
-            console.error('❌ Không thể kết nối tới server:', {
-                url: originalRequest?.url,
-                baseURL: BASE_URL,
-                error: error.message,
-                hint: 'Kiểm tra xem server có đang chạy không và NEXT_PUBLIC_API_URL có đúng không'
-            });
-
-            // Show user-friendly error in development
-            if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
-                const errorMsg = `Không thể kết nối tới server tại ${BASE_URL}. Vui lòng kiểm tra:\n1. Server có đang chạy không?\n2. URL API có đúng không?`;
-                console.error(errorMsg);
-            }
-
+            console.error('❌ Network error:', error.message);
             return Promise.reject(error);
         }
 
-        // Handle 401 (Unauthorized) or 403 (Forbidden) - both indicate token issues
-        if (
-            (error.response?.status === 401 || error.response?.status === 403) &&
-            !originalRequest._retry
-        ) {
+        const status = error.response.status;
+
+        // Handle 401/403 - Token expired or invalid
+        if ((status === 401 || status === 403) && !originalRequest._retry) {
+            // Skip token refresh for auth endpoints
+            if (originalRequest.url?.includes('/auth/')) {
+                return Promise.reject(error);
+            }
+
+            if (isRefreshing) {
+                // Queue this request until token is refreshed
+                return new Promise((resolve, reject) => {
+                    failedQueue.push({ resolve, reject });
+                })
+                    .then((token) => {
+                        originalRequest.headers.Authorization = `Bearer ${token}`;
+                        return axiosInstance(originalRequest);
+                    })
+                    .catch((err) => Promise.reject(err));
+            }
+
             originalRequest._retry = true;
+            isRefreshing = true;
 
             try {
-                // Get refresh token from localStorage or Redux Persist
-                let refreshToken = null;
-
-                if (typeof window !== 'undefined') {
-                    const persistedState = localStorage.getItem('persist:root');
-                    if (persistedState) {
-                        try {
-                            const parsed = JSON.parse(persistedState);
-                            const authState = JSON.parse(parsed.auth);
-                            refreshToken = authState.refreshToken;
-                        } catch {
-                            refreshToken = localStorage.getItem('refreshToken');
-                        }
-                    } else {
-                        refreshToken = localStorage.getItem('refreshToken');
-                    }
-                }
+                const { refreshToken } = getTokens();
 
                 if (!refreshToken) {
-                    // No refresh token, redirect to login
-                    if (typeof window !== 'undefined') {
-                        localStorage.clear();
-                        window.location.href = '/auth/login';
-                    }
-                    return Promise.reject(error);
+                    throw new Error('No refresh token');
                 }
 
-                // Request new access token
+                // Request new tokens
                 const response = await axios.post(`${BASE_URL}/auth/new-token`, {
                     refreshToken
                 });
 
-                const { accessToken, refreshToken: newRefreshToken } = response.data.metadata;
+                const { accessToken: newAccessToken, refreshToken: newRefreshToken } =
+                    response.data.metadata;
 
-                // Update both localStorage and Redux Persist storage
-                if (typeof window !== 'undefined') {
-                    // Update direct localStorage
-                    localStorage.setItem('accessToken', accessToken);
-                    localStorage.setItem('refreshToken', newRefreshToken);
+                updateTokens(newAccessToken, newRefreshToken);
+                processQueue(null, newAccessToken);
 
-                    // Update Redux Persist storage
-                    const persistedState = localStorage.getItem('persist:root');
-                    if (persistedState) {
-                        try {
-                            const parsed = JSON.parse(persistedState);
-                            const authState = JSON.parse(parsed.auth);
-                            authState.accessToken = accessToken;
-                            authState.refreshToken = newRefreshToken;
-                            parsed.auth = JSON.stringify(authState);
-                            localStorage.setItem('persist:root', JSON.stringify(parsed));
-                        } catch {
-                            // If parsing fails, just rely on direct localStorage
-                        }
-                    }
-                }
-
-                // Retry original request with new token
-                originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+                // Retry original request
+                originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
                 return axiosInstance(originalRequest);
             } catch (refreshError) {
-                // Refresh token failed, redirect to login
-                if (typeof window !== 'undefined') {
-                    localStorage.clear();
-                    window.location.href = '/auth/login';
-                }
+                processQueue(refreshError, null);
+                clearAuthAndRedirect();
                 return Promise.reject(refreshError);
+            } finally {
+                isRefreshing = false;
             }
         }
 
