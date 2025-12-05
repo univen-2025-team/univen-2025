@@ -1,18 +1,5 @@
 'use client';
 
-<<<<<<< HEAD
-import { useEffect, useMemo, useState } from 'react'
-import VN30IndexCard from '@/components/market/VN30IndexCard'
-import VN30IndexChart from '@/components/market/VN30IndexChart'
-import TopStocksChart from '@/components/market/TopStocksChart'
-import TopGainersLosers from '@/components/market/TopGainersLosers'
-import StockTable from '@/components/market/StockTable'
-import MarketLoadingSpinner from '@/components/market/MarketLoadingSpinner'
-import ErrorDisplay from '@/components/market/ErrorDisplay'
-import { MarketOverviewData } from '@/features/types/features'
-import { MarketData, IndexHistoryPoint } from '@/lib/types/market'
-import PageHeader from '@/components/dashboard/PageHeader'
-=======
 import { useEffect, useMemo, useState } from 'react';
 import MarketHeader from '@/components/market/MarketHeader';
 import VN30IndexCard from '@/components/market/VN30IndexCard';
@@ -24,7 +11,6 @@ import MarketLoadingSpinner from '@/components/market/MarketLoadingSpinner';
 import ErrorDisplay from '@/components/market/ErrorDisplay';
 import { MarketOverviewData } from '@/features/types/features';
 import { MarketData, IndexHistoryPoint } from '@/lib/types/market';
->>>>>>> 703cbf41 (update (vn30-chart): build vn30chart)
 import {
     fetchMarketDataService,
     MarketSortField,
@@ -241,40 +227,6 @@ export function MarketOverviewFeature({ data }: MarketOverviewFeatureProps) {
 
             <TopGainersLosers topGainers={marketData.topGainers} topLosers={marketData.topLosers} />
 
-<<<<<<< HEAD
-  return (
-    <div className="space-y-6 pb-8">
-      <PageHeader
-        title="Thị trường VN30"
-        description="Theo dõi 30 mã cổ phiếu vốn hóa lớn nhất thị trường Việt Nam"
-      />
-
-      <VN30IndexCard
-        vn30Index={marketData.vn30Index}
-        timestamp={marketData.timestamp}
-        isConnected={isConnected}
-        realtimeEnabled={realtimeEnabled}
-        onToggleRealtime={() => setRealtimeEnabled((prev) => !prev)}
-      />
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <VN30IndexChart data={indexHistory} />
-        <TopStocksChart stocks={marketData.stocks} />
-      </div>
-
-      <TopGainersLosers topGainers={marketData.topGainers} topLosers={marketData.topLosers} />
-
-      <StockTable
-        stocks={marketData.stocks}
-        sortBy={sortBy}
-        order={order}
-        onSortChange={setSortBy}
-        onOrderChange={setOrder}
-        onRefresh={fetchMarketData}
-      />
-    </div>
-  )
-=======
             <StockTable
                 stocks={marketData.stocks}
                 sortBy={sortBy}
@@ -285,5 +237,4 @@ export function MarketOverviewFeature({ data }: MarketOverviewFeatureProps) {
             />
         </div>
     );
->>>>>>> 703cbf41 (update (vn30-chart): build vn30chart)
 }
