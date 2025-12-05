@@ -40,6 +40,11 @@ export default function EditProfilePage() {
     const [error, setError] = useState<string | null>(null);
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
+    // Avatar upload states
+    const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+    const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+    const [avatarFile, setAvatarFile] = useState<File | null>(null);
+
     // Fetch current profile
     useEffect(() => {
         const fetchProfile = async () => {
@@ -119,6 +124,54 @@ export default function EditProfilePage() {
         }
     });
 
+    // Avatar upload handler
+    const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            // Validate file type
+            if (!file.type.startsWith('image/')) {
+                setError('Vui lòng chọn file ảnh');
+                return;
+            }
+            // Validate file size (max 5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                setError('Ảnh không được vượt quá 5MB');
+                return;
+            }
+            setAvatarFile(file);
+            setAvatarPreview(URL.createObjectURL(file));
+            setError(null);
+        }
+    };
+
+    const handleAvatarUpload = async () => {
+        if (!avatarFile) return;
+
+        try {
+            setIsUploadingAvatar(true);
+            setError(null);
+
+            const result = await userApi.uploadAvatar(avatarFile);
+
+            // Update profile with new avatar
+            if (profile) {
+                setProfile({ ...profile, user_avatar: result.avatarUrl });
+            }
+
+            // Update Redux state
+            if (reduxUser) {
+                dispatch(setUser({ ...reduxUser, user_avatar: result.avatarUrl }));
+            }
+
+            setSuccessMessage('Cập nhật ảnh đại diện thành công!');
+            setAvatarFile(null);
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Upload ảnh thất bại');
+        } finally {
+            setIsUploadingAvatar(false);
+        }
+    };
+
     if (isLoading) {
         return <LoadingSpinner />;
     }
@@ -153,6 +206,69 @@ export default function EditProfilePage() {
 
             {successMessage && <SuccessMessage message={successMessage} className="mb-6" />}
             {error && <ErrorMessage message={error} className="mb-6" />}
+
+            {/* Avatar Upload Section */}
+            <div className="bg-white rounded-xl shadow-md p-6 mb-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Ảnh đại diện</h3>
+                <div className="flex items-center gap-6">
+                    {/* Avatar Preview */}
+                    <div className="relative">
+                        <div className="w-24 h-24 rounded-full overflow-hidden bg-gray-200 border-4 border-white shadow-lg">
+                            {avatarPreview ? (
+                                <img
+                                    src={avatarPreview}
+                                    alt="Avatar preview"
+                                    className="w-full h-full object-cover"
+                                />
+                            ) : profile?.user_avatar ? (
+                                <img
+                                    src={profile.user_avatar}
+                                    alt="Current avatar"
+                                    className="w-full h-full object-cover"
+                                />
+                            ) : (
+                                <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-500 to-purple-600">
+                                    <span className="text-2xl font-bold text-white">
+                                        {profile?.user_fullName?.charAt(0).toUpperCase() || 'U'}
+                                    </span>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Upload Controls */}
+                    <div className="flex-1">
+                        <input
+                            type="file"
+                            id="avatar-upload"
+                            accept="image/*"
+                            onChange={handleAvatarChange}
+                            className="hidden"
+                        />
+                        <div className="flex gap-3">
+                            <label
+                                htmlFor="avatar-upload"
+                                className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg cursor-pointer transition-colors font-medium"
+                            >
+                                Chọn ảnh
+                            </label>
+                            {avatarFile && (
+                                <button
+                                    type="button"
+                                    onClick={handleAvatarUpload}
+                                    disabled={isUploadingAvatar}
+                                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    {isUploadingAvatar ? 'Đang tải...' : 'Lưu ảnh'}
+                                </button>
+                            )}
+                        </div>
+                        <p className="text-sm text-gray-500 mt-2">
+                            Chấp nhận JPG, PNG, GIF. Tối đa 5MB.
+                        </p>
+                    </div>
+                </div>
+            </div>
 
             {/* Form */}
             <div className="bg-white rounded-xl shadow-md p-6">

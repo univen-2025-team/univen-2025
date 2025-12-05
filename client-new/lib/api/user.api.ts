@@ -2,52 +2,67 @@ import axiosInstance from '../axios';
 
 // User profile response type
 export interface UserProfile {
-  _id: string;
-  email: string;
-  user_avatar: string;
-  user_fullName: string;
-  user_gender: boolean;
-  balance: number;
-  user_role: string;
-  user_status: string; // "ACTIVE" | "INACTIVE" | "BLOCKED"
-  role_name: string;
-  user_dayOfBirth?: string;
+    _id: string;
+    email: string;
+    user_avatar: string;
+    user_fullName: string;
+    user_gender: boolean;
+    balance: number;
+    user_role: string;
+    user_status: string; // "ACTIVE" | "INACTIVE" | "BLOCKED"
+    role_name: string;
+    user_dayOfBirth?: string;
 }
 
 export interface UserProfileResponse {
-  statusCode: number;
-  name: string;
-  message: string;
-  metadata: {
-    user: UserProfile;
-  };
+    statusCode: number;
+    name: string;
+    message: string;
+    metadata: {
+        user: UserProfile;
+    };
 }
 
 /**
  * API User Service
  */
 export const userApi = {
-  /**
-   * Get user profile
-   */
-  getProfile: async (accessTokenOverride?: string): Promise<UserProfile> => {
-    const config = accessTokenOverride
-      ? {
-        headers: {
-          Authorization: `Bearer ${accessTokenOverride}`,
-        },
-      }
-      : undefined;
+    /**
+     * Get user profile
+     */
+    getProfile: async (accessTokenOverride?: string): Promise<UserProfile> => {
+        const config = accessTokenOverride
+            ? {
+                  headers: {
+                      Authorization: `Bearer ${accessTokenOverride}`
+                  }
+              }
+            : undefined;
 
-    const response = await axiosInstance.get('/user/profile', config);
-    return response.data.metadata.user;
-  },
+        const response = await axiosInstance.get('/user/profile', config);
+        return response.data.metadata.user;
+    },
 
-  /**
-   * Update user profile
-   */
-  updateProfile: async (data: Partial<UserProfile>): Promise<UserProfile> => {
-    const response = await axiosInstance.patch('/user/profile', data);
-    return response.data.metadata.user;
-  },
+    /**
+     * Update user profile
+     */
+    updateProfile: async (data: Partial<UserProfile>): Promise<UserProfile> => {
+        const response = await axiosInstance.patch('/user/profile', data);
+        return response.data.metadata.user;
+    },
+
+    /**
+     * Upload user avatar
+     */
+    uploadAvatar: async (file: File): Promise<{ avatarUrl: string }> => {
+        const formData = new FormData();
+        formData.append('avatar', file);
+
+        const response = await axiosInstance.post('/user/upload-avatar', formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data'
+            }
+        });
+        return response.data.metadata;
+    }
 };
