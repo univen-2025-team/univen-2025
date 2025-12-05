@@ -6,6 +6,7 @@ import type {
   TransactionHistoryResponse,
   TransactionMetadata,
   TransactionStatsResponse,
+  UserRankingResponse,
 } from '../types/transactions';
 
 const extractErrorMessage = (error: unknown): string => {
@@ -64,6 +65,21 @@ export const transactionApi = {
     try {
       const response = await axiosInstance.get(`/stock-transactions/transactions/${userId}/stats`);
       return response.data.metadata as TransactionStatsResponse;
+    } catch (error) {
+      throw new Error(extractErrorMessage(error));
+    }
+  },
+
+  async getUserRanking(params?: { page?: number; limit?: number }): Promise<UserRankingResponse> {
+    try {
+      const response = await axiosInstance.get('/stock-transactions/ranking', {
+        params: {
+          page: params?.page,
+          limit: params?.limit,
+        },
+      });
+
+      return response.data.metadata as UserRankingResponse;
     } catch (error) {
       throw new Error(extractErrorMessage(error));
     }
