@@ -1,28 +1,5 @@
 'use client';
 
-<<<<<<< HEAD:client-new/app/(dashboard)/dashboard/page.tsx
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { useAppDispatch, useAppSelector } from "@/lib/store/hooks";
-import { selectIsAuthenticated, logoutUser } from "@/lib/store/authSlice";
-import { useProfile } from "@/lib/hooks/useProfile";
-import LoadingSpinner from "@/components/dashboard/LoadingSpinner";
-import WelcomeHeader from "@/components/dashboard/WelcomeHeader";
-import StatsGrid from "@/components/dashboard/StatsGrid";
-import QuickActions from "@/components/dashboard/QuickActions";
-import RecentActivity from "@/components/dashboard/RecentActivity";
-import PageHeader from '@/components/dashboard/PageHeader';
-import { title } from "process";
-import ErrorMessage from "@/components/common/ErrorMessage";
-
-export default function DashboardPage() {
-  const router = useRouter();
-  const dispatch = useAppDispatch();
-  const isAuthenticated = useAppSelector(selectIsAuthenticated);
-
-  // Fetch profile data from API
-  const { profile, isLoading, error } = useProfile(true);
-=======
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAppDispatch, useAppSelector } from '@/lib/store/hooks';
@@ -39,7 +16,6 @@ export default function DashboardPage() {
     const router = useRouter();
     const dispatch = useAppDispatch();
     const isAuthenticated = useAppSelector(selectIsAuthenticated);
->>>>>>> d682d7a1 (fix: build):client-new/app/(dashboard)/page.tsx
 
     // Fetch profile data from API
     const { profile, isLoading, error } = useProfile(true);
@@ -72,26 +48,6 @@ export default function DashboardPage() {
             <WelcomeHeader userName={userName} />
             <StatsGrid />
 
-<<<<<<< HEAD:client-new/app/(dashboard)/dashboard/page.tsx
-  const userName = profile.user_fullName || "Admin";
-
-  return ( <>
-    <div className="space-y-6 pb-8">
-    <PageHeader
-        title="Tổng quan"
-        description="" /><div className="space-y-6">
-        {/* <WelcomeHeader userName={userName} /> */}
-        <StatsGrid />
-
-        {/* Quick Actions & Recent Activity */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <QuickActions onLogout={handleLogout} />
-          <RecentActivity />
-        </div>
-      </div>
-    </div></>
-  );
-=======
             {/* Quick Actions & Recent Activity */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <QuickActions onLogout={handleLogout} />
@@ -99,5 +55,4 @@ export default function DashboardPage() {
             </div>
         </div>
     );
->>>>>>> d682d7a1 (fix: build):client-new/app/(dashboard)/page.tsx
 }
