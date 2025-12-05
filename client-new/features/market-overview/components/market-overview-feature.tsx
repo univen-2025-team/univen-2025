@@ -74,14 +74,9 @@ export function MarketOverviewFeature({ data }: MarketOverviewFeatureProps) {
 
             // Map range to limit (days)
             let limit = 30;
+            let type = 'daily';
+
             switch (range) {
-                case '1H':
-                    limit = 1;
-                    break;
-                case '3H':
-                    limit = 1;
-                    break;
-                case '6H':
                 case '1H':
                     limit = 60;
                     type = 'intraday';
