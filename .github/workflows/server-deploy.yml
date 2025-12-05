@@ -26,6 +26,15 @@ jobs:
                   script: |
                       echo "🚀 Starting deployment..."
 
+                      # Source NVM to load Node.js environment
+                      export NVM_DIR="$HOME/.nvm"
+                      [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+                      [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
+
+                      # Verify Node.js is available
+                      echo "Node version: $(node -v)"
+                      echo "NPM version: $(npm -v)"
+
                       # Navigate to project directory
                       cd /home/ubuntu/univen-2025/server || {
                         echo "Directory not found. Cloning repository..."
