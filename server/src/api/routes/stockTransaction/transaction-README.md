@@ -1,4 +1,4 @@
-# Stock Transaction API Documentation
+    # Stock Transaction API Documentation
 
 ## Overview
 
@@ -10,7 +10,7 @@ API endpoints for managing stock transactions (BUY/SELL operations). Handles tra
 
 ## Table of Contents
 
-1. [Create Transaction](#1-create-transaction)
+1. [Create Transaction](#1-create-transaction)  
 2. [Get Transaction History](#2-get-transaction-history)
 3. [Get Transaction by ID](#3-get-transaction-by-id)
 4. [Cancel Transaction](#4-cancel-transaction)
