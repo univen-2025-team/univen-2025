@@ -24,6 +24,7 @@ export function usePortfolioCalculator() {
                     stock_name: string;
                     quantity: number;
                     total_buy: number;
+                    total_quantity_bought: number; // Track total shares ever bought
                     total_sell: number;
                     buy_count: number;
                 }
@@ -38,6 +39,7 @@ export function usePortfolioCalculator() {
                         stock_name,
                         quantity: 0,
                         total_buy: 0,
+                        total_quantity_bought: 0,
                         total_sell: 0,
                         buy_count: 0
                     });
@@ -48,6 +50,7 @@ export function usePortfolioCalculator() {
                 if (transaction_type === 'BUY') {
                     stock.quantity += quantity;
                     stock.total_buy += quantity * price_per_unit;
+                    stock.total_quantity_bought += quantity;
                     stock.buy_count += 1;
                 } else if (transaction_type === 'SELL') {
                     stock.quantity -= quantity;
@@ -89,9 +92,11 @@ export function usePortfolioCalculator() {
 
             for (const [stock_code, data] of stockMap.entries()) {
                 if (data.quantity > 0) {
+                    // Correct formula: avg_buy_price = total_buy_amount / total_quantity_ever_bought
                     const avg_buy_price =
-                        data.total_buy /
-                        (data.quantity + (data.total_sell / data.total_buy) * data.quantity);
+                        data.total_quantity_bought > 0
+                            ? data.total_buy / data.total_quantity_bought
+                            : 0;
                     const total_invested = data.quantity * avg_buy_price;
 
                     // Use real-time price from market API, fallback to avg_buy_price if not available
