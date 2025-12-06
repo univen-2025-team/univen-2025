@@ -223,7 +223,10 @@ export default function Chatbot() {
 
     // Desktop: Resizable split layout
     return (
-        <div className="h-screen overflow-hidden bg-background" ref={containerRef}>
+        <div
+            className="h-[calc(100vh-48px)] md:h-[calc(100vh-48px)] -m-4 md:-m-6 overflow-hidden bg-background"
+            ref={containerRef}
+        >
             <div className="flex h-full">
                 {/* LEFT: Feature Area (flexible width) - scrollable */}
                 <section
