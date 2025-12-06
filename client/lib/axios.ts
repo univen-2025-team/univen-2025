@@ -34,24 +34,26 @@ const processQueue = (error: unknown, token: string | null = null) => {
 const getTokens = () => {
     if (typeof window === 'undefined') return { accessToken: null, refreshToken: null };
 
-    try {
-        const persistedState = localStorage.getItem('persist:root');
-        if (persistedState) {
-            const parsed = JSON.parse(persistedState);
-            const authState = JSON.parse(parsed.auth);
-            return {
-                accessToken: authState.accessToken || null,
-                refreshToken: authState.refreshToken || null
-            };
+    let accessToken = localStorage.getItem('accessToken');
+    let refreshToken = localStorage.getItem('refreshToken');
+
+    // If not found in direct storage, try to get from Redux persist
+    if (!accessToken || !refreshToken) {
+        try {
+            const persistedState = localStorage.getItem('persist:root');
+            if (persistedState) {
+                const parsed = JSON.parse(persistedState);
+                const authState = JSON.parse(parsed.auth);
+
+                if (!accessToken) accessToken = authState.accessToken || null;
+                if (!refreshToken) refreshToken = authState.refreshToken || null;
+            }
+        } catch (e) {
+            console.warn('Failed to parse persist:root', e);
         }
-    } catch {
-        // Fallback
     }
 
-    return {
-        accessToken: localStorage.getItem('accessToken'),
-        refreshToken: localStorage.getItem('refreshToken')
-    };
+    return { accessToken, refreshToken };
 };
 
 // Helper to update tokens in storage
@@ -80,6 +82,7 @@ const updateTokens = (accessToken: string, refreshToken: string) => {
 const clearAuthAndRedirect = () => {
     if (typeof window === 'undefined') return;
 
+    console.log('Clearing auth and redirecting to login...');
     localStorage.removeItem('accessToken');
     localStorage.removeItem('refreshToken');
     localStorage.removeItem('persist:root');
@@ -139,9 +142,11 @@ axiosInstance.interceptors.response.use(
             isRefreshing = true;
 
             try {
+                console.log('🔄 Token expired, attempting refresh...');
                 const { refreshToken } = getTokens();
 
                 if (!refreshToken) {
+                    console.warn('No refresh token found, redirecting to login');
                     throw new Error('No refresh token');
                 }
 
@@ -153,6 +158,7 @@ axiosInstance.interceptors.response.use(
                 const { accessToken: newAccessToken, refreshToken: newRefreshToken } =
                     response.data.metadata;
 
+                console.log('✅ Token refresh successful');
                 updateTokens(newAccessToken, newRefreshToken);
                 processQueue(null, newAccessToken);
 
@@ -160,6 +166,7 @@ axiosInstance.interceptors.response.use(
                 originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
                 return axiosInstance(originalRequest);
             } catch (refreshError) {
+                console.error('❌ Token refresh failed:', refreshError);
                 processQueue(refreshError, null);
                 clearAuthAndRedirect();
                 return Promise.reject(refreshError);
