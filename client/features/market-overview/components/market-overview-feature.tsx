@@ -59,7 +59,7 @@ export function MarketOverviewFeature({ data }: MarketOverviewFeatureProps) {
     const [order, setOrder] = useState<MarketSortOrder>('desc');
     const [indexHistory, setIndexHistory] = useState<IndexHistoryPoint[]>([]);
     const [realtimeEnabled, setRealtimeEnabled] = useState(false);
-    const [historyRange, setHistoryRange] = useState('1M');
+    const [historyRange, setHistoryRange] = useState('10M');
 
     const {
         isConnected,
@@ -75,9 +75,17 @@ export function MarketOverviewFeature({ data }: MarketOverviewFeatureProps) {
 
             // Map range to limit (days)
             let limit = 30;
-            let type = 'daily';
+            let type = 'intraday';
 
             switch (range) {
+                case '10M':
+                    limit = 10;
+                    type = 'intraday';
+                    break;
+                case '30M':
+                    limit = 30;
+                    type = 'intraday';
+                    break;
                 case '1H':
                     limit = 60;
                     type = 'intraday';
@@ -110,7 +118,8 @@ export function MarketOverviewFeature({ data }: MarketOverviewFeatureProps) {
                     limit = 365;
                     break;
                 default:
-                    limit = 30;
+                    limit = 10;
+                    type = 'intraday';
             }
 
             // Import dynamically to avoid circular dependency if any, or just use fetch
@@ -221,7 +230,13 @@ export function MarketOverviewFeature({ data }: MarketOverviewFeatureProps) {
                     onRangeChange={fetchHistory}
                     selectedRange={historyRange}
                 />
-                <TopStocksChart stocks={marketData.stocks} />
+                <TopStocksChart
+                    stocks={
+                        marketData.topStocksByPrice && marketData.topStocksByPrice.length > 0
+                            ? marketData.topStocksByPrice
+                            : marketData.stocks
+                    }
+                />
             </div>
 
             <TopGainersLosers topGainers={marketData.topGainers} topLosers={marketData.topLosers} />

@@ -75,6 +75,7 @@ export default function MarketPage() {
     const [isBuyModalOpen, setIsBuyModalOpen] = useState(false);
     const [viewMode, setViewMode] = useState<'all' | 'watchlist'>('all');
     const [historyRange, setHistoryRange] = useState('10M');
+    const [topStocksByPrice, setTopStocksByPrice] = useState<StockData[]>([]);
 
     // Socket connection
     const {
@@ -170,6 +171,11 @@ export default function MarketPage() {
 
                 console.log('✅ Setting marketData:', marketDataFormatted);
                 setMarketData(marketDataFormatted);
+
+                // Set top stocks by price from latest trading day
+                if (metadata.topStocksByPrice && Array.isArray(metadata.topStocksByPrice)) {
+                    setTopStocksByPrice(metadata.topStocksByPrice);
+                }
 
                 // Note: indexHistory is set by fetchHistory() which handles the selected range
                 // Don't override it here to avoid race conditions
@@ -384,8 +390,10 @@ export default function MarketPage() {
                 selectedRange={historyRange}
             />
 
-            {/* Top Stocks Chart */}
-            <TopStocksChart stocks={marketData.stocks} />
+            {/* Top Stocks Chart - uses data from latest trading day */}
+            <TopStocksChart
+                stocks={topStocksByPrice.length > 0 ? topStocksByPrice : marketData.stocks}
+            />
 
             {/* Market Heatmap */}
             <MarketHeatmap stocks={marketData.stocks} />

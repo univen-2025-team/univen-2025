@@ -128,6 +128,7 @@ export const fetchMarketDataService = async (
                     stocks: allStocks,
                     topGainers: result.metadata.topGainers || [],
                     topLosers: result.metadata.topLosers || [],
+                    topStocksByPrice: result.metadata.topStocksByPrice || [],
                     total: result.metadata.totalStocks || allStocks.length,
                     timestamp: result.metadata.timestamp || new Date().toISOString()
                 }

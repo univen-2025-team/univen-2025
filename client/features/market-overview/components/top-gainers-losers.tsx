@@ -25,7 +25,7 @@ export function TopGainersLosers({
     onBuyClick
 }: TopGainersLosersProps) {
     const formatNumber = (num: number) => num.toLocaleString('vi-VN');
-    const formatPrice = (price: number) => formatNumber(price) + ' ₫';
+    const formatPrice = (price: number) => formatNumber(price) + ' nghìn đồng';
 
     const renderStockList = (stocks: StockData[], isGainers: boolean) => (
         <div className="space-y-2">

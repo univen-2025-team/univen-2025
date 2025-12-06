@@ -42,7 +42,7 @@ export function StockDetailModal({
     const isNegative = stock.change < 0;
 
     const formatNumber = (num: number) => num.toLocaleString('vi-VN');
-    const formatPrice = (price: number) => formatNumber(price) + ' ₫';
+    const formatPrice = (price: number) => formatNumber(price) + ' nghìn đồng';
 
     const getChangeColor = () => {
         if (isPositive) return 'text-green-600 bg-green-50';
@@ -93,7 +93,7 @@ export function StockDetailModal({
                                 {!isPositive && !isNegative && <Minus className="h-5 w-5" />}
                                 <span className="font-semibold text-lg">
                                     {stock.change > 0 ? '+' : ''}
-                                    {formatNumber(stock.change)} ₫
+                                    {formatNumber(stock.change)} nghìn đồng
                                 </span>
                                 <span className="font-semibold text-lg">
                                     ({stock.changePercent > 0 ? '+' : ''}
@@ -184,7 +184,7 @@ export function StockDetailModal({
                     {/* Additional Stats */}
                     <div className="grid grid-cols-2 gap-4">
                         <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
-                            <div className="text-sm text-blue-700 mb-1">Thay đổi (₫)</div>
+                            <div className="text-sm text-blue-700 mb-1">Thay đổi (nghìn đồng)</div>
                             <div
                                 className={`text-2xl font-bold ${
                                     isPositive
@@ -195,7 +195,7 @@ export function StockDetailModal({
                                 }`}
                             >
                                 {stock.change > 0 ? '+' : ''}
-                                {formatNumber(stock.change)} ₫
+                                {formatNumber(stock.change)} nghìn đồng
                             </div>
                         </div>
 

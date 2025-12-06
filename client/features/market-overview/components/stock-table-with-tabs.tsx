@@ -41,7 +41,7 @@ export function StockTableWithTabs({
     toggleWatchlist
 }: StockTableWithTabsProps) {
     const formatNumber = (num: number) => num.toLocaleString('vi-VN');
-    const formatPrice = (price: number) => formatNumber(price) + ' ₫';
+    const formatPrice = (price: number) => formatNumber(price) + ' nghìn đồng';
 
     const getChangeColor = (value: number) => {
         if (value > 0) return 'text-green-600';
