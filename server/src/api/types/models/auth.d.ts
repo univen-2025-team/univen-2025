@@ -17,6 +17,9 @@ declare global {
                     user_gender: boolean;
                     balance: number;
 
+                    isGuest?: boolean;
+                    guestExpiresAt?: Date;
+
                     user_role: mongoose.Types.ObjectId;
                     user_status?: UserStatus;
                 },

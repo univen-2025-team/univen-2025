@@ -35,6 +35,8 @@ authRoute.get(
     catchError(AuthController.loginWithGoogle)
 );
 
+authRoute.post('/login/guest', catchError(AuthController.loginAsGuest));
+
 authRoute.post('/new-token', validateNewToken, catchError(AuthController.newToken));
 
 /* ------------------------------------------------------ */

@@ -1,7 +1,13 @@
-import { CLEAN_UP_KEY_TOKEN_CRON_TIME, getCronOptions } from '@/configs/scheduled.config.js';
+import {
+    CLEAN_UP_KEY_TOKEN_CRON_TIME,
+    CLEAN_UP_EXPIRED_GUESTS_CRON_TIME,
+    getCronOptions
+} from '@/configs/scheduled.config.js';
 
 // Models
 import keyTokenModel from '@/models/keyToken.model.js';
+import { userModel } from '@/models/user.model.js';
+import { stockTransactionModel } from '@/models/stockTransaction.model.js';
 
 // Services
 import JwtService from './jwt.service.js';
@@ -17,6 +23,7 @@ export default class ScheduledService {
 
     public static startScheduledService = () => {
         this.cleanUpKeyTokenCronJob.start();
+        this.cleanUpExpiredGuestsCronJob.start();
     };
 
     /* ------------------------------------------------------ */
@@ -86,12 +93,59 @@ export default class ScheduledService {
     };
 
     /* ------------------------------------------------------ */
+    /*          Cleanup expired guest accounts                */
+    /* ------------------------------------------------------ */
+    private static handleCleanUpExpiredGuests = async () => {
+        try {
+            const now = new Date();
+
+            // Find all expired guest accounts
+            const expiredGuests = await userModel.find({
+                isGuest: true,
+                guestExpiresAt: { $lte: now }
+            });
+
+            if (expiredGuests.length === 0) {
+                LoggerService.getInstance().info('Cleanup guests: No expired guest accounts found');
+                return;
+            }
+
+            const expiredUserIds = expiredGuests.map((user) => user._id);
+
+            // Delete related data
+            const [keyTokenResult, transactionResult, userResult] = await Promise.all([
+                keyTokenModel.deleteMany({ user: { $in: expiredUserIds } }),
+                stockTransactionModel.deleteMany({ userId: { $in: expiredUserIds } }),
+                userModel.deleteMany({ _id: { $in: expiredUserIds } })
+            ]);
+
+            // Clean up Redis tokens
+            await Promise.all(expiredUserIds.map((userId) => deleteKeyToken(userId.toString())));
+
+            LoggerService.getInstance().info(
+                `Cleanup guests: ${userResult.deletedCount} guest accounts deleted, ` +
+                    `${keyTokenResult.deletedCount} key tokens, ${transactionResult.deletedCount} transactions`
+            );
+        } catch (error) {
+            LoggerService.getInstance().error(`Cleanup guests error: ${error}`);
+        }
+    };
+
+    /* ------------------------------------------------------ */
     /*                       Cron jobs                        */
     /* ------------------------------------------------------ */
     public static cleanUpKeyTokenCronJob = CronJob.from(
         getCronOptions({
             cronTime: CLEAN_UP_KEY_TOKEN_CRON_TIME,
             onTick: ScheduledService.handleCleanUpKeyToken,
+            onComplete: () => {}
+        })
+    );
+
+    public static cleanUpExpiredGuestsCronJob = CronJob.from(
+        getCronOptions({
+            cronTime: CLEAN_UP_EXPIRED_GUESTS_CRON_TIME,
+            onTick: ScheduledService.handleCleanUpExpiredGuests,
             onComplete: () => {}
         })
     );

@@ -11,6 +11,10 @@ export const CLEAN_UP_KEY_TOKEN_CRON_TIME =
 // Cleanup product remove failed scheduled
 export const CLEAN_UP_PRODUCT_CRON_TIME = process.env.CLEAN_UP_PRODUCT_CRON_TIME || CRON_TIME_DEV;
 
+// Cleanup expired guest accounts - runs daily at midnight
+export const CLEAN_UP_EXPIRED_GUESTS_CRON_TIME =
+    process.env.CLEAN_UP_EXPIRED_GUESTS_CRON_TIME || '0 0 * * *';
+
 // Sync inventory stock with SKU scheduled - every minute
 export const SYNC_INVENTORY_SKU_CRON_TIME = process.env.SYNC_INVENTORY_SKU_CRON_TIME || '* * * * *';
 
