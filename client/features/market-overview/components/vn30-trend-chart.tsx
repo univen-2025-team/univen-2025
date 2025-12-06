@@ -29,17 +29,23 @@ import {
     SelectValue
 } from '@/components/ui/select';
 
-export function VN30TrendChart({ data, onRangeChange, selectedRange = '1M' }: VN30TrendChartProps) {
+export function VN30TrendChart({
+    data,
+    onRangeChange,
+    selectedRange = '10M'
+}: VN30TrendChartProps) {
     const ranges = [
-        { label: '1H', value: '1H' },
-        { label: '3H', value: '3H' },
-        { label: '6H', value: '6H' },
-        { label: '1D', value: '1D' },
-        { label: '1W', value: '1W' },
-        { label: '1M', value: '1M' },
-        { label: '3M', value: '3M' },
-        { label: '6M', value: '6M' },
-        { label: '1Y', value: '1Y' }
+        { label: '10 phút', value: '10M' },
+        { label: '30 phút', value: '30M' },
+        { label: '1 giờ', value: '1H' },
+        { label: '3 giờ', value: '3H' },
+        { label: '6 giờ', value: '6H' },
+        { label: '1 ngày', value: '1D' },
+        { label: '1 tuần', value: '1W' },
+        { label: '1 tháng', value: '1M' },
+        { label: '3 tháng', value: '3M' },
+        { label: '6 tháng', value: '6M' },
+        { label: '1 năm', value: '1Y' }
     ];
 
     if (!data || data.length === 0) {

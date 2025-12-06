@@ -5,8 +5,73 @@ No API endpoints - Node.js server provides the API.
 """
 
 import os
+import sys
 import logging
+import pathlib
+import json
 from datetime import datetime
+
+# ============================================================
+# Pre-initialize vnai to avoid circular import error
+# This MUST happen before any vnstock imports
+# ============================================================
+def _ensure_vnai_initialized():
+    """
+    Pre-initialize vnai module and accept license terms to avoid
+    the 'partially initialized module vnai has no attribute accept_license_terms'
+    circular import error.
+    """
+    try:
+        # Create the vnstock config directory structure if it doesn't exist
+        home_dir = pathlib.Path.home()
+        vnstock_dir = home_dir / ".vnstock"
+        id_dir = vnstock_dir / "id"
+        
+        vnstock_dir.mkdir(exist_ok=True)
+        id_dir.mkdir(exist_ok=True)
+        
+        # Check if terms are already accepted
+        terms_file = id_dir / "terms_agreement.txt"
+        env_file = id_dir / "environment.json"
+        
+        if not terms_file.exists():
+            # Pre-accept terms to avoid interactive prompts
+            terms_content = f"""Terms accepted automatically at {datetime.now().isoformat()}
+---
+
+TERMS AND CONDITIONS:
+Khi tiếp tục sử dụng Vnstock, bạn xác nhận rằng bạn đã đọc, hiểu và đồng ý với Chính sách quyền riêng tư và Điều khoản, điều kiện về giấy phép sử dụng Vnstock.
+Chi tiết:
+- Giấy phép sử dụng phần mềm: https://vnstocks.com/docs/tai-lieu/giay-phep-su-dung
+- Chính sách quyền riêng tư: https://vnstocks.com/docs/tai-lieu/chinh-sach-quyen-rieng-tu
+"""
+            with open(terms_file, "w", encoding="utf-8") as f:
+                f.write(terms_content)
+        
+        if not env_file.exists():
+            import uuid
+            env_data = {
+                "accepted_agreement": True,
+                "timestamp": datetime.now().isoformat(),
+                "machine_id": str(uuid.uuid4())
+            }
+            with open(env_file, "w") as f:
+                json.dump(env_data, f)
+        
+        # Set environment variable for vnai
+        os.environ["ACCEPT_TC"] = "tôi đồng ý"
+        
+        # Now import and initialize vnai
+        import vnai
+        vnai.setup()
+        
+    except Exception as e:
+        # Log but don't fail - vnstock might still work
+        print(f"Warning: vnai pre-initialization failed: {e}", file=sys.stderr)
+
+# Run initialization immediately
+_ensure_vnai_initialized()
+
 from dotenv import load_dotenv
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger

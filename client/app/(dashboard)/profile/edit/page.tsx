@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import { userApi, type UserProfile } from '@/lib/api/user.api';
+import { getMediaUrl } from '@/lib/api/media.api';
 import { useAppSelector, useAppDispatch } from '@/lib/store/hooks';
 import { selectUser, setUser } from '@/lib/store/authSlice';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
@@ -12,6 +13,7 @@ import ErrorMessage from '@/components/common/ErrorMessage';
 import SuccessMessage from '@/components/common/SuccessMessage';
 import FormInput from '@/components/forms/FormInput';
 import InfoBox from '@/components/common/InfoBox';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 // Validation schema based on backend zod schema
 const updateProfileSchema = Yup.object({
@@ -36,6 +38,7 @@ export default function EditProfilePage() {
     const reduxUser = useAppSelector(selectUser);
 
     const [profile, setProfile] = useState<UserProfile | null>(null);
+    const [originalProfile, setOriginalProfile] = useState<UserProfile | null>(null); // Store original for comparison
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -44,6 +47,7 @@ export default function EditProfilePage() {
     const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
     const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
     const [avatarFile, setAvatarFile] = useState<File | null>(null);
+    const [isPreviewDialogOpen, setIsPreviewDialogOpen] = useState(false);
 
     // Fetch current profile
     useEffect(() => {
@@ -52,6 +56,7 @@ export default function EditProfilePage() {
                 setIsLoading(true);
                 const data = await userApi.getProfile();
                 setProfile(data);
+                setOriginalProfile(data); // Store original profile for comparison
             } catch (err) {
                 setError(err instanceof Error ? err.message : 'Không thể tải thông tin');
             } finally {
@@ -76,17 +81,21 @@ export default function EditProfilePage() {
                 setError(null);
                 setSuccessMessage(null);
 
-                // Only send fields that have changed
+                // Only send fields that have changed (compare against original profile data)
                 const updateData: UpdateProfileFormData = {};
-                if (values.user_fullName && values.user_fullName !== profile?.user_fullName) {
+                if (
+                    values.user_fullName &&
+                    values.user_fullName !== originalProfile?.user_fullName
+                ) {
                     updateData.user_fullName = values.user_fullName;
                 }
-                if (values.email && values.email !== profile?.email) {
-                    updateData.email = values.email;
+                if (values.email && values.email !== originalProfile?.email) {
+                    // Server expects user_email, not email
+                    (updateData as Record<string, unknown>).user_email = values.email;
                 }
                 if (
                     values.user_gender !== undefined &&
-                    values.user_gender !== profile?.user_gender
+                    values.user_gender !== originalProfile?.user_gender
                 ) {
                     updateData.user_gender = values.user_gender;
                 }
@@ -124,7 +133,7 @@ export default function EditProfilePage() {
         }
     });
 
-    // Avatar upload handler
+    // Avatar file change handler - show preview dialog
     const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
@@ -140,10 +149,22 @@ export default function EditProfilePage() {
             }
             setAvatarFile(file);
             setAvatarPreview(URL.createObjectURL(file));
+            setIsPreviewDialogOpen(true);
             setError(null);
         }
     };
 
+    // Cancel preview dialog
+    const handleCancelPreview = () => {
+        setIsPreviewDialogOpen(false);
+        setAvatarFile(null);
+        if (avatarPreview) {
+            URL.revokeObjectURL(avatarPreview);
+            setAvatarPreview(null);
+        }
+    };
+
+    // Confirm avatar upload
     const handleAvatarUpload = async () => {
         if (!avatarFile) return;
 
@@ -151,20 +172,29 @@ export default function EditProfilePage() {
             setIsUploadingAvatar(true);
             setError(null);
 
-            const result = await userApi.uploadAvatar(avatarFile);
+            await userApi.uploadAvatar(avatarFile);
 
-            // Update profile with new avatar
-            if (profile) {
-                setProfile({ ...profile, user_avatar: result.avatarUrl });
-            }
+            // Refetch profile to get updated avatar
+            const updatedProfile = await userApi.getProfile();
+            setProfile(updatedProfile);
 
             // Update Redux state
-            if (reduxUser) {
-                dispatch(setUser({ ...reduxUser, user_avatar: result.avatarUrl }));
-            }
+            dispatch(
+                setUser({
+                    _id: updatedProfile._id,
+                    email: updatedProfile.email,
+                    user_fullName: updatedProfile.user_fullName,
+                    user_avatar: updatedProfile.user_avatar,
+                    user_role: updatedProfile.user_role,
+                    balance: updatedProfile.balance ?? 0,
+                    user_gender: updatedProfile.user_gender,
+                    user_status: updatedProfile.user_status,
+                    user_dayOfBirth: updatedProfile.user_dayOfBirth
+                })
+            );
 
             setSuccessMessage('Cập nhật ảnh đại diện thành công!');
-            setAvatarFile(null);
+            handleCancelPreview();
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Upload ảnh thất bại');
         } finally {
@@ -214,15 +244,9 @@ export default function EditProfilePage() {
                     {/* Avatar Preview */}
                     <div className="relative">
                         <div className="w-24 h-24 rounded-full overflow-hidden bg-gray-200 border-4 border-white shadow-lg">
-                            {avatarPreview ? (
+                            {getMediaUrl(profile?.user_avatar) ? (
                                 <img
-                                    src={avatarPreview}
-                                    alt="Avatar preview"
-                                    className="w-full h-full object-cover"
-                                />
-                            ) : profile?.user_avatar ? (
-                                <img
-                                    src={profile.user_avatar}
+                                    src={getMediaUrl(profile?.user_avatar)!}
                                     alt="Current avatar"
                                     className="w-full h-full object-cover"
                                 />
@@ -245,30 +269,83 @@ export default function EditProfilePage() {
                             onChange={handleAvatarChange}
                             className="hidden"
                         />
-                        <div className="flex gap-3">
-                            <label
-                                htmlFor="avatar-upload"
-                                className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg cursor-pointer transition-colors font-medium"
-                            >
-                                Chọn ảnh
-                            </label>
-                            {avatarFile && (
-                                <button
-                                    type="button"
-                                    onClick={handleAvatarUpload}
-                                    disabled={isUploadingAvatar}
-                                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-                                >
-                                    {isUploadingAvatar ? 'Đang tải...' : 'Lưu ảnh'}
-                                </button>
-                            )}
-                        </div>
+                        <label
+                            htmlFor="avatar-upload"
+                            className="inline-block px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg cursor-pointer transition-colors font-medium"
+                        >
+                            Chọn ảnh mới
+                        </label>
                         <p className="text-sm text-gray-500 mt-2">
                             Chấp nhận JPG, PNG, GIF. Tối đa 5MB.
                         </p>
                     </div>
                 </div>
             </div>
+
+            {/* Preview Dialog */}
+            <Dialog open={isPreviewDialogOpen} onOpenChange={setIsPreviewDialogOpen}>
+                <DialogContent className="max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>Xem trước ảnh đại diện</DialogTitle>
+                    </DialogHeader>
+
+                    <div className="p-6 space-y-6">
+                        {/* Preview image */}
+                        <div className="flex justify-center">
+                            {avatarPreview && (
+                                <img
+                                    src={avatarPreview}
+                                    alt="Preview"
+                                    className="w-48 h-48 rounded-full object-cover border-4 border-primary shadow-lg"
+                                />
+                            )}
+                        </div>
+
+                        {/* Action buttons */}
+                        <div className="flex gap-4 justify-center">
+                            <button
+                                onClick={handleCancelPreview}
+                                disabled={isUploadingAvatar}
+                                className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50"
+                            >
+                                Hủy
+                            </button>
+                            <button
+                                onClick={handleAvatarUpload}
+                                disabled={isUploadingAvatar}
+                                className="px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center gap-2"
+                            >
+                                {isUploadingAvatar ? (
+                                    <>
+                                        <svg
+                                            className="animate-spin h-5 w-5"
+                                            fill="none"
+                                            viewBox="0 0 24 24"
+                                        >
+                                            <circle
+                                                className="opacity-25"
+                                                cx="12"
+                                                cy="12"
+                                                r="10"
+                                                stroke="currentColor"
+                                                strokeWidth="4"
+                                            />
+                                            <path
+                                                className="opacity-75"
+                                                fill="currentColor"
+                                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                            />
+                                        </svg>
+                                        Đang tải...
+                                    </>
+                                ) : (
+                                    'Xác nhận'
+                                )}
+                            </button>
+                        </div>
+                    </div>
+                </DialogContent>
+            </Dialog>
 
             {/* Form */}
             <div className="bg-white rounded-xl shadow-md p-6">
