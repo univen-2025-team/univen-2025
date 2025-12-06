@@ -116,7 +116,7 @@ export default function ProfilePage() {
             <ProfileHeaderCard profile={displayProfileData} onAvatarChange={handleAvatarChange} />
 
             {/* Details Section */}
-            <div className="bg-white rounded-xl shadow-md p-6 space-y-6">
+            <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-md hover:shadow-lg transition-all duration-300 p-6 space-y-6">
                 <h3 className="text-xl font-bold text-gray-900 border-b pb-3">
                     Chi tiết tài khoản
                 </h3>

@@ -238,7 +238,7 @@ export default function EditProfilePage() {
             {error && <ErrorMessage message={error} className="mb-6" />}
 
             {/* Avatar Upload Section */}
-            <div className="bg-white rounded-xl shadow-md p-6 mb-6">
+            <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-md hover:shadow-lg transition-all duration-300 p-6 mb-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Ảnh đại diện</h3>
                 <div className="flex items-center gap-6">
                     {/* Avatar Preview */}
@@ -348,7 +348,7 @@ export default function EditProfilePage() {
             </Dialog>
 
             {/* Form */}
-            <div className="bg-white rounded-xl shadow-md p-6">
+            <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-md hover:shadow-lg transition-all duration-300 p-6">
                 <form onSubmit={formik.handleSubmit} className="space-y-6">
                     <FormInput
                         id="user_fullName"

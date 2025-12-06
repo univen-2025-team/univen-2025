@@ -15,7 +15,7 @@ export default function TopGainersLosers({ topGainers, topLosers }: TopGainersLo
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       {/* Top Gainers */}
-      <div className="bg-white rounded-xl shadow-lg p-6">
+      <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 p-6">
         <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
           <svg className="w-6 h-6 text-success mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
@@ -47,7 +47,7 @@ export default function TopGainersLosers({ topGainers, topLosers }: TopGainersLo
       </div>
 
       {/* Top Losers */}
-      <div className="bg-white rounded-xl shadow-lg p-6">
+      <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 p-6">
         <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
           <svg className="w-6 h-6 text-error mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
