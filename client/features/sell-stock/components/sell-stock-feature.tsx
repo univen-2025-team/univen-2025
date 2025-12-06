@@ -65,26 +65,34 @@ export function SellStockFeature({ data, onBack, onSuccess }: SellStockFeaturePr
     const [transactionResult, setTransactionResult] = useState<TransactionResult | null>(null);
     const [quantityError, setQuantityError] = useState<string | null>(null);
 
+    // ==================== CONSTANTS ====================
+    // Stock prices in VN are in thousands VND (e.g., 142.8 = 142,800 VND)
+    const PRICE_UNIT = 1000;
+
     // ==================== COMPUTED VALUES ====================
     const availableBalance =
         (typeof profile?.balance === 'number' ? profile.balance : null) ??
         (typeof reduxUser?.balance === 'number' ? reduxUser.balance : null) ??
         0;
 
+    // Prices in VND (multiply by 1000)
+    const priceInVND = data.currentPrice * PRICE_UNIT;
+    const avgBuyPriceInVND = data.averageBuyPrice * PRICE_UNIT;
+
     const estimatedRevenue = useMemo(() => {
         if (!quantity || quantity <= 0) return 0;
-        return quantity * data.currentPrice;
-    }, [quantity, data.currentPrice]);
+        return quantity * priceInVND;
+    }, [quantity, priceInVND]);
 
     const estimatedProfit = useMemo(() => {
         if (!quantity || quantity <= 0) return 0;
-        return (data.currentPrice - data.averageBuyPrice) * quantity;
-    }, [quantity, data.currentPrice, data.averageBuyPrice]);
+        return (priceInVND - avgBuyPriceInVND) * quantity;
+    }, [quantity, priceInVND, avgBuyPriceInVND]);
 
     const profitPercent = useMemo(() => {
-        if (data.averageBuyPrice <= 0) return 0;
-        return ((data.currentPrice - data.averageBuyPrice) / data.averageBuyPrice) * 100;
-    }, [data.currentPrice, data.averageBuyPrice]);
+        if (avgBuyPriceInVND <= 0) return 0;
+        return ((priceInVND - avgBuyPriceInVND) / avgBuyPriceInVND) * 100;
+    }, [priceInVND, avgBuyPriceInVND]);
 
     // Reset when symbol changes
     useEffect(() => {
@@ -168,7 +176,7 @@ export function SellStockFeature({ data, onBack, onSuccess }: SellStockFeaturePr
             stock_code: data.symbol,
             stock_name: data.companyName || data.symbol,
             quantity,
-            price_per_unit: data.currentPrice,
+            price_per_unit: priceInVND, // Convert to VND (multiply by 1000)
             transaction_type: 'SELL' as const,
             notes: notes || `${orderType} - Bán ${quantity} CP`
         };
