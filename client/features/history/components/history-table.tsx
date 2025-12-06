@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo, type FC } from 'react';
-import { Loader2, Eye, TrendingDown } from 'lucide-react';
+import { Loader2, Eye } from 'lucide-react';
 
 import type { TransactionHistoryItem } from '@/lib/types/transactions';
 import {
@@ -13,7 +13,6 @@ import {
 } from '../utils/format';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { SellStockFeature, type SellStockData } from '@/features/sell-stock';
 
 interface HistoryTableProps {
     transactions: TransactionHistoryItem[];
@@ -35,8 +34,6 @@ export const HistoryTable: FC<HistoryTableProps> = ({
         null
     );
     const [showDetailModal, setShowDetailModal] = useState(false);
-    const [showSellModal, setShowSellModal] = useState(false);
-    const [sellData, setSellData] = useState<SellStockData | null>(null);
 
     // Calculate current holdings from all transactions
     const holdings: HoldingsMap = useMemo(() => {
@@ -75,31 +72,6 @@ export const HistoryTable: FC<HistoryTableProps> = ({
     const handleViewDetail = (transaction: TransactionHistoryItem) => {
         setSelectedTransaction(transaction);
         setShowDetailModal(true);
-    };
-
-    const handleSell = (transaction: TransactionHistoryItem) => {
-        // Get current holdings for this stock
-        const stockHoldings = holdings.get(transaction.stock_code);
-
-        // Only allow selling if user has holdings
-        if (!stockHoldings || stockHoldings.quantity <= 0) {
-            return;
-        }
-
-        setSellData({
-            symbol: transaction.stock_code,
-            companyName: transaction.stock_name,
-            currentPrice: transaction.price_per_unit / 1000, // Convert back to thousands (UI format)
-            holdingQuantity: stockHoldings.quantity,
-            averageBuyPrice: stockHoldings.avgPrice / 1000 // Convert back to thousands (UI format)
-        });
-        setShowSellModal(true);
-    };
-
-    const handleSellSuccess = () => {
-        setShowSellModal(false);
-        setSellData(null);
-        onRefresh?.();
     };
 
     return (
@@ -166,13 +138,6 @@ export const HistoryTable: FC<HistoryTableProps> = ({
                                 const amountPrefix =
                                     transaction.transaction_type === 'SELL' ? '+' : '-';
                                 const timestamp = transaction.executed_at ?? transaction.createdAt;
-                                // Show sell button if user still has holdings of this stock
-                                const stockHoldings = holdings.get(transaction.stock_code);
-                                const canSell =
-                                    transaction.transaction_type === 'BUY' &&
-                                    transaction.transaction_status === 'COMPLETED' &&
-                                    stockHoldings &&
-                                    stockHoldings.quantity > 0;
 
                                 return (
                                     <tr
@@ -223,17 +188,6 @@ export const HistoryTable: FC<HistoryTableProps> = ({
                                                     <Eye className="h-4 w-4 mr-1" />
                                                     Chi tiết
                                                 </Button>
-                                                {canSell && (
-                                                    <Button
-                                                        variant="outline"
-                                                        size="sm"
-                                                        onClick={() => handleSell(transaction)}
-                                                        className="text-error border-error/30 hover:bg-error/10"
-                                                    >
-                                                        <TrendingDown className="h-4 w-4 mr-1" />
-                                                        Bán
-                                                    </Button>
-                                                )}
                                             </div>
                                         </td>
                                     </tr>
@@ -262,13 +216,6 @@ export const HistoryTable: FC<HistoryTableProps> = ({
                             transaction.transaction_type === 'SELL' ? 'text-success' : 'text-error';
                         const amountPrefix = transaction.transaction_type === 'SELL' ? '+' : '-';
                         const timestamp = transaction.executed_at ?? transaction.createdAt;
-                        // Show sell button if user still has holdings of this stock
-                        const stockHoldings = holdings.get(transaction.stock_code);
-                        const canSell =
-                            transaction.transaction_type === 'BUY' &&
-                            transaction.transaction_status === 'COMPLETED' &&
-                            stockHoldings &&
-                            stockHoldings.quantity > 0;
 
                         return (
                             <div
@@ -313,17 +260,6 @@ export const HistoryTable: FC<HistoryTableProps> = ({
                                         <Eye className="h-4 w-4 mr-1" />
                                         Chi tiết
                                     </Button>
-                                    {canSell && (
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            onClick={() => handleSell(transaction)}
-                                            className="text-error border-error/30 hover:bg-error/10"
-                                        >
-                                            <TrendingDown className="h-4 w-4 mr-1" />
-                                            Bán
-                                        </Button>
-                                    )}
                                 </div>
                             </div>
                         );
@@ -357,116 +293,250 @@ export const HistoryTable: FC<HistoryTableProps> = ({
 
             {/* Detail Modal */}
             <Dialog open={showDetailModal} onOpenChange={setShowDetailModal}>
-                <DialogContent className="max-w-lg">
-                    <DialogHeader>
-                        <DialogTitle>Chi tiết giao dịch</DialogTitle>
-                    </DialogHeader>
-                    {selectedTransaction && (
-                        <div className="space-y-4">
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <p className="text-sm text-muted-foreground">Mã giao dịch</p>
-                                    <p className="font-mono text-sm">{selectedTransaction._id}</p>
-                                </div>
-                                <div>
-                                    <p className="text-sm text-muted-foreground">Loại</p>
-                                    <p className="font-semibold">
-                                        {
-                                            TRANSACTION_TYPE_INFO[
-                                                selectedTransaction.transaction_type
-                                            ].label
-                                        }
-                                    </p>
-                                </div>
-                                <div>
-                                    <p className="text-sm text-muted-foreground">Mã cổ phiếu</p>
-                                    <p className="font-semibold">
-                                        {selectedTransaction.stock_code}
-                                    </p>
-                                </div>
-                                <div>
-                                    <p className="text-sm text-muted-foreground">Số lượng</p>
-                                    <p className="font-semibold">
-                                        {selectedTransaction.quantity} CP
-                                    </p>
-                                </div>
-                                <div>
-                                    <p className="text-sm text-muted-foreground">Giá/CP</p>
-                                    <p className="font-semibold">
-                                        {formatCurrency(selectedTransaction.price_per_unit)}
-                                    </p>
-                                </div>
-                                <div>
-                                    <p className="text-sm text-muted-foreground">Tổng tiền</p>
-                                    <p className="font-semibold">
-                                        {formatCurrency(selectedTransaction.total_amount)}
-                                    </p>
-                                </div>
-                                <div>
-                                    <p className="text-sm text-muted-foreground">Trạng thái</p>
-                                    <span
-                                        className={`inline-flex px-2 py-1 rounded-full text-xs font-semibold ${
-                                            TRANSACTION_STATUS_INFO[
-                                                selectedTransaction.transaction_status
-                                            ].bg
-                                        } ${
-                                            TRANSACTION_STATUS_INFO[
-                                                selectedTransaction.transaction_status
-                                            ].color
+                <DialogContent className="max-w-md p-0 overflow-hidden">
+                    {selectedTransaction &&
+                        (() => {
+                            const typeInfo =
+                                TRANSACTION_TYPE_INFO[selectedTransaction.transaction_type];
+                            const statusInfo =
+                                TRANSACTION_STATUS_INFO[selectedTransaction.transaction_status];
+                            const isBuy = selectedTransaction.transaction_type === 'BUY';
+                            const balanceChange =
+                                (selectedTransaction.balance_after ?? 0) -
+                                selectedTransaction.balance_before;
+
+                            return (
+                                <>
+                                    {/* Header Banner */}
+                                    <div
+                                        className={`px-6 py-5 ${
+                                            isBuy
+                                                ? 'bg-gradient-to-r from-red-500 to-red-600'
+                                                : 'bg-gradient-to-r from-emerald-500 to-emerald-600'
                                         }`}
                                     >
-                                        {
-                                            TRANSACTION_STATUS_INFO[
-                                                selectedTransaction.transaction_status
-                                            ].label
-                                        }
-                                    </span>
-                                </div>
-                                <div>
-                                    <p className="text-sm text-muted-foreground">Thời gian</p>
-                                    <p className="text-sm">
-                                        {formatDate(
-                                            selectedTransaction.executed_at ??
-                                                selectedTransaction.createdAt
-                                        )}
-                                    </p>
-                                </div>
-                            </div>
-                            {selectedTransaction.notes && (
-                                <div>
-                                    <p className="text-sm text-muted-foreground">Ghi chú</p>
-                                    <p className="text-sm">{selectedTransaction.notes}</p>
-                                </div>
-                            )}
-                            <div className="border-t pt-4">
-                                <div className="flex justify-between">
-                                    <span className="text-muted-foreground">Số dư trước</span>
-                                    <span>
-                                        {formatCurrency(selectedTransaction.balance_before)}
-                                    </span>
-                                </div>
-                                <div className="flex justify-between font-semibold">
-                                    <span>Số dư sau</span>
-                                    <span>
-                                        {formatCurrency(selectedTransaction.balance_after ?? 0)}
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-                </DialogContent>
-            </Dialog>
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                                                    <span className="text-2xl">
+                                                        {typeInfo.icon}
+                                                    </span>
+                                                </div>
+                                                <div>
+                                                    <p className="text-white/80 text-sm font-medium">
+                                                        Giao dịch {typeInfo.label}
+                                                    </p>
+                                                    <p className="text-white text-xl font-bold">
+                                                        {selectedTransaction.stock_code}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <span
+                                                className={`px-3 py-1.5 rounded-full text-xs font-bold ${statusInfo.bg} ${statusInfo.color}`}
+                                            >
+                                                {statusInfo.label}
+                                            </span>
+                                        </div>
+                                    </div>
 
-            {/* Sell Modal */}
-            <Dialog open={showSellModal} onOpenChange={setShowSellModal}>
-                <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-                    {sellData && (
-                        <SellStockFeature
-                            data={sellData}
-                            onBack={() => setShowSellModal(false)}
-                            onSuccess={handleSellSuccess}
-                        />
-                    )}
+                                    {/* Content */}
+                                    <div className="p-6 space-y-5">
+                                        {/* Stock Info */}
+                                        <div className="bg-gray-50 rounded-xl p-4">
+                                            <p className="text-sm text-gray-500 mb-1">
+                                                {selectedTransaction.stock_name}
+                                            </p>
+                                            <div className="flex items-baseline justify-between">
+                                                <span
+                                                    className={`text-2xl font-bold ${
+                                                        isBuy ? 'text-red-600' : 'text-emerald-600'
+                                                    }`}
+                                                >
+                                                    {isBuy ? '-' : '+'}
+                                                    {formatCurrency(
+                                                        selectedTransaction.total_amount
+                                                    )}
+                                                </span>
+                                                <span className="text-sm text-gray-500">
+                                                    {selectedTransaction.quantity} CP ×{' '}
+                                                    {formatCurrency(
+                                                        selectedTransaction.price_per_unit
+                                                    )}
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                        {/* Details Grid */}
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div className="bg-gray-50/50 rounded-lg p-3">
+                                                <div className="flex items-center gap-2 mb-1">
+                                                    <svg
+                                                        className="w-4 h-4 text-gray-400"
+                                                        fill="none"
+                                                        stroke="currentColor"
+                                                        viewBox="0 0 24 24"
+                                                    >
+                                                        <path
+                                                            strokeLinecap="round"
+                                                            strokeLinejoin="round"
+                                                            strokeWidth={2}
+                                                            d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14"
+                                                        />
+                                                    </svg>
+                                                    <span className="text-xs text-gray-500">
+                                                        Số lượng
+                                                    </span>
+                                                </div>
+                                                <p className="font-semibold text-gray-900">
+                                                    {selectedTransaction.quantity} CP
+                                                </p>
+                                            </div>
+                                            <div className="bg-gray-50/50 rounded-lg p-3">
+                                                <div className="flex items-center gap-2 mb-1">
+                                                    <svg
+                                                        className="w-4 h-4 text-gray-400"
+                                                        fill="none"
+                                                        stroke="currentColor"
+                                                        viewBox="0 0 24 24"
+                                                    >
+                                                        <path
+                                                            strokeLinecap="round"
+                                                            strokeLinejoin="round"
+                                                            strokeWidth={2}
+                                                            d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                                                        />
+                                                    </svg>
+                                                    <span className="text-xs text-gray-500">
+                                                        Giá/CP
+                                                    </span>
+                                                </div>
+                                                <p className="font-semibold text-gray-900">
+                                                    {formatCurrency(
+                                                        selectedTransaction.price_per_unit
+                                                    )}
+                                                </p>
+                                            </div>
+                                            <div className="bg-gray-50/50 rounded-lg p-3">
+                                                <div className="flex items-center gap-2 mb-1">
+                                                    <svg
+                                                        className="w-4 h-4 text-gray-400"
+                                                        fill="none"
+                                                        stroke="currentColor"
+                                                        viewBox="0 0 24 24"
+                                                    >
+                                                        <path
+                                                            strokeLinecap="round"
+                                                            strokeLinejoin="round"
+                                                            strokeWidth={2}
+                                                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                                                        />
+                                                    </svg>
+                                                    <span className="text-xs text-gray-500">
+                                                        Thời gian
+                                                    </span>
+                                                </div>
+                                                <p className="font-semibold text-gray-900 text-sm">
+                                                    {formatDate(
+                                                        selectedTransaction.executed_at ??
+                                                            selectedTransaction.createdAt
+                                                    )}
+                                                </p>
+                                            </div>
+                                            <div className="bg-gray-50/50 rounded-lg p-3">
+                                                <div className="flex items-center gap-2 mb-1">
+                                                    <svg
+                                                        className="w-4 h-4 text-gray-400"
+                                                        fill="none"
+                                                        stroke="currentColor"
+                                                        viewBox="0 0 24 24"
+                                                    >
+                                                        <path
+                                                            strokeLinecap="round"
+                                                            strokeLinejoin="round"
+                                                            strokeWidth={2}
+                                                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                                                        />
+                                                    </svg>
+                                                    <span className="text-xs text-gray-500">
+                                                        Mã GD
+                                                    </span>
+                                                </div>
+                                                <p
+                                                    className="font-mono text-xs text-gray-700 truncate"
+                                                    title={selectedTransaction._id}
+                                                >
+                                                    {selectedTransaction._id.slice(-12)}
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        {/* Notes */}
+                                        {selectedTransaction.notes && (
+                                            <div className="bg-amber-50 border border-amber-100 rounded-lg p-3">
+                                                <div className="flex items-center gap-2 mb-1">
+                                                    <svg
+                                                        className="w-4 h-4 text-amber-500"
+                                                        fill="none"
+                                                        stroke="currentColor"
+                                                        viewBox="0 0 24 24"
+                                                    >
+                                                        <path
+                                                            strokeLinecap="round"
+                                                            strokeLinejoin="round"
+                                                            strokeWidth={2}
+                                                            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                                                        />
+                                                    </svg>
+                                                    <span className="text-xs text-amber-600 font-medium">
+                                                        Ghi chú
+                                                    </span>
+                                                </div>
+                                                <p className="text-sm text-amber-800">
+                                                    {selectedTransaction.notes}
+                                                </p>
+                                            </div>
+                                        )}
+
+                                        {/* Balance Section */}
+                                        <div className="border-t border-gray-100 pt-4">
+                                            <div className="flex items-center justify-between text-sm mb-2">
+                                                <span className="text-gray-500">
+                                                    Số dư trước GD
+                                                </span>
+                                                <span className="text-gray-700">
+                                                    {formatCurrency(
+                                                        selectedTransaction.balance_before
+                                                    )}
+                                                </span>
+                                            </div>
+                                            <div className="flex items-center justify-between text-sm mb-3">
+                                                <span className="text-gray-500">Thay đổi</span>
+                                                <span
+                                                    className={`font-medium ${
+                                                        balanceChange >= 0
+                                                            ? 'text-emerald-600'
+                                                            : 'text-red-600'
+                                                    }`}
+                                                >
+                                                    {balanceChange >= 0 ? '+' : ''}
+                                                    {formatCurrency(balanceChange)}
+                                                </span>
+                                            </div>
+                                            <div className="flex items-center justify-between bg-gradient-to-r from-primary/5 to-primary/10 rounded-lg p-3">
+                                                <span className="font-medium text-gray-900">
+                                                    Số dư sau GD
+                                                </span>
+                                                <span className="text-lg font-bold text-primary">
+                                                    {formatCurrency(
+                                                        selectedTransaction.balance_after ?? 0
+                                                    )}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </>
+                            );
+                        })()}
                 </DialogContent>
             </Dialog>
         </>
