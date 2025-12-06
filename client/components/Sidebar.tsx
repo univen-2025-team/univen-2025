@@ -87,23 +87,14 @@ export function Sidebar() {
                     {/* Header */}
                     <div className="p-4 border-b border-gray-200 flex items-center justify-between gap-2">
                         <div className="flex items-center gap-3">
-                            <div
-                                className={`h-10 w-10 rounded-md flex items-center justify-center text-white bg-primary text-sm font-bold`}
-                            >
-                                {isCollapsed
-                                    ? appConfig.shortName.charAt(0)
-                                    : appConfig.shortName.substring(0, 2)}
-                            </div>
-                            {!isCollapsed && (
-                                <div>
-                                    <h1 className="text-lg font-bold text-gray-900">
-                                        {appConfig.name}
-                                    </h1>
-                                    <p className="text-xs text-gray-500">
-                                        {appConfig.company.shortName}
-                                    </p>
-                                </div>
-                            )}
+                            <Image
+                                src="/stockie-logo.png"
+                                alt="Stockie"
+                                width={isCollapsed ? 40 : 120}
+                                height={isCollapsed ? 40 : 40}
+                                className="object-contain"
+                                priority
+                            />
                         </div>
 
                         {/* Collapse Toggle (desktop) */}
