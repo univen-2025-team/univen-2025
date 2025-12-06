@@ -223,9 +223,9 @@ export default function Chatbot() {
 
     // Desktop: Resizable split layout
     return (
-        <div className="min-h-screen bg-background" ref={containerRef}>
-            <div className="flex h-screen">
-                {/* LEFT: Feature Area (flexible width) */}
+        <div className="h-screen overflow-hidden bg-background" ref={containerRef}>
+            <div className="flex h-full">
+                {/* LEFT: Feature Area (flexible width) - scrollable */}
                 <section
                     className="flex-1 border-r border-border/50 overflow-y-auto"
                     style={{ minWidth: 0 }}
@@ -257,7 +257,7 @@ export default function Chatbot() {
                     </div>
                 </div>
 
-                {/* RIGHT: Chatbot Panel (resizable width) */}
+                {/* RIGHT: Chatbot Panel (resizable width) - has its own scroll */}
                 <section
                     className="overflow-y-auto bg-white"
                     style={{ width: chatWidth, minWidth: MIN_CHAT_WIDTH, maxWidth: MAX_CHAT_WIDTH }}
