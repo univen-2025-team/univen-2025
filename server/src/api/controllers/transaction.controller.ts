@@ -163,4 +163,22 @@ export default class StockTransactionController {
             throw error;
         }
     };
+
+    public static getUserHoldings: RequestHandler = async (req, res, _) => {
+        try {
+            const { userId } = req.params;
+
+            const holdings = await TransactionService.getAllUserHoldings(userId);
+
+            new OkResponse({
+                message: 'Get user holdings successfully',
+                metadata: {
+                    holdings
+                }
+            }).send(res);
+        } catch (error) {
+            console.error('getUserHoldings error:', error);
+            throw error;
+        }
+    };
 }
