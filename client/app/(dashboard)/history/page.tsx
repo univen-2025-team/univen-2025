@@ -7,7 +7,11 @@ import { transactionApi } from '@/lib/api/transaction.api';
 import { useProfile } from '@/lib/hooks/useProfile';
 import { selectUser } from '@/lib/store/authSlice';
 import { useAppSelector } from '@/lib/store/hooks';
-import type { TransactionHistoryItem, TransactionStatus, TransactionType } from '@/lib/types/transactions';
+import type {
+    TransactionHistoryItem,
+    TransactionStatus,
+    TransactionType
+} from '@/lib/types/transactions';
 import { HistoryBalanceCards } from '@/features/history/components/history-balance-cards';
 import { HistoryFilters } from '@/features/history/components/history-filters';
 import { HistoryTable } from '@/features/history/components/history-table';
@@ -27,7 +31,12 @@ export default function HistoryPage() {
     const [filterType, setFilterType] = useState<FilterType>('ALL');
     const [filterStatus, setFilterStatus] = useState<FilterStatus>('ALL');
     const [transactions, setTransactions] = useState<TransactionHistoryItem[]>([]);
-    const [pagination, setPagination] = useState({ page: 1, limit: PAGE_SIZE, total: 0, totalPages: 1 });
+    const [pagination, setPagination] = useState({
+        page: 1,
+        limit: PAGE_SIZE,
+        total: 0,
+        totalPages: 1
+    });
     const [currentPage, setCurrentPage] = useState(1);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -43,12 +52,12 @@ export default function HistoryPage() {
                 const response = await transactionApi.getTransactionHistory(userId, {
                     filters: {
                         transaction_type: filterType === 'ALL' ? undefined : filterType,
-                        status: filterStatus === 'ALL' ? undefined : filterStatus,
+                        status: filterStatus === 'ALL' ? undefined : filterStatus
                     },
                     pagination: {
                         page: pageToLoad,
-                        limit: PAGE_SIZE,
-                    },
+                        limit: PAGE_SIZE
+                    }
                 });
 
                 setTransactions(response.transactions);
@@ -56,14 +65,16 @@ export default function HistoryPage() {
                 setCurrentPage(response.pagination.page);
             } catch (err) {
                 const message =
-                    err instanceof Error ? err.message : 'Không thể tải lịch sử giao dịch. Vui lòng thử lại.';
+                    err instanceof Error
+                        ? err.message
+                        : 'Không thể tải lịch sử giao dịch. Vui lòng thử lại.';
                 setError(message);
                 setTransactions([]);
             } finally {
                 setIsLoading(false);
             }
         },
-        [userId, filterType, filterStatus],
+        [userId, filterType, filterStatus]
     );
 
     useEffect(() => {
@@ -78,7 +89,7 @@ export default function HistoryPage() {
             transactions
                 .filter((transaction) => transaction.transaction_status === 'PENDING')
                 .reduce((sum, transaction) => sum + transaction.total_amount, 0),
-        [transactions],
+        [transactions]
     );
 
     const handleFilterTypeChange = (value: FilterType) => {
@@ -130,7 +141,10 @@ export default function HistoryPage() {
                 description="Quản lý và theo dõi các lệnh mua bán của bạn"
             />
 
-            <HistoryBalanceCards availableBalance={availableBalance} pendingAmount={pendingAmount} />
+            <HistoryBalanceCards
+                availableBalance={availableBalance}
+                pendingAmount={pendingAmount}
+            />
 
             <HistoryFilters
                 filterType={filterType}
@@ -145,7 +159,12 @@ export default function HistoryPage() {
                 </div>
             )}
 
-            <HistoryTable transactions={transactions} isLoading={isLoading} isEmpty={isEmptyState} />
+            <HistoryTable
+                transactions={transactions}
+                isLoading={isLoading}
+                isEmpty={isEmptyState}
+                onRefresh={() => fetchTransactions(currentPage)}
+            />
 
             <HistoryPagination
                 currentPage={currentPage}
@@ -159,4 +178,3 @@ export default function HistoryPage() {
         </div>
     );
 }
-
