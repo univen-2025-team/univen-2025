@@ -179,6 +179,11 @@ export default class AuthService {
                 });
             }
 
+            // Always update avatar from Google if available
+            if (googleProfile.user_avatar) {
+                userExists.user_avatar = googleProfile.user_avatar;
+            }
+
             userResponse = await userExists.save();
         } else {
             const newUser = UserService.newInstance({
