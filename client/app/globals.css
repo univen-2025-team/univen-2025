@@ -3,48 +3,48 @@
 :root {
     /* Simple Navy Blue Theme - 3 Levels */
     /* Dark Navy: #1e3a8a, Medium Navy: #3b82f6, Light Navy: #93c5fd */
-    
+
     --background: oklch(0.99 0.002 240);
-    --foreground: oklch(0.30 0.10 250);
+    --foreground: oklch(0.3 0.1 250);
     --card: oklch(1 0 0);
-    --card-foreground: oklch(0.30 0.10 250);
+    --card-foreground: oklch(0.3 0.1 250);
     --popover: oklch(1 0 0);
-    --popover-foreground: oklch(0.30 0.10 250);
-    
+    --popover-foreground: oklch(0.3 0.1 250);
+
     /* Primary: Dark Navy #1e3a8a */
     --primary: oklch(0.42 0.15 260);
     --primary-foreground: oklch(1 0 0);
-    
+
     /* Secondary: Light Navy #93c5fd */
-    --secondary: oklch(0.80 0.08 250);
-    --secondary-foreground: oklch(0.30 0.10 250);
-    
+    --secondary: oklch(0.8 0.08 250);
+    --secondary-foreground: oklch(0.3 0.1 250);
+
     /* Muted: Very light blue */
     --muted: oklch(0.96 0.01 250);
     --muted-foreground: oklch(0.55 0.08 250);
-    
+
     /* Accent: Medium Navy #3b82f6 */
     --accent: oklch(0.62 0.18 255);
     --accent-foreground: oklch(1 0 0);
-    
+
     /* Destructive: Red for errors */
     --destructive: oklch(0.56 0.22 25);
     --destructive-foreground: oklch(1 0 0);
-    
+
     /* Borders & Inputs */
     --border: oklch(0.88 0.01 250);
     --input: oklch(0.96 0.01 250);
     --ring: oklch(0.62 0.18 255);
-    
+
     /* Charts: 3 Navy levels */
     --chart-1: oklch(0.42 0.15 260);
     --chart-2: oklch(0.62 0.18 255);
-    --chart-3: oklch(0.80 0.08 250);
+    --chart-3: oklch(0.8 0.08 250);
     --chart-4: oklch(0.55 0.08 250);
     --chart-5: oklch(0.35 0.12 258);
-    
+
     --radius: 0.625rem;
-    
+
     /* Sidebar: Light background with navy accent */
     --sidebar: oklch(0.99 0.002 240);
     --sidebar-foreground: oklch(0.42 0.15 260);
@@ -54,7 +54,7 @@
     --sidebar-accent-foreground: oklch(0.42 0.15 260);
     --sidebar-border: oklch(0.88 0.01 250);
     --sidebar-ring: oklch(0.62 0.18 255);
-    
+
     /* Semantic colors - Using navy shades */
     /* Success: Medium Navy (positive) */
     --success: oklch(0.62 0.18 255);
@@ -63,51 +63,51 @@
     --error: oklch(0.56 0.22 25);
     --error-foreground: oklch(1 0 0);
     /* Warning: Light Navy */
-    --warning: oklch(0.80 0.08 250);
-    --warning-foreground: oklch(0.30 0.10 250);
+    --warning: oklch(0.8 0.08 250);
+    --warning-foreground: oklch(0.3 0.1 250);
 }
 
 .dark {
     /* Dark Mode - Navy Blue Theme */
-    --background: oklch(0.20 0.08 255);
+    --background: oklch(0.2 0.08 255);
     --foreground: oklch(0.95 0.01 240);
     --card: oklch(0.25 0.09 258);
     --card-foreground: oklch(0.95 0.01 240);
     --popover: oklch(0.22 0.08 256);
     --popover-foreground: oklch(0.95 0.01 240);
-    
+
     /* Primary: Medium Navy (lighter for dark mode) */
     --primary: oklch(0.62 0.18 255);
     --primary-foreground: oklch(0.98 0 0);
-    
+
     /* Secondary: Dark blue-gray */
-    --secondary: oklch(0.35 0.10 255);
+    --secondary: oklch(0.35 0.1 255);
     --secondary-foreground: oklch(0.95 0.01 240);
-    
+
     /* Muted: Dark navy */
     --muted: oklch(0.28 0.09 258);
-    --muted-foreground: oklch(0.70 0.05 250);
-    
+    --muted-foreground: oklch(0.7 0.05 250);
+
     /* Accent: Light Navy */
-    --accent: oklch(0.80 0.08 250);
-    --accent-foreground: oklch(0.20 0.08 255);
-    
+    --accent: oklch(0.8 0.08 250);
+    --accent-foreground: oklch(0.2 0.08 255);
+
     /* Destructive: Red */
     --destructive: oklch(0.58 0.24 25);
     --destructive-foreground: oklch(0.98 0 0);
-    
+
     /* Borders & Inputs */
-    --border: oklch(0.35 0.10 255);
+    --border: oklch(0.35 0.1 255);
     --input: oklch(0.28 0.09 258);
     --ring: oklch(0.62 0.18 255);
-    
+
     /* Charts: 3 Navy levels */
     --chart-1: oklch(0.62 0.18 255);
-    --chart-2: oklch(0.80 0.08 250);
+    --chart-2: oklch(0.8 0.08 250);
     --chart-3: oklch(0.42 0.15 260);
     --chart-4: oklch(0.55 0.08 250);
-    --chart-5: oklch(0.70 0.12 253);
-    
+    --chart-5: oklch(0.7 0.12 253);
+
     /* Sidebar: Deep navy background */
     --sidebar: oklch(0.22 0.08 256);
     --sidebar-foreground: oklch(0.92 0.01 240);
@@ -115,9 +115,9 @@
     --sidebar-primary-foreground: oklch(0.98 0 0);
     --sidebar-accent: oklch(0.28 0.09 258);
     --sidebar-accent-foreground: oklch(0.88 0.01 240);
-    --sidebar-border: oklch(0.35 0.10 255);
+    --sidebar-border: oklch(0.35 0.1 255);
     --sidebar-ring: oklch(0.62 0.18 255);
-    
+
     /* Semantic colors - Navy shades */
     /* Success: Medium Navy */
     --success: oklch(0.62 0.18 255);
@@ -126,8 +126,8 @@
     --error: oklch(0.58 0.24 25);
     --error-foreground: oklch(0.98 0 0);
     /* Warning: Light Navy */
-    --warning: oklch(0.80 0.08 250);
-    --warning-foreground: oklch(0.20 0.08 255);
+    --warning: oklch(0.8 0.08 250);
+    --warning-foreground: oklch(0.2 0.08 255);
 }
 
 @theme inline {
@@ -225,7 +225,7 @@
     .hover\:text-primary-solid:hover {
         color: oklch(var(--primary) / 0.9);
     }
-    
+
     /* Accent colors (Purple) */
     .bg-accent-solid {
         background-color: oklch(var(--accent));
@@ -239,7 +239,7 @@
     .hover\:bg-accent-solid:hover {
         background-color: oklch(var(--accent) / 0.9);
     }
-    
+
     /* Light variations */
     .bg-primary-light {
         background-color: oklch(var(--primary) / 0.1);
@@ -250,7 +250,7 @@
     .hover\:bg-primary-light:hover {
         background-color: oklch(var(--primary) / 0.15);
     }
-    
+
     /* Button styles */
     .btn-primary {
         background-color: oklch(var(--primary));
@@ -259,13 +259,13 @@
     .btn-primary:hover {
         background-color: oklch(var(--primary) / 0.9);
     }
-    
+
     /* Loading spinner */
     .spinner-primary {
         border-color: oklch(var(--primary) / 0.2);
         border-top-color: oklch(var(--primary));
     }
-    
+
     /* Success colors (Stock increase, positive status) */
     .text-success {
         color: oklch(var(--success));
@@ -282,7 +282,7 @@
     .hover\:bg-success:hover {
         background-color: oklch(var(--success) / 0.9);
     }
-    
+
     /* Error colors (Stock decrease, negative status) */
     .text-error {
         color: oklch(var(--error));
@@ -299,7 +299,7 @@
     .hover\:bg-error:hover {
         background-color: oklch(var(--error) / 0.9);
     }
-    
+
     /* Warning colors (Neutral/pending status) */
     .text-warning {
         color: oklch(var(--warning));
@@ -316,4 +316,91 @@
     .hover\:bg-warning:hover {
         background-color: oklch(var(--warning) / 0.9);
     }
+}
+
+/* Global Animations */
+@keyframes blob {
+    0% {
+        transform: translate(0px, 0px) scale(1);
+    }
+    33% {
+        transform: translate(30px, -50px) scale(1.1);
+    }
+    66% {
+        transform: translate(-20px, 20px) scale(0.9);
+    }
+    100% {
+        transform: translate(0px, 0px) scale(1);
+    }
+}
+
+@keyframes fade-in-down {
+    0% {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes scale-in {
+    0% {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes slide-in {
+    0% {
+        opacity: 0;
+        transform: translateX(20px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes fade-in {
+    0% {
+        opacity: 0;
+    }
+    100% {
+        opacity: 1;
+    }
+}
+
+/* Animation utility classes */
+.animate-blob {
+    animation: blob 7s infinite;
+}
+
+.animation-delay-2000 {
+    animation-delay: 2s;
+}
+
+.animation-delay-4000 {
+    animation-delay: 4s;
+}
+
+.animate-fade-in-down {
+    animation: fade-in-down 0.6s ease-out;
+}
+
+.animate-scale-in {
+    animation: scale-in 0.5s ease-out;
+}
+
+.animate-slide-in {
+    animation: slide-in 0.4s ease-out;
+}
+
+.animate-fade-in {
+    animation: fade-in 0.8s ease-out;
 }
