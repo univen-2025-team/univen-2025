@@ -1,21 +1,20 @@
 import { useCallback } from 'react';
 import { transactionApi } from '@/lib/api/transaction.api';
+import { getStockData } from '@/lib/api/market-cache';
 import type { StockHolding, PortfolioStats } from '../types';
 
 export function usePortfolioCalculator() {
     const calculatePortfolio = useCallback(
-        async (
-            userId: string
-        ): Promise<{ holdings: StockHolding[]; stats: PortfolioStats }> => {
+        async (userId: string): Promise<{ holdings: StockHolding[]; stats: PortfolioStats }> => {
             // Fetch all completed transactions
             const response = await transactionApi.getTransactionHistory(userId, {
                 filters: {
-                    status: 'COMPLETED',
+                    status: 'COMPLETED'
                 },
                 pagination: {
                     page: 1,
-                    limit: 1000, // Get all transactions
-                },
+                    limit: 1000 // Get all transactions
+                }
             });
 
             // Calculate holdings by stock code
@@ -40,7 +39,7 @@ export function usePortfolioCalculator() {
                         quantity: 0,
                         total_buy: 0,
                         total_sell: 0,
-                        buy_count: 0,
+                        buy_count: 0
                     });
                 }
 
@@ -56,6 +55,33 @@ export function usePortfolioCalculator() {
                 }
             });
 
+            // Get stock symbols that have positive quantity
+            const stockCodes: string[] = [];
+            for (const [stock_code, data] of stockMap.entries()) {
+                if (data.quantity > 0) {
+                    stockCodes.push(stock_code);
+                }
+            }
+
+            // Fetch real-time prices for all stocks in parallel
+            const pricePromises = stockCodes.map(async (symbol) => {
+                try {
+                    const stockData = await getStockData(symbol);
+                    return { symbol, price: stockData?.price ?? null };
+                } catch (error) {
+                    console.error(`Failed to fetch price for ${symbol}:`, error);
+                    return { symbol, price: null };
+                }
+            });
+
+            const priceResults = await Promise.all(pricePromises);
+            const priceMap = new Map<string, number>();
+            priceResults.forEach(({ symbol, price }) => {
+                if (price !== null) {
+                    priceMap.set(symbol, price);
+                }
+            });
+
             // Convert to holdings array (only stocks with quantity > 0)
             const holdingsList: StockHolding[] = [];
             let totalInvested = 0;
@@ -68,8 +94,8 @@ export function usePortfolioCalculator() {
                         (data.quantity + (data.total_sell / data.total_buy) * data.quantity);
                     const total_invested = data.quantity * avg_buy_price;
 
-                    // For now, use avg_buy_price as current_price (should fetch from market API)
-                    const current_price = avg_buy_price * 1.05; // Simulate 5% gain for demo
+                    // Use real-time price from market API, fallback to avg_buy_price if not available
+                    const current_price = priceMap.get(stock_code) ?? avg_buy_price;
                     const current_value = data.quantity * current_price;
                     const profit_loss = current_value - total_invested;
                     const profit_loss_percent = (profit_loss / total_invested) * 100;
@@ -83,7 +109,7 @@ export function usePortfolioCalculator() {
                         total_invested,
                         current_value,
                         profit_loss,
-                        profit_loss_percent,
+                        profit_loss_percent
                     });
 
                     totalInvested += total_invested;
@@ -92,8 +118,7 @@ export function usePortfolioCalculator() {
             }
 
             const totalProfit = currentValue - totalInvested;
-            const totalProfitPercent =
-                totalInvested > 0 ? (totalProfit / totalInvested) * 100 : 0;
+            const totalProfitPercent = totalInvested > 0 ? (totalProfit / totalInvested) * 100 : 0;
 
             return {
                 holdings: holdingsList,
@@ -101,8 +126,8 @@ export function usePortfolioCalculator() {
                     totalInvested,
                     currentValue,
                     totalProfit,
-                    totalProfitPercent,
-                },
+                    totalProfitPercent
+                }
             };
         },
         []
