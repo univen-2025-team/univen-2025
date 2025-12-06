@@ -171,11 +171,8 @@ export default function MarketPage() {
                 console.log('✅ Setting marketData:', marketDataFormatted);
                 setMarketData(marketDataFormatted);
 
-                // Set history if available
-                if (metadata.vn30History && Array.isArray(metadata.vn30History)) {
-                    console.log('✅ Setting indexHistory:', metadata.vn30History);
-                    setIndexHistory(metadata.vn30History);
-                }
+                // Note: indexHistory is set by fetchHistory() which handles the selected range
+                // Don't override it here to avoid race conditions
 
                 setError(null);
             } else {

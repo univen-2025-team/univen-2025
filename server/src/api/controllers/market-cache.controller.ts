@@ -26,8 +26,8 @@ export default class MarketCacheController {
             } else {
                 // Get latest data
                 marketData = await MarketCacheService.getLatestMarketData();
-                // Get history for chart (last 30 days)
-                vn30History = await MarketCacheService.getVN30History(30);
+                // Get intraday history for chart (default 10 minutes to match UI default)
+                vn30History = await MarketCacheService.getVN30Intraday(10);
             }
 
             if (!marketData) {
