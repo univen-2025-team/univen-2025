@@ -7,6 +7,7 @@ import StockDataModel from '@/models/stock-data.model.js';
 import { BadRequestErrorResponse, NotFoundErrorResponse } from '@/response/error.response.js';
 import { Types } from 'mongoose';
 import VNStockService from './vnstock.service.js';
+import { USER_INIT_BALANCE } from '@/configs/user.config.js';
 
 interface CreateTransactionPayload {
     userId: string;
@@ -403,10 +404,9 @@ export default class TransactionService {
     };
 
     /* -------------------- Get User Ranking by Profit -------------------- */
-    /* -------------------- Get User Ranking by Profit -------------------- */
     public static getUserRanking = async (limit: number = 10, offset: number = 0) => {
         try {
-            const INITIAL_BALANCE = 100000000; // 100M VND default balance
+            const INITIAL_BALANCE = USER_INIT_BALANCE;
 
             // 1. Get all users with their current cash balance
             const users = await userModel
