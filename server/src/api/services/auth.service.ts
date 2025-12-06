@@ -210,6 +210,41 @@ export default class AuthService {
     };
 
     /* ------------------------------------------------------ */
+    /*                    Login as Guest                      */
+    /* ------------------------------------------------------ */
+    public static loginAsGuest = async () => {
+        const guestId = crypto.randomUUID().replace(/-/g, '').substring(0, 8);
+        const randomDigits = Math.floor(100000 + Math.random() * 900000);
+
+        const guestEmail = `guest_${guestId}@univen.guest`;
+        const guestName = `Khách #${randomDigits}`;
+
+        // Guest expires after 90 days
+        const guestExpiresAt = new Date();
+        guestExpiresAt.setDate(guestExpiresAt.getDate() + 90);
+
+        const newUser = UserService.newInstance({
+            email: guestEmail,
+            password: '',
+            balance: USER_INIT_BALANCE,
+            user_fullName: guestName,
+            user_avatar: '',
+            user_role: await getRoleIdByName(RoleNames.USER),
+            user_gender: false,
+            isGuest: true,
+            guestExpiresAt
+        });
+
+        const userResponse = await newUser.save();
+
+        LoggerService.getInstance().info(
+            `Guest account created: ${guestEmail}, expires at ${guestExpiresAt.toISOString()}`
+        );
+
+        return await AuthService.generateAuth(userResponse);
+    };
+
+    /* ------------------------------------------------------ */
     /*                         Logout                         */
     /* ------------------------------------------------------ */
     public static logout = async (userId: string) => {

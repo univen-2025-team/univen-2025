@@ -43,6 +43,16 @@ export default class AuthController {
     };
 
     /* ------------------------------------------------------ */
+    /*                    Login as Guest                      */
+    /* ------------------------------------------------------ */
+    public static loginAsGuest: RequestHandler = async (req, res, _) => {
+        new OkResponse({
+            message: 'Login as guest success!',
+            metadata: await AuthService.loginAsGuest()
+        }).send(res);
+    };
+
+    /* ------------------------------------------------------ */
     /*                         Logout                         */
     /* ------------------------------------------------------ */
     public static logout: RequestHandler = async (req, res, _) => {

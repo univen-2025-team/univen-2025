@@ -21,6 +21,10 @@ const userSchema = new Schema<model.auth.UserSchema>(
         user_gender: { type: Boolean, default: false }, // true => male, false => female
         balance: { type: Number, default: 100000000 }, // default balance: 100,000,000 VND
 
+        /* ------------------------ Guest Account ------------------------ */
+        isGuest: { type: Boolean, default: false },
+        guestExpiresAt: { type: Date, default: undefined },
+
         /* ------------------------ Metadata ------------------------ */
         user_role: { type: ObjectId, required, ref: ROLE_MODEL_NAME },
         user_status: { type: String, enum: UserStatus, default: UserStatus.ACTIVE }

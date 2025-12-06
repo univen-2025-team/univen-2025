@@ -164,6 +164,41 @@ export const signUpUser = createAsyncThunk(
     }
 );
 
+export const loginAsGuest = createAsyncThunk(
+    'auth/loginAsGuest',
+    async (_, { rejectWithValue }) => {
+        try {
+            const response = await authApi.loginAsGuest();
+
+            // Save tokens to localStorage for direct access
+            if (typeof window !== 'undefined') {
+                localStorage.setItem('accessToken', response.token.accessToken);
+                localStorage.setItem('refreshToken', response.token.refreshToken);
+            }
+
+            return response;
+        } catch (error: unknown) {
+            console.error('Guest login error:', error);
+
+            let errorMessage = 'Đăng nhập khách thất bại. Vui lòng thử lại.';
+
+            if (error && typeof error === 'object' && 'response' in error) {
+                const axiosError = error as {
+                    response?: { data?: { message?: string; error?: string } };
+                };
+                errorMessage =
+                    axiosError.response?.data?.message ||
+                    axiosError.response?.data?.error ||
+                    errorMessage;
+            } else if (error instanceof Error) {
+                errorMessage = error.message;
+            }
+
+            return rejectWithValue(errorMessage);
+        }
+    }
+);
+
 export const logoutUser = createAsyncThunk('auth/logout', async () => {
     try {
         await authApi.logout();
@@ -272,6 +307,25 @@ const authSlice = createSlice({
                 state.error = null;
             })
             .addCase(signUpUser.rejected, (state, action) => {
+                state.isLoading = false;
+                state.error = action.payload as string;
+            });
+
+        // Login as Guest
+        builder
+            .addCase(loginAsGuest.pending, (state) => {
+                state.isLoading = true;
+                state.error = null;
+            })
+            .addCase(loginAsGuest.fulfilled, (state, action: PayloadAction<AuthResponse>) => {
+                state.isLoading = false;
+                state.user = action.payload.user;
+                state.accessToken = action.payload.token.accessToken;
+                state.refreshToken = action.payload.token.refreshToken;
+                state.isAuthenticated = true;
+                state.error = null;
+            })
+            .addCase(loginAsGuest.rejected, (state, action) => {
                 state.isLoading = false;
                 state.error = action.payload as string;
             });
