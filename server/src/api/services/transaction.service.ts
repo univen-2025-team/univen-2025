@@ -408,9 +408,9 @@ export default class TransactionService {
         try {
             const INITIAL_BALANCE = USER_INIT_BALANCE;
 
-            // 1. Get all users with their current cash balance
+            // 1. Get all users with their current cash balance (excluding guests)
             const users = await userModel
-                .find({})
+                .find({ $or: [{ isGuest: false }, { isGuest: { $exists: false } }] })
                 .select('_id user_fullName user_avatar balance')
                 .lean();
             const userMap = new Map(users.map((u) => [u._id.toString(), u]));
