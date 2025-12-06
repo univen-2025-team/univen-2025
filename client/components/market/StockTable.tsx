@@ -25,7 +25,7 @@ export default function StockTable({
     const router = useRouter();
 
     return (
-        <div className="bg-white rounded-xl shadow-lg p-3 sm:p-6">
+        <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 p-3 sm:p-6">
             {/* Header - Responsive */}
             <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 mb-4">
                 <h2 className="text-base sm:text-xl font-bold text-gray-900">

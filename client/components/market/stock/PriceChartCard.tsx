@@ -35,7 +35,7 @@ export default function PriceChartCard({
   onToggleRealtime,
 }: PriceChartCardProps) {
   return (
-    <div className="bg-white rounded-xl shadow-lg p-6">
+    <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 p-6">
       <div className="flex flex-col gap-4 mb-6">
         <div className="flex items-center justify-between">
           <h2 className="text-2xl font-bold text-gray-900 flex items-center">

@@ -113,7 +113,7 @@ export function MarketHeatmap({ stocks }: MarketHeatmapProps) {
 
     if (!stocks || stocks.length === 0) {
         return (
-            <div className="bg-white rounded-xl shadow-lg p-6">
+            <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 p-6">
                 <h3 className="text-lg font-bold text-gray-900 mb-4">Bản đồ nhiệt thị trường</h3>
                 <div className="h-96 flex items-center justify-center text-gray-500">
                     Chưa có dữ liệu
@@ -123,7 +123,7 @@ export function MarketHeatmap({ stocks }: MarketHeatmapProps) {
     }
 
     return (
-        <div className="bg-white rounded-xl shadow-lg p-6">
+        <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 p-6">
             <div className="mb-4">
                 <h3 className="text-lg font-bold text-gray-900 mb-2">Bản đồ nhiệt thị trường</h3>
                 <p className="text-sm text-gray-600 mb-3">

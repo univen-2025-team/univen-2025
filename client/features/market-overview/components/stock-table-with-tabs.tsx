@@ -50,7 +50,7 @@ export function StockTableWithTabs({
     };
 
     return (
-        <div className="bg-white rounded-xl shadow-lg p-6">
+        <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 p-6">
             {/* Filter Tabs */}
             <div className="flex items-center justify-between mb-6">
                 <div className="flex gap-2">
