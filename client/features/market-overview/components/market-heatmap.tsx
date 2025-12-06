@@ -94,7 +94,7 @@ export function MarketHeatmap({ stocks }: MarketHeatmapProps) {
                         <div className="text-xs text-gray-600 mb-2">{data.companyName}</div>
                     )}
                     <div className="text-sm">
-                        <div>Giá: {data.price.toLocaleString('vi-VN')} nghìn đồng</div>
+                        <div>Giá: {data.price.toLocaleString('vi-VN')} VND</div>
                         <div
                             className={data.changePercent >= 0 ? 'text-green-600' : 'text-red-600'}
                         >

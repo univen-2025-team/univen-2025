@@ -437,7 +437,7 @@ export default function MarketPage() {
             {/* Buy Stock Modal */}
             {buyStock && (
                 <Dialog open={isBuyModalOpen} onOpenChange={setIsBuyModalOpen}>
-                    <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                    <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
                         <BuyStockFeature
                             data={{
                                 symbol: buyStock.symbol,

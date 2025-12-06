@@ -121,7 +121,9 @@ export default function PortfolioPage() {
 
                         {!isLoading && holdings.length === 0 && <PortfolioEmpty />}
 
-                        {!isLoading && holdings.length > 0 && <HoldingsTable holdings={holdings} />}
+                        {!isLoading && holdings.length > 0 && (
+                            <HoldingsTable holdings={holdings} onRefresh={loadPortfolio} />
+                        )}
                     </div>
                 </div>
             </div>

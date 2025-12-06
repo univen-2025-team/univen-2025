@@ -195,7 +195,7 @@ export default function TopStocksChart({ stocks }: TopStocksChartProps) {
                         className="w-3 h-3 sm:w-4 sm:h-4 rounded"
                         style={{ background: 'linear-gradient(to right, #6366f1, #8b5cf6)' }}
                     ></div>
-                    <span>Giá (nghìn đồng)</span>
+                    <span>Giá (VND)</span>
                 </div>
             </div>
         </div>

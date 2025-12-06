@@ -120,7 +120,7 @@ export function StockSearch({
                             </div>
                             <div className="text-right ml-4">
                                 <div className="font-medium text-foreground">
-                                    {stock.price.toLocaleString('vi-VN')} nghìn đồng
+                                    {stock.price.toLocaleString('vi-VN')} VND
                                 </div>
                                 <div
                                     className={`text-sm font-medium ${getChangeColor(
