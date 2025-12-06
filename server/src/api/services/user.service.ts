@@ -37,15 +37,23 @@ export default class UserService {
 
     /* -------------------- Update profile -------------------- */
     public static updateProfile = async (id: string, data: UpdateProfileSchema) => {
-        const { user_email } = data;
+        const { user_email, ...rest } = data;
 
-        // Check email exist
-        const userExist = await userModel.findOne({ user_email, _id: { $ne: id } });
-        if (userExist) throw new BadRequestErrorResponse({ message: 'Email already exists!' });
+        // Check if email already exists (exclude current user)
+        if (user_email) {
+            const userExist = await userModel.findOne({ email: user_email, _id: { $ne: id } });
+            if (userExist) throw new BadRequestErrorResponse({ message: 'Email already exists!' });
+        }
+
+        // Build update data - map user_email to email for database
+        const updateData = {
+            ...rest,
+            ...(user_email && { email: user_email })
+        };
 
         // Update user
         const $set: commonTypes.object.ObjectAnyKeys = {};
-        get$SetNestedFromObject(data, $set);
+        get$SetNestedFromObject(updateData, $set);
 
         const updatedUser = await findOneAndUpdateUser({
             query: { _id: id },

@@ -74,7 +74,7 @@ export default function MarketPage() {
     const [buyStock, setBuyStock] = useState<StockData | null>(null);
     const [isBuyModalOpen, setIsBuyModalOpen] = useState(false);
     const [viewMode, setViewMode] = useState<'all' | 'watchlist'>('all');
-    const [historyRange, setHistoryRange] = useState('1M');
+    const [historyRange, setHistoryRange] = useState('10M');
 
     // Socket connection
     const {
@@ -94,6 +94,12 @@ export default function MarketPage() {
             let type = 'intraday'; // Always use intraday as requested
 
             switch (range) {
+                case '10M':
+                    limit = 10;
+                    break;
+                case '30M':
+                    limit = 30;
+                    break;
                 case '1H':
                     limit = 60;
                     break;
@@ -210,22 +216,32 @@ export default function MarketPage() {
                 setIndexHistory((prev) => {
                     // Format time to match historical data: "YYYY-MM-DD HH:MM:SS"
                     const now = new Date();
-                    const timeStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
-                    
+                    const timeStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(
+                        2,
+                        '0'
+                    )}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(
+                        2,
+                        '0'
+                    )}:${String(now.getMinutes()).padStart(2, '0')}:${String(
+                        now.getSeconds()
+                    ).padStart(2, '0')}`;
+
                     const newPoint = {
                         time: timeStr,
                         index: socketMarketData.vn30Index.index
                     };
-                    
+
                     // Check if this time already exists (avoid duplicates)
-                    const existingIndex = prev.findIndex(p => p.time.substring(0, 16) === timeStr.substring(0, 16));
+                    const existingIndex = prev.findIndex(
+                        (p) => p.time.substring(0, 16) === timeStr.substring(0, 16)
+                    );
                     if (existingIndex >= 0) {
                         // Update existing point
                         const updated = [...prev];
                         updated[existingIndex] = newPoint;
                         return updated;
                     }
-                    
+
                     // Append new point without slicing to preserve historical data
                     return [...prev, newPoint];
                 });
