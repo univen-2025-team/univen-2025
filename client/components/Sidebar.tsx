@@ -79,7 +79,7 @@ export function Sidebar() {
             <aside
                 className={`fixed lg:static inset-y-0 left-0 z-40 ${
                     isCollapsed ? 'w-20' : 'w-64'
-                } bg-white border-r border-gray-200 transform transition-all duration-300 ease-in-out ${
+                } bg-white/95 backdrop-blur-sm border-r border-gray-200 shadow-xl transform transition-all duration-300 ease-in-out ${
                     isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
                 }`}
             >
