@@ -1,167 +1,16 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
-import { Trophy, TrendingUp, Target, Award, Star, Zap, Shield, Crown } from 'lucide-react';
-
 import { formatCurrency } from '@/features/history/utils/format';
-import { transactionApi } from '@/lib/api/transaction.api';
-import type { UserRankingItem } from '@/lib/types/transactions';
-import { useProfile } from '@/lib/hooks/useProfile';
 import LoadingSpinner from '@/components/dashboard/LoadingSpinner';
 import PageHeader from '@/components/dashboard/PageHeader';
-
-interface Badge {
-    id: string;
-    name: string;
-    description: string;
-    icon: React.ReactNode;
-    earned: boolean;
-    earnedDate?: string;
-    progress?: number;
-    requirement: string;
-}
+import { useBadges } from '@/lib/hooks/useBadges';
 
 export default function BadgesPage() {
-    const [userRanking, setUserRanking] = useState<UserRankingItem | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
+    const { badges, earnedBadges, unearnedBadges, userRanking, isLoading, error } = useBadges();
 
-    // Fetch profile data
-    const { profile, isLoading: isLoadingProfile } = useProfile(true);
-
-    // Fetch user ranking
-    const fetchUserRanking = useCallback(async () => {
-        if (!profile?._id) return;
-
-        setIsLoading(true);
-        setError(null);
-
-        try {
-            // Fetch full ranking list and find current user by name
-            const data = await transactionApi.getUserRanking({
-                page: 1,
-                limit: 100 // Get enough users to find current user
-            });
-
-            // Find current user in ranking by full name
-            const currentUser = data.ranking.find(
-                (item) => item.user_fullName === profile.user_fullName
-            );
-
-            setUserRanking(currentUser || null);
-        } catch (err) {
-            const message =
-                err instanceof Error
-                    ? err.message
-                    : 'Không thể tải thông tin xếp hạng.';
-            setError(message);
-        } finally {
-            setIsLoading(false);
-        }
-    }, [profile?._id, profile?.user_fullName]);
-
-    useEffect(() => {
-        if (profile?._id) {
-            fetchUserRanking();
-        }
-    }, [profile?._id, fetchUserRanking]);
-
-    // Calculate badges based on user data
-    const badges: Badge[] = [
-        {
-            id: 'first-trade',
-            name: 'Giao dịch đầu tiên',
-            description: 'Hoàn thành giao dịch đầu tiên của bạn',
-            icon: <Target className="w-8 h-8" />,
-            earned: true,
-            earnedDate: new Date().toISOString(),
-            requirement: 'Thực hiện 1 giao dịch'
-        },
-        {
-            id: 'top-10',
-            name: 'Top 10',
-            description: 'Lọt vào top 10 bảng xếp hạng',
-            icon: <Trophy className="w-8 h-8" />,
-            earned: userRanking ? userRanking.rank <= 10 : false,
-            earnedDate: userRanking && userRanking.rank <= 10 ? new Date().toISOString() : undefined,
-            requirement: 'Đạt hạng 10 trở lên'
-        },
-        {
-            id: 'top-3',
-            name: 'Top 3',
-            description: 'Lọt vào top 3 bảng xếp hạng',
-            icon: <Crown className="w-8 h-8" />,
-            earned: userRanking ? userRanking.rank <= 3 : false,
-            earnedDate: userRanking && userRanking.rank <= 3 ? new Date().toISOString() : undefined,
-            requirement: 'Đạt hạng 3 trở lên'
-        },
-        {
-            id: 'champion',
-            name: 'Quán quân',
-            description: 'Đứng đầu bảng xếp hạng',
-            icon: <Crown className="w-8 h-8" />,
-            earned: userRanking ? userRanking.rank === 1 : false,
-            earnedDate: userRanking && userRanking.rank === 1 ? new Date().toISOString() : undefined,
-            requirement: 'Đạt hạng 1'
-        },
-        {
-            id: 'profit-1m',
-            name: 'Triệu phú',
-            description: 'Đạt lợi nhuận 1 triệu đồng',
-            icon: <TrendingUp className="w-8 h-8" />,
-            earned: userRanking ? userRanking.total_profit >= 1000000 : false,
-            earnedDate: userRanking && userRanking.total_profit >= 1000000 ? new Date().toISOString() : undefined,
-            progress: userRanking ? Math.min((userRanking.total_profit / 1000000) * 100, 100) : 0,
-            requirement: 'Lợi nhuận ≥ 1,000,000 ₫'
-        },
-        {
-            id: 'profit-10m',
-            name: 'Cao thủ',
-            description: 'Đạt lợi nhuận 10 triệu đồng',
-            icon: <Star className="w-8 h-8" />,
-            earned: userRanking ? userRanking.total_profit >= 10000000 : false,
-            earnedDate: userRanking && userRanking.total_profit >= 10000000 ? new Date().toISOString() : undefined,
-            progress: userRanking ? Math.min((userRanking.total_profit / 10000000) * 100, 100) : 0,
-            requirement: 'Lợi nhuận ≥ 10,000,000 ₫'
-        },
-        {
-            id: 'profit-100m',
-            name: 'Huyền thoại',
-            description: 'Đạt lợi nhuận 100 triệu đồng',
-            icon: <Award className="w-8 h-8" />,
-            earned: userRanking ? userRanking.total_profit >= 100000000 : false,
-            earnedDate: userRanking && userRanking.total_profit >= 100000000 ? new Date().toISOString() : undefined,
-            progress: userRanking ? Math.min((userRanking.total_profit / 100000000) * 100, 100) : 0,
-            requirement: 'Lợi nhuận ≥ 100,000,000 ₫'
-        },
-        {
-            id: 'active-trader',
-            name: 'Nhà giao dịch năng động',
-            description: 'Thực hiện nhiều giao dịch',
-            icon: <Zap className="w-8 h-8" />,
-            earned: true,
-            earnedDate: new Date().toISOString(),
-            requirement: 'Thực hiện 10+ giao dịch'
-        },
-        {
-            id: 'risk-master',
-            name: 'Quản trị rủi ro',
-            description: 'Quản lý danh mục hiệu quả',
-            icon: <Shield className="w-8 h-8" />,
-            earned: profile?.balance ? profile.balance > 0 : false,
-            earnedDate: profile && profile.balance > 0 ? new Date().toISOString() : undefined,
-            requirement: 'Duy trì số dư dương'
-        }
-    ];
-
-    const earnedBadges = badges.filter((b) => b.earned);
-    const unearnedBadges = badges.filter((b) => !b.earned);
-
-    if (isLoadingProfile || isLoading) {
+    if (isLoading) {
         return <LoadingSpinner />;
     }
-
-    const userName = profile?.user_fullName || 'Admin';
 
     return (
         <div className="space-y-6">
@@ -341,7 +190,9 @@ export default function BadgesPage() {
                                         {badge.progress !== undefined && badge.progress > 0 && (
                                             <div className="mt-2">
                                                 <div className="flex items-center justify-between text-xs mb-1">
-                                                    <span style={{ color: 'var(--muted-foreground)' }}>
+                                                    <span
+                                                        style={{ color: 'var(--muted-foreground)' }}
+                                                    >
                                                         Tiến độ
                                                     </span>
                                                     <span style={{ color: 'var(--foreground)' }}>

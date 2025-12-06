@@ -10,6 +10,8 @@ import { appConfig } from '@/config';
 import { sidebarRoutes, isRouteActive } from '@/config/sidebar.config';
 import { getMediaUrl } from '@/lib/api/media.api';
 
+import { useBadges } from '@/lib/hooks/useBadges';
+
 export function Sidebar() {
     const [isOpen, setIsOpen] = useState(false);
     const [isCollapsed, setIsCollapsed] = useState(false);
@@ -19,6 +21,9 @@ export function Sidebar() {
     const router = useRouter();
     const dispatch = useAppDispatch();
     const user = useAppSelector(selectUser);
+
+    // Get badge count
+    const { earnedBadges, unearnedBadges } = useBadges();
 
     const handleLogout = async () => {
         await dispatch(logoutUser());
@@ -124,6 +129,13 @@ export function Sidebar() {
                         <div className="space-y-1">
                             {sidebarRoutes.map((route) => {
                                 const active = isRouteActive(route, pathname);
+                                // Use dynamic badge count for 'Huy hiệu' route (unearned badges)
+                                const isBadgesRoute = route.path === '/badges';
+                                const badgeCount = isBadgesRoute
+                                    ? unearnedBadges.length > 0
+                                        ? unearnedBadges.length.toString()
+                                        : undefined
+                                    : route.badge;
 
                                 return (
                                     <Link
@@ -154,15 +166,19 @@ export function Sidebar() {
                                                 <span className="flex-1 font-medium">
                                                     {route.name}
                                                 </span>
-                                                {route.badge && (
+                                                {badgeCount && (
                                                     <span
                                                         className={`ml-2 px-2 py-0.5 rounded-full text-xs font-semibold ${
-                                                            active
+                                                            isBadgesRoute
+                                                                ? active
+                                                                    ? 'bg-white text-red-500'
+                                                                    : 'bg-red-500 text-white'
+                                                                : active
                                                                 ? 'bg-white text-primary'
                                                                 : 'bg-primary text-white'
                                                         }`}
                                                     >
-                                                        {route.badge}
+                                                        {badgeCount}
                                                     </span>
                                                 )}
                                             </>

@@ -403,37 +403,59 @@ export default class TransactionService {
     };
 
     /* -------------------- Get User Ranking by Profit -------------------- */
+    /* -------------------- Get User Ranking by Profit -------------------- */
     public static getUserRanking = async (limit: number = 10, offset: number = 0) => {
         try {
-            // Get all users with their transactions
-            const users = await userModel.find({}).select('_id user_fullName user_avatar').lean();
+            const INITIAL_BALANCE = 100000000; // 100M VND default balance
 
-            // Get both BUY and SELL completed transactions
-            const allTransactions = await stockTransactionModel
-                .find({
-                    transaction_type: { $in: ['BUY', 'SELL'] },
-                    transaction_status: 'COMPLETED'
-                })
+            // 1. Get all users with their current cash balance
+            const users = await userModel
+                .find({})
+                .select('_id user_fullName user_avatar balance')
                 .lean();
+            const userMap = new Map(users.map((u) => [u._id.toString(), u]));
 
-            console.log(
-                `[Ranking] Found ${allTransactions.length} transactions from ${users.length} users`
-            );
+            // 2. Calculate net holdings for all users using aggregation
+            // Group by User + Stock to get net quantity (BUY - SELL)
+            const holdings = await stockTransactionModel.aggregate([
+                {
+                    $match: {
+                        transaction_status: 'COMPLETED',
+                        transaction_type: { $in: ['BUY', 'SELL'] }
+                    }
+                },
+                {
+                    $group: {
+                        _id: {
+                            user_id: '$user_id',
+                            stock_code: '$stock_code'
+                        },
+                        net_quantity: {
+                            $sum: {
+                                $cond: [
+                                    { $eq: ['$transaction_type', 'BUY'] },
+                                    '$quantity',
+                                    { $multiply: ['$quantity', -1] }
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    $match: {
+                        net_quantity: { $gt: 0 } // Only keep positive holdings
+                    }
+                }
+            ]);
 
-            // Separate BUY and SELL transactions
-            const buyTransactions = allTransactions.filter((t) => t.transaction_type === 'BUY');
-            const sellTransactions = allTransactions.filter((t) => t.transaction_type === 'SELL');
+            // 3. Get unique stock codes to fetch prices
+            const uniqueStockCodes = [...new Set(holdings.map((h) => h._id.stock_code))];
+            console.log(`[Ranking] Found ${uniqueStockCodes.length} active stocks held by users`);
 
-            // Get unique stock codes and fetch latest prices once from stock_data
-            const uniqueStockCodes = [...new Set(allTransactions.map((t) => t.stock_code))];
-            console.log(`[Ranking] Unique stock codes: ${uniqueStockCodes.join(', ')}`);
-
+            // 4. Fetch latest stock prices
             const stockPriceMap = new Map<string, number>();
-
-            // Fetch latest stock prices from stock_data collection
             for (const stockCode of uniqueStockCodes) {
                 try {
-                    // Get the latest stock data for this symbol (sorted by date descending)
                     const stockData = await StockDataModel.findOne({
                         symbol: stockCode.toUpperCase()
                     })
@@ -441,140 +463,59 @@ export default class TransactionService {
                         .lean();
 
                     if (stockData && stockData.price) {
-                        // Multiply by 1000 to convert from database format to actual price
+                        // Convert from thousand VND to VND if needed (assuming API returns thousands)
+                        // Based on previous context, we multiply by 1000
                         const actualPrice = stockData.price * 1000;
                         stockPriceMap.set(stockCode, actualPrice);
-                        console.log(
-                            `[Ranking] Got price for ${stockCode} from stock_data: ${stockData.price} → ${actualPrice} (date: ${stockData.date})`
-                        );
-                    } else {
-                        console.warn(`[Ranking] No stock_data found for ${stockCode}`);
                     }
                 } catch (error) {
-                    console.warn(`[Ranking] Error fetching stock_data for ${stockCode}:`, error);
+                    console.warn(`[Ranking] Error fetching price for ${stockCode}`, error);
                 }
             }
 
-            console.log(
-                `[Ranking] Final stockPriceMap size: ${stockPriceMap.size}/${uniqueStockCodes.length}`
-            );
-
-            // Calculate profit for each user
+            // 5. Calculate Total Asset Value and Profit for each user
             const userProfits = users.map((user) => {
-                const userBuyTransactions = buyTransactions.filter(
-                    (t) => t.user_id.toString() === user._id.toString()
-                );
-                const userSellTransactions = sellTransactions.filter(
-                    (t) => t.user_id.toString() === user._id.toString()
-                );
+                const userId = user._id.toString();
 
-                let totalProfit = 0;
-                const stockDetails: any[] = [];
+                // Calculate value of stock holdings
+                let stockHoldingsValue = 0;
+                const userHoldings = holdings.filter((h) => h._id.user_id.toString() === userId);
 
-                // Calculate profit for BUY transactions
-                // Profit = (current_price - buy_price) * quantity
-                for (const transaction of userBuyTransactions) {
-                    const currentPrice = stockPriceMap.get(transaction.stock_code);
-
-                    if (currentPrice !== undefined) {
-                        const buyPrice = transaction.price_per_unit;
-                        const quantity = transaction.quantity;
-
-                        const profit = (currentPrice - buyPrice) * quantity;
-                        totalProfit += profit;
-
-                        stockDetails.push({
-                            stock_code: transaction.stock_code,
-                            stock_name: transaction.stock_name,
-                            quantity: quantity,
-                            transaction_type: 'BUY',
-                            purchase_price: buyPrice,
-                            current_price: currentPrice,
-                            profit_per_share: currentPrice - buyPrice,
-                            total_profit: profit
-                        });
-                    } else {
-                        stockDetails.push({
-                            stock_code: transaction.stock_code,
-                            stock_name: transaction.stock_name,
-                            quantity: transaction.quantity,
-                            transaction_type: 'BUY',
-                            purchase_price: transaction.price_per_unit,
-                            current_price: null,
-                            profit_per_share: null,
-                            total_profit: null,
-                            note: 'Current price data not available in stock_data'
-                        });
-                    }
+                for (const holding of userHoldings) {
+                    const price = stockPriceMap.get(holding._id.stock_code) || 0;
+                    stockHoldingsValue += holding.net_quantity * price;
                 }
 
-                // Calculate profit for SELL transactions
-                // Profit = (sell_price - current_price) * quantity
-                for (const transaction of userSellTransactions) {
-                    const currentPrice = stockPriceMap.get(transaction.stock_code);
+                // Total Asset Value = Cash Balance + Stock Holdings Value
+                const totalAssetValue = user.balance + stockHoldingsValue;
 
-                    if (currentPrice !== undefined) {
-                        const sellPrice = transaction.price_per_unit;
-                        const quantity = transaction.quantity;
-
-                        const profit = (sellPrice - currentPrice) * quantity;
-                        totalProfit += profit;
-
-                        stockDetails.push({
-                            stock_code: transaction.stock_code,
-                            stock_name: transaction.stock_name,
-                            quantity: quantity,
-                            transaction_type: 'SELL',
-                            sell_price: sellPrice,
-                            current_price: currentPrice,
-                            profit_per_share: sellPrice - currentPrice,
-                            total_profit: profit
-                        });
-                    } else {
-                        stockDetails.push({
-                            stock_code: transaction.stock_code,
-                            stock_name: transaction.stock_name,
-                            quantity: transaction.quantity,
-                            transaction_type: 'SELL',
-                            sell_price: transaction.price_per_unit,
-                            current_price: null,
-                            profit_per_share: null,
-                            total_profit: null,
-                            note: 'Current price data not available in stock_data'
-                        });
-                    }
-                }
+                // Total Profit = Total Asset Value - Initial Balance
+                const totalProfit = totalAssetValue - INITIAL_BALANCE;
 
                 return {
                     user_id: user._id,
                     user_fullName: user.user_fullName,
                     user_avatar: user.user_avatar,
                     total_profit: totalProfit,
-                    buy_count: userBuyTransactions.length,
-                    sell_count: userSellTransactions.length,
-                    total_transactions: userBuyTransactions.length + userSellTransactions.length,
-                    stock_details: stockDetails
+                    // Optional: include details if needed for debugging or future use
+                    current_balance: user.balance,
+                    stock_value: stockHoldingsValue
                 };
             });
 
-            // Sort by total profit (descending)
+            // 6. Sort and Paginate
             const rankedUsers = userProfits
                 .sort((a, b) => b.total_profit - a.total_profit)
                 .slice(offset, offset + limit)
                 .map((user, index) => ({
                     rank: offset + index + 1,
-                    ...user
+                    user_fullName: user.user_fullName,
+                    total_profit: user.total_profit
+                    // Additional fields can be added if the interface supports them
                 }));
 
-            // Calculate total for pagination
             const totalUsers = userProfits.length;
             const totalPages = Math.ceil(totalUsers / limit);
-
-            console.log(
-                `[Ranking] Returning ${rankedUsers.length} users (page ${
-                    Math.floor(offset / limit) + 1
-                })`
-            );
 
             return {
                 ranking: rankedUsers,
