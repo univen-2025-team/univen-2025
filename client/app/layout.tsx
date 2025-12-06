@@ -14,6 +14,11 @@ export const metadata: Metadata = {
         title: appConfig.seo.title,
         description: appConfig.seo.description,
         images: [appConfig.seo.ogImage]
+    },
+    icons: {
+        icon: '/stockie-logo.png',
+        shortcut: '/stockie-logo.png',
+        apple: '/stockie-logo.png'
     }
 };
 

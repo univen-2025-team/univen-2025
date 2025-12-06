@@ -118,19 +118,24 @@ export default class AuthService {
 
         if (!user.password)
             throw new ForbiddenErrorResponse({
-                message: 'This account already uses Google login!'
+                message: 'This account already uses Google login!',
+                hideOnProduction: false
             });
 
         /* ------------------ Check password ------------------ */
         const hashPassword = user.password;
         if (!hashPassword)
             throw new ForbiddenErrorResponse({
-                message: 'Username or password is not correct!'
+                message: 'Username or password is not correct!',
+                hideOnProduction: false
             });
 
         const isPasswordMatch = await bcrypt.compare(password, hashPassword);
         if (!isPasswordMatch)
-            throw new ForbiddenErrorResponse({ message: 'Username or password is not correct!' });
+            throw new ForbiddenErrorResponse({
+                message: 'Username or password is not correct!',
+                hideOnProduction: false
+            });
 
         /* --------- Generate token and send response --------- */
         return await AuthService.generateAuth(user);
