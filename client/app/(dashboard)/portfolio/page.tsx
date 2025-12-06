@@ -8,7 +8,6 @@ import { selectUser, logoutUser } from '@/lib/store/authSlice';
 import { useAppSelector, useAppDispatch } from '@/lib/store/hooks';
 import LoadingSpinner from '@/components/dashboard/LoadingSpinner';
 import PageHeader from '@/components/dashboard/PageHeader';
-import QuickActions from '@/components/dashboard/QuickActions';
 import { PortfolioSummary } from '@/components/portfolio/portfolio-summary';
 import { PortfolioEmpty } from '@/components/portfolio/portfolio-empty';
 import { PortfolioLoading } from '@/components/portfolio/portfolio-loading';
@@ -28,7 +27,7 @@ export default function PortfolioPage() {
         totalInvested: 0,
         currentValue: 0,
         totalProfit: 0,
-        totalProfitPercent: 0,
+        totalProfitPercent: 0
     });
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -96,15 +95,24 @@ export default function PortfolioPage() {
             {/* Portfolio Summary */}
             <PortfolioSummary balance={profile.balance} stats={stats} />
 
-            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 gap-6">
                 {/* Holdings Table */}
-                <div className="lg:col-span-3">
+                <div>
                     <div
                         className="rounded-xl shadow-sm overflow-hidden"
-                        style={{ backgroundColor: 'var(--card)', border: '1px solid var(--border)' }}
+                        style={{
+                            backgroundColor: 'var(--card)',
+                            border: '1px solid var(--border)'
+                        }}
                     >
-                        <div className="px-6 py-4" style={{ borderBottom: '1px solid var(--border)' }}>
-                            <h2 className="text-xl font-bold" style={{ color: 'var(--foreground)' }}>
+                        <div
+                            className="px-6 py-4"
+                            style={{ borderBottom: '1px solid var(--border)' }}
+                        >
+                            <h2
+                                className="text-xl font-bold"
+                                style={{ color: 'var(--foreground)' }}
+                            >
                                 Cổ phiếu đang có ({holdings.length})
                             </h2>
                         </div>
@@ -115,11 +123,6 @@ export default function PortfolioPage() {
 
                         {!isLoading && holdings.length > 0 && <HoldingsTable holdings={holdings} />}
                     </div>
-                </div>
-
-                {/* Quick Actions */}
-                <div className="lg:col-span-1">
-                    <QuickActions onLogout={handleLogout} />
                 </div>
             </div>
         </div>
