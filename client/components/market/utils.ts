@@ -3,9 +3,8 @@ export const formatNumber = (num: number): string => {
 };
 
 export const formatPrice = (price: number): string => {
-    // Stock prices in Vietnam are quoted in thousands VND (nghìn đồng)
-    // Example: 142.8 means 142,800 VND or 142.8 nghìn đồng
-    return formatNumber(price) + ' nghìn đồng';
+    // Prices are now in actual VND (API returns real VND values)
+    return formatNumber(price) + ' VND';
 };
 
 export const formatLargeNumber = (num: number): string => {

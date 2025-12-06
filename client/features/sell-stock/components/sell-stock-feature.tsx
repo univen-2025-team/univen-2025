@@ -65,19 +65,15 @@ export function SellStockFeature({ data, onBack, onSuccess }: SellStockFeaturePr
     const [transactionResult, setTransactionResult] = useState<TransactionResult | null>(null);
     const [quantityError, setQuantityError] = useState<string | null>(null);
 
-    // ==================== CONSTANTS ====================
-    // Stock prices in VN are in thousands VND (e.g., 142.8 = 142,800 VND)
-    const PRICE_UNIT = 1000;
-
     // ==================== COMPUTED VALUES ====================
     const availableBalance =
         (typeof profile?.balance === 'number' ? profile.balance : null) ??
         (typeof reduxUser?.balance === 'number' ? reduxUser.balance : null) ??
         0;
 
-    // Prices in VND (multiply by 1000)
-    const priceInVND = data.currentPrice * PRICE_UNIT;
-    const avgBuyPriceInVND = data.averageBuyPrice * PRICE_UNIT;
+    // Prices are already in VND from market API
+    const priceInVND = data.currentPrice;
+    const avgBuyPriceInVND = data.averageBuyPrice;
 
     const estimatedRevenue = useMemo(() => {
         if (!quantity || quantity <= 0) return 0;
@@ -176,7 +172,7 @@ export function SellStockFeature({ data, onBack, onSuccess }: SellStockFeaturePr
             stock_code: data.symbol,
             stock_name: data.companyName || data.symbol,
             quantity,
-            price_per_unit: priceInVND, // Convert to VND (multiply by 1000)
+            price_per_unit: priceInVND, // Already in VND (API returns real VND values)
             transaction_type: 'SELL' as const,
             notes: notes || `${orderType} - Bán ${quantity} CP`
         };
@@ -307,7 +303,7 @@ export function SellStockFeature({ data, onBack, onSuccess }: SellStockFeaturePr
                                             Giá bán/CP
                                         </span>
                                         <span className="font-semibold">
-                                            {data.currentPrice.toLocaleString('vi-VN')} VND
+                                            {priceInVND.toLocaleString('vi-VN')} VND
                                         </span>
                                     </div>
                                     <div className="flex items-center justify-between">
@@ -430,7 +426,7 @@ export function SellStockFeature({ data, onBack, onSuccess }: SellStockFeaturePr
                         Bán {data.symbol}
                     </h1>
                     <p className="text-sm text-muted-foreground">
-                        Giá hiện tại: {data.currentPrice.toLocaleString('vi-VN')} VND
+                        Giá hiện tại: {priceInVND.toLocaleString('vi-VN')} VND
                     </p>
                 </div>
             </div>
@@ -448,7 +444,7 @@ export function SellStockFeature({ data, onBack, onSuccess }: SellStockFeaturePr
                         <div className="text-right">
                             <p className="text-sm text-muted-foreground">Giá mua TB</p>
                             <p className="text-xl font-bold">
-                                {data.averageBuyPrice.toLocaleString('vi-VN')} VND
+                                {avgBuyPriceInVND.toLocaleString('vi-VN')} VND
                             </p>
                         </div>
                         <div className="text-right">
@@ -588,7 +584,7 @@ export function SellStockFeature({ data, onBack, onSuccess }: SellStockFeaturePr
                                         Giá bán/CP
                                     </span>
                                     <span className="font-semibold text-base">
-                                        {data.currentPrice.toLocaleString('vi-VN')} VND
+                                        {priceInVND.toLocaleString('vi-VN')} VND
                                     </span>
                                 </div>
                                 <div className="flex items-center justify-between pt-2 border-t">

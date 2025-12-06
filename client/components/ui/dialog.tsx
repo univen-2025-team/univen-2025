@@ -95,7 +95,7 @@ export interface DialogContentProps extends React.HTMLAttributes<HTMLDivElement>
 export function DialogContent({ className, children, ...props }: DialogContentProps) {
     return (
         <div
-            className={cn('w-full max-w-2xl rounded-2xl bg-white shadow-2xl', className)}
+            className={cn('w-full max-w-4xl rounded-2xl bg-white shadow-2xl', className)}
             onClick={(e) => e.stopPropagation()}
             {...props}
         >

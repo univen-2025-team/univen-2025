@@ -53,18 +53,14 @@ export function BuyStockFeature({ data, onBack }: BuyStockFeatureProps) {
     const [transactionResult, setTransactionResult] = useState<TransactionResult | null>(null);
     const [balanceWarning, setBalanceWarning] = useState<string | null>(null);
 
-    // ==================== CONSTANTS ====================
-    // Stock prices in VN are in thousands VND (e.g., 142.8 = 142,800 VND)
-    const PRICE_UNIT = 1000;
-
     // ==================== COMPUTED VALUES ====================
     const availableBalance =
         (typeof profile?.balance === 'number' ? profile.balance : null) ??
         (typeof reduxUser?.balance === 'number' ? reduxUser.balance : null) ??
         0;
 
-    // Price in VND (multiply by 1000)
-    const priceInVND = data.currentPrice * PRICE_UNIT;
+    // Price from Market API is now in actual VND (API returns real VND values)
+    const priceInVND = data.currentPrice;
 
     const quantity = Number(formValues.quantity || 0);
     const estimatedCost = useMemo(() => {
@@ -86,7 +82,7 @@ export function BuyStockFeature({ data, onBack }: BuyStockFeatureProps) {
 
         if (isNewStock) {
             setStepIndex(data.currentStepIndex || 0);
-            setFormValues({ _lastSymbol: data.symbol });
+            setFormValues({ _lastSymbol: data.symbol, orderType: 'Market Order' });
             setPlacingOrder(false);
             setTransactionResult(null);
             setBalanceWarning(null);
@@ -150,7 +146,7 @@ export function BuyStockFeature({ data, onBack }: BuyStockFeatureProps) {
             // Nếu đang ở màn kết quả, reset về bước đầu
             setTransactionResult(null);
             setStepIndex(0);
-            setFormValues({});
+            setFormValues({ orderType: 'Market Order' });
             return;
         }
         setStepIndex((prev) => Math.max(prev - 1, 0));
@@ -195,7 +191,7 @@ export function BuyStockFeature({ data, onBack }: BuyStockFeatureProps) {
             stock_code: data.symbol,
             stock_name: data.symbol,
             quantity,
-            price_per_unit: priceInVND, // Convert to VND (multiply by 1000)
+            price_per_unit: priceInVND, // Already in VND (API returns real VND values)
             transaction_type: 'BUY' as const,
             notes: formValues.notes || `${formValues.orderType || 'Market'} order`
         };
@@ -326,7 +322,7 @@ export function BuyStockFeature({ data, onBack }: BuyStockFeatureProps) {
                                             Giá/CP
                                         </span>
                                         <span className="font-semibold">
-                                            {data.currentPrice.toLocaleString('vi-VN')} VND
+                                            {priceInVND.toLocaleString('vi-VN')} VND
                                         </span>
                                     </div>
                                     <div className="flex items-center justify-between">
@@ -408,7 +404,7 @@ export function BuyStockFeature({ data, onBack }: BuyStockFeatureProps) {
                                 onClick={() => {
                                     setTransactionResult(null);
                                     setStepIndex(0);
-                                    setFormValues({});
+                                    setFormValues({ orderType: 'Market Order' });
                                 }}
                                 className="flex-1"
                                 variant={transactionResult.success ? 'default' : 'outline'}
@@ -439,7 +435,7 @@ export function BuyStockFeature({ data, onBack }: BuyStockFeatureProps) {
                 <div>
                     <h1 className="text-2xl font-bold">Mua {data.symbol}</h1>
                     <p className="text-sm text-muted-foreground">
-                        Giá hiện tại: {data.currentPrice.toLocaleString('vi-VN')} VND
+                        Giá hiện tại: {priceInVND.toLocaleString('vi-VN')} VND
                     </p>
                 </div>
             </div>
@@ -562,7 +558,7 @@ export function BuyStockFeature({ data, onBack }: BuyStockFeatureProps) {
                                                 Giá/CP
                                             </span>
                                             <span className="font-semibold text-base">
-                                                {data.currentPrice.toLocaleString('vi-VN')} VND
+                                                {priceInVND.toLocaleString('vi-VN')} VND
                                             </span>
                                         </div>
                                         <div className="flex items-center justify-between pt-2 border-t">

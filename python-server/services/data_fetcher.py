@@ -98,6 +98,11 @@ COMPANY_NAMES = {
     'VPB': 'Ngân hàng TMCP Việt Nam Thịnh Vượng',
 }
 
+# Price multiplier: vnstock API returns prices in thousands VND (e.g. 107 = 107,000 VND)
+# Multiply by 1000 to get actual VND values
+# NOTE: Do NOT apply to VN30 index - it's measured in points, not price
+PRICE_MULTIPLIER = 1000
+
 
 class VNStockDataFetcher:
     """Fetch market data from vnstock3 API."""
@@ -155,23 +160,24 @@ class VNStockDataFetcher:
                 for item in intraday_data:
                     prices.append({
                         'time': item['time'],
-                        'price': item['close'],
+                        'price': round(item['close'] * PRICE_MULTIPLIER, 0),  # Convert to VND
                         'volume': item['volume']
                     })
 
+            # Multiply all price fields by PRICE_MULTIPLIER to convert from thousands VND to actual VND
             return {
                 'symbol': symbol,
                 'companyName': COMPANY_NAMES.get(symbol, 'Công ty Cổ phần'),
-                'price': round(price, 2),
-                'prices': prices, # Add the prices array
-                'change': round(change, 2),
+                'price': round(price * PRICE_MULTIPLIER, 0),
+                'prices': prices, # Add the prices array (already in VND)
+                'change': round(change * PRICE_MULTIPLIER, 0),
                 'changePercent': round(change_percent, 2),
                 'volume': int(latest['volume']),
-                'high': round(float(latest['high']), 2),
-                'low': round(float(latest['low']), 2),
-                'open': round(float(latest['open']), 2),
-                'close': round(price, 2),
-                'previousClose': round(previous_close, 2),
+                'high': round(float(latest['high']) * PRICE_MULTIPLIER, 0),
+                'low': round(float(latest['low']) * PRICE_MULTIPLIER, 0),
+                'open': round(float(latest['open']) * PRICE_MULTIPLIER, 0),
+                'close': round(price * PRICE_MULTIPLIER, 0),
+                'previousClose': round(previous_close * PRICE_MULTIPLIER, 0),
                 'date': actual_date,
             }
             
