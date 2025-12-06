@@ -64,7 +64,10 @@ export function VN30IndexCard({
 
             <div className="space-y-3">
                 <div>
-                    <div className="text-4xl font-bold text-gray-900">{formatNumber(index)}</div>
+                    <div className="text-4xl font-bold text-gray-900">
+                        {formatNumber(index)}{' '}
+                        <span className="text-xl font-medium text-gray-500">điểm</span>
+                    </div>
                     <div
                         className={`flex items-center gap-2 mt-2 text-lg font-semibold ${getChangeColor()}`}
                     >
@@ -73,7 +76,7 @@ export function VN30IndexCard({
                         {!isPositive && !isNegative && <Minus className="h-5 w-5" />}
                         <span>
                             {change > 0 ? '+' : ''}
-                            {formatNumber(change)} ({changePercent > 0 ? '+' : ''}
+                            {formatNumber(change)} điểm ({changePercent > 0 ? '+' : ''}
                             {changePercent}%)
                         </span>
                     </div>

@@ -26,6 +26,7 @@ export interface MarketData {
     stocks: StockData[];
     topGainers: StockData[];
     topLosers: StockData[];
+    topStocksByPrice?: StockData[];
     total: number;
     timestamp: string;
 }

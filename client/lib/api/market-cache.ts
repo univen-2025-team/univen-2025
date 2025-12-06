@@ -32,6 +32,14 @@ export interface CachedMarketData {
         changePercent: number;
         volume: number;
     }>;
+    topStocksByPrice?: Array<{
+        symbol: string;
+        companyName: string;
+        price: number;
+        change: number;
+        changePercent: number;
+        volume: number;
+    }>;
     totalStocks: number;
 }
 

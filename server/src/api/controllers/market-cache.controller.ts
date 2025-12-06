@@ -18,7 +18,8 @@ export default class MarketCacheController {
             const { date } = req.query;
 
             let marketData;
-            let vn30History = [];
+            let vn30History: any[] = [];
+            let topStocksByPrice: any[] = [];
 
             if (date) {
                 // Get data for specific date
@@ -28,6 +29,8 @@ export default class MarketCacheController {
                 marketData = await MarketCacheService.getLatestMarketData();
                 // Get intraday history for chart (default 10 minutes to match UI default)
                 vn30History = await MarketCacheService.getVN30Intraday(10);
+                // Get top 10 stocks by price from latest trading day
+                topStocksByPrice = await MarketCacheService.getTopStocksByPrice(10);
             }
 
             if (!marketData) {
@@ -42,6 +45,7 @@ export default class MarketCacheController {
                 metadata: {
                     ...marketData,
                     vn30History,
+                    topStocksByPrice,
                     isCached: true
                 }
             }).send(res);

@@ -300,11 +300,18 @@ class VNStockDataFetcher:
             # Get actual date from first stock (all should have same date)
             actual_date = stocks[0]['date'] if stocks else datetime.now().strftime('%Y-%m-%d')
             
-            # Calculate top gainers and losers
-            sorted_by_change = sorted(stocks, key=lambda x: x['changePercent'], reverse=True)
-            top_gainers = sorted_by_change[:5]
-            top_losers = sorted_by_change[-5:]
-            top_losers.reverse()
+            # Calculate top gainers and losers (exclude VN30 index)
+            stocks_only = [s for s in stocks if s.get('symbol') != 'VN30']
+            
+            # Top gainers: only stocks with positive change
+            gainers = [s for s in stocks_only if s.get('changePercent', 0) > 0]
+            gainers_sorted = sorted(gainers, key=lambda x: x['changePercent'], reverse=True)
+            top_gainers = gainers_sorted[:5]
+            
+            # Top losers: only stocks with negative change
+            losers = [s for s in stocks_only if s.get('changePercent', 0) < 0]
+            losers_sorted = sorted(losers, key=lambda x: x['changePercent'])  # Ascending (most negative first)
+            top_losers = losers_sorted[:5]
             
             return {
                 'date': actual_date,

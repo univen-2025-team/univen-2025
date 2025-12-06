@@ -133,6 +133,39 @@ export default class MarketCacheService {
     }
 
     /**
+     * Get top stocks by price from the latest trading day
+     * Returns top N stocks sorted by price descending
+     */
+    static async getTopStocksByPrice(limit: number = 10): Promise<StockDataLean[]> {
+        try {
+            // Get all stocks from the latest date, sorted by price descending
+            const results = await StockDataModel.find({ symbol: { $ne: 'VN30' } }) // Exclude VN30 index
+                .sort({ date: -1, price: -1 })
+                .limit(limit * 2) // Get extra to filter by latest date
+                .lean()
+                .exec();
+
+            if (results.length === 0) {
+                return [];
+            }
+
+            // Get the latest date from results
+            const latestDate = (results[0] as any).date;
+
+            // Filter to only include stocks from the latest date and sort by price
+            const latestDateStocks = (results as StockDataLean[])
+                .filter((s) => s.date === latestDate)
+                .sort((a, b) => b.price - a.price)
+                .slice(0, limit);
+
+            return latestDateStocks;
+        } catch (error) {
+            this.logger.error('Error getting top stocks by price', error as any);
+            return [];
+        }
+    }
+
+    /**
      * Get list of available cached dates
      */
     static async getAvailableDates(limit: number = 30): Promise<string[]> {
@@ -177,57 +210,97 @@ export default class MarketCacheService {
             return [];
         }
     }
-
     /**
      * Get VN30 Intraday data
+     * Logic:
+     * 1. Get current time (HH:MM in Vietnam timezone)
+     * 2. Filter data from latest trading day that is <= current time HH:MM
+     * 3. Return the last N points from filtered data
+     *
+     * Example: Current time is 11:00, limit is 10
+     * - Returns data points from ~10:50 to 11:00 of latest trading day
+     * - If no data exists before 11:00 (e.g., market hasn't opened), returns empty
      */
-
     static async getVN30Intraday(limit: number = 300): Promise<any[]> {
         try {
             // Query StockDataModel for VN30 symbol
-            // This leverages the unified storage where VN30 is treated as a stock
             const result = await StockDataModel.findOne({ symbol: 'VN30' })
                 .sort({ date: -1 }) // Get latest date
                 .lean()
                 .exec();
 
-            if (!result || !result.prices) {
+            if (!result || !result.prices || result.prices.length === 0) {
                 return [];
             }
 
-            // The prices array is already in chronological order (09:15 -> 15:00)
-            // We just need to map it to the expected format
+            const prices = result.prices as any[];
 
-            let prices = result.prices;
+            // Get current time in Vietnam timezone (UTC+7)
+            const now = new Date();
+            const vietnamTime = new Date(now.getTime() + 7 * 60 * 60 * 1000); // Add 7 hours for UTC+7
+            const currentHour = vietnamTime.getUTCHours();
+            const currentMinute = vietnamTime.getUTCMinutes();
 
-            // Filter by time duration (limit is treated as minutes)
-            if (limit > 0 && prices.length > 0) {
-                // Get the timestamp of the last data point
-                const lastPoint = prices[prices.length - 1];
-                // Handle "YYYY-MM-DD HH:MM:SS" format
-                const lastTime = new Date(lastPoint.time).getTime();
+            // Build current time string for comparison (HH:MM format)
+            const currentTimeStr = `${String(currentHour).padStart(2, '0')}:${String(
+                currentMinute
+            ).padStart(2, '0')}`;
 
-                if (!isNaN(lastTime)) {
-                    const durationMs = limit * 60 * 1000; // Convert minutes to ms
-                    const cutoffTime = lastTime - durationMs;
+            // Log first and last data points for debugging
+            const firstPrice = prices[0];
+            const lastPrice = prices[prices.length - 1];
+            this.logger.info(
+                `VN30 Intraday: currentTime=${currentTimeStr}, limit=${limit}, totalPrices=${prices.length}, dataDate=${result.date}`
+            );
+            this.logger.info(
+                `VN30 Intraday: firstDataTime=${firstPrice?.time}, lastDataTime=${lastPrice?.time}`
+            );
 
-                    prices = prices.filter((p: any) => {
-                        const pTime = new Date(p.time).getTime();
-                        return pTime >= cutoffTime;
-                    });
-                } else {
-                    // Fallback to slice if date parsing fails
-                    if (limit < prices.length) {
-                        prices = prices.slice(-limit);
-                    }
+            // Extract HH:MM from data points for comparison
+            const getTimeOnly = (timeStr: string) => {
+                // timeStr format: "YYYY-MM-DD HH:MM:SS"
+                if (timeStr.includes(' ')) {
+                    return timeStr.split(' ')[1].substring(0, 5); // Get "HH:MM"
                 }
+                return timeStr;
+            };
+
+            // Filter data that is BEFORE or AT current time HH:MM
+            // This ensures we NEVER return data from the future (relative to current time of day)
+            const dataBeforeOrAtCurrentTime = prices.filter((p: any) => {
+                const pTime = getTimeOnly(p.time);
+                return pTime <= currentTimeStr;
+            });
+
+            this.logger.info(
+                `VN30 Intraday: found ${dataBeforeOrAtCurrentTime.length} points before/at ${currentTimeStr}`
+            );
+
+            // Log sample of filtered data for debugging
+            if (dataBeforeOrAtCurrentTime.length > 0) {
+                const lastFiltered =
+                    dataBeforeOrAtCurrentTime[dataBeforeOrAtCurrentTime.length - 1];
+                this.logger.info(`VN30 Intraday: lastFilteredPoint time=${lastFiltered?.time}`);
             }
 
-            return prices.map((p: any) => ({
-                time: p.time,
-                index: p.close, // Use close price as index value
-                volume: p.volume
-            }));
+            // If we have data before current time, return the last N points
+            if (dataBeforeOrAtCurrentTime.length > 0) {
+                let resultPrices = dataBeforeOrAtCurrentTime;
+                if (limit > 0 && limit < dataBeforeOrAtCurrentTime.length) {
+                    resultPrices = dataBeforeOrAtCurrentTime.slice(-limit);
+                }
+
+                return resultPrices.map((p: any) => ({
+                    time: p.time,
+                    index: p.close,
+                    volume: p.volume
+                }));
+            }
+
+            // No data before current time (e.g., it's 8:00 AM and market opens at 9:15)
+            // Return empty - chart will show "no data" message
+            this.logger.info(`VN30 Intraday: no data before ${currentTimeStr}, returning empty`);
+            return [];
         } catch (error) {
             this.logger.error('Error getting VN30 intraday', error as any);
             return [];

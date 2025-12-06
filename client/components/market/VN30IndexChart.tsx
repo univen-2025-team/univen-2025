@@ -25,9 +25,11 @@ type VN30IndexChartProps = {
 export default function VN30IndexChart({
     data,
     onRangeChange,
-    selectedRange = '1M'
+    selectedRange = '10M'
 }: VN30IndexChartProps) {
     const ranges = [
+        { label: '10 phút', value: '10M' },
+        { label: '30 phút', value: '30M' },
         { label: '1H', value: '1H' },
         { label: '3H', value: '3H' },
         { label: '6H', value: '6H' },
@@ -87,6 +89,12 @@ export default function VN30IndexChart({
                                 stroke="#6b7280"
                                 style={{ fontSize: '12px' }}
                                 tickFormatter={(value) => {
+                                    // For intraday data (YYYY-MM-DD HH:MM:SS), show only HH:MM
+                                    if (value.includes(' ')) {
+                                        const timePart = value.split(' ')[1]; // Get "HH:MM:SS"
+                                        return timePart.substring(0, 5); // Return "HH:MM"
+                                    }
+                                    // For daily data (YYYY-MM-DD or MM/DD), keep as is or simplify
                                     if (value.includes('/'))
                                         return value.split('/').slice(0, 2).join('/');
                                     return value;
