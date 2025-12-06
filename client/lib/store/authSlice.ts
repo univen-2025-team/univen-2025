@@ -86,6 +86,13 @@ export const loginUser = createAsyncThunk(
             console.log('Login credentials:', credentials);
             const response = await authApi.login(credentials);
             console.log('Login response:', response);
+
+            // Save tokens to localStorage for direct access
+            if (typeof window !== 'undefined') {
+                localStorage.setItem('accessToken', response.token.accessToken);
+                localStorage.setItem('refreshToken', response.token.refreshToken);
+            }
+
             const profile = await fetchProfileSafely(response.token.accessToken);
             return {
                 ...response,
@@ -98,7 +105,9 @@ export const loginUser = createAsyncThunk(
             let errorMessage = 'Đăng nhập thất bại. Vui lòng kiểm tra lại email và mật khẩu.';
 
             if (error && typeof error === 'object' && 'response' in error) {
-                const axiosError = error as { response?: { data?: { message?: string; error?: string } } };
+                const axiosError = error as {
+                    response?: { data?: { message?: string; error?: string } };
+                };
                 errorMessage =
                     axiosError.response?.data?.message ||
                     axiosError.response?.data?.error ||
@@ -120,6 +129,13 @@ export const signUpUser = createAsyncThunk(
     ) => {
         try {
             const response = await authApi.signUp(data);
+
+            // Save tokens to localStorage for direct access
+            if (typeof window !== 'undefined') {
+                localStorage.setItem('accessToken', response.token.accessToken);
+                localStorage.setItem('refreshToken', response.token.refreshToken);
+            }
+
             const profile = await fetchProfileSafely(response.token.accessToken);
             return {
                 ...response,
@@ -132,7 +148,9 @@ export const signUpUser = createAsyncThunk(
             let errorMessage = 'Đăng ký thất bại. Vui lòng thử lại.';
 
             if (error && typeof error === 'object' && 'response' in error) {
-                const axiosError = error as { response?: { data?: { message?: string; error?: string } } };
+                const axiosError = error as {
+                    response?: { data?: { message?: string; error?: string } };
+                };
                 errorMessage =
                     axiosError.response?.data?.message ||
                     axiosError.response?.data?.error ||
@@ -153,6 +171,13 @@ export const logoutUser = createAsyncThunk('auth/logout', async () => {
         // Continue with logout even if API call fails
         console.error('Logout API error:', error);
     }
+
+    // Remove tokens from localStorage
+    if (typeof window !== 'undefined') {
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+    }
+
     return;
 });
 
@@ -169,7 +194,9 @@ export const getCurrentUser = createAsyncThunk(
             let errorMessage = 'Không thể lấy thông tin người dùng.';
 
             if (error && typeof error === 'object' && 'response' in error) {
-                const axiosError = error as { response?: { data?: { message?: string; error?: string } } };
+                const axiosError = error as {
+                    response?: { data?: { message?: string; error?: string } };
+                };
                 errorMessage =
                     axiosError.response?.data?.message ||
                     axiosError.response?.data?.error ||
