@@ -257,12 +257,19 @@ export default function Chatbot() {
                     </div>
                 </div>
 
-                {/* RIGHT: Chatbot Panel (resizable width) - has its own scroll */}
+                {/* RIGHT: Chatbot Panel (resizable width) - full height with padding */}
                 <section
-                    className="overflow-y-auto bg-white"
-                    style={{ width: chatWidth, minWidth: MIN_CHAT_WIDTH, maxWidth: MAX_CHAT_WIDTH }}
+                    className="h-full flex flex-col bg-white"
+                    style={{
+                        width: chatWidth,
+                        minWidth: MIN_CHAT_WIDTH,
+                        maxWidth: MAX_CHAT_WIDTH,
+                        padding: '10px'
+                    }}
                 >
-                    <ChatInterface onUiEffects={handleUiEffects} />
+                    <div className="flex-1 overflow-hidden">
+                        <ChatInterface onUiEffects={handleUiEffects} />
+                    </div>
                 </section>
             </div>
         </div>
