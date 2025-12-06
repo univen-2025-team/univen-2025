@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, type FC } from 'react';
+import { useState, useMemo, type FC } from 'react';
 import { Loader2, Eye, TrendingDown } from 'lucide-react';
 
 import type { TransactionHistoryItem } from '@/lib/types/transactions';
@@ -22,6 +22,9 @@ interface HistoryTableProps {
     onRefresh?: () => void;
 }
 
+// Calculate holdings from transaction history
+type HoldingsMap = Map<string, { quantity: number; avgPrice: number; stockName: string }>;
+
 export const HistoryTable: FC<HistoryTableProps> = ({
     transactions,
     isLoading,
@@ -35,26 +38,60 @@ export const HistoryTable: FC<HistoryTableProps> = ({
     const [showSellModal, setShowSellModal] = useState(false);
     const [sellData, setSellData] = useState<SellStockData | null>(null);
 
+    // Calculate current holdings from all transactions
+    const holdings: HoldingsMap = useMemo(() => {
+        const map = new Map<
+            string,
+            { quantity: number; avgPrice: number; stockName: string; totalCost: number }
+        >();
+
+        // Process all completed transactions to calculate net holdings
+        for (const tx of transactions) {
+            if (tx.transaction_status !== 'COMPLETED') continue;
+
+            const stockCode = tx.stock_code;
+            const current = map.get(stockCode) || {
+                quantity: 0,
+                avgPrice: 0,
+                stockName: tx.stock_name,
+                totalCost: 0
+            };
+
+            if (tx.transaction_type === 'BUY') {
+                current.totalCost += tx.total_amount;
+                current.quantity += tx.quantity;
+            } else if (tx.transaction_type === 'SELL') {
+                current.quantity -= tx.quantity;
+            }
+
+            // Calculate average price from total cost / quantity
+            current.avgPrice = current.quantity > 0 ? current.totalCost / current.quantity : 0;
+            map.set(stockCode, current);
+        }
+
+        return map;
+    }, [transactions]);
+
     const handleViewDetail = (transaction: TransactionHistoryItem) => {
         setSelectedTransaction(transaction);
         setShowDetailModal(true);
     };
 
     const handleSell = (transaction: TransactionHistoryItem) => {
-        // Only allow selling for completed BUY transactions
-        if (
-            transaction.transaction_type !== 'BUY' ||
-            transaction.transaction_status !== 'COMPLETED'
-        ) {
+        // Get current holdings for this stock
+        const stockHoldings = holdings.get(transaction.stock_code);
+
+        // Only allow selling if user has holdings
+        if (!stockHoldings || stockHoldings.quantity <= 0) {
             return;
         }
 
         setSellData({
             symbol: transaction.stock_code,
             companyName: transaction.stock_name,
-            currentPrice: transaction.price_per_unit, // Will be updated with real-time price
-            holdingQuantity: transaction.quantity,
-            averageBuyPrice: transaction.price_per_unit
+            currentPrice: transaction.price_per_unit / 1000, // Convert back to thousands (UI format)
+            holdingQuantity: stockHoldings.quantity,
+            averageBuyPrice: stockHoldings.avgPrice / 1000 // Convert back to thousands (UI format)
         });
         setShowSellModal(true);
     };
@@ -129,9 +166,13 @@ export const HistoryTable: FC<HistoryTableProps> = ({
                                 const amountPrefix =
                                     transaction.transaction_type === 'SELL' ? '+' : '-';
                                 const timestamp = transaction.executed_at ?? transaction.createdAt;
+                                // Show sell button if user still has holdings of this stock
+                                const stockHoldings = holdings.get(transaction.stock_code);
                                 const canSell =
                                     transaction.transaction_type === 'BUY' &&
-                                    transaction.transaction_status === 'COMPLETED';
+                                    transaction.transaction_status === 'COMPLETED' &&
+                                    stockHoldings &&
+                                    stockHoldings.quantity > 0;
 
                                 return (
                                     <tr
@@ -221,9 +262,13 @@ export const HistoryTable: FC<HistoryTableProps> = ({
                             transaction.transaction_type === 'SELL' ? 'text-success' : 'text-error';
                         const amountPrefix = transaction.transaction_type === 'SELL' ? '+' : '-';
                         const timestamp = transaction.executed_at ?? transaction.createdAt;
+                        // Show sell button if user still has holdings of this stock
+                        const stockHoldings = holdings.get(transaction.stock_code);
                         const canSell =
                             transaction.transaction_type === 'BUY' &&
-                            transaction.transaction_status === 'COMPLETED';
+                            transaction.transaction_status === 'COMPLETED' &&
+                            stockHoldings &&
+                            stockHoldings.quantity > 0;
 
                         return (
                             <div
