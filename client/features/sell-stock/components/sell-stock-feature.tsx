@@ -76,12 +76,12 @@ export function SellStockFeature({ data, onBack, onSuccess }: SellStockFeaturePr
     const avgBuyPriceInVND = data.averageBuyPrice;
 
     const estimatedRevenue = useMemo(() => {
-        if (!quantity || quantity <= 0) return 0;
+        if (!quantity || quantity <= 0 || priceInVND <= 0) return 0;
         return quantity * priceInVND;
     }, [quantity, priceInVND]);
 
     const estimatedProfit = useMemo(() => {
-        if (!quantity || quantity <= 0) return 0;
+        if (!quantity || quantity <= 0 || priceInVND <= 0 || avgBuyPriceInVND <= 0) return 0;
         return (priceInVND - avgBuyPriceInVND) * quantity;
     }, [quantity, priceInVND, avgBuyPriceInVND]);
 
@@ -426,7 +426,11 @@ export function SellStockFeature({ data, onBack, onSuccess }: SellStockFeaturePr
                         Bán {data.symbol}
                     </h1>
                     <p className="text-sm text-muted-foreground">
-                        Giá hiện tại: {priceInVND.toLocaleString('vi-VN')} VND
+                        Giá hiện tại: {priceInVND > 0 ? (
+                            `${priceInVND.toLocaleString('vi-VN')} VND`
+                        ) : (
+                            'Đang tải giá...'
+                        )}
                     </p>
                 </div>
             </div>
@@ -646,7 +650,7 @@ export function SellStockFeature({ data, onBack, onSuccess }: SellStockFeaturePr
                             <Button
                                 type="button"
                                 variant="outline"
-                                className="sm:flex-1"
+                                className="sm:flex-1 hover:text-primary"
                                 disabled={placingOrder}
                                 onClick={handlePreviousStep}
                             >

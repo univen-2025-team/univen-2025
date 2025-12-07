@@ -128,21 +128,14 @@ export function StockDetailFeature({ data, onBack, onBuyClick }: StockDetailFeat
     [fallbackHistory, fallbackDetail.price]
   )
 
-  const [stockData, setStockData] = useState<FullStockDetailData | null>(fallbackDetail)
-  const [priceHistory, setPriceHistory] = useState<PriceHistoryPoint[]>(fallbackHistory)
-  const [technicalIndicators, setTechnicalIndicators] = useState<TechnicalIndicator | null>(
-    fallbackIndicators
-  )
+  // Không dùng fallback data làm initial state - chỉ fetch từ API
+  const [stockData, setStockData] = useState<FullStockDetailData | null>(null)
+  const [priceHistory, setPriceHistory] = useState<PriceHistoryPoint[]>([])
+  const [technicalIndicators, setTechnicalIndicators] = useState<TechnicalIndicator | null>(null)
   const [timeRange, setTimeRange] = useState<TimeRange>('1D')
   const [realtimeEnabled, setRealtimeEnabled] = useState(false)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-
-  useEffect(() => {
-    setStockData(fallbackDetail)
-    setPriceHistory(fallbackHistory)
-    setTechnicalIndicators(fallbackIndicators)
-  }, [fallbackDetail, fallbackHistory, fallbackIndicators])
 
   const {
     isConnected,
@@ -154,6 +147,9 @@ export function StockDetailFeature({ data, onBack, onBuyClick }: StockDetailFeat
   const loadStockDetail = useCallback(async () => {
     try {
       setLoading(true)
+      setError(null)
+      
+      // Luôn fetch từ API để lấy giá thật
       const result = await fetchStockDetail({ symbol, timeRange })
 
       if (result.success && result.data) {
@@ -162,15 +158,24 @@ export function StockDetailFeature({ data, onBack, onBuyClick }: StockDetailFeat
         setTechnicalIndicators(result.data.technicalIndicators)
         setError(null)
       } else {
-        setError(result?.error || result?.message || 'Failed to fetch stock data')
+        // Nếu API lỗi, dùng fallback data nhưng vẫn hiển thị warning
+        console.warn('⚠️ Failed to fetch stock data from API, using fallback:', result?.error || result?.message)
+        setStockData(fallbackDetail)
+        setPriceHistory(fallbackHistory)
+        setTechnicalIndicators(fallbackIndicators)
+        setError(null) // Không hiển thị error, dùng fallback
       }
     } catch (err) {
-      setError('Network error: Unable to fetch stock data')
       console.error('Error fetching stock data:', err)
+      // Nếu network error, dùng fallback data
+      setStockData(fallbackDetail)
+      setPriceHistory(fallbackHistory)
+      setTechnicalIndicators(fallbackIndicators)
+      setError(null) // Không hiển thị error, dùng fallback
     } finally {
       setLoading(false)
     }
-  }, [symbol, timeRange])
+  }, [symbol, timeRange, fallbackDetail, fallbackHistory, fallbackIndicators])
 
   useEffect(() => {
     if (!symbol) return

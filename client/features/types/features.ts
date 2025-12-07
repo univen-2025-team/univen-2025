@@ -2,14 +2,20 @@
 export type FeatureId =
   | 'MARKET_OVERVIEW'
   | 'BUY_STOCK'
+  | 'SELL_STOCK'
   | 'VIEW_NEWS'
   | 'VIEW_STOCK_DETAIL'
+  | 'CONFIRM_TRANSACTION'
+  | 'USER_PROFILE'
+  | 'TRANSACTION_HISTORY'
+  | 'TRANSACTION_STATS'
+  | 'RANKING'
 
 // Buy Flow Step
 export type BuyFlowStep = {
   id: string
   title: string
-  description: string
+  description?: string
   helperText?: string
   fields?: {
     type: 'text' | 'number' | 'select'
@@ -48,6 +54,55 @@ export type BuyStockData = {
   currentStepIndex: number
 }
 
+// Sell Stock Data (theo FE_TEST.md)
+export type SellStockData = {
+  symbol: string
+  currentPrice: number
+  availableQuantity: number // Số lượng cổ phiếu user đang có
+  steps: BuyFlowStep[]
+  currentStepIndex: number
+}
+
+// Transaction Data (theo FE_TEST.md)
+export type TransactionData = {
+  transactionId?: string
+  symbol: string
+  type: 'buy' | 'sell'
+  quantity: number
+  price: number
+  totalAmount: number
+  userId: string
+}
+
+// User Profile Data (theo FE_TEST.md)
+export type UserProfileData = {
+  userId: string
+  fullName?: string
+  email?: string
+  balance?: number
+  avatar?: string
+}
+
+// Transaction History Data (theo FE_TEST.md)
+export type TransactionHistoryData = {
+  userId: string
+  transactions: any[]
+}
+
+// Transaction Stats Data (theo FE_TEST.md)
+export type TransactionStatsData = {
+  userId: string
+  totalProfit?: number
+  totalTransactions?: number
+  winRate?: number
+}
+
+// Ranking Data (theo FE_TEST.md)
+export type RankingData = {
+  rankings: any[]
+  userRank?: number
+}
+
 // News Data
 export type NewsData = {
   symbol?: string
@@ -75,11 +130,17 @@ export type FeatureState = {
   activeFeature: FeatureId
   marketOverview: MarketOverviewData // luôn giữ để quay lại nhanh
   buyStock?: BuyStockData
+  sellStock?: SellStockData
   news?: NewsData
   stockDetail?: StockDetailData
+  transaction?: TransactionData
+  userProfile?: UserProfileData
+  transactionHistory?: TransactionHistoryData
+  transactionStats?: TransactionStatsData
+  ranking?: RankingData
 }
 
-// Feature Instruction
+// Feature Instruction (theo FE_TEST.md - đầy đủ 10 types)
 export type FeatureInstruction =
   | {
       type: 'SHOW_MARKET_OVERVIEW'
@@ -93,11 +154,40 @@ export type FeatureInstruction =
       }
     }
   | {
+      type: 'OPEN_SELL_STOCK'
+      payload: {
+        symbol: string
+        currentPrice: number
+        availableQuantity: number
+        steps: BuyFlowStep[]
+      }
+    }
+  | {
       type: 'OPEN_NEWS'
       payload: NewsData
     }
   | {
       type: 'OPEN_STOCK_DETAIL'
       payload: StockDetailData
+    }
+  | {
+      type: 'CONFIRM_TRANSACTION'
+      payload: TransactionData
+    }
+  | {
+      type: 'SHOW_USER_PROFILE'
+      payload: UserProfileData
+    }
+  | {
+      type: 'SHOW_TRANSACTION_HISTORY'
+      payload: TransactionHistoryData
+    }
+  | {
+      type: 'SHOW_TRANSACTION_STATS'
+      payload: TransactionStatsData
+    }
+  | {
+      type: 'SHOW_RANKING'
+      payload: RankingData
     }
 

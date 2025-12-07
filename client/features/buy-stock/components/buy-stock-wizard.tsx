@@ -23,12 +23,13 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Progress } from '@/components/ui/progress'
-import { ArrowLeft, CheckCircle2, XCircle } from 'lucide-react'
+import { ArrowLeft, CheckCircle2, XCircle, Loader2 } from 'lucide-react'
 import { BuyStockData } from '@/features/types/features'
 import { transactionApi } from '@/lib/api/transaction.api'
 import { useAppSelector } from '@/lib/store/hooks'
 import { selectUser } from '@/lib/store/authSlice'
 import { useProfile } from '@/lib/hooks/useProfile'
+import { getStockData } from '@/lib/api/market-cache'
 import type { TransactionMetadata } from '@/lib/types/transactions'
 
 type BuyStockWizardProps = {
@@ -53,12 +54,55 @@ export function BuyStockWizard({ data, onBack }: BuyStockWizardProps) {
   const [notes, setNotes] = useState('')
   const [placingOrder, setPlacingOrder] = useState(false)
   const [transactionResult, setTransactionResult] = useState<TransactionResult | null>(null)
+  
+  // Fetch giá từ API khi component mount
+  const [currentPrice, setCurrentPrice] = useState(data.currentPrice || 0)
+  const [isLoadingPrice, setIsLoadingPrice] = useState(data.currentPrice === 0)
+
+  // ==================== FETCH STOCK PRICE ====================
+  useEffect(() => {
+    const fetchPrice = async () => {
+      if (!data.symbol) return
+      
+      // Nếu đã có giá từ props và > 0, không cần fetch
+      if (data.currentPrice > 0) {
+        setCurrentPrice(data.currentPrice)
+        setIsLoadingPrice(false)
+        return
+      }
+
+      try {
+        setIsLoadingPrice(true)
+        // Đảm bảo symbol là uppercase
+        const symbol = data.symbol.toUpperCase().trim()
+        console.log(`💰 Fetching price for ${symbol}...`)
+        
+        const stockData = await getStockData(symbol)
+        if (stockData && stockData.price) {
+          console.log(`✅ Price fetched for ${symbol}: ${stockData.price}`)
+          setCurrentPrice(stockData.price)
+        } else {
+          console.warn(`⚠️ No price data for ${symbol}, using fallback`)
+          // Nếu không fetch được, giữ giá từ props hoặc 0
+          setCurrentPrice(data.currentPrice || 0)
+        }
+      } catch (error) {
+        console.error(`❌ Error fetching stock price for ${data.symbol}:`, error)
+        setCurrentPrice(data.currentPrice || 0)
+      } finally {
+        setIsLoadingPrice(false)
+      }
+    }
+
+    fetchPrice()
+  }, [data.symbol, data.currentPrice])
 
   // ==================== COMPUTED VALUES ====================
   const availableBalance = profile?.balance ?? reduxUser?.balance ?? 0
-  const totalCost = quantity * data.currentPrice
+  // Chỉ tính totalCost khi có giá và số lượng > 0
+  const totalCost = currentPrice > 0 && quantity > 0 ? quantity * currentPrice : 0
   const balanceAfter = availableBalance - totalCost
-  const insufficientBalance = totalCost > availableBalance
+  const insufficientBalance = totalCost > 0 && totalCost > availableBalance
 
   // ==================== EFFECTS ====================
   useEffect(() => {
@@ -108,7 +152,7 @@ export function BuyStockWizard({ data, onBack }: BuyStockWizardProps) {
       stock_code: data.symbol,
       stock_name: data.symbol,
       quantity,
-      price_per_unit: data.currentPrice,
+      price_per_unit: currentPrice,
       transaction_type: 'BUY' as const,
       notes: notes || `${orderType}`,
     }
@@ -246,7 +290,11 @@ export function BuyStockWizard({ data, onBack }: BuyStockWizardProps) {
         <div>
           <h1 className="text-2xl font-bold">Mua cổ phiếu {data.symbol}</h1>
           <p className="text-sm text-muted-foreground">
-            Giá hiện tại: {data.currentPrice.toLocaleString('vi-VN')} VND
+            Giá hiện tại: {isLoadingPrice ? (
+              <Loader2 className="h-4 w-4 animate-spin inline ml-2" />
+            ) : (
+              `${currentPrice.toLocaleString('vi-VN')} VND`
+            )}
           </p>
         </div>
       </div>
@@ -277,9 +325,21 @@ export function BuyStockWizard({ data, onBack }: BuyStockWizardProps) {
                       onChange={(e) => setQuantity(Number(e.target.value))}
                       className="h-11"
                     />
-                    {quantity > 0 && (
-                      <p className="text-sm text-muted-foreground">
-                        Tổng giá trị: <span className="font-semibold">{totalCost.toLocaleString('vi-VN')} VND</span>
+                    {quantity > 0 && currentPrice > 0 && (
+                      <div className="space-y-1">
+                        <p className="text-sm text-muted-foreground">
+                          Tổng giá trị: <span className="font-semibold text-primary">{totalCost.toLocaleString('vi-VN')} VND</span>
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          Số dư sau giao dịch: <span className={insufficientBalance ? 'text-error font-semibold' : 'text-success font-semibold'}>
+                            {balanceAfter.toLocaleString('vi-VN')} VND
+                          </span>
+                        </p>
+                      </div>
+                    )}
+                    {quantity > 0 && currentPrice === 0 && !isLoadingPrice && (
+                      <p className="text-sm text-warning">
+                        ⚠️ Không thể lấy giá hiện tại. Vui lòng thử lại sau.
                       </p>
                     )}
                   </div>
@@ -338,11 +398,35 @@ export function BuyStockWizard({ data, onBack }: BuyStockWizardProps) {
                       </div>
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Giá/CP</span>
-                        <span className="font-semibold">{data.currentPrice.toLocaleString('vi-VN')} VND</span>
+                        <span className="font-semibold">
+                          {isLoadingPrice ? (
+                            <Loader2 className="h-4 w-4 animate-spin inline" />
+                          ) : currentPrice > 0 ? (
+                            `${currentPrice.toLocaleString('vi-VN')} VND`
+                          ) : (
+                            'Đang tải...'
+                          )}
+                        </span>
                       </div>
                       <div className="flex justify-between border-t pt-2">
+                        <span className="text-muted-foreground font-semibold">Tổng tiền</span>
+                        <span className="font-bold text-lg text-primary">
+                          {isLoadingPrice || currentPrice === 0 ? (
+                            <Loader2 className="h-4 w-4 animate-spin inline" />
+                          ) : (
+                            `${totalCost.toLocaleString('vi-VN')} VND`
+                          )}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
                         <span className="text-muted-foreground">Loại lệnh</span>
                         <span className="font-semibold">{orderType}</span>
+                      </div>
+                      <div className="flex justify-between border-t pt-2">
+                        <span className="text-muted-foreground">Số dư sau giao dịch</span>
+                        <span className={`font-semibold ${insufficientBalance ? 'text-error' : 'text-success'}`}>
+                          {balanceAfter.toLocaleString('vi-VN')} VND
+                        </span>
                       </div>
                       {notes && (
                         <div className="flex justify-between">
@@ -361,7 +445,7 @@ export function BuyStockWizard({ data, onBack }: BuyStockWizardProps) {
                   <Button
                     type="button"
                     variant="outline"
-                    className="flex-1"
+                    className="flex-1 hover:text-primary"
                     disabled={placingOrder}
                     onClick={handlePrevious}
                   >
