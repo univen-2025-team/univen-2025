@@ -12,7 +12,8 @@ export function TradingChatPanel({
     isLoading,
     suggestions,
     onSendMessage,
-    onSuggestionClick
+    onSuggestionClick,
+    hasComponentLoaded
 }: TradingChatPanelProps) {
     return (
         <Card className="flex h-full flex-col gap-0 pt-0 pb-0 bg-linear-to-br from-card to-card/95 border border-border/50 shadow-lg backdrop-blur-sm">
@@ -24,9 +25,15 @@ export function TradingChatPanel({
             </CardHeader>
 
             <CardContent className="flex flex-1 flex-col overflow-hidden p-4 pb-3">
-                <ChatMessageList messages={messages} />
+                <ChatMessageList 
+                    messages={messages} 
+                    isLoading={isLoading} 
+                    hasComponentLoaded={hasComponentLoaded}
+                />
 
-                <SuggestionChips suggestions={suggestions} onClick={onSuggestionClick} />
+                {!isLoading && (
+                    <SuggestionChips suggestions={suggestions} onClick={onSuggestionClick} />
+                )}
 
                 <ChatInput onSend={onSendMessage} isLoading={isLoading} />
             </CardContent>

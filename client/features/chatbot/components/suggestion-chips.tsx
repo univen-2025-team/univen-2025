@@ -1,30 +1,44 @@
 'use client'
 
 import { Button } from '@/components/ui/button'
+import { SuggestionMessage } from './types'
 
 type SuggestionChipsProps = {
-  suggestions?: string[]
+  suggestions?: string[] | SuggestionMessage[]
   onClick?: (value: string) => void
 }
 
-const DEFAULT_SUGGESTIONS = ['Show market news', 'Buy AAPL', 'Explain P/E ratio', 'Top gainers today']
+const DEFAULT_SUGGESTIONS: SuggestionMessage[] = [
+  { text: 'Show market news', icon: '📰' },
+  { text: 'Buy AAPL', icon: '💹' },
+  { text: 'Explain P/E ratio', icon: '📊' },
+  { text: 'Top gainers today', icon: '📈' },
+]
 
 export function SuggestionChips({ suggestions, onClick }: SuggestionChipsProps) {
-  const chips = suggestions || DEFAULT_SUGGESTIONS
+  // Convert string[] to SuggestionMessage[] nếu cần
+  const chips: SuggestionMessage[] = suggestions
+    ? suggestions.map((s) =>
+        typeof s === 'string'
+          ? { text: s }
+          : s
+      )
+    : DEFAULT_SUGGESTIONS
 
   return (
     <div className="mb-3 space-y-2">
       <p className="text-xs text-muted-foreground">Quick actions:</p>
       <div className="flex flex-wrap gap-2">
-        {chips.map((chip) => (
+        {chips.map((chip, index) => (
           <Button
-            key={chip}
+            key={chip.text || index}
             variant="outline"
             size="sm"
-            className="text-xs"
-            onClick={() => onClick?.(chip)}
+            className="text-xs hover:text-primary"
+            onClick={() => onClick?.(chip.text)}
           >
-            {chip}
+            {chip.icon && <span className="mr-1">{chip.icon}</span>}
+            {chip.text}
           </Button>
         ))}
       </div>
