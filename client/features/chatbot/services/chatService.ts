@@ -2,7 +2,7 @@ import { FeatureInstruction } from '@/features/types/features'
 import { ChatMessage, SuggestionMessage } from '../components/types'
 import { userApi, type UserProfile } from '@/lib/api/user.api'
 import { getLatestMarketData, getStockData } from '@/lib/api/market-cache'
-import { API_URL } from '@/config/app'
+import { API_URL, NEXT_PUBLIC_AGENT_API } from '@/config/app'
 
 // Không cần import Groq SDK nữa, dùng fetch trực tiếp
 
@@ -52,15 +52,10 @@ export type ChatRequest = {
 // ============================================
 
 /**
- * Lấy AGENT_API từ biến môi trường - gọi trực tiếp đến server AI, không qua backend
+ * Lấy AGENT_API từ config - gọi trực tiếp đến server AI, không qua backend
  */
 export const getAgentApiUrl = (): string => {
-  if (typeof window !== 'undefined') {
-    // Client-side: chỉ dùng NEXT_PUBLIC_AGENT_API
-    return process.env.NEXT_PUBLIC_AGENT_API || ''
-  }
-  // Server-side: có thể dùng cả hai
-  return process.env.NEXT_PUBLIC_AGENT_API || process.env.AGENT_API || ''
+  return NEXT_PUBLIC_AGENT_API || 'https://adk-trading-chatbot.onrender.com' || ''
 }
 
 /**
