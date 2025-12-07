@@ -14,18 +14,24 @@ export function ChatInput({ onSend, isLoading }: ChatInputProps) {
   const [input, setInput] = useState('')
 
   const handleSend = () => {
-    if (!input.trim()) return
+    if (!input.trim() || isLoading) return
     onSend(input)
     setInput('')
+  }
+
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && !isLoading) {
+      handleSend()
+    }
   }
 
   return (
     <div className="flex gap-2 border-t border-border/30 pt-3">
       <Input
-        placeholder="Ask your AI advisor…"
+        placeholder={isLoading ? 'Đang xử lý...' : 'Ask your AI advisor…'}
         value={input}
         onChange={(e) => setInput(e.target.value)}
-        onKeyPress={(e) => e.key === 'Enter' && handleSend()}
+        onKeyPress={handleKeyPress}
         disabled={isLoading}
         className="flex-1 text-sm"
       />

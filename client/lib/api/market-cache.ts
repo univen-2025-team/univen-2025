@@ -113,26 +113,45 @@ export async function getMarketDataByDate(date: string): Promise<CachedMarketDat
  */
 export async function getStockData(symbol: string, date?: string): Promise<CachedStockData | null> {
     try {
+        // Đảm bảo symbol là uppercase (VCB, VNM, etc.)
+        const upperSymbol = symbol.toUpperCase().trim();
+        
         const url = date
-            ? `${API_BASE_URL}/market/stock/${symbol}?date=${date}`
-            : `${API_BASE_URL}/market/stock/${symbol}`;
+            ? `${API_BASE_URL}/market/stock/${upperSymbol}?date=${date}`
+            : `${API_BASE_URL}/market/stock/${upperSymbol}`;
+
+        console.log(`📊 Fetching stock data from: ${url}`);
 
         const response = await fetch(url, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json'
-            }
+            },
+            cache: 'no-store' // Đảm bảo không cache để lấy data mới nhất
         });
 
         if (!response.ok) {
-            console.error(`Failed to fetch stock data for ${symbol}:`, response.statusText);
+            const errorText = await response.text();
+            console.error(`❌ Failed to fetch stock data for ${upperSymbol}:`, {
+                status: response.status,
+                statusText: response.statusText,
+                error: errorText
+            });
             return null;
         }
 
         const result = await response.json();
-        return result.metadata || null;
+        
+        // Kiểm tra response format theo API_ENDPOINTS.md: { statusCode, message, metadata }
+        if (result.statusCode === 200 && result.metadata) {
+            console.log(`✅ Stock data fetched for ${upperSymbol}:`, result.metadata);
+            return result.metadata;
+        } else {
+            console.warn(`⚠️ Unexpected response format for ${upperSymbol}:`, result);
+            return result.metadata || null;
+        }
     } catch (error) {
-        console.error(`Error fetching stock data for ${symbol}:`, error);
+        console.error(`❌ Error fetching stock data for ${symbol}:`, error);
         return null;
     }
 }
