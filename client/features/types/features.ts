@@ -10,6 +10,7 @@ export type FeatureId =
   | 'TRANSACTION_HISTORY'
   | 'TRANSACTION_STATS'
   | 'RANKING'
+  | 'STOCK_SUGGESTIONS'
 
 // Buy Flow Step
 export type BuyFlowStep = {
@@ -125,6 +126,11 @@ export type StockDetailData = {
   intradayChart: { time: string; value: number }[]
 }
 
+// Stock Suggestions Data
+export type StockSuggestionsData = {
+  symbols: string[]
+}
+
 // Feature State
 export type FeatureState = {
   activeFeature: FeatureId
@@ -138,6 +144,7 @@ export type FeatureState = {
   transactionHistory?: TransactionHistoryData
   transactionStats?: TransactionStatsData
   ranking?: RankingData
+  stockSuggestions?: StockSuggestionsData
 }
 
 // Feature Instruction (theo FE_TEST.md - đầy đủ 10 types)
@@ -189,5 +196,9 @@ export type FeatureInstruction =
   | {
       type: 'SHOW_RANKING'
       payload: RankingData
+    }
+  | {
+      type: 'SHOW_STOCK_SUGGESTIONS'
+      payload: StockSuggestionsData
     }
 

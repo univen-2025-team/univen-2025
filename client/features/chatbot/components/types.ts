@@ -75,16 +75,19 @@ export type BuyStockData = {
   currentStepIndex: number
 }
 
+// News Item
+export type NewsItem = {
+  id: string
+  title: string
+  source: string
+  timeAgo: string
+  sentiment: 'positive' | 'negative' | 'neutral'
+}
+
 // News Data
 export type NewsData = {
   symbol?: string
-  items: {
-    id: string
-    title: string
-    source: string
-    timeAgo: string
-    sentiment: 'positive' | 'negative' | 'neutral'
-  }[]
+  items: NewsItem[]
 }
 
 // Stock Detail Data

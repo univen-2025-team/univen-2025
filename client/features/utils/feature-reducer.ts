@@ -86,6 +86,13 @@ export function reduceFeatureState(
           ranking: eff.payload,
         }
 
+      case 'SHOW_STOCK_SUGGESTIONS':
+        return {
+          ...s,
+          activeFeature: 'STOCK_SUGGESTIONS',
+          stockSuggestions: eff.payload,
+        }
+
       default:
         // TypeScript exhaustive check
         const _exhaustive: never = eff

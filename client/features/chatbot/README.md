@@ -30,7 +30,6 @@ features/chatbot/
 │   ├── suggestion-chips.tsx          # Gợi ý câu hỏi
 │   ├── trading-chat-panel.tsx        # Panel chứa chat UI
 │   ├── types.ts                      # Type definitions
-│   ├── insights/                     # Trading insights components
 │   └── widgets/                      # Widget components
 └── services/
     └── chatService.ts                # Service layer cho API calls
