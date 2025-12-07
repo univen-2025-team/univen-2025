@@ -437,9 +437,14 @@ const parseGroqIntent = (userText: string, groqReply: string): FeatureInstructio
       },
     })
   } else if (
-    combinedText.includes('xác nhận') || 
+    (combinedText.includes('xác nhận') || 
     combinedText.includes('confirm') || 
-    combinedText.includes('xác nhận giao dịch')
+    combinedText.includes('xác nhận giao dịch')) &&
+    // CHỈ tạo CONFIRM_TRANSACTION nếu KHÔNG có "mua" hoặc "bán" đơn thuần (để tránh nhầm với OPEN_BUY_STOCK/OPEN_SELL_STOCK)
+    !(combinedText.includes('mua') && !combinedText.includes('xác nhận mua')) &&
+    !(combinedText.includes('bán') && !combinedText.includes('xác nhận bán')) &&
+    !(combinedText.includes('buy') && !combinedText.includes('confirm buy')) &&
+    !(combinedText.includes('sell') && !combinedText.includes('confirm sell'))
   ) {
     effects.push({
       type: 'CONFIRM_TRANSACTION',
@@ -534,22 +539,28 @@ export const callGroqAPI = async (
 
 Dựa trên câu hỏi từ người dùng, trả về một trong các effect sau (chỉ trả về tên effect, không có description):
 - SHOW_MARKET_OVERVIEW: Xem tổng quan thị trường
-- OPEN_BUY_STOCK: Mua cổ phiếu
-- OPEN_SELL_STOCK: Bán cổ phiếu
+- OPEN_BUY_STOCK: Mua cổ phiếu (khi user muốn BẮT ĐẦU mua, ví dụ: "mua VCB", "mua cổ phiếu MWG")
+- OPEN_SELL_STOCK: Bán cổ phiếu (khi user muốn BẮT ĐẦU bán, ví dụ: "bán VCB")
 - OPEN_NEWS: Xem tin tức
 - OPEN_STOCK_DETAIL: Xem chi tiết cổ phiếu
-- CONFIRM_TRANSACTION: Xác nhận giao dịch
+- CONFIRM_TRANSACTION: CHỈ dùng khi user đã điền form và XÁC NHẬN giao dịch (ví dụ: "xác nhận mua VCB", "xác nhận giao dịch")
 - SHOW_USER_PROFILE: Xem thông tin tài khoản
 - SHOW_TRANSACTION_HISTORY: Xem lịch sử giao dịch
 - SHOW_TRANSACTION_STATS: Xem thống kê giao dịch
 - SHOW_RANKING: Xem bảng xếp hạng
+- STOCK_SUGGESTIONS: gợi ý mã cổ phiếu (khi user nói "gợi ý cổ phiếu", "gợi ý mã cổ phiếu") phù hợp với user - là người mới bắt đầu Một vài mã: VNM,FPT,HPG,VCB,MWG,VIC
+- NONE: không có effect nào
 
-Nếu không có effect phù hợp, trả về "SHOW_MARKET_OVERVIEW" cho uiEffects.
+QUAN TRỌNG: 
+- Khi user nói "mua [symbol]" hoặc "buy [symbol]" → dùng OPEN_BUY_STOCK (KHÔNG phải CONFIRM_TRANSACTION)
+- CONFIRM_TRANSACTION chỉ dùng khi user nói "xác nhận", "confirm", "xác nhận mua/bán"
+- Nếu không có effect phù hợp, trả về uiEffects là "NONE" cho uiEffects.
+
 BẮT BUỘC trả về theo cấu trúc JSON hợp lệ (không có markdown, không có code block):
 {
-  "reply": "Câu trả lời ngắn gọn bằng tiếng Việt",
+  "reply": "Câu trả lời thân thiện, liên quan đến câu hỏi của người dùng bằng tiếng Việt",
   "uiEffects": "Tên effect (chỉ một effect, không có dấu ngoặc vuông)",
-  "suggestions": ["Gợi ý 1", "Gợi ý 2", "Gợi ý 3"]
+  "suggestions": ["Gợi ý 1", "Gợi ý 2", "Gợi ý 3"] (Đây là chip text, gợi ý câu hỏi hoặc yêu cầu tiếp theo cho người dùng)
 }`
 
     // Gọi Next.js API endpoint để gọi Groq từ server-side
@@ -629,14 +640,16 @@ BẮT BUỘC trả về theo cấu trúc JSON hợp lệ (không có markdown, k
       console.warn('⚠️ Falling back to text parsing...')
       // Fallback: dùng text parsing
       const uiEffects = parseGroqIntent(lastUserMessage, rawContent)
+      // Nếu fallback parsing không có effect, dùng SHOW_MARKET_OVERVIEW
+      const finalEffects: FeatureInstruction[] = uiEffects.length > 0 ? uiEffects : [{ type: 'SHOW_MARKET_OVERVIEW' }]
       const suggestions: SuggestionMessage[] = [
         { text: 'Xem tổng quan thị trường', icon: '🌐' },
         { text: 'Tìm hiểu thêm', icon: '❓' },
       ]
-      console.log('🔄 Fallback result:', { reply: rawContent, uiEffects, suggestions })
+      console.log('🔄 Fallback result:', { reply: rawContent, uiEffects: finalEffects, suggestions })
       return {
         reply: rawContent || 'Xin lỗi, tôi không thể trả lời câu hỏi này.',
-        uiEffects,
+        uiEffects: finalEffects,
         suggestions,
       }
     }
@@ -706,17 +719,68 @@ BẮT BUỘC trả về theo cấu trúc JSON hợp lệ (không có markdown, k
           })
           break
         case 'CONFIRM_TRANSACTION':
-          uiEffects.push({
-            type: 'CONFIRM_TRANSACTION',
-            payload: {
-              symbol: symbol || '',
-              type: 'buy',
-              quantity: 0,
-              price: 0,
-              totalAmount: 0,
-              userId: '',
-            },
-          })
+          // CHỈ tạo CONFIRM_TRANSACTION nếu user thực sự xác nhận (có từ "xác nhận" trong text)
+          const userTextLower = lastUserMessage.toLowerCase()
+          const replyLower = reply.toLowerCase()
+          const hasConfirmKeyword = 
+            userTextLower.includes('xác nhận') || 
+            userTextLower.includes('confirm') ||
+            replyLower.includes('xác nhận') ||
+            replyLower.includes('confirm')
+          
+          if (hasConfirmKeyword) {
+            uiEffects.push({
+              type: 'CONFIRM_TRANSACTION',
+              payload: {
+                symbol: symbol || '',
+                type: 'buy',
+                quantity: 0,
+                price: 0,
+                totalAmount: 0,
+                userId: '',
+              },
+            })
+          } else {
+            // Nếu không có từ "xác nhận" nhưng Groq trả về CONFIRM_TRANSACTION
+            // → Có thể là nhầm lẫn, fallback về OPEN_BUY_STOCK nếu có "mua" trong text
+            console.warn('⚠️ Groq returned CONFIRM_TRANSACTION but no confirm keyword found. Checking for buy/sell intent...')
+            if (userTextLower.includes('mua') || userTextLower.includes('buy')) {
+              console.log('🔄 Converting CONFIRM_TRANSACTION to OPEN_BUY_STOCK')
+              uiEffects.push({
+                type: 'OPEN_BUY_STOCK',
+                payload: {
+                  symbol: symbol || 'MWG',
+                  currentPrice: 0,
+                  steps: [],
+                },
+              })
+            } else if (userTextLower.includes('bán') || userTextLower.includes('sell')) {
+              console.log('🔄 Converting CONFIRM_TRANSACTION to OPEN_SELL_STOCK')
+              uiEffects.push({
+                type: 'OPEN_SELL_STOCK',
+                payload: {
+                  symbol: symbol || 'MWG',
+                  currentPrice: 0,
+                  availableQuantity: 0,
+                  steps: [],
+                },
+              })
+            } else {
+              // Nếu không rõ, giữ nguyên CONFIRM_TRANSACTION nhưng log warning
+              console.warn('⚠️ Keeping CONFIRM_TRANSACTION but no clear intent detected')
+              uiEffects.push({
+                type: 'CONFIRM_TRANSACTION',
+                payload: {
+                  symbol: symbol || '',
+                  type: 'buy',
+                  quantity: 0,
+                  price: 0,
+                  totalAmount: 0,
+                  userId: '',
+                },
+              })
+            }
+          }
           break
         case 'SHOW_USER_PROFILE':
           uiEffects.push({
@@ -758,10 +822,9 @@ BẮT BUỘC trả về theo cấu trúc JSON hợp lệ (không có markdown, k
           console.log('🔄 Fallback parsing result:', uiEffects)
       }
     } else {
-      // Nếu không có effect hoặc là "NONE", dùng fallback parsing
-      console.log('⚠️ No uiEffect or "NONE", using fallback parsing')
-      uiEffects = parseGroqIntent(lastUserMessage, reply)
-      console.log('🔄 Fallback parsing result:', uiEffects)
+      // Nếu không có effect hoặc là "NONE", tự động load SHOW_MARKET_OVERVIEW
+      console.log('⚠️ No uiEffect or "NONE", defaulting to SHOW_MARKET_OVERVIEW')
+      uiEffects = [{ type: 'SHOW_MARKET_OVERVIEW' }]
     }
     
     console.log('🎨 Final uiEffects:', JSON.stringify(uiEffects, null, 2))

@@ -7,6 +7,7 @@ import { BuyStockWizard } from '../buy-stock/components/buy-stock-wizard'
 import { SellStockFeature } from '../sell-stock/components/sell-stock-feature'
 import { StockDetailFeature } from '../stock-detail/components/stock-detail-feature'
 import { NewsFeature } from '../news/news-feature'
+import { StockSuggestionsFeature } from '../stock-suggestions/components/stock-suggestions-feature'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { ArrowLeft, CheckCircle2, User, History, TrendingUp, Trophy, Loader2 } from 'lucide-react'
@@ -636,6 +637,31 @@ export function FeatureArea({
     case 'RANKING':
       return state.ranking ? (
         <RankingFeature data={state.ranking} onBack={onBack} />
+      ) : (
+        <MarketOverviewFeature data={state.marketOverview} />
+      )
+
+    case 'STOCK_SUGGESTIONS':
+      return state.stockSuggestions ? (
+        <StockSuggestionsFeature
+          symbols={state.stockSuggestions.symbols}
+          onStockClick={(symbol) => {
+            // Khi click vào stock, tạo OPEN_STOCK_DETAIL effect
+            if (onFeatureAction) {
+              onFeatureAction({
+                type: 'OPEN_STOCK_DETAIL',
+                payload: {
+                  symbol,
+                  name: `${symbol} Corporation`,
+                  description: `Thông tin chi tiết về cổ phiếu ${symbol}`,
+                  price: 0,
+                  changePercent: 0,
+                  intradayChart: [],
+                },
+              })
+            }
+          }}
+        />
       ) : (
         <MarketOverviewFeature data={state.marketOverview} />
       )

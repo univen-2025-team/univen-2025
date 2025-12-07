@@ -3,6 +3,7 @@ import { ChatMessage, SuggestionMessage } from '../types'
 import { FeatureInstruction } from '@/features/types/features'
 import { useAppSelector } from '@/lib/store/hooks'
 import { selectUser } from '@/lib/store/authSlice'
+import { getStockData } from '@/lib/api/market-cache'
 import {
   getAgentApiUrl,
   createDefaultUiEffects,
@@ -125,9 +126,30 @@ export function useChat({ onUiEffects }: UseChatOptions = {}): UseChatReturn {
         }
         setMessages((prev) => [...prev, groqBotResponse])
         
-        // Hiển thị component từ Groq
-        if (groqResult.uiEffects.length > 0 && onUiEffects) {
+        // Kiểm tra nếu suggestions chứa nhiều mã cổ phiếu -> tạo SHOW_STOCK_SUGGESTIONS
+        const stockSymbols = groqResult.suggestions
+          .filter((s) => /^[A-Z]{2,5}$/.test(s.text.trim()))
+          .map((s) => s.text.trim().toUpperCase())
+        
+        if (stockSymbols.length >= 2 && onUiEffects) {
+          // Nếu có 2+ mã cổ phiếu trong suggestions, hiển thị component suggestions
+          console.log(`📊 Detected ${stockSymbols.length} stock symbols in suggestions, showing StockSuggestionsFeature`)
+          const stockSuggestionsEffect: FeatureInstruction = {
+            type: 'SHOW_STOCK_SUGGESTIONS',
+            payload: {
+              symbols: stockSymbols,
+            },
+          }
+          onUiEffects([stockSuggestionsEffect])
+          setHasComponentLoaded(true)
+        } else if (groqResult.uiEffects.length > 0 && onUiEffects) {
+          // Nếu không có nhiều mã cổ phiếu, dùng UI effects từ Groq như bình thường
           onUiEffects(groqResult.uiEffects)
+          setHasComponentLoaded(true)
+        } else if (onUiEffects) {
+          // Nếu không có UI effects (NONE hoặc empty), tự động load SHOW_MARKET_OVERVIEW
+          console.log('⚠️ No UI effects from Groq, defaulting to SHOW_MARKET_OVERVIEW')
+          onUiEffects([{ type: 'SHOW_MARKET_OVERVIEW' }])
           setHasComponentLoaded(true)
         }
         
@@ -312,10 +334,149 @@ export function useChat({ onUiEffects }: UseChatOptions = {}): UseChatReturn {
     }
   }
 
-  const handleSuggestionClick = (suggestionText: string) => {
+  // Helper function để tạo mock stock data
+  const createMockStockData = (symbol: string): FeatureInstruction => {
+    // Tạo giá mock dựa trên symbol (để có giá khác nhau cho mỗi mã)
+    const basePrice = 50000 + (symbol.charCodeAt(0) + symbol.charCodeAt(1)) * 1000
+    const mockPrice = basePrice + Math.floor(Math.random() * 20000)
+    const mockChangePercent = (Math.random() * 4 - 2).toFixed(2) // -2% đến +2%
+    
+    // Tạo mock intraday chart data
+    const mockChartData = [
+      { time: '09:00', value: mockPrice * 0.98 },
+      { time: '10:00', value: mockPrice * 0.99 },
+      { time: '11:00', value: mockPrice },
+      { time: '13:00', value: mockPrice * 1.01 },
+      { time: '14:00', value: mockPrice * 1.005 },
+      { time: '15:00', value: mockPrice },
+    ]
+    
+    // Map company names cho các mã phổ biến
+    const companyNames: Record<string, string> = {
+      VCB: 'Ngân hàng TMCP Ngoại Thương Việt Nam',
+      VNM: 'Công ty Cổ phần Sữa Việt Nam',
+      VIC: 'Tập đoàn Vingroup',
+      VRE: 'Công ty Cổ phần Vinhomes',
+      TPB: 'Ngân hàng TMCP Tiên Phong',
+      MWG: 'Công ty Cổ phần Đầu tư Thế Giới Di Động',
+      FPT: 'Công ty Cổ phần FPT',
+      HPG: 'Công ty Cổ phần Tập đoàn Hòa Phát',
+      VHM: 'Công ty Cổ phần Vinhomes',
+      MSN: 'Công ty Cổ phần Tập đoàn Ma San',
+    }
+    
+    return {
+      type: 'OPEN_STOCK_DETAIL',
+      payload: {
+        symbol,
+        name: companyNames[symbol] || `${symbol} Corporation`,
+        description: `Thông tin chi tiết về cổ phiếu ${symbol}`,
+        price: mockPrice,
+        changePercent: parseFloat(mockChangePercent),
+        intradayChart: mockChartData,
+      },
+    }
+  }
+  
+  const handleSuggestionClick = async (suggestionText: string) => {
     // Tìm suggestion object để lấy action nếu có (theo tài liệu Frontend Integration Guide)
     // Action format: query:, buy:, sell:, confirm:, cancel:, help
     const suggestionObj = suggestions.find((s) => s.text === suggestionText)
+    
+    // Kiểm tra nếu suggestionText là mã cổ phiếu (2-5 chữ cái in hoa, không có khoảng trắng)
+    const isStockSymbol = /^[A-Z]{2,5}$/.test(suggestionText.trim())
+    
+    if (isStockSymbol) {
+      // Nếu là mã cổ phiếu, fetch data từ API và hiển thị stock detail
+      console.log(`📊 Detected stock symbol in suggestion: ${suggestionText}`)
+      
+      setIsLoading(true)
+      try {
+        const symbol = suggestionText.trim().toUpperCase()
+        const stockData = await getStockData(symbol)
+        
+        let stockDetailEffect: FeatureInstruction
+        let botMessageText: string
+        
+        if (stockData && onUiEffects) {
+          // Tạo UI effect OPEN_STOCK_DETAIL với data từ API
+          stockDetailEffect = {
+            type: 'OPEN_STOCK_DETAIL',
+            payload: {
+              symbol: stockData.symbol,
+              name: stockData.companyName || `${stockData.symbol} Corporation`,
+              description: `Thông tin chi tiết về cổ phiếu ${stockData.symbol}`,
+              price: stockData.price,
+              changePercent: stockData.changePercent,
+              intradayChart: [], // Chart data sẽ được fetch bởi component
+            },
+          }
+          
+          botMessageText = `Đây là thông tin về cổ phiếu ${stockData.symbol}:\n\nGiá hiện tại: ${stockData.price.toLocaleString('vi-VN')} VNĐ\nThay đổi: ${stockData.changePercent >= 0 ? '+' : ''}${stockData.changePercent.toFixed(2)}%`
+          
+          console.log(`✅ Stock detail loaded from API for ${symbol}:`, stockData)
+        } else {
+          // Nếu không fetch được data, dùng mock data
+          console.warn(`⚠️ Failed to fetch stock data for ${symbol}, using mock data`)
+          stockDetailEffect = createMockStockData(symbol)
+          
+          // Type guard để access payload
+          if (stockDetailEffect.type === 'OPEN_STOCK_DETAIL') {
+            botMessageText = `Đây là thông tin về cổ phiếu ${symbol} (dữ liệu mẫu):\n\nGiá hiện tại: ${stockDetailEffect.payload.price.toLocaleString('vi-VN')} VNĐ\nThay đổi: ${stockDetailEffect.payload.changePercent >= 0 ? '+' : ''}${stockDetailEffect.payload.changePercent.toFixed(2)}%`
+          } else {
+            botMessageText = `Đây là thông tin về cổ phiếu ${symbol} (dữ liệu mẫu)`
+          }
+        }
+        
+        if (onUiEffects) {
+          // Thêm message từ bot
+          const botMessage: ChatMessage = {
+            id: `msg-${Date.now()}`,
+            role: 'assistant',
+            text: botMessageText,
+            createdAt: new Date().toLocaleTimeString([], {
+              hour: '2-digit',
+              minute: '2-digit',
+            }),
+          }
+          
+          setMessages((prev) => [...prev, botMessage])
+          onUiEffects([stockDetailEffect])
+          setHasComponentLoaded(true)
+        }
+      } catch (error) {
+        console.error(`❌ Error fetching stock data for ${suggestionText}:`, error)
+        
+        // Nếu có lỗi, dùng mock data
+        const symbol = suggestionText.trim().toUpperCase()
+        const mockEffect = createMockStockData(symbol)
+        
+        if (onUiEffects) {
+          // Type guard để access payload
+          let botMessageText = `Đây là thông tin về cổ phiếu ${symbol} (dữ liệu mẫu)`
+          if (mockEffect.type === 'OPEN_STOCK_DETAIL') {
+            botMessageText = `Đây là thông tin về cổ phiếu ${symbol} (dữ liệu mẫu):\n\nGiá hiện tại: ${mockEffect.payload.price.toLocaleString('vi-VN')} VNĐ\nThay đổi: ${mockEffect.payload.changePercent >= 0 ? '+' : ''}${mockEffect.payload.changePercent.toFixed(2)}%`
+          }
+          
+          const botMessage: ChatMessage = {
+            id: `msg-${Date.now()}`,
+            role: 'assistant',
+            text: botMessageText,
+            createdAt: new Date().toLocaleTimeString([], {
+              hour: '2-digit',
+              minute: '2-digit',
+            }),
+          }
+          
+          setMessages((prev) => [...prev, botMessage])
+          onUiEffects([mockEffect])
+          setHasComponentLoaded(true)
+        }
+      } finally {
+        setIsLoading(false)
+      }
+      return
+    }
     
     if (!suggestionObj) {
       // Nếu không tìm thấy, dùng suggestionText trực tiếp
