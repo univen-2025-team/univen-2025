@@ -635,7 +635,7 @@ export function BuyStockFeature({ data, onBack }: BuyStockFeatureProps) {
                             <Button
                                 type="button"
                                 variant="outline"
-                                className="sm:flex-1"
+                                className="sm:flex-1 hover:text-primary"
                                 disabled={placingOrder}
                                 onClick={handlePreviousStep}
                             >

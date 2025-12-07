@@ -24,6 +24,19 @@ export function reduceFeatureState(
           },
         }
 
+      case 'OPEN_SELL_STOCK':
+        return {
+          ...s,
+          activeFeature: 'SELL_STOCK',
+          sellStock: {
+            symbol: eff.payload.symbol,
+            currentPrice: eff.payload.currentPrice,
+            availableQuantity: eff.payload.availableQuantity,
+            steps: eff.payload.steps,
+            currentStepIndex: 0,
+          },
+        }
+
       case 'OPEN_NEWS':
         return {
           ...s,
@@ -38,7 +51,45 @@ export function reduceFeatureState(
           stockDetail: eff.payload,
         }
 
+      case 'CONFIRM_TRANSACTION':
+        return {
+          ...s,
+          activeFeature: 'CONFIRM_TRANSACTION',
+          transaction: eff.payload,
+        }
+
+      case 'SHOW_USER_PROFILE':
+        return {
+          ...s,
+          activeFeature: 'USER_PROFILE',
+          userProfile: eff.payload,
+        }
+
+      case 'SHOW_TRANSACTION_HISTORY':
+        return {
+          ...s,
+          activeFeature: 'TRANSACTION_HISTORY',
+          transactionHistory: eff.payload,
+        }
+
+      case 'SHOW_TRANSACTION_STATS':
+        return {
+          ...s,
+          activeFeature: 'TRANSACTION_STATS',
+          transactionStats: eff.payload,
+        }
+
+      case 'SHOW_RANKING':
+        return {
+          ...s,
+          activeFeature: 'RANKING',
+          ranking: eff.payload,
+        }
+
       default:
+        // TypeScript exhaustive check
+        const _exhaustive: never = eff
+        console.warn('Unknown UI effect type:', eff)
         return s
     }
   }, state)
