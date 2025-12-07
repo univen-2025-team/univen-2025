@@ -255,18 +255,24 @@ function TransactionHistoryFeature({ data, onBack }: { data: any; onBack?: () =>
   useEffect(() => {
     const fetchHistory = async () => {
       const userId = data?.userId || user?._id
+      console.log('📊 Fetching transaction history for userId:', userId)
+      
       if (!userId) {
+        console.warn('⚠️ No userId provided for transaction history')
         setIsLoading(false)
         return
       }
 
       try {
+        console.log('📡 Calling transactionApi.getTransactionHistory...')
         const response = await transactionApi.getTransactionHistory(userId, {
           pagination: { page: 1, limit: 50 }
         })
+        console.log('✅ Transaction history response:', response)
         setTransactions(response.transactions || [])
       } catch (error) {
-        console.error('Error fetching transaction history:', error)
+        console.log('❌ Error fetching transaction history:', error)
+        console.log('❌ Error details:', error instanceof Error ? error.message : String(error))
         setTransactions([])
       } finally {
         setIsLoading(false)
@@ -349,16 +355,22 @@ function TransactionStatsFeature({ data, onBack }: { data: any; onBack?: () => v
   useEffect(() => {
     const fetchStats = async () => {
       const userId = data?.userId || user?._id
+      console.log('📈 Fetching transaction stats for userId:', userId)
+      
       if (!userId) {
+        console.warn('⚠️ No userId provided for transaction stats')
         setIsLoading(false)
         return
       }
 
       try {
+        console.log('📡 Calling transactionApi.getUserTransactionStats...')
         const response = await transactionApi.getUserTransactionStats(userId)
+        console.log('✅ Transaction stats response:', response)
         setStats(response)
       } catch (error) {
-        console.error('Error fetching transaction stats:', error)
+        console.log('❌ Error fetching transaction stats:', error)
+        console.log('❌ Error details:', error instanceof Error ? error.message : String(error))
         setStats(null)
       } finally {
         setIsLoading(false)
@@ -438,11 +450,14 @@ function RankingFeature({ data, onBack }: { data: any; onBack?: () => void }) {
 
   useEffect(() => {
     const fetchRanking = async () => {
+      console.log('🏆 Fetching ranking data...')
       try {
+        console.log('📡 Calling transactionApi.getUserRanking...')
         const response = await transactionApi.getUserRanking({
           page: 1,
           limit: 20
         })
+        console.log('✅ Ranking response:', response)
         setRankings(response.ranking || [])
 
         // Tìm user rank
@@ -452,10 +467,12 @@ function RankingFeature({ data, onBack }: { data: any; onBack?: () => void }) {
           )
           if (rankIndex !== -1) {
             setUserRank(rankIndex + 1)
+            console.log('✅ User rank found:', rankIndex + 1)
           }
         }
       } catch (error) {
-        console.error('Error fetching ranking:', error)
+        console.log('❌ Error fetching ranking:', error)
+        console.log('❌ Error details:', error instanceof Error ? error.message : String(error))
         setRankings([])
       } finally {
         setIsLoading(false)

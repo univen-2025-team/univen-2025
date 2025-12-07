@@ -12,6 +12,7 @@ import {
   sendChatMessage,
   createFallbackResponse,
   parseChatResponse,
+  callGroqAPI,
   type ChatApiResponse,
 } from '../../services/chatService'
 
@@ -77,19 +78,82 @@ export function useChat({ onUiEffects }: UseChatOptions = {}): UseChatReturn {
     setHasComponentLoaded(false) // Reset khi bắt đầu message mới
 
     // ============================================
-    // LOAD DEFAULT COMPONENTS NGAY LẬP TỨC (không đợi API)
+    // BƯỚC 1: GỌI GROQ TRƯỚC - Phân loại intent và hiển thị component ngay
     // ============================================
-    const defaultEffects = createDefaultUiEffects(text)
-    if (defaultEffects.length > 0 && onUiEffects) {
-      console.log('⚡ Loading default components immediately:', defaultEffects)
-      onUiEffects(defaultEffects)
-      setHasComponentLoaded(true) // Đánh dấu component đã load
+    console.log('🚀 ========== STARTING CHAT FLOW ==========')
+    console.log('📝 User message:', text)
+    
+    const allMessages = [...messages, userMessage]
+    const conversationHistory = buildConversationHistory(allMessages)
+    console.log('💬 Conversation history length:', conversationHistory.length)
+    console.log('💬 Conversation history:', conversationHistory)
+    
+    // Gọi Groq ngay để phân loại intent
+    let groqResult: { reply: string; uiEffects: FeatureInstruction[]; suggestions: SuggestionMessage[] } | null = null
+    try {
+      console.log('🤖 ========== CALLING GROQ API ==========')
+      console.log('🤖 Preparing messages for Groq...')
+      
+      const groqMessages = [
+        {
+          role: 'system' as const,
+          content: 'Bạn là trợ lý chứng khoán Việt Nam.',
+        },
+        ...conversationHistory,
+      ]
+      console.log('🤖 Messages to send to Groq:', groqMessages)
+      
+      groqResult = await callGroqAPI(groqMessages)
+      console.log('🤖 Groq API call completed')
+
+      if (groqResult) {
+        // Hiển thị component và reply từ Groq ngay
+        console.log('✅ ========== GROQ RESPONSE RECEIVED ==========')
+        console.log('✅ Groq reply:', groqResult.reply)
+        console.log('✅ Groq UI effects:', groqResult.uiEffects)
+        console.log('✅ Groq suggestions:', groqResult.suggestions)
+        
+        // Hiển thị reply từ Groq
+        const groqBotResponse: ChatMessage = {
+          id: `msg-${Date.now() + 1}`,
+          role: 'assistant',
+          text: groqResult.reply,
+          createdAt: new Date().toLocaleTimeString([], {
+            hour: '2-digit',
+            minute: '2-digit',
+          }),
+        }
+        setMessages((prev) => [...prev, groqBotResponse])
+        
+        // Hiển thị component từ Groq
+        if (groqResult.uiEffects.length > 0 && onUiEffects) {
+          onUiEffects(groqResult.uiEffects)
+          setHasComponentLoaded(true)
+        }
+        
+        // Hiển thị suggestions từ Groq
+        setSuggestions(groqResult.suggestions)
+        console.log('✅ Groq UI updated successfully')
+      } else {
+        console.warn('⚠️ Groq API returned null, no response received')
+      }
+    } catch (groqError) {
+      console.log('❌ ========== GROQ API ERROR ==========')
+      console.log('❌ Groq API error:', groqError)
+      console.log('❌ Error details:', groqError instanceof Error ? groqError.message : String(groqError))
+      console.log('❌ Stack trace:', groqError instanceof Error ? groqError.stack : 'N/A')
+      // Tiếp tục với AGENT_API nếu Groq lỗi
     }
 
+    // ============================================
+    // BƯỚC 2: GỌI AGENT_API SONG SONG - Để update suggestions và data thật
+    // ============================================
     try {
       // Kiểm tra AGENT_API có được cấu hình chưa
       if (!AGENT_API) {
-        throw new Error('AGENT_API chưa được cấu hình trong file .env')
+        console.warn('⚠️ AGENT_API chưa được cấu hình, chỉ dùng Groq')
+        setIsLoading(false)
+        return
       }
 
       // Lưu conversationId vào sessionStorage
@@ -97,36 +161,13 @@ export function useChat({ onUiEffects }: UseChatOptions = {}): UseChatReturn {
         sessionStorage.setItem('chatbot_conversation_id', conversationIdRef.current)
       }
 
-      // ============================================
-      // BUILD FULL CONVERSATION CONTEXT
-      // Gửi toàn bộ lịch sử chat để server có đầy đủ ngữ cảnh
-      // ============================================
-      
-      // Lấy toàn bộ messages (bao gồm cả message mới vừa thêm)
-      const allMessages = [...messages, userMessage]
-      
-      // Build conversation history - gửi FULL CONTEXT từ đầu đến giờ
-      const conversationHistory = buildConversationHistory(allMessages)
-
-      // Log để debug - xem full context được gửi
-      console.log('📝 Full conversation context being sent:', {
-        totalMessages: allMessages.length,
-        conversationHistoryLength: conversationHistory.length,
-        firstMessage: conversationHistory[0]?.content?.substring(0, 50),
-        lastMessage: conversationHistory[conversationHistory.length - 1]?.content?.substring(0, 50),
-        fullHistory: conversationHistory,
-      })
-
       // Đảm bảo user_id được gửi trong meta (BẮT BUỘC)
       const userId = user?._id || 'guest'
       if (!userId || userId === 'guest') {
         console.warn('⚠️ User ID không có, sử dụng guest. Đảm bảo user đã đăng nhập.')
       }
 
-      // ============================================
-      // LẤY THÔNG TIN BỔ SUNG TỪ BACKEND
-      // Gọi API để lấy thông tin user đầy đủ (balance, name, email, etc.)
-      // ============================================
+      // Lấy thông tin user profile
       const userProfile = await fetchUserProfile(userId, user)
 
       // Build request body với FULL CONTEXT và META đầy đủ
@@ -137,118 +178,112 @@ export function useChat({ onUiEffects }: UseChatOptions = {}): UseChatReturn {
         userProfile
       )
 
-      // Gọi TRỰC TIẾP đến server AI (AGENT_API), không qua backend
-      const { data, error: apiError } = await sendChatMessage(request, AGENT_API)
-
-      // Nếu API lỗi, tạo fallback response
-      let responseData = data
-      if (!responseData && apiError) {
-        responseData = await createFallbackResponse(defaultEffects)
-      }
-
-      // Đảm bảo data không null (sau khi đã tạo fallback)
-      if (!responseData) {
-        // Nếu vẫn null, tạo response mặc định
-        console.error('❌ Failed to create response, using default')
-        responseData = {
-          reply: 'Xin lỗi, không thể kết nối đến hệ thống. Vui lòng thử lại sau.',
-          ui_effects: defaultEffects.length > 0 ? defaultEffects : [{ type: 'SHOW_MARKET_OVERVIEW' }],
-          suggestion_messages: [
-            { text: 'Xem tổng quan thị trường', icon: '🌐' },
-            { text: 'Tìm hiểu thêm', icon: '❓' },
-          ],
-        } as ChatApiResponse
-      }
+      // Gọi AGENT_API để update suggestions và data thật
+      console.log('🔗 Calling AGENT_API to update suggestions and data...')
+      
+      // Đợi AGENT_API trả về để update
+      const { data: agentData, error: agentError } = await sendChatMessage(request, AGENT_API)
 
       // ============================================
-      // PARSE RESPONSE THEO FORMAT API_RESPONSE_FORMAT.md
+      // BƯỚC 3: UPDATE KHI AGENT_API TRẢ VỀ (CHỈ KHI KHÔNG CÓ LỖI)
+      // Update suggestions, UI effects, và các thông số
       // ============================================
-      const { reply: replyText, uiEffects, suggestionMessages } = parseChatResponse(responseData)
-
-      // ============================================
-      // MERGE SYMBOL TỪ USER INPUT VÀO API RESPONSE
-      // ============================================
-      // Ưu tiên symbol từ default effects (user input) hơn symbol từ API response
-      const mergedUiEffects: FeatureInstruction[] = uiEffects.map((apiEffect) => {
-        // Tìm default effect tương ứng
-        const defaultEffect = defaultEffects.find(
-          (def) => def.type === apiEffect.type
-        )
-        
-        // Nếu có default effect và cả hai đều có symbol, ưu tiên symbol từ default
-        if (defaultEffect && 'payload' in defaultEffect && 'payload' in apiEffect) {
-          const defaultSymbol = (defaultEffect.payload as any)?.symbol
-          const apiSymbol = (apiEffect.payload as any)?.symbol
+      if (agentData && !agentError) {
+        // Double check: Validate response từ AGENT_API
+        try {
+          const { reply: agentReply, uiEffects: agentUiEffects, suggestionMessages: agentSuggestions } = parseChatResponse(agentData)
           
-          if (defaultSymbol && apiSymbol && defaultSymbol !== apiSymbol) {
-            console.warn(`⚠️ Symbol mismatch: API returned "${apiSymbol}" but user input was "${defaultSymbol}". Using user input.`)
-            
-            // Merge symbol vào payload dựa trên type
-            if (apiEffect.type === 'OPEN_STOCK_DETAIL') {
-              return {
-                ...apiEffect,
-                payload: {
-                  ...apiEffect.payload,
-                  symbol: defaultSymbol,
-                },
-              } as FeatureInstruction
-            } else if (apiEffect.type === 'OPEN_BUY_STOCK' || apiEffect.type === 'OPEN_SELL_STOCK') {
-              return {
-                ...apiEffect,
-                payload: {
-                  ...apiEffect.payload,
-                  symbol: defaultSymbol,
-                },
-              } as FeatureInstruction
-            } else if (apiEffect.type === 'OPEN_NEWS') {
-              return {
-                ...apiEffect,
-                payload: {
-                  ...apiEffect.payload,
-                  symbol: defaultSymbol,
-                },
-              } as FeatureInstruction
+          // Validate: Kiểm tra reply có hợp lệ không
+          const hasValidReply = agentReply && typeof agentReply === 'string' && agentReply.trim().length > 0
+          
+          // Validate: Kiểm tra suggestions có hợp lệ không
+          const hasValidSuggestions = Array.isArray(agentSuggestions) && agentSuggestions.length > 0
+          
+          // Validate: Kiểm tra UI effects có hợp lệ không
+          const hasValidUiEffects = Array.isArray(agentUiEffects) && agentUiEffects.length > 0
+          
+          console.log('🔍 Validating AGENT_API response:', {
+            hasValidReply,
+            hasValidSuggestions,
+            hasValidUiEffects,
+            suggestionsCount: agentSuggestions?.length || 0,
+            uiEffectsCount: agentUiEffects?.length || 0,
+          })
+          
+          // Tạo message mới từ AGENT_API reply (không ghi đè Groq)
+          if (hasValidReply) {
+            const agentBotResponse: ChatMessage = {
+              id: `msg-${Date.now() + 2}`, // ID khác với Groq message
+              role: 'assistant',
+              text: agentReply,
+              createdAt: new Date().toLocaleTimeString([], {
+                hour: '2-digit',
+                minute: '2-digit',
+              }),
             }
+            console.log('💬 Adding new message from AGENT_API reply')
+            setMessages((prev) => [...prev, agentBotResponse])
           }
+          
+          // Update suggestions từ AGENT_API (chỉ khi hợp lệ)
+          if (hasValidSuggestions) {
+            console.log('📝 Updating suggestions from AGENT_API:', agentSuggestions)
+            setSuggestions(agentSuggestions)
+          } else {
+            console.warn('⚠️ AGENT_API suggestions invalid, keeping Groq suggestions')
+          }
+          
+          // Update UI effects từ AGENT_API (chỉ khi hợp lệ)
+          if (hasValidUiEffects && onUiEffects) {
+            // Merge symbol từ Groq nếu có
+            const mergedUiEffects: FeatureInstruction[] = agentUiEffects.map((agentEffect) => {
+              // Validate effect có payload hợp lệ
+              if (!agentEffect || !('type' in agentEffect)) {
+                console.warn('⚠️ Invalid effect from AGENT_API:', agentEffect)
+                return agentEffect
+              }
+              
+              if (groqResult && groqResult.uiEffects.length > 0) {
+                const groqEffect = groqResult.uiEffects.find(e => e.type === agentEffect.type)
+                if (groqEffect && 'payload' in groqEffect && 'payload' in agentEffect) {
+                  const groqSymbol = (groqEffect.payload as any)?.symbol
+                  const agentSymbol = (agentEffect.payload as any)?.symbol
+                  
+                  // Ưu tiên symbol từ Groq (user input) nếu có
+                  if (groqSymbol && (!agentSymbol || groqSymbol !== agentSymbol)) {
+                    console.log(`🔄 Merging symbol from Groq: ${groqSymbol}`)
+                    return {
+                      ...agentEffect,
+                      payload: {
+                        ...agentEffect.payload,
+                        symbol: groqSymbol,
+                      },
+                    } as FeatureInstruction
+                  }
+                }
+              }
+              return agentEffect
+            })
+            
+            console.log('✅ Updating UI effects from AGENT_API (validated):', mergedUiEffects)
+            onUiEffects(mergedUiEffects)
+            setHasComponentLoaded(true)
+          } else {
+            console.warn('⚠️ AGENT_API UI effects invalid, keeping Groq UI effects')
+          }
+        } catch (parseError) {
+          console.log('❌ Error parsing AGENT_API response:', parseError)
+          // Giữ nguyên Groq response nếu parse lỗi
         }
-        
-        return apiEffect
-      })
-
-      // ============================================
-      // TẠO COMPONENTS/PROPS TỪ PARSED DATA
-      // ============================================
-
-      // Component: ChatMessage (reply)
-      const botResponse: ChatMessage = {
-        id: `msg-${Date.now() + 1}`,
-        role: 'assistant',
-        text: replyText,
-        createdAt: new Date().toLocaleTimeString([], {
-          hour: '2-digit',
-          minute: '2-digit',
-        }),
+      } else if (agentError) {
+        console.warn('⚠️ AGENT_API error, keeping Groq response:', agentError)
+        // Giữ nguyên Groq response nếu AGENT_API lỗi
+      } else {
+        console.warn('⚠️ AGENT_API returned no data, keeping Groq response')
       }
-
-      // Component: Suggestions (suggestion_messages)
-      setSuggestions(suggestionMessages)
-
-      // Component: UI Effects (ui_effects) - Cập nhật với data từ API (đã merge symbol)
-      // Nếu API trả về ui_effects, cập nhật lại (components sẽ tự fetch data thật từ backend)
-      if (mergedUiEffects.length > 0 && onUiEffects) {
-        console.log('✅ Updating UI effects with API data (merged with user input):', mergedUiEffects)
-        onUiEffects(mergedUiEffects)
-      } else if (defaultEffects.length > 0) {
-        // Nếu API không trả về ui_effects nhưng đã load default, giữ nguyên
-        // Components đã load sẽ tự fetch data từ backend
-        console.log('ℹ️ Keeping default components, they will fetch data from backend')
-      }
-
-      // Thêm message vào chat (reply từ API)
-      setMessages((prev) => [...prev, botResponse])
     } catch (error) {
       // Lỗi này chỉ xảy ra nếu có lỗi nghiêm trọng (không phải từ API call)
-      console.error('❌ Unexpected error:', error)
+      console.log('❌ Unexpected error:', error)
       
       // Nếu đã load default components, giữ nguyên (chúng sẽ tự fetch data từ backend)
       const errorMessage: ChatMessage = {
@@ -265,14 +300,12 @@ export function useChat({ onUiEffects }: UseChatOptions = {}): UseChatReturn {
       }
       setMessages((prev) => [...prev, errorMessage])
       
-      // Nếu có default effects đã load, giữ nguyên (components sẽ tự fetch)
-      if (defaultEffects.length > 0) {
-        console.log('⚠️ Error but keeping default components - they will fetch from backend')
+      // Nếu Groq đã load component, giữ nguyên
+      if (groqResult && groqResult.uiEffects.length > 0) {
+        console.log('⚠️ Error but keeping Groq components')
       } else {
-        // Nếu không có default effects, load market overview
-        if (onUiEffects) {
-          onUiEffects([{ type: 'SHOW_MARKET_OVERVIEW' }])
-        }
+        console.log('⚠️ Error occurred, no component shown')
+        setHasComponentLoaded(false)
       }
     } finally {
       setIsLoading(false)

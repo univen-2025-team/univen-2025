@@ -141,7 +141,7 @@ export default function Chatbot() {
                     console.warn('⚠️ Using fallback market data - cached data not available');
                 }
             } catch (error) {
-                console.error('❌ Error loading market data:', error);
+                console.log('❌ Error loading market data:', error);
             } finally {
                 setIsLoading(false);
             }

@@ -4,6 +4,8 @@ import { userApi, type UserProfile } from '@/lib/api/user.api'
 import { getLatestMarketData, getStockData } from '@/lib/api/market-cache'
 import { API_URL } from '@/config/app'
 
+// Không cần import Groq SDK nữa, dùng fetch trực tiếp
+
 // ============================================
 // TYPES
 // ============================================
@@ -214,33 +216,10 @@ export const createDefaultUiEffects = (text: string): FeatureInstruction[] => {
     effects.push({
       type: 'SHOW_MARKET_OVERVIEW',
     })
-  } else {
-    // Nếu chỉ là symbol (không có từ khóa), hiển thị stock detail
-    const symbol = extractSymbol(text)
-    if (symbol) {
-      const mockPrice = 95000 + Math.floor(Math.random() * 10000)
-      const mockChangePercent = (Math.random() * 4 - 2).toFixed(2)
-      
-      effects.push({
-        type: 'OPEN_STOCK_DETAIL',
-        payload: {
-          symbol,
-          name: `${symbol} Corporation`,
-          description: `Thông tin chi tiết về cổ phiếu ${symbol}`,
-          price: mockPrice,
-          changePercent: parseFloat(mockChangePercent),
-          intradayChart: [
-            { time: '09:00', value: mockPrice * 0.98 },
-            { time: '10:00', value: mockPrice * 0.99 },
-            { time: '11:00', value: mockPrice },
-            { time: '13:00', value: mockPrice * 1.01 },
-            { time: '14:00', value: mockPrice * 1.005 },
-            { time: '15:00', value: mockPrice },
-          ],
-        },
-      })
-    }
   }
+  // KHÔNG tự động tạo effect cho symbol đơn thuần - đợi response từ API
+  // Nếu chỉ là symbol (không có từ khóa), không tạo default effect
+  // Component sẽ được tạo từ API response (Groq hoặc AGENT_API)
 
   return effects
 }
@@ -354,7 +333,475 @@ export const buildChatRequest = (
 }
 
 /**
- * Gửi message đến AGENT_API
+ * Groq API Models - với fallback khi hết token
+ */
+const GROQ_MODELS = [
+  'llama-3.1-8b-instant', // Fast, ít token
+  'llama-3.3-70b-versatile', // Medium, nhiều token hơn
+  'llama-3.1-70b-versatile', // Large, nhiều token nhất (fallback)
+] as const
+
+/**
+ * Lấy Groq API key từ env
+ */
+const getGroqApiKey = (): string | null => {
+  if (typeof window !== 'undefined') {
+    return process.env.NEXT_PUBLIC_GROQ_API_KEY || null
+  }
+  return process.env.GROQ_API_KEY || process.env.NEXT_PUBLIC_GROQ_API_KEY || null
+}
+
+/**
+ * Parse intent từ Groq response và map sang UI effects
+ * Sử dụng cả text và reply để phân loại chính xác hơn
+ */
+const parseGroqIntent = (userText: string, groqReply: string): FeatureInstruction[] => {
+  const effects: FeatureInstruction[] = []
+  const lowerUserText = userText.toLowerCase()
+  const lowerReply = groqReply.toLowerCase()
+  const combinedText = `${lowerUserText} ${lowerReply}`
+  const symbol = extractSymbol(userText) || extractSymbol(groqReply)
+
+  // Phân loại intent - ưu tiên các pattern cụ thể
+  if (
+    combinedText.includes('thị trường') || 
+    combinedText.includes('market') || 
+    combinedText.includes('tổng quan') ||
+    combinedText.includes('vn30') ||
+    combinedText.includes('index') ||
+    (combinedText.includes('top') && (combinedText.includes('cổ phiếu') || combinedText.includes('hôm nay'))) ||
+    combinedText.includes('cổ phiếu hôm nay') ||
+    combinedText.includes('top cổ phiếu')
+  ) {
+    effects.push({ type: 'SHOW_MARKET_OVERVIEW' })
+  } else if (
+    combinedText.includes('mua') || 
+    combinedText.includes('buy') || 
+    combinedText.includes('đặt lệnh mua') ||
+    combinedText.includes('mua cổ phiếu')
+  ) {
+    const stockSymbol = symbol || 'MWG'
+    effects.push({
+      type: 'OPEN_BUY_STOCK',
+      payload: {
+        symbol: stockSymbol,
+        currentPrice: 0,
+        steps: [],
+      },
+    })
+  } else if (
+    combinedText.includes('bán') || 
+    combinedText.includes('sell') || 
+    combinedText.includes('đặt lệnh bán') ||
+    combinedText.includes('bán cổ phiếu')
+  ) {
+    const stockSymbol = symbol || 'MWG'
+    effects.push({
+      type: 'OPEN_SELL_STOCK',
+      payload: {
+        symbol: stockSymbol,
+        currentPrice: 0,
+        availableQuantity: 0,
+        steps: [],
+      },
+    })
+  } else if (
+    combinedText.includes('tin tức') || 
+    combinedText.includes('news') ||
+    combinedText.includes('tin tức thị trường')
+  ) {
+    effects.push({
+      type: 'OPEN_NEWS',
+      payload: {
+        symbol,
+        items: [],
+      },
+    })
+  } else if (
+    combinedText.includes('chi tiết') || 
+    combinedText.includes('detail') || 
+    combinedText.includes('giá') || 
+    symbol ||
+    combinedText.includes('thông tin cổ phiếu')
+  ) {
+    const stockSymbol = symbol || 'MWG'
+    effects.push({
+      type: 'OPEN_STOCK_DETAIL',
+      payload: {
+        symbol: stockSymbol,
+        name: `${stockSymbol} Corporation`,
+        description: `Thông tin chi tiết về cổ phiếu ${stockSymbol}`,
+        price: 0,
+        changePercent: 0,
+        intradayChart: [],
+      },
+    })
+  } else if (
+    combinedText.includes('xác nhận') || 
+    combinedText.includes('confirm') || 
+    combinedText.includes('xác nhận giao dịch')
+  ) {
+    effects.push({
+      type: 'CONFIRM_TRANSACTION',
+      payload: {
+        symbol: symbol || '',
+        type: 'buy',
+        quantity: 0,
+        price: 0,
+        totalAmount: 0,
+        userId: '',
+      },
+    })
+  } else if (
+    combinedText.includes('tài khoản') || 
+    combinedText.includes('profile') || 
+    combinedText.includes('thông tin cá nhân') ||
+    combinedText.includes('số dư')
+  ) {
+    effects.push({
+      type: 'SHOW_USER_PROFILE',
+      payload: {
+        userId: '',
+      },
+    })
+  } else if (
+    combinedText.includes('lịch sử') || 
+    combinedText.includes('history') || 
+    combinedText.includes('giao dịch đã thực hiện') ||
+    combinedText.includes('lịch sử giao dịch')
+  ) {
+    effects.push({
+      type: 'SHOW_TRANSACTION_HISTORY',
+      payload: {
+        userId: '',
+        transactions: [],
+      },
+    })
+  } else if (
+    combinedText.includes('thống kê') || 
+    combinedText.includes('stats') || 
+    combinedText.includes('tổng kết') ||
+    combinedText.includes('thống kê giao dịch')
+  ) {
+    effects.push({
+      type: 'SHOW_TRANSACTION_STATS',
+      payload: {
+        userId: '',
+      },
+    })
+  } else if (
+    (combinedText.includes('xếp hạng') || 
+    combinedText.includes('ranking') || 
+    combinedText.includes('bảng xếp hạng')) &&
+    !combinedText.includes('cổ phiếu') // Loại trừ "top cổ phiếu"
+  ) {
+    effects.push({
+      type: 'SHOW_RANKING',
+      payload: {
+        rankings: [],
+      },
+    })
+  }
+
+  // Nếu không tìm thấy intent nào, trả về market overview mặc định
+  if (effects.length === 0) {
+    effects.push({ type: 'SHOW_MARKET_OVERVIEW' })
+  }
+
+  return effects
+}
+
+/**
+ * Gọi Groq API với fallback models
+ * Export để dùng trong useChat
+ * Sử dụng fetch trực tiếp thay vì SDK để tránh CORS issues
+ */
+export const callGroqAPI = async (
+  messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }>,
+  modelIndex: number = 0
+): Promise<{ reply: string; uiEffects: FeatureInstruction[]; suggestions: SuggestionMessage[] } | null> => {
+  if (modelIndex >= GROQ_MODELS.length) {
+    console.log('❌ All Groq models exhausted')
+    return null
+  }
+
+  const model = GROQ_MODELS[modelIndex]
+  
+  try {
+    console.log(`🤖 Calling Groq API via Next.js endpoint with model: ${model}`)
+    
+    const systemPrompt = `Bạn là trợ lý chứng khoán Việt Nam. Phân tích câu hỏi của người dùng và trả lời ngắn gọn, rõ ràng bằng tiếng Việt.
+
+Dựa trên câu hỏi từ người dùng, trả về một trong các effect sau (chỉ trả về tên effect, không có description):
+- SHOW_MARKET_OVERVIEW: Xem tổng quan thị trường
+- OPEN_BUY_STOCK: Mua cổ phiếu
+- OPEN_SELL_STOCK: Bán cổ phiếu
+- OPEN_NEWS: Xem tin tức
+- OPEN_STOCK_DETAIL: Xem chi tiết cổ phiếu
+- CONFIRM_TRANSACTION: Xác nhận giao dịch
+- SHOW_USER_PROFILE: Xem thông tin tài khoản
+- SHOW_TRANSACTION_HISTORY: Xem lịch sử giao dịch
+- SHOW_TRANSACTION_STATS: Xem thống kê giao dịch
+- SHOW_RANKING: Xem bảng xếp hạng
+
+Nếu không có effect phù hợp, trả về "SHOW_MARKET_OVERVIEW" cho uiEffects.
+BẮT BUỘC trả về theo cấu trúc JSON hợp lệ (không có markdown, không có code block):
+{
+  "reply": "Câu trả lời ngắn gọn bằng tiếng Việt",
+  "uiEffects": "Tên effect (chỉ một effect, không có dấu ngoặc vuông)",
+  "suggestions": ["Gợi ý 1", "Gợi ý 2", "Gợi ý 3"]
+}`
+
+    // Gọi Next.js API endpoint để gọi Groq từ server-side
+    const response = await fetch('/api/groq', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model,
+        messages: [
+          { role: 'system', content: systemPrompt },
+          ...messages.filter(m => m.role !== 'system'),
+        ],
+        temperature: 0.7,
+        max_tokens: 1000,
+        response_format: { type: 'json_object' },
+      }),
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
+      console.log(`❌ Groq API error (${response.status}):`, errorData)
+      
+      // Thử model tiếp theo nếu lỗi do token limit
+      if (response.status === 429 || response.status === 413 || errorData.error?.includes('token')) {
+        console.warn(`⚠️ Token limit reached for ${model}, trying next model...`)
+        return callGroqAPI(messages, modelIndex + 1)
+      }
+      
+      return null
+    }
+
+    const data = await response.json()
+    const rawContent = data.content || ''
+    const lastUserMessage = messages[messages.length - 1]?.content || ''
+    
+    console.log('🔍 ========== GROQ API RESPONSE DEBUG ==========')
+    console.log('📥 Raw response from Groq:', rawContent)
+    console.log('📝 Last user message:', lastUserMessage)
+    console.log('🤖 Model used:', model)
+    
+    // Parse JSON từ reply
+    let parsedData: {
+      reply?: string
+      uiEffects?: string
+      suggestions?: string[]
+    } = {}
+    
+    try {
+      // Loại bỏ markdown code blocks nếu có
+      let jsonString = rawContent.trim()
+      console.log('🧹 Original JSON string length:', jsonString.length)
+      console.log('🧹 First 200 chars:', jsonString.substring(0, 200))
+      
+      if (jsonString.startsWith('```json')) {
+        console.log('🔧 Removing ```json markdown wrapper...')
+        jsonString = jsonString.replace(/^```json\s*/, '').replace(/\s*```$/, '')
+      } else if (jsonString.startsWith('```')) {
+        console.log('🔧 Removing ``` markdown wrapper...')
+        jsonString = jsonString.replace(/^```\s*/, '').replace(/\s*```$/, '')
+      }
+      
+      console.log('📦 Cleaned JSON string length:', jsonString.length)
+      console.log('📦 Cleaned JSON string:', jsonString)
+      
+      parsedData = JSON.parse(jsonString)
+      console.log('✅ Successfully parsed JSON!')
+      console.log('📦 Parsed data:', JSON.stringify(parsedData, null, 2))
+      console.log('📦 Parsed reply:', parsedData.reply)
+      console.log('📦 Parsed uiEffects:', parsedData.uiEffects)
+      console.log('📦 Parsed suggestions:', parsedData.suggestions)
+    } catch (parseError) {
+      console.log('❌ Failed to parse Groq JSON!')
+      console.log('❌ Parse error:', parseError)
+      console.log('❌ Raw content that failed:', rawContent)
+      console.warn('⚠️ Falling back to text parsing...')
+      // Fallback: dùng text parsing
+      const uiEffects = parseGroqIntent(lastUserMessage, rawContent)
+      const suggestions: SuggestionMessage[] = [
+        { text: 'Xem tổng quan thị trường', icon: '🌐' },
+        { text: 'Tìm hiểu thêm', icon: '❓' },
+      ]
+      console.log('🔄 Fallback result:', { reply: rawContent, uiEffects, suggestions })
+      return {
+        reply: rawContent || 'Xin lỗi, tôi không thể trả lời câu hỏi này.',
+        uiEffects,
+        suggestions,
+      }
+    }
+    
+    // Extract reply
+    const reply = parsedData.reply || rawContent || 'Xin lỗi, tôi không thể trả lời câu hỏi này.'
+    console.log('💬 Final reply:', reply)
+    
+    // Parse uiEffects từ string thành FeatureInstruction[]
+    let uiEffects: FeatureInstruction[] = []
+    const uiEffectString = parsedData.uiEffects?.trim().toUpperCase()
+    console.log('🎯 uiEffectString (raw):', parsedData.uiEffects)
+    console.log('🎯 uiEffectString (uppercase):', uiEffectString)
+    
+    if (uiEffectString && uiEffectString !== 'NONE') {
+      // Parse effect string thành FeatureInstruction
+      const symbol = extractSymbol(lastUserMessage) || extractSymbol(reply)
+      console.log('🔤 Extracted symbol:', symbol)
+      console.log('🔄 Processing effect:', uiEffectString)
+      
+      switch (uiEffectString) {
+        case 'SHOW_MARKET_OVERVIEW':
+          console.log('✅ Matched: SHOW_MARKET_OVERVIEW')
+          uiEffects.push({ type: 'SHOW_MARKET_OVERVIEW' })
+          break
+        case 'OPEN_BUY_STOCK':
+          uiEffects.push({
+            type: 'OPEN_BUY_STOCK',
+            payload: {
+              symbol: symbol || 'MWG',
+              currentPrice: 0,
+              steps: [],
+            },
+          })
+          break
+        case 'OPEN_SELL_STOCK':
+          uiEffects.push({
+            type: 'OPEN_SELL_STOCK',
+            payload: {
+              symbol: symbol || 'MWG',
+              currentPrice: 0,
+              availableQuantity: 0,
+              steps: [],
+            },
+          })
+          break
+        case 'OPEN_NEWS':
+          uiEffects.push({
+            type: 'OPEN_NEWS',
+            payload: {
+              symbol,
+              items: [],
+            },
+          })
+          break
+        case 'OPEN_STOCK_DETAIL':
+          uiEffects.push({
+            type: 'OPEN_STOCK_DETAIL',
+            payload: {
+              symbol: symbol || 'MWG',
+              name: `${symbol || 'MWG'} Corporation`,
+              description: `Thông tin chi tiết về cổ phiếu ${symbol || 'MWG'}`,
+              price: 0,
+              changePercent: 0,
+              intradayChart: [],
+            },
+          })
+          break
+        case 'CONFIRM_TRANSACTION':
+          uiEffects.push({
+            type: 'CONFIRM_TRANSACTION',
+            payload: {
+              symbol: symbol || '',
+              type: 'buy',
+              quantity: 0,
+              price: 0,
+              totalAmount: 0,
+              userId: '',
+            },
+          })
+          break
+        case 'SHOW_USER_PROFILE':
+          uiEffects.push({
+            type: 'SHOW_USER_PROFILE',
+            payload: {
+              userId: '',
+            },
+          })
+          break
+        case 'SHOW_TRANSACTION_HISTORY':
+          uiEffects.push({
+            type: 'SHOW_TRANSACTION_HISTORY',
+            payload: {
+              userId: '',
+              transactions: [],
+            },
+          })
+          break
+        case 'SHOW_TRANSACTION_STATS':
+          uiEffects.push({
+            type: 'SHOW_TRANSACTION_STATS',
+            payload: {
+              userId: '',
+            },
+          })
+          break
+        case 'SHOW_RANKING':
+          uiEffects.push({
+            type: 'SHOW_RANKING',
+            payload: {
+              rankings: [],
+            },
+          })
+          break
+        default:
+          // Fallback: dùng parseGroqIntent nếu không match
+          console.warn(`⚠️ Unknown uiEffect: "${uiEffectString}", using fallback parsing`)
+          uiEffects = parseGroqIntent(lastUserMessage, reply)
+          console.log('🔄 Fallback parsing result:', uiEffects)
+      }
+    } else {
+      // Nếu không có effect hoặc là "NONE", dùng fallback parsing
+      console.log('⚠️ No uiEffect or "NONE", using fallback parsing')
+      uiEffects = parseGroqIntent(lastUserMessage, reply)
+      console.log('🔄 Fallback parsing result:', uiEffects)
+    }
+    
+    console.log('🎨 Final uiEffects:', JSON.stringify(uiEffects, null, 2))
+    
+    // Parse suggestions từ string[] thành SuggestionMessage[]
+    const suggestions: SuggestionMessage[] = parsedData.suggestions
+      ? parsedData.suggestions.map((text, index) => ({
+          text: text.trim(),
+          icon: index === 0 ? '🌐' : index === 1 ? '❓' : '💡',
+        }))
+      : [
+          { text: 'Xem tổng quan thị trường', icon: '🌐' },
+          { text: 'Tìm hiểu thêm', icon: '❓' },
+        ]
+    
+    console.log('💡 Final suggestions:', suggestions)
+
+    console.log(`✅ ========== GROQ API RESPONSE SUMMARY ==========`)
+    console.log(`✅ Model: ${model}`)
+    console.log(`✅ Reply length: ${reply.length} chars`)
+    console.log(`✅ Reply preview: ${reply.substring(0, 100)}...`)
+    console.log(`✅ UI Effects count: ${uiEffects.length}`)
+    console.log(`✅ Suggestions count: ${suggestions.length}`)
+    console.log(`✅ ================================================`)
+    
+    return { reply, uiEffects, suggestions }
+  } catch (error: any) {
+    // Nếu lỗi do token limit, thử model tiếp theo
+    if (error?.message?.includes('token') || error?.status === 429 || error?.status === 413) {
+      console.warn(`⚠️ Token limit reached for ${model}, trying next model...`)
+      return callGroqAPI(messages, modelIndex + 1)
+    }
+
+    console.log(`❌ Groq API error (model: ${model}):`, error)
+    return null
+  }
+}
+
+/**
+ * Gửi message đến AGENT_API với fallback Groq
  */
 export const sendChatMessage = async (
   request: ChatRequest,
@@ -375,19 +822,52 @@ export const sendChatMessage = async (
     lastMessage: request.messages[request.messages.length - 1]?.content?.substring(0, 60),
   })
 
+  // Tạo timeout promise (5 giây)
+  const timeoutPromise = new Promise<{ data: null; error: Error }>((resolve) => {
+    setTimeout(() => {
+      resolve({
+        data: null,
+        error: new Error('AGENT_API timeout'),
+      })
+    }, 5000)
+  })
+
   try {
-    const response = await fetch(apiUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(request),
-    })
+    // Race giữa fetch và timeout
+    const response = await Promise.race([
+      fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(request),
+      }),
+      timeoutPromise.then(() => null),
+    ])
+
+    // Nếu timeout hoặc không có response
+    if (!response) {
+      console.warn('⏱️ AGENT_API timeout, falling back to Groq...')
+      const groqResult = await callGroqAPI(request.messages)
+      if (groqResult) {
+        return {
+          data: {
+            reply: groqResult.reply,
+            ui_effects: groqResult.uiEffects,
+            suggestion_messages: groqResult.suggestions,
+          },
+          error: null,
+        }
+      }
+      return {
+        data: null,
+        error: new Error('AGENT_API timeout and Groq fallback failed'),
+      }
+    }
 
     if (!response.ok) {
       const errorText = await response.text()
-      // Console log chi tiết cho developer
-      console.error('❌ AGENT_API Error Details:', {
+      console.log('❌ AGENT_API Error Details:', {
         status: response.status,
         statusText: response.statusText,
         url: apiUrl,
@@ -395,9 +875,18 @@ export const sendChatMessage = async (
         userId: request.meta.user_id,
       })
       
-      // Nếu là 404, có thể endpoint không tồn tại hoặc AGENT_API sai
-      if (response.status === 404) {
-        console.warn('⚠️ 404 - Endpoint không tồn tại. Kiểm tra AGENT_API:', agentApiUrl)
+      // Fallback to Groq khi lỗi
+      console.warn('⚠️ AGENT_API error, falling back to Groq...')
+      const groqResult = await callGroqAPI(request.messages)
+      if (groqResult) {
+        return {
+          data: {
+            reply: groqResult.reply,
+            ui_effects: groqResult.uiEffects,
+            suggestion_messages: groqResult.suggestions,
+          },
+          error: null,
+        }
       }
       
       return {
@@ -419,12 +908,26 @@ export const sendChatMessage = async (
     }
   } catch (fetchError) {
     // Console log chi tiết cho developer
-    console.error('❌ AGENT_API Fetch Error:', {
+    console.log('❌ AGENT_API Fetch Error:', {
       error: fetchError,
       url: apiUrl,
       userId: request.meta.user_id,
       message: fetchError instanceof Error ? fetchError.message : 'Unknown error',
     })
+    
+    // Fallback to Groq khi network error
+    console.warn('⚠️ AGENT_API network error, falling back to Groq...')
+    const groqResult = await callGroqAPI(request.messages)
+    if (groqResult) {
+      return {
+        data: {
+          reply: groqResult.reply,
+          ui_effects: groqResult.uiEffects,
+          suggestion_messages: groqResult.suggestions,
+        },
+        error: null,
+      }
+    }
     
     return {
       data: null,
@@ -497,7 +1000,7 @@ export const createFallbackResponse = async (
           }
         } catch (stockError) {
           // Console log chi tiết cho developer (không hiển thị cho user)
-          console.error(`❌ Error fetching stock data for ${symbol} from backend:`, {
+          console.log(`❌ Error fetching stock data for ${symbol} from backend:`, {
             error: stockError,
             symbol,
             url: `${API_URL}/market/stock/${symbol}`,
@@ -575,7 +1078,7 @@ export const createFallbackResponse = async (
     }
   } catch (backendError) {
     // Console log chi tiết, nhưng không throw
-    console.error('❌ Backend market API error:', {
+    console.log('❌ Backend market API error:', {
       error: backendError,
       message: backendError instanceof Error ? backendError.message : 'Unknown error',
     })
