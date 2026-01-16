@@ -82,6 +82,9 @@ services:
     depends_on:
       mongodb-dev:
         condition: service_healthy
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
 
 # =============================================================================
 # Networks

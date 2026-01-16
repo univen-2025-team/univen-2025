@@ -12,48 +12,9 @@ from datetime import datetime, timedelta
 from typing import Dict, List, Optional
 
 # ============================================================
-# Ensure vnai is pre-initialized before any vnstock3 imports
+# NOTE: vnai initialization is handled by app.py or checks below.
+# We do NOT run _init_vnai() here to avoid circular imports and duplication.
 # ============================================================
-def _init_vnai():
-    """Ensure vnai module is initialized to avoid circular import."""
-    try:
-        home_dir = pathlib.Path.home()
-        vnstock_dir = home_dir / ".vnstock"
-        id_dir = vnstock_dir / "id"
-        
-        vnstock_dir.mkdir(exist_ok=True)
-        id_dir.mkdir(exist_ok=True)
-        
-        terms_file = id_dir / "terms_agreement.txt"
-        env_file = id_dir / "environment.json"
-        
-        if not terms_file.exists():
-            terms_content = f"""Terms accepted automatically at {datetime.now().isoformat()}
----
-TERMS AND CONDITIONS:
-Khi tiếp tục sử dụng Vnstock, bạn xác nhận rằng bạn đã đọc, hiểu và đồng ý với Chính sách quyền riêng tư và Điều khoản, điều kiện về giấy phép sử dụng Vnstock.
-"""
-            with open(terms_file, "w", encoding="utf-8") as f:
-                f.write(terms_content)
-        
-        if not env_file.exists():
-            import uuid
-            env_data = {
-                "accepted_agreement": True,
-                "timestamp": datetime.now().isoformat(),
-                "machine_id": str(uuid.uuid4())
-            }
-            with open(env_file, "w") as f:
-                json.dump(env_data, f)
-        
-        os.environ["ACCEPT_TC"] = "tôi đồng ý"
-        
-        import vnai
-        vnai.setup()
-    except Exception as e:
-        print(f"Warning: vnai init in data_fetcher: {e}", file=sys.stderr)
-
-_init_vnai()
 
 logger = logging.getLogger(__name__)
 
@@ -107,7 +68,7 @@ PRICE_MULTIPLIER = 1000
 class VNStockDataFetcher:
     """Fetch market data from vnstock3 API."""
 
-    def __init__(self, source: str = 'TCBS'):
+    def __init__(self, source: str = 'VCI'):
         """Initialize data fetcher with source."""
         self.source = source
 
@@ -122,7 +83,7 @@ class VNStockDataFetcher:
             Dict with stock data or None if failed
         """
         try:
-            from vnstock3 import Vnstock
+            from vnstock import Vnstock
             
             stock = Vnstock().stock(symbol=symbol, source=self.source)
             
@@ -202,8 +163,9 @@ class VNStockDataFetcher:
             if stock_data:
                 stocks_data.append(stock_data)
             
-            # Add delay to avoid rate limiting (TCBS is strict)
-            time.sleep(2)
+            # Add delay to avoid rate limiting (vnstock Guest: 20 req/min)
+            # 4s between requests = 15 req/min (safe margin)
+            time.sleep(4)
         
         logger.info(f"Successfully fetched {len(stocks_data)}/{len(VN30_SYMBOLS)} stocks")
         return stocks_data
@@ -216,7 +178,7 @@ class VNStockDataFetcher:
             Dict with VN30 index data or None if failed
         """
         try:
-            from vnstock3 import Vnstock
+            from vnstock import Vnstock
             
             stock = Vnstock().stock(symbol='VN30', source=self.source)
             
@@ -345,7 +307,15 @@ class VNStockDataFetcher:
             List of intraday data points
         """
         try:
-            from vnstock3 import Vnstock
+            # NOTE: TCBS closed public API access on 15/12/2025
+            # Intraday minute data is no longer available from TCBS
+            # TODO: Find alternative VCI endpoint for intraday data
+            # For now, return empty list to avoid spamming logs
+            logger.debug(f"Intraday data disabled for {symbol} (TCBS API closed)")
+            return []
+            
+            # Old TCBS implementation below - keeping for reference
+            from vnstock import Vnstock
             import pandas as pd
             from unittest.mock import patch
             

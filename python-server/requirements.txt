@@ -1,5 +1,6 @@
 python-dotenv==1.0.1
-vnstock3
+vnstock==3.3.1
+ipython
 pymongo==4.6.0
 pandas==2.2.2
 numpy==1.26.4

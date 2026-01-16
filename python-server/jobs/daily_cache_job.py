@@ -33,7 +33,7 @@ def fetch_and_cache_market_data():
         logger.info("=" * 60)
         
         # Initialize services
-        fetcher = VNStockDataFetcher(source='TCBS')
+        fetcher = VNStockDataFetcher()
         storage = MarketDataStorage()
         
         # Fetch latest market overview (vnstock will return most recent trading day)
