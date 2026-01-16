@@ -1,5 +1,8 @@
+
+"use client";
 import React, { useState, useEffect } from 'react';
 import { TrendingUp, Target, Award, Shield, BarChart3, LineChart, Menu, X, ChevronRight, Check, Zap, Users, RefreshCw } from 'lucide-react';
+import Link from 'next/link';
 
 export default function StockieHomepage() {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -101,12 +104,31 @@ export default function StockieHomepage() {
     profitPercent: '+0.00%'
   };
 
+  // Supplemented from tradetutor-ai
+  const MOCK_CHART_DATA = [
+    { time: '10:00', open: 150, close: 152, high: 153, low: 149, volume: 1200 },
+    { time: '10:15', open: 152, close: 151, high: 152.5, low: 150.5, volume: 900 },
+    { time: '10:30', open: 151, close: 154, high: 155, low: 151, volume: 1500, event: 'Earning Report', insight: "Price spiked due to better-than-expected earnings." },
+    { time: '10:45', open: 154, close: 153, high: 154.5, low: 152, volume: 800 },
+    { time: '11:00', open: 153, close: 156, high: 157, low: 152.5, volume: 2100, event: 'Breakout', insight: "High volume breakout above resistance level." },
+    { time: '11:15', open: 156, close: 155, high: 156.5, low: 154, volume: 1000 },
+    { time: '11:30', open: 155, close: 158, high: 159, low: 155, volume: 1800 },
+    { time: '11:45', open: 158, close: 157, high: 158.5, low: 156.5, volume: 950 },
+    { time: '12:00', open: 157, close: 160, high: 161, low: 157, volume: 2500, event: 'News Alert', insight: "CEO announces new partnership." },
+    { time: '12:15', open: 160, close: 159, high: 160.5, low: 158, volume: 1100 },
+  ];
+
+  const AI_SUGGESTIONS = [
+    "Tại sao giá tăng lúc 11:00?",
+    "Đây có phải là xu hướng tăng?",
+    "Khối lượng giao dịch có ý nghĩa gì?",
+  ];
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-white">
       {/* Navigation */}
-      <nav className={`fixed top-0 w-full z-50 transition-all duration-300 ${
-        isScrolled ? 'bg-slate-950/95 backdrop-blur-lg shadow-lg shadow-purple-500/10' : 'bg-transparent'
-      }`}>
+      <nav className={`fixed top-0 w-full z-50 transition-all duration-300 ${isScrolled ? 'bg-slate-950/95 backdrop-blur-lg shadow-lg shadow-purple-500/10' : 'bg-transparent'
+        }`}>
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
@@ -124,13 +146,13 @@ export default function StockieHomepage() {
               <a href="#achievements" className="hover:text-purple-400 transition-colors">Huy hiệu</a>
               <a href="#pricing" className="hover:text-purple-400 transition-colors">Bảng giá</a>
               <a href="#contact" className="hover:text-purple-400 transition-colors">Liên hệ</a>
-              <button className="px-6 py-2 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full hover:shadow-lg hover:shadow-purple-500/50 transition-all">
+              <Link href="/dashboard" className="px-6 py-2 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full hover:shadow-lg hover:shadow-purple-500/50 transition-all text-white">
                 Bắt đầu
-              </button>
+              </Link>
             </div>
 
             {/* Mobile Menu Button */}
-            <button 
+            <button
               className="md:hidden"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             >
@@ -145,9 +167,9 @@ export default function StockieHomepage() {
               <a href="#achievements" className="block hover:text-purple-400 transition-colors">Huy hiệu</a>
               <a href="#pricing" className="block hover:text-purple-400 transition-colors">Bảng giá</a>
               <a href="#contact" className="block hover:text-purple-400 transition-colors">Liên hệ</a>
-              <button className="w-full px-6 py-2 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full">
+              <Link href="/dashboard" className="w-full px-6 py-2 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full text-center block text-white">
                 Bắt đầu
-              </button>
+              </Link>
             </div>
           )}
         </div>
@@ -161,7 +183,7 @@ export default function StockieHomepage() {
               <div className="inline-block px-4 py-2 bg-purple-500/20 border border-purple-500/30 rounded-full text-sm">
                 🚀 Nền tảng đầu tư thông minh #1 Việt Nam
               </div>
-              
+
               <h1 className="text-5xl md:text-7xl font-bold leading-tight">
                 Đầu tư{' '}
                 <span className="bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 bg-clip-text text-transparent">
@@ -169,20 +191,20 @@ export default function StockieHomepage() {
                 </span>{' '}
                 dễ dàng hơn bao giờ hết
               </h1>
-              
+
               <p className="text-xl text-slate-400">
-                Quản lý danh mục, phân tích thị trường realtime, và nhận tư vấn từ AI. 
+                Quản lý danh mục, phân tích thị trường realtime, và nhận tư vấn từ AI.
                 Tất cả trong một nền tảng hiện đại.
               </p>
 
               <div className="flex flex-wrap gap-4">
-                <button className="px-8 py-4 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full font-semibold hover:shadow-2xl hover:shadow-purple-500/50 transition-all flex items-center gap-2 group">
+                <Link href="/dashboard" className="px-8 py-4 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full font-semibold hover:shadow-2xl hover:shadow-purple-500/50 transition-all flex items-center gap-2 group text-white">
                   Bắt đầu miễn phí
                   <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                </button>
-                <button className="px-8 py-4 border border-slate-700 rounded-full font-semibold hover:border-purple-500 transition-all">
+                </Link>
+                <Link href="/dashboard" className="px-8 py-4 border border-slate-700 rounded-full font-semibold hover:border-purple-500 transition-all text-white">
                   Xem demo
-                </button>
+                </Link>
               </div>
 
               <div className="flex gap-8 pt-4">
@@ -352,6 +374,21 @@ export default function StockieHomepage() {
                     </div>
                   ))}
                 </div>
+
+                {/* AI Insights from tradetutor-ai */}
+                <div className="mt-4 pt-4 border-t border-slate-800">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Zap className="w-4 h-4 text-yellow-500" />
+                    <span className="text-sm font-semibold text-yellow-500">AI Inisghts</span>
+                  </div>
+                  <div className="space-y-2">
+                    {MOCK_CHART_DATA.filter(d => d.insight).slice(0, 2).map((data, i) => (
+                      <div key={i} className="text-xs text-slate-400 p-2 bg-slate-800/50 rounded border border-slate-700">
+                        <span className="font-bold text-slate-300">{data.event}:</span> {data.insight}
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -407,10 +444,10 @@ export default function StockieHomepage() {
                 Tham gia cùng hàng nghìn nhà đầu tư thông minh đang sử dụng Stockie
               </p>
               <div className="flex flex-wrap gap-4 justify-center">
-                <button className="px-8 py-4 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full font-semibold hover:shadow-2xl hover:shadow-purple-500/50 transition-all flex items-center gap-2">
+                <Link href="/auth/register" className="px-8 py-4 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full font-semibold hover:shadow-2xl hover:shadow-purple-500/50 transition-all flex items-center gap-2 text-white">
                   Đăng ký miễn phí
                   <ChevronRight className="w-5 h-5" />
-                </button>
+                </Link>
                 <button className="px-8 py-4 bg-white text-slate-900 rounded-full font-semibold hover:shadow-2xl hover:shadow-white/50 transition-all">
                   Liên hệ tư vấn
                 </button>
