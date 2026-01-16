@@ -1,5 +1,5 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
-import { API_URL } from '@/config/app';
+import { API_URL } from '@/src/config/app';
 
 const BASE_URL = API_URL;
 

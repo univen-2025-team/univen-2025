@@ -2,6 +2,7 @@ import { RoleNames } from '@/enums/rbac.enum.js';
 import resourceModel from '@/models/resource.model.js';
 import roleModel from '@/models/role.model.js';
 import { NotFoundErrorResponse } from '@/response/error.response.js';
+import LoggerService from '@/services/logger.service';
 import {
     generateFindAll,
     generateFindById,
@@ -30,6 +31,8 @@ export const getRoleIdByName = async (name: RoleNames) => {
     const role = await findOneRole({
         query: { role_name: name }
     }).lean();
+
+    LoggerService.getInstance().debug('Role found!', { role });
 
     if (!role) throw new NotFoundErrorResponse({ message: 'Default role not found!' });
 

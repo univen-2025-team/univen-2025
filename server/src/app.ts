@@ -14,7 +14,7 @@ import ScheduledService from './api/services/scheduled.service.js';
 import MongoDB from './app/db.app.js';
 
 // Configs
-import { API_VERSION } from './configs/server.config.js';
+import { API_VERSION, CLIENT_URL } from './configs/server.config.js';
 
 // Routes
 import rootRoute from './api/routes/index.js';
@@ -75,7 +75,7 @@ app.use(
 // CORS
 app.use(
     cors({
-        origin: '*',
+        origin: CLIENT_URL,
         methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
         credentials: true,
         exposedHeaders: ['Content-Disposition']
