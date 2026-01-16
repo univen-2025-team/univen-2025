@@ -6,11 +6,15 @@ import { Label } from "@/components/ui/label"
 import { useLearnStockStore } from "../stores/useLearnStockStore"
 import { RotateCcw } from "lucide-react"
 
+export type TimeRange = '1M' | '3M' | '6M' | '1Y' | 'All'
+
 interface ChartControlsProps {
     showVolume: boolean
     setShowVolume: (show: boolean) => void
     showEvents: boolean
     setShowEvents: (show: boolean) => void
+    timeRange: TimeRange
+    setTimeRange: (range: TimeRange) => void
 }
 
 export default function ChartControls({
@@ -18,8 +22,12 @@ export default function ChartControls({
     setShowVolume,
     showEvents,
     setShowEvents,
+    timeRange,
+    setTimeRange,
 }: ChartControlsProps) {
     const { resetFilters, selectedEventDate } = useLearnStockStore()
+
+    const timeRanges: TimeRange[] = ['1M', '3M', '6M', '1Y', 'All']
 
     return (
         <div className="flex flex-wrap items-center justify-between gap-4 p-4 border-b border-border">
@@ -28,12 +36,13 @@ export default function ChartControls({
             </div>
 
             <div className="flex flex-wrap items-center gap-4">
-                {/* Simple Range Selector (Mock for now) */}
+                {/* Time Range Selector */}
                 <div className="flex bg-secondary rounded-md p-1">
-                    {['1M', '3M', '6M', '1Y', 'All'].map((range) => (
+                    {timeRanges.map((range) => (
                         <button
                             key={range}
-                            className={`px-3 py-1 text-xs font-medium rounded-sm transition-colors ${range === '3M'
+                            onClick={() => setTimeRange(range)}
+                            className={`px-3 py-1 text-xs font-medium rounded-sm transition-colors ${range === timeRange
                                     ? 'bg-background shadow-sm text-foreground'
                                     : 'text-muted-foreground hover:text-foreground'
                                 }`}
