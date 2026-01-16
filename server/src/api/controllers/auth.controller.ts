@@ -6,6 +6,7 @@ import { CreatedResponse, OkResponse } from '@/response/success.response.js';
 import { ForbiddenErrorResponse } from '@/response/error.response.js';
 import { Profile } from 'passport-google-oauth20';
 import { CLIENT_URL } from '@/configs/server.config';
+import LoggerService from '@/services/logger.service';
 
 export default class AuthController {
     /* ------------------------------------------------------ */
@@ -35,6 +36,8 @@ export default class AuthController {
         if (!req.user) throw new ForbiddenErrorResponse({ message: 'Login failed!' });
 
         const user = await AuthService.loginWithGoogle(req.user as Profile);
+
+        LoggerService.getInstance().debug('Login with Google success!', { CLIENT_URL });
 
         new OkResponse({
             message: 'Login with Google success!',

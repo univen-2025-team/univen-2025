@@ -1,9 +1,9 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import { ReduxProvider } from '@/lib/store/Provider';
-import { ToastProvider } from '@/components/toast/toast-provider';
-import { appConfig } from '@/config';
-import { APP_URL } from '@/config/app';
+import { ToastProvider } from '@/src/components/toast/toast-provider';
+import { appConfig } from '@/src/config';
+import { APP_URL } from '@/src/config/app';
 
 export const metadata: Metadata = {
     metadataBase: new URL(APP_URL),
@@ -28,7 +28,7 @@ export default function RootLayout({
     children: React.ReactNode;
 }>) {
     return (
-        <html lang={appConfig.settings.defaultLanguage}>
+        <html lang={appConfig.settings.defaultLanguage} suppressHydrationWarning>
             <body className="antialiased">
                 <ReduxProvider>
                     <ToastProvider>{children}</ToastProvider>
