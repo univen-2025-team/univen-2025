@@ -6,17 +6,22 @@ import {
     GOOGLE_OAUTH_REDIRECT_URI
 } from '@/configs/google-oauth.config';
 
-passport.use(
-    new GoogleStrategy(
-        {
-            clientID: GOOGLE_OAUTH_CLIENT_ID,
-            clientSecret: GOOGLE_OAUTH_CLIENT_SECRET,
-            callbackURL: GOOGLE_OAUTH_REDIRECT_URI
-        },
-        function (accessToken, refreshToken, profile, cb) {
-            console.log('Google profile:', profile);
+// Only initialize Google Strategy if credentials are provided
+if (GOOGLE_OAUTH_CLIENT_ID && GOOGLE_OAUTH_CLIENT_SECRET) {
+    passport.use(
+        new GoogleStrategy(
+            {
+                clientID: GOOGLE_OAUTH_CLIENT_ID,
+                clientSecret: GOOGLE_OAUTH_CLIENT_SECRET,
+                callbackURL: GOOGLE_OAUTH_REDIRECT_URI
+            },
+            function (accessToken, refreshToken, profile, cb) {
+                console.log('Google profile:', profile);
 
-            return cb(null, profile);
-        }
-    )
-);
+                return cb(null, profile);
+            }
+        )
+    );
+} else {
+    console.warn('Google OAuth not configured - skipping Google Strategy initialization');
+}
