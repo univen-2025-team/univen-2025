@@ -61,9 +61,10 @@ Chi tiết:
         # Set environment variable for vnai
         os.environ["ACCEPT_TC"] = "tôi đồng ý"
         
-        # Now import and initialize vnai
-        import vnai
-        vnai.setup()
+        # NOTE: Using vnstock 3.3.1
+        print("DEBUG: Importing vnstock...", flush=True)
+        import vnstock
+        print("DEBUG: vnstock imported.", flush=True)
         
     except Exception as e:
         # Log but don't fail - vnstock might still work
