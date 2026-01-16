@@ -1,0 +1,127 @@
+version: '3.8'
+
+services:
+  # =============================================================================
+  # Infrastructure Services
+  # =============================================================================
+  
+  mongodb:
+    image: mongo:7
+    container_name: univen-mongodb
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME:-admin}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD:-password123}
+      MONGO_INITDB_DATABASE: ${MONGO_INITDB_DATABASE:-do_an_1}
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - univen-network
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  redis:
+    image: redis:alpine
+    container_name: univen-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - univen-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # =============================================================================
+  # Application Services
+  # =============================================================================
+
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: univen-server
+    restart: unless-stopped
+    environment:
+      NODE_ENV: ${NODE_ENV:-production}
+      SERVER_PORT: ${SERVER_PORT:-5000}
+      MONGODB_URI: ${MONGODB_URI:-mongodb://admin:password123@mongodb:27017/do_an_1?authSource=admin}
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379}
+    ports:
+      - "${SERVER_PORT:-5000}:5000"
+    volumes:
+      - ./server/logs:/app/logs
+      - ./server/public:/app/public
+    networks:
+      - univen-network
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    container_name: univen-client
+    restart: unless-stopped
+    environment:
+      NODE_ENV: ${NODE_ENV:-production}
+      NEXT_PUBLIC_API_URL: http://server:5000
+    ports:
+      - "${CUSTOMER_PORT:-3000}:3000"
+    networks:
+      - univen-network
+    depends_on:
+      - server
+
+  python-server:
+    build:
+      context: ./python-server
+      dockerfile: Dockerfile
+    container_name: univen-python
+    restart: unless-stopped
+    environment:
+      MONGODB_URI: ${MONGODB_URI:-mongodb://admin:password123@mongodb:27017/do_an_1?authSource=admin}
+      CRONJOB_ENABLED: ${CRONJOB_ENABLED:-true}
+      VNSTOCK_SOURCE: ${VNSTOCK_SOURCE:-TCBS}
+    networks:
+      - univen-network
+    depends_on:
+      mongodb:
+        condition: service_healthy
+
+# =============================================================================
+# Networks
+# =============================================================================
+
+networks:
+  univen-network:
+    driver: bridge
+
+# =============================================================================
+# Volumes
+# =============================================================================
+
+volumes:
+  mongodb_data:
+    driver: local
+  redis_data:
+    driver: local

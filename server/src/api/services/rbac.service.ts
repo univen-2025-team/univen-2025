@@ -7,11 +7,12 @@ import {
     findRoles
 } from '@/models/repository/rbac/index.js';
 import { findUserById } from '@/models/repository/user/index.js';
+import slugify from 'slugify';
 
 class RBACService {
     public static instance: RBACService;
 
-    private constructor() {}
+    private constructor() { }
 
     public static getInstance() {
         if (!this.instance) {
@@ -26,10 +27,11 @@ class RBACService {
         const resources = Object.values(Resources);
         const resourcesId = await Promise.all(
             resources.map(async (resource, index) => {
+                const resourceSlug = slugify(resource, { lower: true, locale: 'vi' });
                 const id = (
                     await findOneAndUpdateResource({
                         query: { resource_name: resource },
-                        update: { resource_name: resource },
+                        update: { resource_name: resource, resource_slug: resourceSlug },
                         options: { upsert: true, new: true }
                     })
                 )._id;

@@ -3,7 +3,7 @@
  * Fetches cached market data from Node.js server
  */
 
-import { API_URL } from '@/config/app';
+import { API_URL } from "@/src/config/app";
 
 const API_BASE_URL = API_URL;
 console.log({ API_BASE_URL });
@@ -115,7 +115,7 @@ export async function getStockData(symbol: string, date?: string): Promise<Cache
     try {
         // Đảm bảo symbol là uppercase (VCB, VNM, etc.)
         const upperSymbol = symbol.toUpperCase().trim();
-        
+
         const url = date
             ? `${API_BASE_URL}/market/stock/${upperSymbol}?date=${date}`
             : `${API_BASE_URL}/market/stock/${upperSymbol}`;
@@ -141,7 +141,7 @@ export async function getStockData(symbol: string, date?: string): Promise<Cache
         }
 
         const result = await response.json();
-        
+
         // Kiểm tra response format theo API_ENDPOINTS.md: { statusCode, message, metadata }
         if (result.statusCode === 200 && result.metadata) {
             console.log(`✅ Stock data fetched for ${upperSymbol}:`, result.metadata);

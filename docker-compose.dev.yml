@@ -1,0 +1,102 @@
+# Development Docker Compose - Standalone
+# Usage: docker compose -f docker-compose.dev.yml up
+# Note: Client chạy riêng bên ngoài Docker (npm run dev trong folder client)
+
+services:
+  # =============================================================================
+  # Infrastructure Services
+  # =============================================================================
+
+  mongodb-dev:
+    image: mongo:7
+    container_name: univen-mongodb-dev
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
+      MONGO_INITDB_DATABASE: ${MONGO_INITDB_DATABASE}
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data_dev:/data/db
+    networks:
+      - univen-network
+    healthcheck:
+      test: [ "CMD", "mongosh", "--eval", "db.adminCommand('ping')" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  redis:
+    image: redis:alpine
+    container_name: univen-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - univen-network
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # =============================================================================
+  # Application Services (Development Mode - Hot Reload)
+  # =============================================================================
+
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile.dev
+    container_name: univen-server-dev
+    restart: unless-stopped
+
+    ports:
+      - "5000:4000"
+    volumes:
+      - ./server:/app
+      - /app/node_modules
+    networks:
+      - univen-network
+    depends_on:
+      mongodb-dev:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  python-server:
+    build:
+      context: ./python-server
+      dockerfile: Dockerfile.dev
+    container_name: univen-python-dev
+    restart: unless-stopped
+
+    volumes:
+      - ./python-server:/app
+    networks:
+      - univen-network
+    depends_on:
+      mongodb-dev:
+        condition: service_healthy
+
+# =============================================================================
+# Networks
+# =============================================================================
+
+networks:
+  univen-network:
+    driver: bridge
+
+# =============================================================================
+# Volumes
+# =============================================================================
+
+volumes:
+  mongodb_data_dev:
+    driver: local
+  redis_data:
+    driver: local

@@ -1,14 +1,10 @@
 // Load env
 import './src/api/helpers/loadEnv.helper';
 
-import fs from 'fs/promises';
-import https from 'https';
-
 // Configs
 import { BASE_URL, PORT } from './src/configs/server.config.js';
 
 // App
-import path from 'path';
 import loggerService from './src/api/services/logger.service.js';
 import app from './src/app.js';
 import MongoDB from './src/app/db.app.js';
@@ -87,4 +83,4 @@ process.on('SIGINT', async () => {
 /* ---------------------------------------------------------- */
 /*                        Initial data                        */
 /* ---------------------------------------------------------- */
-// await RBACService.getInstance().initRBAC();
+await RBACService.getInstance().initRBAC()
