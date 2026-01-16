@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import CandlestickChart from './candlestick-chart';
@@ -8,9 +8,46 @@ import LessonsList from './lessons-list';
 import StockPicker from './stock-picker';
 import { mockLessons } from '@/lib/mock-data';
 import { useLearnStockStore } from '../stores/useLearnStockStore';
+import { getStockData, CachedStockData } from '@/lib/api/market-cache';
 
 export default function LearnStockPage() {
     const { selectedStock, setSelectedStock, isLoading, setIsLoading } = useLearnStockStore();
+    const [stockData, setStockData] = useState<CachedStockData | null>(null);
+    const [priceLoading, setPriceLoading] = useState(false);
+
+    // Fetch stock data when selected stock changes
+    useEffect(() => {
+        const fetchStockData = async () => {
+            if (!selectedStock) return;
+            
+            setPriceLoading(true);
+            try {
+                const data = await getStockData(selectedStock);
+                setStockData(data);
+            } catch (error) {
+                console.error('Error fetching stock data:', error);
+                setStockData(null);
+            } finally {
+                setPriceLoading(false);
+            }
+        };
+
+        fetchStockData();
+    }, [selectedStock]);
+
+    // Calculate percentage change: (price - previousClose) / previousClose * 100
+    const calculateChangePercent = () => {
+        if (!stockData || !stockData.previousClose) return 0;
+        return ((stockData.price - stockData.previousClose) / stockData.previousClose) * 100;
+    };
+
+    const changePercent = calculateChangePercent();
+    const isPositive = changePercent >= 0;
+
+    // Format price with thousand separator
+    const formatPrice = (price: number) => {
+        return price.toLocaleString('vi-VN');
+    };
 
     const handleGenerateLessons = async () => {
         setIsLoading(true);
@@ -74,9 +111,11 @@ export default function LearnStockPage() {
                             Current Price
                         </h3>
                         <p className="text-3xl font-bold text-foreground">
-                            {selectedStock === 'HPG' ? '30,200' : selectedStock === 'FPT' ? '141,200' : selectedStock === 'VNM' ? '66,500' : '42,300'} VND
+                            {priceLoading ? '...' : stockData ? formatPrice(stockData.price) : '---'} VND
                         </p>
-                        <p className="text-sm text-chart-up mt-2">+2.34% today</p>
+                        <p className={`text-sm mt-2 ${isPositive ? 'text-chart-up' : 'text-chart-down'}`}>
+                            {priceLoading ? '...' : stockData ? `${isPositive ? '+' : ''}${changePercent.toFixed(2)}% today` : '---'}
+                        </p>
                     </Card>
 
                     <Card className="p-6 bg-card border-border">

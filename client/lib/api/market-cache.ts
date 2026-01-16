@@ -43,11 +43,21 @@ export interface CachedMarketData {
     totalStocks: number;
 }
 
+export interface StockPriceData {
+    time: string;
+    open: number;
+    high: number;
+    low: number;
+    close: number;
+    volume: number;
+}
+
 export interface CachedStockData {
     symbol: string;
     date: string;
     companyName: string;
     price: number;
+    prices?: StockPriceData[];
     change: number;
     changePercent: number;
     volume: number;
@@ -177,6 +187,26 @@ export async function getAllStocksByDate(date: string): Promise<CachedStockData[
         return result.metadata?.stocks || [];
     } catch (error) {
         console.error('Error fetching stocks:', error);
+        return [];
+    }
+}
+
+/**
+ * Get all stocks from latest date (without specifying date)
+ */
+export async function getAllStocks(): Promise<CachedStockData[]> {
+    try {
+        // First get available dates
+        const dates = await getAvailableDates(1);
+        if (dates.length === 0) {
+            console.error('No available dates found');
+            return [];
+        }
+        
+        // Fetch stocks from the latest date
+        return await getAllStocksByDate(dates[0]);
+    } catch (error) {
+        console.error('Error fetching all stocks:', error);
         return [];
     }
 }
