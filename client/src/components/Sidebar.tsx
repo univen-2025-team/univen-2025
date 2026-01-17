@@ -82,11 +82,9 @@ export function Sidebar() {
             )}
 
             <aside
-                className={`fixed lg:static inset-y-0 left-0 z-40 ${
-                    isCollapsed ? 'w-20' : 'w-64'
-                } bg-white/95 backdrop-blur-sm border-r border-gray-200 shadow-xl transform transition-all duration-300 ease-in-out ${
-                    isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
-                }`}
+                className={`fixed lg:static inset-y-0 left-0 z-40 ${isCollapsed ? 'w-20' : 'w-64'
+                    } bg-white/95 backdrop-blur-sm border-r border-gray-200 shadow-xl transform transition-all duration-300 ease-in-out ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+                    }`}
             >
                 <div className="h-full flex flex-col">
                     {/* Header */}
@@ -130,7 +128,7 @@ export function Sidebar() {
                             {sidebarRoutes.map((route) => {
                                 const active = isRouteActive(route, pathname);
                                 // Use dynamic badge count for 'Huy hiệu' route (unearned badges)
-                                const isBadgesRoute = route.path === '/badges';
+                                const isBadgesRoute = route.path === '/dashboard/badges';
                                 const badgeCount = isBadgesRoute
                                     ? unearnedBadges.length > 0
                                         ? unearnedBadges.length.toString()
@@ -142,11 +140,10 @@ export function Sidebar() {
                                         key={route.path}
                                         href={route.path}
                                         onClick={() => setIsOpen(false)}
-                                        className={`group flex items-center gap-3 p-3 rounded-md relative transition-colors ${
-                                            active
+                                        className={`group flex items-center gap-3 p-3 rounded-md relative transition-colors ${active
                                                 ? 'bg-primary text-white shadow'
                                                 : 'text-gray-700 hover:bg-gray-100'
-                                        } ${isCollapsed ? 'justify-center' : ''}`}
+                                            } ${isCollapsed ? 'justify-center' : ''}`}
                                     >
                                         {/* Active indicator */}
                                         {active && !isCollapsed && (
@@ -154,9 +151,8 @@ export function Sidebar() {
                                         )}
 
                                         <div
-                                            className={`flex-shrink-0 ${
-                                                active ? 'text-white' : 'text-gray-600'
-                                            }`}
+                                            className={`flex-shrink-0 ${active ? 'text-white' : 'text-gray-600'
+                                                }`}
                                         >
                                             {route.icon}
                                         </div>
@@ -168,15 +164,14 @@ export function Sidebar() {
                                                 </span>
                                                 {badgeCount && (
                                                     <span
-                                                        className={`ml-2 px-2 py-0.5 rounded-full text-xs font-semibold ${
-                                                            isBadgesRoute
+                                                        className={`ml-2 px-2 py-0.5 rounded-full text-xs font-semibold ${isBadgesRoute
                                                                 ? active
                                                                     ? 'bg-white text-red-500'
                                                                     : 'bg-red-500 text-white'
                                                                 : active
-                                                                ? 'bg-white text-primary'
-                                                                : 'bg-primary text-white'
-                                                        }`}
+                                                                    ? 'bg-white text-primary'
+                                                                    : 'bg-primary text-white'
+                                                            }`}
                                                     >
                                                         {badgeCount}
                                                     </span>
@@ -200,9 +195,8 @@ export function Sidebar() {
                     <div className="p-4 border-t border-gray-200 relative" ref={profileMenuRef}>
                         <button
                             onClick={() => setShowProfileMenu(!showProfileMenu)}
-                            className={`w-full flex items-center gap-3 ${
-                                isCollapsed ? 'justify-center' : ''
-                            } hover:bg-gray-50 rounded-lg p-2 transition-colors`}
+                            className={`w-full flex items-center gap-3 ${isCollapsed ? 'justify-center' : ''
+                                } hover:bg-gray-50 rounded-lg p-2 transition-colors`}
                         >
                             {(() => {
                                 const avatarUrl = getMediaUrl(user?.user_avatar);
@@ -230,9 +224,8 @@ export function Sidebar() {
                             )}
                             {!isCollapsed && (
                                 <svg
-                                    className={`w-4 h-4 text-gray-400 transition-transform ${
-                                        showProfileMenu ? 'rotate-180' : ''
-                                    }`}
+                                    className={`w-4 h-4 text-gray-400 transition-transform ${showProfileMenu ? 'rotate-180' : ''
+                                        }`}
                                     fill="none"
                                     stroke="currentColor"
                                     viewBox="0 0 24 24"
@@ -251,7 +244,7 @@ export function Sidebar() {
                         {showProfileMenu && !isCollapsed && (
                             <div className="absolute bottom-full left-0 right-0 mb-2 mx-4 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
                                 <Link
-                                    href="/profile"
+                                    href="/dashboard/profile"
                                     onClick={() => setShowProfileMenu(false)}
                                     className="flex items-center gap-3 px-4 py-2 hover:bg-gray-50 transition-colors text-gray-700"
                                 >
@@ -299,7 +292,7 @@ export function Sidebar() {
                         {isCollapsed && showProfileMenu && (
                             <div className="absolute bottom-full left-full ml-2 mb-2 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50 w-48">
                                 <Link
-                                    href="/profile"
+                                    href="/dashboard/profile"
                                     onClick={() => setShowProfileMenu(false)}
                                     className="flex items-center gap-3 px-4 py-2 hover:bg-gray-50 transition-colors text-gray-700"
                                 >

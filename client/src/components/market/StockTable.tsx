@@ -77,7 +77,7 @@ export default function StockTable({
                 {stocks.map((stock) => (
                     <div
                         key={stock.symbol}
-                        onClick={() => router.push(`/market/${stock.symbol}`)}
+                        onClick={() => router.push(`/dashboard/market/${stock.symbol}`)}
                         className="bg-gray-50 rounded-lg p-3 cursor-pointer hover:bg-gray-100 transition-colors"
                     >
                         <div className="flex items-center justify-between mb-2">
@@ -141,7 +141,7 @@ export default function StockTable({
                         {stocks.map((stock) => (
                             <tr
                                 key={stock.symbol}
-                                onClick={() => router.push(`/market/${stock.symbol}`)}
+                                onClick={() => router.push(`/dashboard/market/${stock.symbol}`)}
                                 className="border-b border-gray-100 hover:bg-primary/5 transition-colors cursor-pointer"
                             >
                                 <td className="px-2 sm:px-4 py-2 sm:py-3">
