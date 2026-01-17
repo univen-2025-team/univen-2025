@@ -1,6 +1,7 @@
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 from src.jobs.daily_sync import daily_sync_job
+from src.jobs.vn30_history_sync import sync_vn30_history_1m
 import time
 
 class Scheduler:
@@ -17,9 +18,21 @@ class Scheduler:
             replace_existing=True
         )
         
+        # Add VN30 1-minute history sync job to run everyday at 6:00 PM (after market close)
+        self.scheduler.add_job(
+            sync_vn30_history_1m,
+            trigger=CronTrigger(hour=18, minute=0),
+            id='vn30_history_sync_job',
+            name='VN30 1-Minute History Sync',
+            replace_existing=True
+        )
+        
         self.scheduler.start()
-        print("Scheduler started. Daily sync job scheduled for 01:00 AM.")
+        print("Scheduler started.")
+        print("  - Daily sync job scheduled for 01:00 AM")
+        print("  - VN30 history sync job scheduled for 06:00 PM")
 
     def shutdown(self):
         self.scheduler.shutdown()
         print("Scheduler shut down.")
+

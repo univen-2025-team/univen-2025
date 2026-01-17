@@ -89,7 +89,7 @@ export function Sidebar() {
                 <div className="h-full flex flex-col">
                     {/* Header */}
                     <div className="p-4 border-b border-gray-200 flex items-center justify-between gap-2">
-                        <div className="flex items-center gap-3">
+                        <Link href="/" className="flex items-center gap-3">
                             <Image
                                 src="/stockie-logo.png"
                                 alt="Stockie"
@@ -98,7 +98,7 @@ export function Sidebar() {
                                 className="object-contain"
                                 priority
                             />
-                        </div>
+                        </Link>
 
                         {/* Collapse Toggle (desktop) */}
                         <button
@@ -141,8 +141,8 @@ export function Sidebar() {
                                         href={route.path}
                                         onClick={() => setIsOpen(false)}
                                         className={`group flex items-center gap-3 p-3 rounded-md relative transition-colors ${active
-                                                ? 'bg-primary text-white shadow'
-                                                : 'text-gray-700 hover:bg-gray-100'
+                                            ? 'bg-primary text-white shadow'
+                                            : 'text-gray-700 hover:bg-gray-100'
                                             } ${isCollapsed ? 'justify-center' : ''}`}
                                     >
                                         {/* Active indicator */}
@@ -165,12 +165,12 @@ export function Sidebar() {
                                                 {badgeCount && (
                                                     <span
                                                         className={`ml-2 px-2 py-0.5 rounded-full text-xs font-semibold ${isBadgesRoute
-                                                                ? active
-                                                                    ? 'bg-white text-red-500'
-                                                                    : 'bg-red-500 text-white'
-                                                                : active
-                                                                    ? 'bg-white text-primary'
-                                                                    : 'bg-primary text-white'
+                                                            ? active
+                                                                ? 'bg-white text-red-500'
+                                                                : 'bg-red-500 text-white'
+                                                            : active
+                                                                ? 'bg-white text-primary'
+                                                                : 'bg-primary text-white'
                                                             }`}
                                                     >
                                                         {badgeCount}
