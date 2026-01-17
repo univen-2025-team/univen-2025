@@ -79,10 +79,14 @@ class StockHistoryFetcher(BaseFetcher):
                 print(f"No price bars for {self.symbol} on {date}")
                 return None
             
+            # Determine unit
+            unit = "INDEX" if self.symbol in ['VN30', 'VNINDEX'] else "VND"
+            
             result = {
                 'symbol': self.symbol,
                 'date': date,
                 'interval': self.interval,
+                'unit': unit,
                 'prices': prices
             }
             

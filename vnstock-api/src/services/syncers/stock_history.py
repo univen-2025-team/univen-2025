@@ -34,6 +34,7 @@ class StockHistorySyncer:
                 'symbol': data['symbol'].upper(),
                 'date': data['date'],
                 'interval': data['interval'],
+                'unit': data.get('unit', 'VND'),
                 'prices': data['prices'],
                 'updated_at': datetime.now(timezone.utc)
             }
