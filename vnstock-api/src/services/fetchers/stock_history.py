@@ -51,15 +51,19 @@ class StockHistoryFetcher(BaseFetcher):
                 print(f"No data for {self.symbol} on {date} ({self.interval}) - likely weekend/holiday")
                 return None
             
+            # IMPORTANT: vnstock may return data spanning multiple days
+            # Filter to only include data from the target date
+            df['date_str'] = df['time'].dt.strftime('%Y-%m-%d')
+            df = df[df['date_str'] == date]
+            
+            if df.empty:
+                print(f"No data for {self.symbol} on {date} after filtering ({self.interval})")
+                return None
+            
             # Convert DataFrame to price bars array
             prices = []
             for _, row in df.iterrows():
-                time_str = row['time']
-                # Extract time portion (HH:MM:SS)
-                if hasattr(time_str, 'strftime'):
-                    time_str = time_str.strftime('%H:%M:%S')
-                else:
-                    time_str = str(time_str).split('T')[-1][:8] if 'T' in str(time_str) else str(time_str)[-8:]
+                time_str = row['time'].strftime('%H:%M:%S') if hasattr(row['time'], 'strftime') else str(row['time'])[-8:]
                 
                 price_bar = {
                     'time': time_str,
