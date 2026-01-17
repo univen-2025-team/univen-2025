@@ -112,16 +112,17 @@ class VNStockDataFetcher:
             change = price - previous_close
             change_percent = (change / previous_close * 100) if previous_close > 0 else 0
             
-            # Fetch intraday data for the prices array
-            # Fetch intraday data using the dedicated method (handles pagination and filtering)
+            # Fetch intraday tick data for the prices array
             intraday_data = self.fetch_intraday_data(symbol)
             prices = []
             
             if intraday_data:
+                # Tick data already has: { time, price, volume }
+                # Apply PRICE_MULTIPLIER to price (VCI returns price in thousands VND)
                 for item in intraday_data:
                     prices.append({
                         'time': item['time'],
-                        'price': round(item['close'] * PRICE_MULTIPLIER, 0),  # Convert to VND
+                        'price': round(item['price'] * PRICE_MULTIPLIER, 0),  # Convert to VND
                         'volume': item['volume']
                     })
 
@@ -146,10 +147,14 @@ class VNStockDataFetcher:
             logger.error(f"Error fetching data for {symbol}: {str(e)}")
             return None
 
-    def fetch_all_vn30_stocks(self) -> List[Dict]:
+    def fetch_all_vn30_stocks(self, storage=None) -> List[Dict]:
         """
         Fetch latest data for all VN30 stocks.
+        If storage is provided, saves each stock immediately after fetch.
         
+        Args:
+            storage: Optional MarketDataStorage instance for immediate save
+            
         Returns:
             List of stock data dictionaries
         """
@@ -162,10 +167,17 @@ class VNStockDataFetcher:
             
             if stock_data:
                 stocks_data.append(stock_data)
+                
+                # Save immediately if storage is provided
+                if storage:
+                    date = stock_data.get('date')
+                    if date:
+                        storage.save_single_stock(stock_data, date)
             
             # Add delay to avoid rate limiting (vnstock Guest: 20 req/min)
-            # 4s between requests = 15 req/min (safe margin)
-            time.sleep(4)
+            # Each stock = 2 API calls (history + intraday)
+            # 7s delay = ~17 req/min (2 calls * 30 stocks / 3.5 min), safely under 20/min
+            time.sleep(7)
         
         logger.info(f"Successfully fetched {len(stocks_data)}/{len(VN30_SYMBOLS)} stocks")
         return stocks_data
@@ -214,9 +226,55 @@ class VNStockDataFetcher:
             logger.error(f"Error fetching VN30 index: {str(e)}")
             return None
 
-    def fetch_market_overview(self) -> Optional[Dict]:
+    def fetch_vn30_index_intraday(self) -> List[Dict]:
+        """
+        Fetch VN30 index intraday tick data.
+        Tries multiple sources: TCBS, SSI, VCI
+        
+        Returns:
+            List of tick data points: { time, price, volume }
+        """
+        try:
+            from vnstock import Vnstock
+            
+            sources_to_try = ['TCBS', 'SSI', 'VCI']
+            
+            for source in sources_to_try:
+                try:
+                    logger.info(f"Trying to fetch VN30 intraday from {source}...")
+                    
+                    # VN30 is an index, use appropriate symbol
+                    stock = Vnstock().stock(symbol='VN30', source=source)
+                    
+                    # Try to get intraday data
+                    intraday_df = stock.quote.intraday(symbol='VN30', page_size=10000, show_log=False)
+                    
+                    if intraday_df is not None and len(intraday_df) > 0:
+                        logger.info(f"Successfully fetched {len(intraday_df)} VN30 ticks from {source}")
+                        
+                        # Process the tick data
+                        ticks = self._process_tick_data(intraday_df, 'VN30')
+                        if ticks:
+                            return ticks
+                            
+                except Exception as e:
+                    logger.warning(f"Failed to fetch VN30 intraday from {source}: {str(e)}")
+                    continue
+            
+            logger.warning("Failed to fetch VN30 intraday from all sources")
+            return []
+            
+        except Exception as e:
+            logger.error(f"Error fetching VN30 index intraday: {str(e)}")
+            return []
+
+
+    def fetch_market_overview(self, storage=None) -> Optional[Dict]:
         """
         Fetch complete market overview with latest available data.
+        
+        Args:
+            storage: Optional MarketDataStorage instance for immediate save of each stock
         
         Returns:
             Dict with complete market data or None if failed
@@ -230,8 +288,8 @@ class VNStockDataFetcher:
                 logger.error("Failed to fetch VN30 index")
                 return None
             
-            # Fetch all stocks
-            stocks = self.fetch_all_vn30_stocks()
+            # Fetch all stocks (will save each immediately if storage provided)
+            stocks = self.fetch_all_vn30_stocks(storage=storage)
             if not stocks:
                 logger.error("Failed to fetch stock data")
                 return None
@@ -242,7 +300,7 @@ class VNStockDataFetcher:
             
             if vn30_intraday:
                 # Create a pseudo-stock object for VN30 to store in stock_data collection
-                # vn30_intraday items have 'time' key as string 'YYYY-MM-DD HH:MM:SS'
+                # vn30_intraday now has tick format: { time, price, volume }
                 date_str = vn30_intraday[0]['time'].split(' ')[0] if vn30_intraday else datetime.now().strftime('%Y-%m-%d')
                 
                 vn30_stock_data = {
@@ -251,9 +309,9 @@ class VNStockDataFetcher:
                     'price': vn30_index.get('index'),
                     'change': vn30_index.get('change'),
                     'changePercent': vn30_index.get('changePercent'),
-                    'prices': vn30_intraday,
+                    'prices': vn30_intraday,  # Raw tick data: { time, price, volume }
                     'volume': sum(item.get('volume', 0) for item in vn30_intraday),
-                    # Other fields can be defaulted
+                    # Calculate high/low from tick prices
                     'high': max(item.get('price', 0) for item in vn30_intraday) if vn30_intraday else 0,
                     'low': min(item.get('price', 0) for item in vn30_intraday) if vn30_intraday else 0,
                     'open': vn30_intraday[0].get('price', 0) if vn30_intraday else 0,
@@ -261,7 +319,7 @@ class VNStockDataFetcher:
                 }
                 # Append to stocks list so it gets saved to stock_data collection
                 stocks.append(vn30_stock_data)
-                logger.info(f"Added VN30 index data with {len(vn30_intraday)} minute records")
+                logger.info(f"Added VN30 index data with {len(vn30_intraday)} tick records")
             else:
                 logger.warning("Failed to fetch VN30 intraday data")
             
@@ -297,141 +355,181 @@ class VNStockDataFetcher:
 
     def fetch_intraday_data(self, symbol: str, get_previous_day: bool = False) -> List[Dict]:
         """
-        Fetch intraday data for a specific symbol.
+        Fetch intraday tick data for a specific symbol using VCI source.
         
         Args:
             symbol: Stock symbol or 'VN30'
             get_previous_day: If True, fetch data for the previous trading day instead of the latest.
             
         Returns:
-            List of intraday data points
+            List of tick data points: { time, price, volume }
         """
         try:
-            # NOTE: TCBS closed public API access on 15/12/2025
-            # Intraday minute data is no longer available from TCBS
-            # TODO: Find alternative VCI endpoint for intraday data
-            # For now, return empty list to avoid spamming logs
-            logger.debug(f"Intraday data disabled for {symbol} (TCBS API closed)")
-            return []
-            
-            # Old TCBS implementation below - keeping for reference
             from vnstock import Vnstock
             import pandas as pd
-            from unittest.mock import patch
+            from datetime import datetime, timedelta
             
-            # Fetch 1-minute data directly from TCBS API
-            # This avoids fetching thousands of ticks and aggregating them
-            import requests
-            import time
+            logger.info(f"Fetching intraday tick data for {symbol} using VCI source...")
             
-            end_stamp = int(time.time())
-            # resolution=1 means 1 minute
+            # Initialize stock object with VCI source
+            stock = Vnstock().stock(symbol=symbol, source=self.source)
             
-            # Fetch data in batches to overcome 250 item limit
-            # We need about 255 items for a full trading day.
-            # If get_previous_day is True, we need to fetch enough to cover 2 days (approx 510 items).
-            # Strategy: Fetch batches of 160 items. 2 batches for today, 4 batches for previous day.
+            # Fetch tick-level intraday data
+            # page_size controls how many ticks to retrieve (max ~10000)
+            intraday_df = stock.quote.intraday(symbol=symbol, page_size=10000, show_log=False)
             
-            num_batches = 4 if get_previous_day else 2
-            # Determine type based on symbol
-            type_param = 'index' if symbol == 'VN30' else 'stock'
-            
-            # Calculate time range
-            # End time is now
-            end_stamp = int(time.time())
-            
-            # URL for direct API access (same as vnstock uses internally)
-            # We fetch in batches to ensure we get enough data
-            # Each request gets 'countBack' items
-            all_items = []
-            
-            current_to = end_stamp
-            
-            for i in range(num_batches):
-                try:
-                    # Update URL with current 'to' timestamp and correct type
-                    url = f"https://apipubaws.tcbs.com.vn/stock-insight/v2/stock/bars?resolution=1&ticker={symbol}&type={type_param}&to={current_to}&countBack=160"
-                    response = requests.get(url, timeout=10)
-                    
-                    if response.status_code == 200:
-                        data = response.json().get('data', [])
-                        if data:
-                            all_items.extend(data)
-                            
-                            # Prepare for next batch
-                            oldest_item = data[0]
-                            dt = datetime.strptime(oldest_item['tradingDate'].split('.')[0], "%Y-%m-%dT%H:%M:%S")
-                            import calendar
-                            current_to = calendar.timegm(dt.timetuple())
-                        else:
-                            break # No more data
-                    else:
-                        logger.warning(f"Failed to fetch batch {i+1} for {symbol}: {response.status_code}")
-                        break
-                except Exception as e:
-                    logger.error(f"Error fetching batch {i+1} for {symbol}: {e}")
-                    break
-                
-            if all_items:
-                # Deduplicate based on tradingDate
-                unique_items = {item['tradingDate']: item for item in all_items}.values()
-                # Sort by tradingDate
-                sorted_items = sorted(unique_items, key=lambda x: x['tradingDate'])
-                
-                # Filter logic
-                if sorted_items:
-                    # Group by date
-                    dates = sorted(list(set(item['tradingDate'].split('T')[0] for item in sorted_items)))
-                    
-                    target_date = None
-                    if get_previous_day:
-                        if len(dates) >= 2:
-                            target_date = dates[-2] # Second latest date
-                            logger.info(f"Fetching previous day data. Found dates: {dates}. Target: {target_date}")
-                        else:
-                            logger.warning(f"Requested previous day but only found dates: {dates}")
-                            # Fallback to latest if only one day found (or return empty?)
-                            # Let's return empty to be strict about "previous day"
-                            return []
-                    else:
-                        target_date = dates[-1] # Latest date
-                        
-                    if target_date:
-                        sorted_items = [item for item in sorted_items if item['tradingDate'].startswith(target_date)]
-                        logger.info(f"Filtered to keep only data for {target_date}: {len(sorted_items)} items")
-                
-                logger.info(f"Fetched total {len(sorted_items)} minute candles for {symbol}")
-                
-                # Convert to result format
-                result = []
-                for item in sorted_items:
-                    # Parse tradingDate (e.g. "2025-11-28T06:21:00.000Z")
-                    # Convert to local time string
-                    try:
-                        dt = datetime.strptime(item['tradingDate'].split('.')[0], "%Y-%m-%dT%H:%M:%S")
-                        # Add 7 hours for GMT+7 (simple adjustment since source is Z/UTC)
-                        dt = dt + timedelta(hours=7)
-                        time_str = dt.strftime("%Y-%m-%d %H:%M:%S")
-                        
-                        result.append({
-                            'time': time_str,
-                            'open': float(item['open']),
-                            'high': float(item['high']),
-                            'low': float(item['low']),
-                            'close': float(item['close']),
-                            'volume': int(item['volume'])
-                        })
-                    except Exception as e:
-                        logger.warning(f"Error parsing item for {symbol}: {e}")
-                        continue
-                        
-                if result:
-                    logger.info(f"Sample data: {result[:2]}")
-                return result
-            else:
-                logger.warning(f"No minute data returned for {symbol}")
+            if intraday_df is None or len(intraday_df) == 0:
+                logger.warning(f"No intraday data found for {symbol}")
                 return []
+            
+            logger.info(f"Fetched {len(intraday_df)} ticks for {symbol}")
+            
+            # Convert tick DataFrame to list of dicts
+            # VCI intraday columns may include: time, price, volume, etc.
+            ticks = self._process_tick_data(intraday_df, symbol)
+            
+            if not ticks:
+                logger.warning(f"Failed to process tick data for {symbol}")
+                return []
+            
+            # Filter by date if needed
+            if get_previous_day:
+                dates = sorted(list(set(item['time'].split(' ')[0] for item in ticks)))
+                if len(dates) >= 2:
+                    target_date = dates[-2]  # Second latest date
+                    ticks = [item for item in ticks if item['time'].startswith(target_date)]
+                    logger.info(f"Filtered to previous day {target_date}: {len(ticks)} ticks")
+                else:
+                    logger.warning(f"No previous day data available for {symbol}")
+                    return []
+            
+            logger.info(f"Returning {len(ticks)} ticks for {symbol}")
+            return ticks
             
         except Exception as e:
             logger.error(f"Error fetching intraday data for {symbol}: {str(e)}")
             return []
+    
+    def _process_tick_data(self, df, symbol: str) -> List[Dict]:
+        """
+        Process tick DataFrame to list of tick dicts.
+        
+        Args:
+            df: DataFrame with tick data from quote.intraday()
+            symbol: Stock symbol (for logging)
+            
+        Returns:
+            List of tick dicts: { time, price, volume }
+        """
+        try:
+            import pandas as pd
+            
+            # Rename columns if needed based on VCI response
+            if 'time' not in df.columns and 'thoiGian' in df.columns:
+                df = df.rename(columns={'thoiGian': 'time'})
+            if 'price' not in df.columns and 'gia' in df.columns:
+                df = df.rename(columns={'gia': 'price'})
+            if 'volume' not in df.columns and 'khoiLuong' in df.columns:
+                df = df.rename(columns={'khoiLuong': 'volume'})
+            
+            # Ensure we have the required columns
+            if 'time' not in df.columns or 'price' not in df.columns:
+                logger.warning(f"Missing required columns for {symbol}. Available: {df.columns.tolist()}")
+                return []
+            
+            # Convert time to string format if it's datetime
+            if hasattr(df['time'].iloc[0], 'strftime'):
+                df['time'] = df['time'].apply(lambda x: x.strftime('%Y-%m-%d %H:%M:%S'))
+            
+            # Sort by time
+            df = df.sort_values('time')
+            
+            # Convert to list of dicts
+            result = []
+            for _, row in df.iterrows():
+                result.append({
+                    'time': str(row['time']),
+                    'price': float(row['price']),
+                    'volume': int(row.get('volume', 0))
+                })
+            
+            logger.info(f"Processed {len(result)} ticks for {symbol}")
+            return result
+            
+        except Exception as e:
+            logger.error(f"Error processing tick data for {symbol}: {str(e)}")
+            return []
+    
+    def _aggregate_ticks_to_minutes(self, df, symbol: str) -> List[Dict]:
+        """
+        Aggregate tick-level data to minute candles (OHLCV).
+        
+        Args:
+            df: DataFrame with tick data from quote.intraday()
+            symbol: Stock symbol (for logging)
+            
+        Returns:
+            List of minute candle dicts with time, open, high, low, close, volume
+        """
+        try:
+            import pandas as pd
+            
+            # Expected columns from VCI intraday: time, price, volume, match_type, etc.
+            # Rename columns if needed based on actual VCI response
+            if 'time' not in df.columns and 'thoiGian' in df.columns:
+                df = df.rename(columns={'thoiGian': 'time'})
+            if 'price' not in df.columns and 'gia' in df.columns:
+                df = df.rename(columns={'gia': 'price'})
+            if 'volume' not in df.columns and 'khoiLuong' in df.columns:
+                df = df.rename(columns={'khoiLuong': 'volume'})
+            
+            # Ensure we have the required columns
+            if 'time' not in df.columns or 'price' not in df.columns:
+                logger.warning(f"Missing required columns for {symbol}. Available: {df.columns.tolist()}")
+                return []
+            
+            # Convert time to datetime if it's a string
+            if df['time'].dtype == 'object':
+                df['time'] = pd.to_datetime(df['time'])
+            
+            # Create minute floor column
+            df['minute'] = df['time'].dt.floor('min')  # Floor to minute
+            
+            # Group by minute and aggregate
+            grouped = df.groupby('minute').agg({
+                'price': ['first', 'max', 'min', 'last'],
+                'volume': 'sum'
+            }).reset_index()
+            
+            # Flatten column names
+            grouped.columns = ['minute', 'open', 'high', 'low', 'close', 'volume']
+            
+            # Sort by time
+            grouped = grouped.sort_values('minute')
+            
+            # Convert to list of dicts
+            result = []
+            for _, row in grouped.iterrows():
+                time_str = row['minute'].strftime('%Y-%m-%d %H:%M:%S')
+                
+                # For VN30 index, don't multiply by PRICE_MULTIPLIER since it's an index (points)
+                # For stocks, prices from intraday are already in VND (different from daily data)
+                # Check if prices need multiplication based on magnitude
+                price_value = float(row['close'])
+                
+                result.append({
+                    'time': time_str,
+                    'open': float(row['open']),
+                    'high': float(row['high']),
+                    'low': float(row['low']),
+                    'close': float(row['close']),
+                    'volume': int(row['volume'])
+                })
+            
+            logger.info(f"Aggregated {len(df)} ticks to {len(result)} minute candles for {symbol}")
+            return result
+            
+        except Exception as e:
+            logger.error(f"Error aggregating tick data for {symbol}: {str(e)}")
+            return []
+

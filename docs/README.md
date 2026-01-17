@@ -64,7 +64,42 @@ This will:
 - Start all services
 - Create necessary configuration files
 
-### Option 2: Manual Setup
+### Option 2: Docker Compose Development (Recommended)
+
+```bash
+# Clone the repository
+git clone https://github.com/univen-2025-team/univen-2025.git
+cd univen-2025
+
+# Start all services with docker-compose
+docker compose -f docker-compose.dev.yml up -d
+
+# View logs
+docker compose -f docker-compose.dev.yml logs -f
+
+# Restart specific service
+docker restart univen-server-dev
+docker restart univen-python-dev
+
+# Stop all services
+docker compose -f docker-compose.dev.yml down
+```
+
+**Services started:**
+| Service | Container | Port | Description |
+|---------|-----------|------|-------------|
+| MongoDB | univen-mongodb-dev | 27019 | Database |
+| Redis | univen-redis-dev | 6379 | Cache |
+| Server | univen-server-dev | 4000 | Node.js API |
+| Client | univen-client-dev | 3000 | Next.js Frontend |
+| Python | univen-python-dev | - | Data Fetcher (cronjob) |
+
+**Manual trigger data fetch:**
+```bash
+docker exec -it univen-python-dev python run_daily_job.py
+```
+
+### Option 3: Manual Setup
 
 See [QUICKSTART.md](QUICKSTART.md) for detailed manual setup instructions.
 

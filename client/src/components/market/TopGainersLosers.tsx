@@ -26,7 +26,7 @@ export default function TopGainersLosers({ topGainers, topLosers }: TopGainersLo
           {topGainers.map((stock) => (
             <div
               key={stock.symbol}
-              onClick={() => router.push(`/market/${stock.symbol}`)}
+              onClick={() => router.push(`/dashboard/market/${stock.symbol}`)}
               className={`flex items-center justify-between p-3 rounded-lg border cursor-pointer hover:shadow-md transition-shadow ${getChangeBgColor(stock.change)}`}
             >
               <div>
@@ -58,7 +58,7 @@ export default function TopGainersLosers({ topGainers, topLosers }: TopGainersLo
           {topLosers.map((stock) => (
             <div
               key={stock.symbol}
-              onClick={() => router.push(`/market/${stock.symbol}`)}
+              onClick={() => router.push(`/dashboard/market/${stock.symbol}`)}
               className={`flex items-center justify-between p-3 rounded-lg border cursor-pointer hover:shadow-md transition-shadow ${getChangeBgColor(stock.change)}`}
             >
               <div>

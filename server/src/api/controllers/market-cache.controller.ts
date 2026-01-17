@@ -175,4 +175,65 @@ export default class MarketCacheController {
             next(error);
         }
     }
+    /**
+     * GET /api/cached/details/:symbol
+     * Get aggregated stock details
+     */
+    static async getStockDetails(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { symbol } = req.params;
+
+            if (!symbol) {
+                throw new BadRequestErrorResponse({
+                    message: 'Stock symbol is required'
+                });
+            }
+
+            const details = await MarketCacheService.getStockDetails(symbol);
+
+            if (!details) {
+                throw new NotFoundErrorResponse({
+                    message: `No details found for stock: ${symbol}`
+                });
+            }
+
+            new OkResponse({
+                message: 'Stock details retrieved successfully',
+                metadata: details
+            }).send(res);
+        } catch (error) {
+            next(error);
+        }
+    }
+    /**
+     * GET /api/cached/stock/:symbol/intraday
+     * Get stock intraday data
+     */
+    static async getStockIntraday(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { symbol } = req.params;
+            const limit = parseInt(req.query.limit as string) || 300;
+            const start = req.query.start as string;
+            const end = req.query.end as string;
+
+            if (!symbol) {
+                throw new BadRequestErrorResponse({
+                    message: 'Stock symbol is required'
+                });
+            }
+
+            const history = await MarketCacheService.getStockIntraday(symbol, limit, start, end);
+
+            new OkResponse({
+                message: 'Stock intraday data retrieved successfully',
+                metadata: {
+                    symbol: symbol.toUpperCase(),
+                    history,
+                    total: history.length
+                }
+            }).send(res);
+        } catch (error) {
+            next(error);
+        }
+    }
 }
