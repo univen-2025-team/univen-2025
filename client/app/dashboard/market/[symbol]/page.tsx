@@ -198,12 +198,28 @@ const StockDetailPage = () => {
                   {profile.history.split(/ - |;  - /).map((item: string, index: number) => {
                     const cleanItem = item.trim();
                     if (!cleanItem) return null;
-                    // If it's the first item and doesn't look like a bullet point, render as is.
-                    // Otherwise prepend dash if missing (split consumes it).
+
                     const isBullet = index > 0 || profile.history.startsWith(' - ');
+                    const content = cleanItem.replace(/^[-•]\s*/, '');
+
+                    // Check for date pattern (starts with Ngày/Tháng/Năm followed by colon)
+                    const dateMatch = content.match(/^((?:Ngày|Tháng|Năm)\s[^:]+):/);
+
+                    if (dateMatch) {
+                      const datePart = dateMatch[1];
+                      const remainingPart = content.substring(dateMatch[0].length);
+                      return (
+                        <div key={index} className="mb-2">
+                          {isBullet ? <span className="mr-2">•</span> : ''}
+                          <span className="font-bold text-gray-900">{datePart}:</span>
+                          {remainingPart}
+                        </div>
+                      );
+                    }
+
                     return (
                       <div key={index} className="mb-2">
-                        {isBullet ? '• ' : ''}{cleanItem.replace(/^[-•]\s*/, '')}
+                        {isBullet ? <span className="mr-2">•</span> : ''}{content}
                       </div>
                     );
                   })}

@@ -39,12 +39,23 @@ class CompanyProfileFetcher(BaseFetcher):
                 if 'ticker' not in data:
                     data['ticker'] = data['symbol']
                 
-                # Synthesize and validate logo URL
-                logo_url = f"https://cafef1.mediacdn.vn/LOGO/{data['symbol']}.png"
-                if self._validate_logo_url(logo_url):
-                    data['logo'] = logo_url
-                else:
-                    data['logo'] = None  # No valid logo found
+                # Synthesize and validate logo URL from multiple sources
+                logo_sources = [
+                    f"https://trading.vietcap.com.vn/api/files/logo/{data['symbol']}",
+                    f"https://cafef1.mediacdn.vn/LOGO/{data['symbol']}.png",
+                    f"https://s.cafef.vn/logo/{data['symbol']}.jpg",
+                    f"https://static.fireant.vn/symbols/{data['symbol']}.jpg",
+                    f"https://static.fireant.vn/symbols/{data['symbol']}.png",
+                    f"https://cdn.simplize.vn/simplize/images/logo-ticker/{data['symbol']}.png"
+                ]
+                
+                valid_logo = None
+                for url in logo_sources:
+                    if self._validate_logo_url(url):
+                        valid_logo = url
+                        break
+                
+                data['logo'] = valid_logo
                 
             return data
             
