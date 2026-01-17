@@ -213,6 +213,8 @@ export default class MarketCacheController {
         try {
             const { symbol } = req.params;
             const limit = parseInt(req.query.limit as string) || 300;
+            const start = req.query.start as string;
+            const end = req.query.end as string;
 
             if (!symbol) {
                 throw new BadRequestErrorResponse({
@@ -220,7 +222,7 @@ export default class MarketCacheController {
                 });
             }
 
-            const history = await MarketCacheService.getStockIntraday(symbol, limit);
+            const history = await MarketCacheService.getStockIntraday(symbol, limit, start, end);
 
             new OkResponse({
                 message: 'Stock intraday data retrieved successfully',

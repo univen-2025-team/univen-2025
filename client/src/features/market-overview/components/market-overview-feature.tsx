@@ -1,11 +1,13 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { StockDetailModal } from './stock-detail-modal';
+import { TopGainersLosers } from './top-gainers-losers';
 import { MarketHeader } from './market-header';
 import VN30IndexCard from '@/components/market/VN30IndexCard';
 import VN30IndexChart from '@/components/market/VN30IndexChart';
 import TopStocksChart from '@/components/market/TopStocksChart';
-import TopGainersLosers from '@/components/market/TopGainersLosers';
 import StockTable from '@/components/market/StockTable';
 import MarketLoadingSpinner from '@/components/market/MarketLoadingSpinner';
 import ErrorDisplay from '@/components/market/ErrorDisplay';
@@ -51,6 +53,7 @@ const buildFallbackMarketData = (data: MarketOverviewData): MarketData => {
 };
 
 export function MarketOverviewFeature({ data }: MarketOverviewFeatureProps) {
+    const router = useRouter();
     const fallbackData = useMemo(() => buildFallbackMarketData(data), [data]);
     const [marketData, setMarketData] = useState<MarketData | null>(fallbackData);
     const [loading, setLoading] = useState(true);
@@ -61,12 +64,30 @@ export function MarketOverviewFeature({ data }: MarketOverviewFeatureProps) {
     const [realtimeEnabled, setRealtimeEnabled] = useState(false);
     const [historyRange, setHistoryRange] = useState('10M');
 
+    // Modal State
+    const [selectedStock, setSelectedStock] = useState<any>(null);
+
     const {
         isConnected,
         marketData: socketMarketData,
         subscribeToMarket,
         unsubscribeFromMarket
     } = useMarketSocket();
+
+    // Handlers
+    const handleStockClick = (stock: any) => {
+        router.push(`/dashboard/market/${stock.symbol}`);
+    };
+
+    const handleQuickTrade = (stock: any) => {
+        setSelectedStock(stock);
+    };
+
+    const handleModalBuy = (stock: any) => {
+        // TODO: Implement actual buy flow or redirect
+        console.log('Buy requested from Modal for:', stock.symbol);
+        setSelectedStock(null);
+    };
 
     // Fetch history data
     const fetchHistory = async (range: string) => {
@@ -255,7 +276,12 @@ export function MarketOverviewFeature({ data }: MarketOverviewFeatureProps) {
                 />
             </div>
 
-            <TopGainersLosers topGainers={marketData.topGainers} topLosers={marketData.topLosers} />
+            <TopGainersLosers
+                gainers={marketData.topGainers}
+                losers={marketData.topLosers}
+                onStockClick={handleStockClick}
+                onBuyClick={handleQuickTrade}
+            />
 
             <StockTable
                 stocks={marketData.stocks}
@@ -264,6 +290,13 @@ export function MarketOverviewFeature({ data }: MarketOverviewFeatureProps) {
                 onSortChange={setSortBy}
                 onOrderChange={setOrder}
                 onRefresh={fetchMarketData}
+            />
+
+            <StockDetailModal
+                isOpen={!!selectedStock}
+                stock={selectedStock}
+                onClose={() => setSelectedStock(null)}
+                onBuy={handleModalBuy}
             />
         </div>
     );
