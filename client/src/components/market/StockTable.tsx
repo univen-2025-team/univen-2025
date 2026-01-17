@@ -1,6 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { StockData } from '@/lib/types/market';
 import { MarketSortField, MarketSortOrder } from '@/lib/services/marketService';
 import { formatNumber, formatPrice, getChangeColor } from './utils';
@@ -75,10 +76,10 @@ export default function StockTable({
             {/* Mobile Card View */}
             <div className="block sm:hidden space-y-2">
                 {stocks.map((stock) => (
-                    <div
+                    <Link
                         key={stock.symbol}
-                        onClick={() => router.push(`/market/${stock.symbol}`)}
-                        className="bg-gray-50 rounded-lg p-3 cursor-pointer hover:bg-gray-100 transition-colors"
+                        href={`/dashboard/market/${stock.symbol}`}
+                        className="block bg-gray-50 rounded-lg p-3 cursor-pointer hover:bg-gray-100 transition-colors"
                     >
                         <div className="flex items-center justify-between mb-2">
                             <span className="font-bold text-primary text-sm">{stock.symbol}</span>
@@ -105,7 +106,7 @@ export default function StockTable({
                             </div>
                             <span className="text-gray-500">KL: {formatNumber(stock.volume)}</span>
                         </div>
-                    </div>
+                    </Link>
                 ))}
             </div>
 
@@ -141,13 +142,17 @@ export default function StockTable({
                         {stocks.map((stock) => (
                             <tr
                                 key={stock.symbol}
-                                onClick={() => router.push(`/market/${stock.symbol}`)}
-                                className="border-b border-gray-100 hover:bg-primary/5 transition-colors cursor-pointer"
+                                onClick={() => router.push(`/dashboard/market/${stock.symbol}`)}
+                                className="border-b border-gray-100 hover:bg-primary/5 transition-colors cursor-pointer group"
                             >
                                 <td className="px-2 sm:px-4 py-2 sm:py-3">
-                                    <span className="font-bold text-primary text-xs sm:text-sm hover:text-primary/90">
+                                    <Link
+                                        href={`/dashboard/market/${stock.symbol}`}
+                                        className="font-bold text-primary text-xs sm:text-sm hover:text-primary/90 block w-full h-full"
+                                        onClick={(e) => e.stopPropagation()} // Prevent double nav
+                                    >
                                         {stock.symbol}
-                                    </span>
+                                    </Link>
                                 </td>
                                 <td
                                     className={`px-2 sm:px-4 py-2 sm:py-3 text-right text-xs sm:text-sm font-semibold ${getChangeColor(

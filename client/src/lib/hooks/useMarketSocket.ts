@@ -45,8 +45,11 @@ export function useMarketSocket(serverUrl: string = API_URL) {
     const [marketData, setMarketData] = useState<MarketUpdate | null>(null);
 
     useEffect(() => {
+        // Extract base server URL (remove /v1/api path suffix for Socket.IO)
+        const baseServerUrl = serverUrl.replace(/\/v\d+\/api\/?$/, '');
+
         // Create socket connection to /market namespace
-        socketRef.current = io(`${serverUrl}/market`, {
+        socketRef.current = io(`${baseServerUrl}/market`, {
             transports: ['websocket', 'polling'],
             reconnection: true,
             reconnectionDelay: 1000,
@@ -127,8 +130,11 @@ export function useStockSocket(
     const [stockData, setStockData] = useState<StockDetailUpdate | null>(null);
 
     useEffect(() => {
+        // Extract base server URL (remove /v1/api path suffix for Socket.IO)
+        const baseServerUrl = serverUrl.replace(/\/v\d+\/api\/?$/, '');
+
         // Create socket connection to /market namespace
-        socketRef.current = io(`${serverUrl}/market`, {
+        socketRef.current = io(`${baseServerUrl}/market`, {
             transports: ['websocket', 'polling'],
             reconnection: true,
             reconnectionDelay: 1000,

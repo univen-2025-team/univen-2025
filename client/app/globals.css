@@ -176,6 +176,13 @@
     --color-error-foreground: var(--error-foreground);
     --color-warning: var(--warning);
     --color-warning-foreground: var(--warning-foreground);
+
+    /* Compatibility for TradeTutor AI components */
+    --color-brand-500: var(--primary);
+    --color-brand-400: var(--accent);
+    --color-brand-300: oklch(0.8 0.08 250);
+    --color-fintech-bg: var(--background); /* Or specific dark color if needed */
+    --color-fintech-border: var(--border);
 }
 
 :root {

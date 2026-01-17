@@ -3,7 +3,7 @@ import {
     STOCK_TRANSACTION_MODEL_NAME
 } from '@/models/stockTransaction.model.js';
 import { userModel } from '@/models/user.model.js';
-import StockDataModel from '@/models/stock-data.model.js';
+import StockHistoryModel from '@/models/stock-history.model.js';
 import { BadRequestErrorResponse, NotFoundErrorResponse } from '@/response/error.response.js';
 import { Types } from 'mongoose';
 import VNStockService from './vnstock.service.js';
@@ -452,20 +452,22 @@ export default class TransactionService {
             const uniqueStockCodes = [...new Set(holdings.map((h) => h._id.stock_code))];
             console.log(`[Ranking] Found ${uniqueStockCodes.length} active stocks held by users`);
 
-            // 4. Fetch latest stock prices
+            // 4. Fetch latest stock prices from stock_history
             const stockPriceMap = new Map<string, number>();
             for (const stockCode of uniqueStockCodes) {
                 try {
-                    const stockData = await StockDataModel.findOne({
-                        symbol: stockCode.toUpperCase()
+                    const stockData = await StockHistoryModel.findOne({
+                        symbol: stockCode.toUpperCase(),
+                        interval: '1m'
                     })
                         .sort({ date: -1 })
                         .lean();
 
-                    if (stockData && stockData.price) {
-                        // Convert from thousand VND to VND if needed (assuming API returns thousands)
-                        // Based on previous context, we multiply by 1000
-                        const actualPrice = stockData.price * 1000;
+                    if (stockData && (stockData as any).prices && (stockData as any).prices.length > 0) {
+                        const prices = (stockData as any).prices;
+                        const latestPrice = prices[prices.length - 1];
+                        // Price is in thousands VND, multiply by 1000
+                        const actualPrice = latestPrice.close * 1000;
                         stockPriceMap.set(stockCode, actualPrice);
                     }
                 } catch (error) {

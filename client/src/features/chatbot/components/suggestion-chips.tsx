@@ -10,7 +10,7 @@ type SuggestionChipsProps = {
 
 const DEFAULT_SUGGESTIONS: SuggestionMessage[] = [
   { text: 'Show market news', icon: '📰' },
-  { text: 'Buy AAPL', icon: '💹' },
+  { text: 'Buy HPG', icon: '💹' },
   { text: 'Explain P/E ratio', icon: '📊' },
   { text: 'Top gainers today', icon: '📈' },
 ]
@@ -19,10 +19,10 @@ export function SuggestionChips({ suggestions, onClick }: SuggestionChipsProps) 
   // Convert string[] to SuggestionMessage[] nếu cần
   const chips: SuggestionMessage[] = suggestions
     ? suggestions.map((s) =>
-        typeof s === 'string'
-          ? { text: s }
-          : s
-      )
+      typeof s === 'string'
+        ? { text: s }
+        : s
+    )
     : DEFAULT_SUGGESTIONS
 
   return (
