@@ -23,4 +23,10 @@ router.get('/dates', MarketCacheController.getAvailableDates);
 // GET /api/cached/history/vn30 - Get VN30 history
 router.get('/history/vn30', MarketCacheController.getVN30History);
 
+// GET /api/cached/details/:symbol - Get aggregated stock details
+router.get('/details/:symbol', MarketCacheController.getStockDetails);
+
+// GET /api/cached/stock/:symbol/intraday - Get stock intraday data
+router.get('/stock/:symbol/intraday', MarketCacheController.getStockIntraday);
+
 export default router;
