@@ -24,9 +24,9 @@ export interface SidebarRoute {
 export const sidebarRoutes: SidebarRoute[] = [
     {
         name: 'Trang chủ',
-        path: '/',
+        path: '/dashboard/dashboard',
         exact: true,
-        aliases: ['/'],
+        aliases: ['/dashboard', '/dashboard/dashboard'],
         icon: (
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
@@ -40,7 +40,7 @@ export const sidebarRoutes: SidebarRoute[] = [
     },
     {
         name: 'Thị trường',
-        path: '/market',
+        path: '/dashboard/market',
         icon: (
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
@@ -54,7 +54,7 @@ export const sidebarRoutes: SidebarRoute[] = [
     },
     {
         name: 'Danh mục',
-        path: '/portfolio',
+        path: '/dashboard/portfolio',
         icon: (
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
@@ -68,7 +68,7 @@ export const sidebarRoutes: SidebarRoute[] = [
     },
     {
         name: 'Giao dịch',
-        path: '/trade',
+        path: '/dashboard/trade',
         icon: (
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
@@ -82,7 +82,7 @@ export const sidebarRoutes: SidebarRoute[] = [
     },
     {
         name: 'Bảng xếp hạng',
-        path: '/ranking',
+        path: '/dashboard/ranking',
         icon: (
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
@@ -96,7 +96,7 @@ export const sidebarRoutes: SidebarRoute[] = [
     },
     {
         name: 'Học đầu tư',
-        path: '/stock-analysis',
+        path: '/dashboard/stock-analysis',
         icon: (
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
@@ -110,7 +110,7 @@ export const sidebarRoutes: SidebarRoute[] = [
     },
     {
         name: 'Lịch sử',
-        path: '/history',
+        path: '/dashboard/history',
         icon: (
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
@@ -124,7 +124,7 @@ export const sidebarRoutes: SidebarRoute[] = [
     },
     {
         name: 'Huy hiệu',
-        path: '/badges',
+        path: '/dashboard/badges',
         icon: (
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
