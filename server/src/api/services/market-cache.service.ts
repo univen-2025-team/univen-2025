@@ -7,6 +7,10 @@
 import LoggerService from './logger.service';
 import MarketDataModel from '@/models/market-data.model';
 import StockHistoryModel, { IPriceBar } from '@/models/stock-history.model';
+import CompanyProfileModel from '@/models/company-profile.model';
+import StockSymbolModel from '@/models/stock-symbol.model';
+import axios from 'axios';
+import { VNSTOCK_API_URL } from '@/configs/vnstock.config';
 
 // Lean types (without Document methods)
 type MarketDataLean = {
@@ -93,7 +97,33 @@ export default class MarketCacheService {
                 .sort({ date: -1 })
                 .lean()
                 .exec();
-            return result as StockHistoryLean | null;
+
+            if (result) return result as StockHistoryLean;
+
+            // FALLBACK: If data not found, try to sync from vnstock-api
+            this.logger.info(`Cache miss for ${symbol}, attempting on-demand sync from vnstock-api...`);
+            try {
+                // Call vnstock-api to fetch data
+                await axios.get(`${VNSTOCK_API_URL}/sync-stock?symbol=${symbol}`);
+
+                // Retry getting data from DB
+                const retryResult = await StockHistoryModel.findOne({
+                    symbol: symbol.toUpperCase(),
+                    interval
+                })
+                    .sort({ date: -1 })
+                    .lean()
+                    .exec();
+
+                if (retryResult) {
+                    this.logger.info(`Successfully synced and retrieved data for ${symbol}`);
+                    return retryResult as StockHistoryLean;
+                }
+            } catch (syncError) {
+                this.logger.error(`Failed to sync stock ${symbol} from vnstock-api`, syncError as any);
+            }
+
+            return null;
         } catch (error) {
             this.logger.error(`Error getting latest stock history for ${symbol}`, error as any);
             return null;
@@ -351,6 +381,64 @@ export default class MarketCacheService {
             return latestDateStocks;
         } catch (error) {
             this.logger.error('Error getting top stocks by price', error as any);
+            return [];
+        }
+    }
+    /**
+     * Get aggregated stock details (Profile + Symbol + Latest Price)
+     */
+    static async getStockDetails(symbol: string): Promise<any | null> {
+        try {
+            const upperSymbol = symbol.toUpperCase();
+
+            // 1. Get Company Profile
+            const profile = await CompanyProfileModel.findOne({ ticker: upperSymbol }).lean().exec();
+
+            // 2. Get Stock Symbol Details (Exchange etc.)
+            const symbolInfo = await StockSymbolModel.findOne({ symbol: upperSymbol }).lean().exec();
+
+            // 3. Get Latest Price Data
+            const priceData = await this.getLatestStockData(upperSymbol);
+
+            if (!profile && !symbolInfo && !priceData) {
+                return null;
+            }
+
+            return {
+                symbol: upperSymbol,
+                profile: profile || null,
+                info: symbolInfo || null,
+                marketData: priceData || null
+            };
+        } catch (error) {
+            this.logger.error(`Error getting stock details for ${symbol}`, error as any);
+            return null;
+        }
+    }
+
+    /**
+     * Get stock Intraday data
+     */
+    static async getStockIntraday(symbol: string, limit: number = 300): Promise<any[]> {
+        try {
+            const history = await this.getLatestStockHistory(symbol, '1m');
+
+            if (!history || !history.prices || history.prices.length === 0) {
+                return [];
+            }
+
+            let resultPrices = history.prices;
+            if (limit > 0 && limit < history.prices.length) {
+                resultPrices = history.prices.slice(-limit);
+            }
+
+            return resultPrices.map((p: IPriceBar) => ({
+                time: p.time,
+                price: p.close,
+                volume: p.volume
+            }));
+        } catch (error) {
+            this.logger.error(`Error getting stock intraday for ${symbol}`, error as any);
             return [];
         }
     }
