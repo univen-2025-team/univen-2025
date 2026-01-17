@@ -1,7 +1,8 @@
 import {
     CLEAN_UP_KEY_TOKEN_CRON_TIME,
     CLEAN_UP_EXPIRED_GUESTS_CRON_TIME,
-    getCronOptions
+    getCronOptions,
+    TIMEZONE
 } from '@/configs/scheduled.config.js';
 
 // Models
@@ -24,6 +25,7 @@ export default class ScheduledService {
     public static startScheduledService = () => {
         this.cleanUpKeyTokenCronJob.start();
         this.cleanUpExpiredGuestsCronJob.start();
+        this.vn30DailySyncCronJob.start();
     };
 
     /* ------------------------------------------------------ */
@@ -124,7 +126,7 @@ export default class ScheduledService {
 
             LoggerService.getInstance().info(
                 `Cleanup guests: ${userResult.deletedCount} guest accounts deleted, ` +
-                    `${keyTokenResult.deletedCount} key tokens, ${transactionResult.deletedCount} transactions`
+                `${keyTokenResult.deletedCount} key tokens, ${transactionResult.deletedCount} transactions`
             );
         } catch (error) {
             LoggerService.getInstance().error(`Cleanup guests error: ${error}`);
@@ -138,15 +140,57 @@ export default class ScheduledService {
         getCronOptions({
             cronTime: CLEAN_UP_KEY_TOKEN_CRON_TIME,
             onTick: ScheduledService.handleCleanUpKeyToken,
-            onComplete: () => {}
+            onComplete: () => { }
         })
     );
 
     public static cleanUpExpiredGuestsCronJob = CronJob.from(
         getCronOptions({
             cronTime: CLEAN_UP_EXPIRED_GUESTS_CRON_TIME,
-            onTick: ScheduledService.handleCleanUpExpiredGuests,
-            onComplete: () => {}
+            onTick: async () => {
+                try {
+                    // Check logic here - previously it called UserService? No, it called handleCleanUpExpiredGuests?
+                    // Original code used handleCleanUpExpiredGuests. 
+                    // But in Step 2146 I changed it to an inline async function calling UserService.cleanUpExpiredGuestAccounts()
+                    // But UserService is not imported. 
+                    // Let's revert to using the static method handleCleanUpExpiredGuests which is defined in this class above.
+                    await ScheduledService.handleCleanUpExpiredGuests();
+                } catch (error) {
+                    LoggerService.getInstance().error(
+                        'Error in cleanUpExpiredGuestsCronJob: ' + (error instanceof Error ? error.message : String(error))
+                    );
+                }
+            }
+        })
+    );
+
+    // VN30 Daily Price Sync (Every day at 6:00 PM)
+    public static vn30DailySyncCronJob = CronJob.from(
+        getCronOptions({
+            cronTime: '0 18 * * *', // 18:00
+            onTick: async () => {
+                try {
+                    LoggerService.getInstance().info('Starting VN30 Daily Sync Cron...');
+                    const VN30_SYMBOLS = [
+                        'ACB', 'BCM', 'BID', 'BVH', 'CTG', 'FPT', 'GAS', 'GVR', 'HDB', 'HPG',
+                        'MBB', 'MSN', 'MWG', 'PLX', 'POW', 'SAB', 'SHB', 'SSB', 'SSI', 'STB',
+                        'TCB', 'TPB', 'VCB', 'VHM', 'VIB', 'VIC', 'VJC', 'VNM', 'VPB', 'VRE',
+                        'VN30', 'VNINDEX'
+                    ];
+
+                    // Dynamically import queue to avoid circular dependency if any
+                    const queueService = (await import('./queue.service')).default.getInstance();
+
+                    for (const symbol of VN30_SYMBOLS) {
+                        await queueService.addStockSyncJob(symbol);
+                    }
+
+                    LoggerService.getInstance().info(`Queued ${VN30_SYMBOLS.length} VN30 symbols for sync.`);
+                } catch (error) {
+                    LoggerService.getInstance().error('Error in vn30DailySyncCronJob: ' + (error instanceof Error ? error.message : String(error)));
+                }
+            },
+            timeZone: 'Asia/Ho_Chi_Minh'
         })
     );
 }

@@ -11,6 +11,8 @@ import CompanyProfileModel from '@/models/company-profile.model';
 import StockSymbolModel from '@/models/stock-symbol.model';
 import axios from 'axios';
 import { VNSTOCK_API_URL } from '@/configs/vnstock.config';
+import QueueService from './queue.service';
+import { eachDayOfInterval, format } from 'date-fns';
 
 // Lean types (without Document methods)
 type MarketDataLean = {
@@ -86,7 +88,9 @@ export default class MarketCacheService {
     }
 
     /**
-     * Get latest stock history for a symbol (most recent date)
+     * Get latest stock history with Queue fallback support
+     * For "Latest" request, we still try synchronous fetch for UX, 
+     * but we could fallback to Queue if sync fails.
      */
     static async getLatestStockHistory(symbol: string, interval: string = '1m'): Promise<StockHistoryLean | null> {
         try {
@@ -100,13 +104,13 @@ export default class MarketCacheService {
 
             if (result) return result as StockHistoryLean;
 
-            // FALLBACK: If data not found, try to sync from vnstock-api
-            this.logger.info(`Cache miss for ${symbol}, attempting on-demand sync from vnstock-api...`);
+            // Cache miss - Use Queue or Direct? 
+            // User 'filter change' implies historical. 'Latest' implies current.
+            // For current price, fast direct sync is better.
+            this.logger.info(`Cache miss for ${symbol}, attempting on-demand sync...`);
             try {
-                // Call vnstock-api to fetch data
                 await axios.get(`${VNSTOCK_API_URL}/sync-stock?symbol=${symbol}`);
 
-                // Retry getting data from DB
                 const retryResult = await StockHistoryModel.findOne({
                     symbol: symbol.toUpperCase(),
                     interval
@@ -115,18 +119,68 @@ export default class MarketCacheService {
                     .lean()
                     .exec();
 
-                if (retryResult) {
-                    this.logger.info(`Successfully synced and retrieved data for ${symbol}`);
-                    return retryResult as StockHistoryLean;
-                }
-            } catch (syncError) {
-                this.logger.error(`Failed to sync stock ${symbol} from vnstock-api`, syncError as any);
+                if (retryResult) return retryResult as StockHistoryLean;
+            } catch (error) {
+                this.logger.error(`Direct sync failed, queuing job for ${symbol}`, error as any);
+                // Queue for later retry
+                QueueService.getInstance().addStockSyncJob(symbol);
             }
 
             return null;
         } catch (error) {
             this.logger.error(`Error getting latest stock history for ${symbol}`, error as any);
             return null;
+        }
+    }
+
+    /**
+     * Sync missing dates for a range via Queue
+     */
+    /**
+     * Sync missing dates for a range via Queue
+     * Pushes individual daily sync jobs to the queue.
+     */
+    static async queueMissingDates(symbol: string, startDate: string, endDate: string) {
+        try {
+            const start = new Date(startDate);
+            const end = new Date(endDate);
+
+            // Generate all dates in range
+            const dates = eachDayOfInterval({ start, end });
+
+            // Check needing sync
+            // Optimization: We could check DB first, but for now we trust the queue worker 
+            // to be efficient or we just push everything if requested.
+            // User requirement: "if user changes filter... put MISSING days into queue"
+            // So we should ideally filter.
+
+            const existingRecords = await StockHistoryModel.find({
+                symbol: symbol.toUpperCase(),
+                interval: '1m', // Assuming 1m for now, or pass as param
+                date: {
+                    $gte: format(start, 'yyyy-MM-dd'),
+                    $lte: format(end, 'yyyy-MM-dd')
+                }
+            }).select('date').lean();
+
+            const existingDates = new Set(existingRecords.map(r => r.date));
+            const queueService = QueueService.getInstance();
+            let queuedCount = 0;
+
+            for (const dateObj of dates) {
+                const dateStr = format(dateObj, 'yyyy-MM-dd');
+                if (!existingDates.has(dateStr)) {
+                    // Missing date, push to queue
+                    await queueService.addStockSyncJob(symbol, dateStr);
+                    queuedCount++;
+                }
+            }
+
+            if (queuedCount > 0) {
+                this.logger.info(`Queued ${queuedCount} missing days for ${symbol} from ${startDate} to ${endDate}`);
+            }
+        } catch (error) {
+            this.logger.error(`Error queuing missing dates for ${symbol}`, error as any);
         }
     }
 

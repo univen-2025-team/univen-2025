@@ -19,10 +19,12 @@ from src.jobs.daily_sync import check_startup_sync
 from src.jobs.vn30_history_sync import startup_vn30_sync
 from src.services.fetchers.stock_history import StockHistoryFetcher
 from src.services.syncers.stock_history import StockHistorySyncer
+from src.worker import StockSyncWorker
 
 # Initialize FastAPI
 app = FastAPI(title="VNStock API Service")
 scheduler = Scheduler()
+worker = StockSyncWorker()
 
 @app.on_event("startup")
 async def startup_event():
@@ -41,6 +43,9 @@ async def startup_event():
             
         # Start Scheduler
         scheduler.start()
+        
+        # Start Worker
+        worker.start()
         
         # Run startup syncs in background (not awaiting to avoid blocking startup)
         # However, for simplicity here, we can run them sequentially or trust scheduler
@@ -65,6 +70,7 @@ async def startup_event():
 @app.on_event("shutdown")
 async def shutdown_event():
     print("Gracefully shutting down...")
+    worker.stop()
     scheduler.shutdown()
     db.close()
 

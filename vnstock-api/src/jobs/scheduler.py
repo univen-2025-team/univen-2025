@@ -19,13 +19,14 @@ class Scheduler:
         )
         
         # Add VN30 1-minute history sync job to run everyday at 6:00 PM (after market close)
-        self.scheduler.add_job(
-            sync_vn30_daily,
-            trigger=CronTrigger(hour=18, minute=0),
-            id='vn30_history_sync_job',
-            name='VN30 Daily History Sync',
-            replace_existing=True
-        )
+        # VN30 job migrated to Node.js Queue
+        # self.scheduler.add_job(
+        #     sync_vn30_daily,
+        #     trigger=CronTrigger(hour=18, minute=0),
+        #     id='vn30_history_sync_job',
+        #     name='VN30 Daily History Sync',
+        #     replace_existing=True
+        # )
         
         self.scheduler.start()
         print("Scheduler started.")
