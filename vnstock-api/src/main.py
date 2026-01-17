@@ -13,6 +13,7 @@ from src.config.mongodb_config import MongoDBConfig
 from src.config.app_config import AppConfig
 from src.jobs.scheduler import Scheduler
 from src.jobs.daily_sync import check_startup_sync
+from src.jobs.vn30_history_sync import startup_vn30_sync
 
 scheduler = Scheduler()
 
@@ -46,6 +47,9 @@ def main():
         # Check for startup sync (after scheduler init, or before - here we do it parallel or blocking?)
         # User asked for 'immediate' check.
         check_startup_sync()
+        
+        # VN30 startup sync - ensure all VN30 stocks have at least one record
+        startup_vn30_sync()
         
         # Keep the main thread alive
         print("Service is running. Press Ctrl+C to exit.")

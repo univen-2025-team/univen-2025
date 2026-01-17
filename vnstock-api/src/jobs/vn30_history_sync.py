@@ -1,8 +1,9 @@
 """
 VN30 Stock History Sync Job
 
-This module provides a cronjob that fetches 1-minute tick data for all VN30 stocks daily.
-VN30 is the index of the 30 largest and most liquid stocks on HOSE.
+This module provides:
+1. Startup sync: ensures VN30 stocks have at least some historical data
+2. Daily sync: fetches 1-minute tick data for all VN30 stocks after market close
 """
 
 import time
@@ -22,9 +23,63 @@ VN30_SYMBOLS = [
 ]
 
 
-def sync_vn30_history_1m(date: str = None):
+def startup_vn30_sync():
     """
-    Sync 1-minute tick data for all VN30 stocks for a specific date.
+    Startup sync: ensure all VN30 stocks have at least one record.
+    For stocks without data, fetch the most recent available trading day.
+    
+    This runs when the service starts.
+    """
+    print("=== VN30 Startup Sync ===")
+    
+    db.connect()
+    syncer = StockHistorySyncer()
+    
+    missing_symbols = []
+    
+    for symbol in VN30_SYMBOLS:
+        if not syncer.ensure_symbol_exists(symbol):
+            missing_symbols.append(symbol)
+    
+    if not missing_symbols:
+        print("All VN30 stocks have data, startup sync complete.")
+        return
+    
+    print(f"Found {len(missing_symbols)} stocks without data: {missing_symbols}")
+    print("Fetching initial data...")
+    
+    today = datetime.now().strftime('%Y-%m-%d')
+    successful = 0
+    
+    for i, symbol in enumerate(missing_symbols):
+        print(f"\n[{i+1}/{len(missing_symbols)}] Fetching {symbol}...")
+        
+        try:
+            fetcher = StockHistoryFetcher(symbol=symbol, interval='1m')
+            data = fetcher.fetch_latest_available(target_date=today, max_lookback_days=7)
+            
+            if data:
+                syncer.sync(data)
+                successful += 1
+            else:
+                print(f"  Could not find data for {symbol}")
+                
+        except Exception as e:
+            print(f"  Error fetching {symbol}: {e}")
+        
+        # Rate limiting
+        if i < len(missing_symbols) - 1:
+            print(f"  Waiting 10s for rate limit...")
+            time.sleep(10)
+    
+    print(f"\n=== Startup Sync Complete ===")
+    print(f"Initialized {successful}/{len(missing_symbols)} stocks")
+
+
+def sync_vn30_daily(date: str = None):
+    """
+    Daily sync: fetch 1-minute tick data for all VN30 stocks for a specific date.
+    Skips weekends/holidays (when vnstock returns no data).
     
     Args:
         date: Date string in 'YYYY-MM-DD' format. Defaults to today.
@@ -32,13 +87,13 @@ def sync_vn30_history_1m(date: str = None):
     if not date:
         date = datetime.now().strftime('%Y-%m-%d')
     
-    print(f"=== Starting VN30 1-minute history sync for {date} ===")
+    print(f"=== VN30 Daily Sync for {date} ===")
     
     db.connect()
     syncer = StockHistorySyncer()
     
-    total_synced = 0
     successful = 0
+    skipped = 0
     failed = 0
     
     for i, symbol in enumerate(VN30_SYMBOLS):
@@ -47,83 +102,79 @@ def sync_vn30_history_1m(date: str = None):
         try:
             # Check if we already have data for this date
             if syncer.has_data_for_date(symbol, date, '1m'):
-                print(f"  Data already exists for {symbol} on {date}, skipping...")
-                successful += 1
+                print(f"  Data already exists, skipping")
+                skipped += 1
                 continue
             
-            # Fetch 1-minute data for the date
+            # Fetch data
             fetcher = StockHistoryFetcher(symbol=symbol, interval='1m')
-            records = fetcher.fetch(start=date, end=date)
+            data = fetcher.fetch(date)
             
-            if records:
-                count = syncer.sync(records)
-                total_synced += count
+            if data:
+                syncer.sync(data)
                 successful += 1
-                print(f"  ✓ Synced {count} records for {symbol}")
             else:
-                print(f"  ✗ No data returned for {symbol}")
-                failed += 1
+                # No data (weekend/holiday) - this is expected, not an error
+                print(f"  No data for {date} (likely weekend/holiday)")
+                skipped += 1
                 
         except Exception as e:
-            print(f"  ✗ Error processing {symbol}: {e}")
+            print(f"  Error: {e}")
             failed += 1
         
-        # Rate limiting: 10 seconds between requests (as per user's vnstock limit)
+        # Rate limiting
         if i < len(VN30_SYMBOLS) - 1:
             print(f"  Waiting 10s for rate limit...")
             time.sleep(10)
     
-    print(f"\n=== VN30 Sync Complete ===")
-    print(f"Total symbols: {len(VN30_SYMBOLS)}")
+    print(f"\n=== Daily Sync Complete ===")
     print(f"Successful: {successful}")
+    print(f"Skipped: {skipped}")
     print(f"Failed: {failed}")
-    print(f"Total records synced: {total_synced}")
 
 
-def sync_stock_history_on_demand(symbol: str, interval: str = "1D", start: str = None, end: str = None):
+def get_stock_price(symbol: str, target_time: str = None, target_date: str = None, interval: str = "1m"):
     """
-    Fetch and sync stock history on demand (for non-VN30 stocks or specific requests).
-    Implements caching: checks MongoDB first, fetches from API if not present.
+    API helper: Get stock price at a specific time.
+    Automatically falls back to previous trading day if no data for target date.
     
     Args:
         symbol: Stock ticker symbol
-        interval: Time interval (1m, 5m, 15m, 30m, 1H, 1D, 1W, 1M)
-        start: Start date in 'YYYY-MM-DD' format
-        end: End date in 'YYYY-MM-DD' format
+        target_time: Time in 'HH:MM' format. If None, returns latest price.
+        target_date: Date in 'YYYY-MM-DD' format. Defaults to today.
+        interval: Time interval
         
     Returns:
-        List of OHLCV records from MongoDB
+        Price bar dict or None
     """
     db.connect()
     syncer = StockHistorySyncer()
     
-    # Set defaults
-    if not end:
-        end = datetime.now().strftime('%Y-%m-%d')
-    if not start:
-        if interval in ['1m', '5m', '15m', '30m', '1H']:
-            start = end  # Same day for intraday
-        else:
-            start = (datetime.now() - timedelta(days=365)).strftime('%Y-%m-%d')
+    if not target_date:
+        target_date = datetime.now().strftime('%Y-%m-%d')
     
-    # Check if we have data in MongoDB
-    existing = syncer.get_latest(symbol, interval, limit=1)
-    
-    if not existing:
-        # No data, fetch from API
-        print(f"No cached data for {symbol} ({interval}), fetching from API...")
-        fetcher = StockHistoryFetcher(symbol=symbol, interval=interval)
-        records = fetcher.fetch(start=start, end=end)
-        
-        if records:
-            syncer.sync(records)
+    if target_time:
+        # Get specific time
+        return syncer.get_price_at_time(symbol, target_time, target_date, interval)
     else:
-        print(f"Found cached data for {symbol} ({interval})")
-    
-    # Return data from MongoDB
-    return syncer.get_latest(symbol, interval, limit=1000)
+        # Get latest available data
+        data = syncer.get_latest_available(symbol, target_date, interval)
+        if data and data.get('prices'):
+            # Return the last price bar
+            return {
+                'symbol': data['symbol'],
+                'date': data['date'],
+                **data['prices'][-1]
+            }
+        return None
 
 
 # For manual testing
 if __name__ == "__main__":
-    sync_vn30_history_1m()
+    import sys
+    
+    if len(sys.argv) > 1 and sys.argv[1] == 'daily':
+        date = sys.argv[2] if len(sys.argv) > 2 else None
+        sync_vn30_daily(date)
+    else:
+        startup_vn30_sync()
