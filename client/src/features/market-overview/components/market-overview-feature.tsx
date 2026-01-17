@@ -179,14 +179,30 @@ export function MarketOverviewFeature({ data }: MarketOverviewFeatureProps) {
             });
             setError(null);
 
+            // Create timestamp in same format as historical data (YYYY-MM-DD HH:MM:SS)
+            // Browser is already in local timezone (Vietnam), no need to add offset
             const now = new Date();
-            const timeStr = now.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            const fullTimeStr = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+
             setIndexHistory((prev) => {
+                // Check if this timestamp already exists to avoid duplicates
+                const exists = prev.some(p => p.time === fullTimeStr);
+                if (exists) {
+                    return prev;
+                }
+
+                // Append new point and keep last 500 points
                 const newHistory = [
                     ...prev,
-                    { time: timeStr, index: socketMarketData.vn30Index.index }
+                    { time: fullTimeStr, index: socketMarketData.vn30Index.index, volume: 0 }
                 ];
-                return newHistory.slice(-100);
+                return newHistory.slice(-500);
             });
         }
     }, [socketMarketData, realtimeEnabled]);

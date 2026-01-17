@@ -167,10 +167,53 @@ export default class MarketSocketService {
     }
 
     private async initializeStockCache(): Promise<void> {
-        // Initialize cache with mock data
-        VN30_SYMBOLS.forEach((symbol) => {
-            this.stockPriceCache.set(symbol, this.generateStockData(symbol));
-        });
+        try {
+            // Load stock data from MongoDB
+            const stocks = await StockDataModel.find({
+                symbol: { $in: VN30_SYMBOLS }
+            })
+                .sort({ date: -1 })
+                .lean()
+                .exec();
+
+            // Group by symbol and get latest for each
+            const latestBySymbol = new Map<string, any>();
+            for (const stock of stocks) {
+                if (!latestBySymbol.has(stock.symbol)) {
+                    latestBySymbol.set(stock.symbol, stock);
+                }
+            }
+
+            // Populate cache with real data
+            for (const [symbol, stockData] of latestBySymbol) {
+                this.stockPriceCache.set(symbol, {
+                    symbol: stockData.symbol,
+                    price: stockData.price || stockData.close || 0,
+                    change: stockData.change || 0,
+                    changePercent: stockData.changePercent || 0,
+                    volume: stockData.volume || 0,
+                    high: stockData.high || 0,
+                    low: stockData.low || 0,
+                    open: stockData.open || 0,
+                    close: stockData.close || stockData.price || 0
+                });
+            }
+
+            // Fill missing symbols with mock data
+            VN30_SYMBOLS.forEach((symbol) => {
+                if (!this.stockPriceCache.has(symbol)) {
+                    this.stockPriceCache.set(symbol, this.generateStockData(symbol));
+                }
+            });
+
+            LoggerService.getInstance().info(`Stock cache initialized with ${latestBySymbol.size} real stocks`);
+        } catch (error) {
+            LoggerService.getInstance().error('Error initializing stock cache from MongoDB, using mock data', error as any);
+            // Fallback to mock data
+            VN30_SYMBOLS.forEach((symbol) => {
+                this.stockPriceCache.set(symbol, this.generateStockData(symbol));
+            });
+        }
 
         // Initialize VN30 index from MongoDB
         this.vn30IndexCache = await this.getVN30FromMongoDB();
@@ -203,7 +246,7 @@ export default class MarketSocketService {
                     this.stockPriceCache.set(symbol, realData);
                     return realData;
                 }
-            } catch (error) {
+            } catch (error: any) {
                 LoggerService.getInstance().warn(
                     `Failed to fetch real data for ${symbol}, using mock data`,
                     error
@@ -240,62 +283,84 @@ export default class MarketSocketService {
 
     private async getVN30FromMongoDB(): Promise<VN30Index | null> {
         try {
-            // Get current minute (HH:MM)
+            // Import StockTicksModel for tick queries
+            const StockTicksModel = (await import('@/models/stock-ticks.model')).default;
+
+            // Get current time for Vietnam timezone (UTC+7)
+            // Server runs in UTC (Docker), so we need to add 7 hours
             const now = new Date();
-            const currentHour = now.getHours().toString().padStart(2, '0');
-            const currentMinute = now.getMinutes().toString().padStart(2, '0');
+            const vietnamTime = new Date(now.getTime() + 7 * 60 * 60 * 1000);
+            const currentHour = vietnamTime.getUTCHours().toString().padStart(2, '0');
+            const currentMinute = vietnamTime.getUTCMinutes().toString().padStart(2, '0');
             const timePattern = `${currentHour}:${currentMinute}`;
 
-            // Find latest VN30 data in stock_data collection
-            const vn30Data = await StockDataModel.findOne({ symbol: 'VN30' })
+            // Find latest date from any stock (VCB as reference)
+            const latestStock = await StockDataModel.findOne({
+                symbol: { $in: ['VN30', 'VCB'] }
+            })
                 .sort({ date: -1 })
+                .select('date symbol price open close')
                 .lean()
                 .exec();
 
-            if (!vn30Data || !vn30Data.prices) {
+            if (!latestStock) {
                 return null;
             }
 
-            // Find matching minute in prices array
-            const matchingPrice = vn30Data.prices.find((p: any) => {
-                // Extract HH:MM from time string "YYYY-MM-DD HH:MM:SS"
-                if (p.time && typeof p.time === 'string') {
-                    const timePart = p.time.split(' ')[1]; // Get "HH:MM:SS"
-                    const timeHHMM = timePart?.substring(0, 5); // Get "HH:MM"
-                    return timeHHMM === timePattern;
-                }
-                return false;
-            });
+            const latestDate = (latestStock as any).date;
 
-            if (matchingPrice) {
-                // Calculate change from opening price
-                const openPrice = vn30Data.open || matchingPrice.close;
-                const change = matchingPrice.close - openPrice;
-                const changePercent = (change / openPrice) * 100;
+            // Try VN30 ticks first, then VCB as proxy
+            let tick = await StockTicksModel.findOne({
+                symbol: 'VN30',
+                date: latestDate,
+                time: { $regex: timePattern }
+            }).lean().exec();
+
+            if (!tick) {
+                tick = await StockTicksModel.findOne({
+                    symbol: 'VCB',
+                    date: latestDate,
+                    time: { $regex: timePattern }
+                }).lean().exec();
+            }
+
+            // Fallback to latest tick of the day
+            if (!tick) {
+                tick = await StockTicksModel.findOne({
+                    symbol: { $in: ['VN30', 'VCB'] },
+                    date: latestDate
+                })
+                    .sort({ time: -1 })
+                    .lean()
+                    .exec();
+            }
+
+            if (tick) {
+                const openPrice = (latestStock as any).open || (tick as any).price;
+                const currentPrice = (tick as any).price;
+                const change = currentPrice - openPrice;
+                const changePercent = openPrice > 0 ? (change / openPrice) * 100 : 0;
 
                 return {
-                    index: parseFloat(matchingPrice.close.toFixed(2)),
+                    index: parseFloat(currentPrice.toFixed(2)),
                     change: parseFloat(change.toFixed(2)),
                     changePercent: parseFloat(changePercent.toFixed(2))
                 };
             }
 
-            // If no matching minute, return latest price
-            const latestPrice = vn30Data.prices[vn30Data.prices.length - 1];
-            if (latestPrice) {
-                const openPrice = vn30Data.open || latestPrice.close;
-                const change = latestPrice.close - openPrice;
-                const changePercent = (change / openPrice) * 100;
-
+            // Final fallback: use stock_data close price
+            if (latestStock) {
+                const stock = latestStock as any;
+                const price = stock.close || stock.price || 0;
                 return {
-                    index: parseFloat(latestPrice.close.toFixed(2)),
-                    change: parseFloat(change.toFixed(2)),
-                    changePercent: parseFloat(changePercent.toFixed(2))
+                    index: parseFloat(price.toFixed(2)),
+                    change: stock.change || 0,
+                    changePercent: stock.changePercent || 0
                 };
             }
 
             return null;
-        } catch (error) {
+        } catch (error: any) {
             LoggerService.getInstance().error('Error fetching VN30 from MongoDB', error);
             return null;
         }
@@ -372,7 +437,7 @@ export default class MarketSocketService {
 
             io.of('/market').to('market').emit('market:update', marketUpdate);
             LoggerService.getInstance().debug('Market update sent to clients');
-        } catch (error) {
+        } catch (error: any) {
             LoggerService.getInstance().error('Error sending market update', error);
         }
     }
@@ -398,7 +463,7 @@ export default class MarketSocketService {
 
             io.of('/market').to(room).emit('stock:update', stockUpdate);
             LoggerService.getInstance().debug(`Stock update sent for ${symbol}`);
-        } catch (error) {
+        } catch (error: any) {
             LoggerService.getInstance().error(`Error sending stock update for ${symbol}`, error);
         }
     }

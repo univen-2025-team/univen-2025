@@ -37,8 +37,9 @@ def fetch_and_cache_market_data():
         storage = MarketDataStorage()
         
         # Fetch latest market overview (vnstock will return most recent trading day)
+        # Storage is passed to save each stock immediately after fetch
         logger.info("Fetching latest market overview...")
-        market_data = fetcher.fetch_market_overview()
+        market_data = fetcher.fetch_market_overview(storage=storage)
         
         if not market_data:
             logger.error("Failed to fetch market overview. Job aborted.")
@@ -63,11 +64,20 @@ def fetch_and_cache_market_data():
             logger.error("Failed to save market overview")
             return False
         
-        # Save individual stock data
-        logger.info("Saving stock data to MongoDB...")
-        if not storage.save_stock_data(market_data['stocks'], actual_date):
-            logger.error("Failed to save stock data")
-            return False
+        # Individual stocks already saved during fetch (immediate save)
+        # Only need to save VN30 index data here
+        vn30_data = next((s for s in market_data['stocks'] if s['symbol'] == 'VN30'), None)
+        if vn30_data:
+            storage.save_single_stock(vn30_data, actual_date)
+        
+        # Fetch VN30 index intraday ticks (try multiple sources)
+        logger.info("Fetching VN30 index intraday data...")
+        vn30_intraday = fetcher.fetch_vn30_index_intraday()
+        if vn30_intraday and len(vn30_intraday) > 0:
+            logger.info(f"Saving {len(vn30_intraday)} VN30 index ticks...")
+            storage.save_stock_ticks('VN30', actual_date, vn30_intraday)
+        else:
+            logger.warning("No VN30 intraday ticks available")
         
         # Clean up old data (keep last 30 days)
         logger.info("Cleaning up old data...")
