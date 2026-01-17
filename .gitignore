@@ -14,3 +14,4 @@ server/yarn.lock
 # Client dùng npm/pnpm nên ignore bun lock
 client/bun.lock
 client-new/bun.lock
+.agent
