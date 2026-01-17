@@ -27,11 +27,13 @@ class MarketDataStorage:
         if self.db is not None:
             self.market_collection = self.db['market_data']
             self.stock_collection = self.db['stock_data']
+            self.ticks_collection = self.db['stock_ticks']  # Separate collection for ticks
             self._ensure_indexes()
         else:
             logger.error("MongoDB not connected, storage service unavailable")
             self.market_collection = None
             self.stock_collection = None
+            self.ticks_collection = None
 
     def _ensure_indexes(self):
         """Create indexes for better query performance."""
@@ -43,6 +45,11 @@ class MarketDataStorage:
             # Composite index for stock_data collection
             self.stock_collection.create_index([('symbol', 1), ('date', 1)], unique=True)
             self.stock_collection.create_index('date')
+            
+            # Indexes for stock_ticks collection
+            # Composite index for efficient queries by symbol+date+time
+            self.ticks_collection.create_index([('symbol', 1), ('date', 1), ('time', 1)])
+            self.ticks_collection.create_index([('symbol', 1), ('date', 1)])
             
             logger.info("MongoDB indexes created successfully")
         except Exception as e:
@@ -151,6 +158,109 @@ class MarketDataStorage:
             
         except Exception as e:
             logger.error(f"Error saving stock data: {str(e)}")
+            return False
+
+    def save_single_stock(self, stock_data: Dict, date: str) -> bool:
+        """
+        Save a single stock's data to MongoDB immediately.
+        Ticks are saved to separate collection, not embedded in stock document.
+        
+        Args:
+            stock_data: Stock data dictionary (including 'prices' array of ticks)
+            date: Date in format 'YYYY-MM-DD'
+            
+        Returns:
+            True if successful, False otherwise
+        """
+        if self.stock_collection is None:
+            logger.warning("Stock collection not available")
+            return False
+            
+        try:
+            symbol = stock_data['symbol']
+            ticks = stock_data.get('prices', [])
+            
+            # Save ticks to separate collection
+            if ticks:
+                self.save_stock_ticks(symbol, date, ticks)
+            
+            # Save stock summary (without prices array to avoid large document)
+            doc = {
+                'symbol': symbol,
+                'date': date,
+                'companyName': stock_data.get('companyName', ''),
+                'price': stock_data.get('price', 0),
+                # 'prices' removed - stored in stock_ticks collection
+                'tickCount': len(ticks),  # Store count for reference
+                'change': stock_data.get('change', 0),
+                'changePercent': stock_data.get('changePercent', 0),
+                'volume': stock_data.get('volume', 0),
+                'high': stock_data.get('high', 0),
+                'low': stock_data.get('low', 0),
+                'open': stock_data.get('open', 0),
+                'close': stock_data.get('close', 0),
+                'previousClose': stock_data.get('previousClose', 0),
+                'metadata': {
+                    'fetchedAt': datetime.now(),
+                }
+            }
+            
+            # Upsert: update if exists, insert if not
+            self.stock_collection.update_one(
+                {'symbol': doc['symbol'], 'date': doc['date']},
+                {'$set': doc},
+                upsert=True
+            )
+            
+            logger.info(f"Saved stock {symbol} for {date} ({len(ticks)} ticks)")
+            return True
+            
+        except Exception as e:
+            logger.error(f"Error saving stock {stock_data.get('symbol')}: {str(e)}")
+            return False
+
+    def save_stock_ticks(self, symbol: str, date: str, ticks: List[Dict]) -> bool:
+        """
+        Save stock ticks to separate collection for efficient storage.
+        Uses bulk insert for performance.
+        
+        Args:
+            symbol: Stock symbol
+            date: Date in format 'YYYY-MM-DD'
+            ticks: List of tick dicts { time, price, volume }
+            
+        Returns:
+            True if successful, False otherwise
+        """
+        if self.ticks_collection is None:
+            logger.warning("Ticks collection not available")
+            return False
+            
+        try:
+            # Delete existing ticks for this symbol+date before inserting new ones
+            self.ticks_collection.delete_many({'symbol': symbol, 'date': date})
+            
+            # Prepare tick documents
+            documents = []
+            for tick in ticks:
+                documents.append({
+                    'symbol': symbol,
+                    'date': date,
+                    'time': tick['time'],
+                    'price': tick['price'],
+                    'volume': tick.get('volume', 0)
+                })
+            
+            if documents:
+                # Bulk insert for performance
+                self.ticks_collection.insert_many(documents, ordered=False)
+                logger.info(f"Saved {len(documents)} ticks for {symbol} on {date}")
+                return True
+            
+            return False
+            
+        except Exception as e:
+            logger.error(f"Error saving ticks for {symbol}: {str(e)}")
             return False
 
     def get_latest_market_data(self) -> Optional[Dict]:

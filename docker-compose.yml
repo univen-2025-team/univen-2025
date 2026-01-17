@@ -92,16 +92,16 @@ services:
     depends_on:
       - server
 
-  python-server:
+  vnstock-api:
     build:
-      context: ./python-server
-      dockerfile: Dockerfile
-    container_name: univen-python
+      context: ./vnstock-api
+      dockerfile: Dockerfile.dev
+    container_name: univen-vnstock-api
     restart: unless-stopped
     environment:
-      MONGODB_URI: ${MONGODB_URI:-mongodb://admin:password123@mongodb:27017/do_an_1?authSource=admin}
-      CRONJOB_ENABLED: ${CRONJOB_ENABLED:-true}
-      VNSTOCK_SOURCE: ${VNSTOCK_SOURCE:-TCBS}
+      MONGODB_URI: ${MONGODB_URI}
+      CRONJOB_ENABLED: ${CRONJOB_ENABLED}
+      VNSTOCK_SOURCE: ${VNSTOCK_SOURCE}
     networks:
       - univen-network
     depends_on:

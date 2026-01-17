@@ -157,9 +157,8 @@ export default function VN30IndexChart({
                 <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
                     <div className="flex items-center gap-3 sm:gap-4">
                         <div
-                            className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${
-                                isUp ? 'bg-emerald-100' : 'bg-red-100'
-                            }`}
+                            className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${isUp ? 'bg-emerald-100' : 'bg-red-100'
+                                }`}
                         >
                             {isUp ? (
                                 <svg
@@ -202,11 +201,10 @@ export default function VN30IndexChart({
                                     })}
                                 </span>
                                 <span
-                                    className={`text-xs sm:text-sm font-semibold px-1.5 sm:px-2 py-0.5 rounded-full ${
-                                        isUp
+                                    className={`text-xs sm:text-sm font-semibold px-1.5 sm:px-2 py-0.5 rounded-full ${isUp
                                             ? 'bg-emerald-100 text-emerald-700'
                                             : 'bg-red-100 text-red-700'
-                                    }`}
+                                        }`}
                                 >
                                     {isUp ? '+' : ''}
                                     {change.toFixed(2)} ({isUp ? '+' : ''}
@@ -281,7 +279,7 @@ export default function VN30IndexChart({
                             if (value.includes('/')) return value.split('/').slice(0, 2).join('/');
                             return value;
                         }}
-                        interval="preserveStartEnd"
+                        interval={Math.max(0, Math.floor(data.length / 8) - 1)}
                     />
                     <YAxis
                         domain={['auto', 'auto']}
