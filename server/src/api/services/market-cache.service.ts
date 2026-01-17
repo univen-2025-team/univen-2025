@@ -473,23 +473,110 @@ export default class MarketCacheService {
     /**
      * Get stock Intraday data
      */
-    static async getStockIntraday(symbol: string, limit: number = 300): Promise<any[]> {
+    /**
+     * Get stock Intraday data
+     * Fetches multiple days back to satisfy the limit or time range.
+     * Triggers sync if data is stale.
+     */
+    static async getStockIntraday(symbol: string, limit: number = 300, start?: string, end?: string): Promise<any[]> {
         try {
-            const history = await this.getLatestStockHistory(symbol, '1m');
+            const query: any = {
+                symbol: symbol.toUpperCase(),
+                interval: '1m'
+            };
 
-            if (!history || !history.prices || history.prices.length === 0) {
+            // Date filtering
+            if (start) {
+                let startDateVal = start;
+                const startDateObj = new Date(start);
+                if (!isNaN(startDateObj.getTime())) {
+                    startDateVal = format(startDateObj, 'yyyy-MM-dd');
+                }
+
+                query.date = { $gte: startDateVal };
+
+                if (end) {
+                    let endDateVal = end;
+                    const endDateObj = new Date(end);
+                    if (!isNaN(endDateObj.getTime())) {
+                        endDateVal = format(endDateObj, 'yyyy-MM-dd');
+                    }
+                    query.date.$lte = endDateVal;
+                }
+            }
+
+            // docLimit: if date range set, possibly fetch more. 
+            // 7 days is usually enough for "Intraday" default, but if user asks for specific range, they might ask for old data.
+            const docLimit = start ? 100 : 7;
+
+            const historyDocs = await StockHistoryModel.find(query)
+                .sort({ date: -1 })
+                .limit(docLimit)
+                .lean()
+                .exec();
+
+            // Check Freshness (only if default "latest" behavior)
+            const today = format(new Date(), 'yyyy-MM-dd');
+            if (!start) {
+                const latestDoc = historyDocs[0];
+                const dayOfWeek = new Date().getDay();
+                const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+
+                if (!latestDoc || ((latestDoc as any).date < today && !isWeekend)) {
+                    this.logger.info(`StockIntraday: Data stale for ${symbol}. Queuing sync...`);
+                    QueueService.getInstance().addStockSyncJob(symbol);
+                }
+            }
+
+            if (!historyDocs || historyDocs.length === 0) {
                 return [];
             }
 
-            let resultPrices = history.prices;
-            if (limit > 0 && limit < history.prices.length) {
-                resultPrices = history.prices.slice(-limit);
+            let aggregatedPrices: IPriceBar[] = [];
+            for (let i = historyDocs.length - 1; i >= 0; i--) {
+                const doc = historyDocs[i] as any;
+                if (doc.prices) {
+                    aggregatedPrices = aggregatedPrices.concat(doc.prices);
+                    // Attach date to each price for frontend usage if tricky
+                    // But we will map it below using doc.date
+                    // Wait, logic below uses `(p as any).date`.
+                    // Does `prices` have `date`? No, doc has `date`.
+                    // We need to inject date into price object here or below.
+                    // The map below `(p as any).date` assumes `p` has date.
+                    // Original price object `IPriceBar` likely doesn't have date.
+                    // In previous code `(p as any).date` might have been undefined? 
+                    // No, previous code didn't have `date` map. I added it in Step 2345 (which failed) then Step 2352 (which succeeded).
+                    // In current view (Step 2371 Line 541), it has `date: (p as any).date`.
+                    // `p` comes from `doc.prices`. Does `doc.prices` elements have `date`?
+                    // Typically NO, unless Mongoose schema defines it?
+                    // If not, we should assign it from `doc.date`.
+                }
             }
 
-            return resultPrices.map((p: IPriceBar) => ({
+            // Re-aggregate with date injection
+            aggregatedPrices = [];
+            for (let i = historyDocs.length - 1; i >= 0; i--) {
+                const doc = historyDocs[i] as any;
+                if (doc.prices) {
+                    const datedPrices = doc.prices.map((p: any) => ({
+                        ...p,
+                        date: doc.date
+                    }));
+                    aggregatedPrices = aggregatedPrices.concat(datedPrices);
+                }
+            }
+
+            // Trace back limit
+            let resultPrices = aggregatedPrices;
+            if (!start && limit > 0 && limit < aggregatedPrices.length) {
+                resultPrices = aggregatedPrices.slice(-limit);
+            }
+
+            return resultPrices.map((p: any) => ({
                 time: p.time,
                 price: p.close,
-                volume: p.volume
+                volume: p.volume,
+                date: p.date
             }));
         } catch (error) {
             this.logger.error(`Error getting stock intraday for ${symbol}`, error as any);

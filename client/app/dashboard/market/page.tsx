@@ -312,12 +312,16 @@ export default function MarketPage() {
     }, [marketData]);
 
     // Handlers
-    const handleStockClick = (stock: StockData) => {
+    const handleRowClick = (stock: StockData) => {
+        router.push(`/dashboard/market/${stock.symbol}`);
+    };
+
+    const handleQuickView = (stock: StockData) => {
         setSelectedStock(stock);
         setIsDetailModalOpen(true);
     };
 
-    const handleBuyClick = (stock: StockData) => {
+    const handleTransactionStart = (stock: StockData) => {
         setBuyStock(stock);
         setIsBuyModalOpen(true);
     };
@@ -402,8 +406,8 @@ export default function MarketPage() {
             <TopGainersLosers
                 gainers={marketData.topGainers}
                 losers={marketData.topLosers}
-                onStockClick={handleStockClick}
-                onBuyClick={handleBuyClick}
+                onStockClick={handleRowClick}
+                onBuyClick={handleQuickView}
             />
 
             {/* Stock Table */}
@@ -413,8 +417,8 @@ export default function MarketPage() {
                 watchlist={watchlist}
                 searchTerm={searchTerm}
                 onViewModeChange={setViewMode}
-                onStockClick={handleStockClick}
-                onBuyClick={handleBuyClick}
+                onStockClick={handleRowClick}
+                onBuyClick={handleQuickView}
                 isInWatchlist={isInWatchlist}
                 toggleWatchlist={toggleWatchlist}
             />
@@ -426,7 +430,7 @@ export default function MarketPage() {
                 onClose={() => setIsDetailModalOpen(false)}
                 onBuy={(stock) => {
                     setIsDetailModalOpen(false);
-                    handleBuyClick(stock);
+                    handleTransactionStart(stock);
                 }}
                 isInWatchlist={selectedStock ? isInWatchlist(selectedStock.symbol) : false}
                 onToggleWatchlist={

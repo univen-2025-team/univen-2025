@@ -48,13 +48,43 @@ export default function StockChart({ symbol, refreshTrigger = 0 }: StockChartPro
             if (!symbol) return;
             try {
                 setLoading(true);
-                // Currently supporting only intraday (1D) via this endpoint
-                // Ideally this would change endpoint based on range
-                const limit = selectedRange === '1D' ? 300 : 300;
 
-                const response = await api.get(`/market/stock/${symbol}/intraday?limit=${limit}`);
+                const end = new Date();
+                const start = new Date();
+
+                if (selectedRange === '1W') {
+                    start.setDate(end.getDate() - 7);
+                } else if (selectedRange === '1M') {
+                    start.setDate(end.getDate() - 30);
+                } else if (selectedRange === '1D') {
+                    // Fallback to Friday if today is Saturday (6) or Sunday (0)
+                    const day = start.getDay();
+                    if (day === 6) { // Saturday
+                        start.setDate(start.getDate() - 1);
+                        end.setDate(end.getDate() - 1);
+                    } else if (day === 0) { // Sunday
+                        start.setDate(start.getDate() - 2);
+                        end.setDate(end.getDate() - 2);
+                    }
+                }
+                // For '1D' (Weekday), start/end remains today
+
+                const formatDate = (d: Date) => d.toISOString().split('T')[0];
+                const startStr = formatDate(start);
+                const endStr = formatDate(end);
+
+                // Use date range filtering instead of limit
+                const response = await api.get(`/market/stock/${symbol}/intraday?start=${startStr}&end=${endStr}`);
+
                 if (response.data && response.data.metadata && response.data.metadata.history) {
-                    setData(response.data.metadata.history);
+                    const rawData = response.data.metadata.history;
+                    // Combine date and time for unique X-axis keys and better tooltip context
+                    const formattedData = rawData.map((item: any) => ({
+                        time: item.date ? `${item.date} ${item.time}` : item.time,
+                        price: item.price,
+                        volume: item.volume
+                    }));
+                    setData(formattedData);
                 }
             } catch (error) {
                 console.error('Error fetching stock chart data:', error);
@@ -155,7 +185,7 @@ export default function StockChart({ symbol, refreshTrigger = 0 }: StockChartPro
                                 <stop offset="95%" stopColor={trendColor} stopOpacity={0} />
                             </linearGradient>
                         </defs>
-                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#4b5563" opacity={0.5} />
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" opacity={0.8} />
                         <XAxis
                             dataKey="time"
                             hide={true} // Hide X axis for cleaner look or style it
@@ -163,7 +193,7 @@ export default function StockChart({ symbol, refreshTrigger = 0 }: StockChartPro
                         <YAxis
                             domain={['auto', 'auto']}
                             orientation="right"
-                            tick={{ fontSize: 11, fill: '#d1d5db' }}
+                            tick={{ fontSize: 11, fill: '#6b7280' }}
                             axisLine={false}
                             tickLine={false}
                             tickFormatter={(val) => (val * 1000).toLocaleString()}
@@ -171,20 +201,21 @@ export default function StockChart({ symbol, refreshTrigger = 0 }: StockChartPro
                         />
                         <Tooltip
                             contentStyle={{
-                                backgroundColor: '#1f2937',
-                                borderColor: '#374151',
-                                color: '#f3f4f6',
-                                borderRadius: '0.5rem'
+                                backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                                borderColor: '#e5e7eb',
+                                color: '#111827',
+                                borderRadius: '0.5rem',
+                                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
                             }}
                             formatter={(value: number) => [(value * 1000).toLocaleString(), 'Price']}
-                            labelStyle={{ color: '#d1d5db' }}
+                            labelStyle={{ color: '#6b7280' }}
                         />
                         <ReferenceLine
                             y={firstValue}
-                            stroke="#6b7280"
+                            stroke="#9ca3af"
                             strokeDasharray="3 3"
                             strokeWidth={1}
-                            opacity={0.5}
+                            opacity={0.8}
                         />
                         <Area
                             type="monotone"

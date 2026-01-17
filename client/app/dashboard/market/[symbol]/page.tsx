@@ -47,13 +47,16 @@ const StockDetailPage = () => {
   const { profile, info, marketData } = stockData;
   const isPositive = marketData?.change >= 0;
 
+  // Shared Card Styles
+  const cardClassName = "bg-white/95 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300";
+
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-6 animate-fade-in pb-8">
       {/* Header */}
       <div className="flex items-center justify-between">
         <button
           onClick={() => router.back()}
-          className="flex items-center text-gray-400 hover:text-white transition-colors"
+          className="flex items-center text-gray-500 hover:text-gray-900 transition-colors font-medium"
         >
           <ArrowLeft className="w-5 h-5 mr-2" />
           Back to Market
@@ -65,9 +68,9 @@ const StockDetailPage = () => {
         {/* Left Column: Info & Stats */}
         <div className="lg:col-span-1 space-y-6">
           {/* Stock Overview Card */}
-          <div className="bg-[#1e1e1e] rounded-xl p-6 border border-gray-800">
+          <div className={cardClassName}>
             <div className="flex items-center space-x-4 mb-6">
-              <div className="w-16 h-16 relative bg-white rounded-lg p-2 flex items-center justify-center overflow-hidden">
+              <div className="w-16 h-16 relative bg-gray-50 rounded-lg p-2 flex items-center justify-center overflow-hidden border border-gray-100 shadow-sm">
                 {profile?.logo ? (
                   <img
                     src={profile.logo}
@@ -78,79 +81,88 @@ const StockDetailPage = () => {
                     }}
                   />
                 ) : (
-                  <span className="text-xl font-bold text-gray-800">{symbol}</span>
+                  <span className="text-xl font-bold text-gray-700">{symbol}</span>
                 )}
               </div>
               <div>
-                <h1 className="text-2xl font-bold">{symbol}</h1>
-                <p className="text-gray-400 text-sm">{info?.organShortName || profile?.companyShortName || symbol}</p>
-                <div className="mt-1 inline-block px-2 py-0.5 rounded text-xs font-medium bg-gray-800 text-gray-300">
+                <h1 className="text-2xl font-bold text-gray-900">{symbol}</h1>
+                <p className="text-gray-500 text-sm font-medium">{info?.organShortName || profile?.companyShortName || symbol}</p>
+                <div className="mt-1 inline-block px-2.5 py-0.5 rounded text-xs font-semibold bg-gray-100 text-gray-600 border border-gray-200">
                   {info?.exchange || profile?.exchange || 'HOSE'}
                 </div>
               </div>
             </div>
 
             <div className="mb-6">
-              <div className="text-3xl font-bold flex items-center">
+              <div className="text-3xl font-bold flex items-center text-gray-900">
                 {marketData?.price ? (marketData.price * 1000).toLocaleString('vi-VN') : '---'}
-                <span className="text-sm font-normal text-gray-400 ml-1">VND</span>
+                <span className="text-sm font-medium text-gray-500 ml-1">VND</span>
               </div>
-              <div className={`flex items-center mt-1 ${isPositive ? 'text-green-500' : 'text-red-500'}`}>
+              <div className={`flex items-center mt-1 font-semibold ${isPositive ? 'text-emerald-600' : 'text-red-500'}`}>
                 {isPositive ? <TrendingUp className="w-4 h-4 mr-1" /> : <TrendingDown className="w-4 h-4 mr-1" />}
-                <span className="font-semibold">{marketData?.change > 0 ? '+' : ''}{marketData?.change * 1000}</span>
-                <span className="ml-1 opacity-80">({marketData?.changePercent}%)</span>
+                <span>{marketData?.change > 0 ? '+' : ''}{marketData?.change * 1000}</span>
+                <span className="ml-1 opacity-90">({marketData?.changePercent}%)</span>
               </div>
             </div>
 
-            <div className="space-y-4 pt-4 border-t border-gray-800">
+            <div className="space-y-4 pt-4 border-t border-gray-100">
               <div className="flex justify-between text-sm">
-                <span className="text-gray-400">Open</span>
-                <span className="font-medium text-white">{(marketData?.open * 1000).toLocaleString()}</span>
+                <span className="text-gray-500 font-medium">Open</span>
+                <span className="font-semibold text-gray-900">{(marketData?.open * 1000).toLocaleString()}</span>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="text-gray-400">High</span>
-                <span className="font-medium text-white">{(marketData?.high * 1000).toLocaleString()}</span>
+                <span className="text-gray-500 font-medium">High</span>
+                <span className="font-semibold text-gray-900">{(marketData?.high * 1000).toLocaleString()}</span>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="text-gray-400">Low</span>
-                <span className="font-medium text-white">{(marketData?.low * 1000).toLocaleString()}</span>
+                <span className="text-gray-500 font-medium">Low</span>
+                <span className="font-semibold text-gray-900">{(marketData?.low * 1000).toLocaleString()}</span>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="text-gray-400">Volume</span>
-                <span className="font-medium text-white">{marketData?.volume?.toLocaleString()}</span>
+                <span className="text-gray-500 font-medium">Volume</span>
+                <span className="font-semibold text-gray-900">{marketData?.volume?.toLocaleString()}</span>
               </div>
             </div>
           </div>
 
           {/* Company Profile Card */}
-          <div className="bg-[#1e1e1e] rounded-xl p-6 border border-gray-800 space-y-4">
-            <h3 className="text-lg font-semibold mb-4">Company Profile</h3>
+          <div className={`${cardClassName} space-y-4`}>
+            <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+              <Building2 className="w-5 h-5 text-gray-400" />
+              Company Profile
+            </h3>
 
-            <div className="flex items-start space-x-3">
-              <Building2 className="w-5 h-5 text-blue-500 mt-0.5" />
+            <div className="flex items-start space-x-3 group">
+              <div className="p-2 bg-blue-50 rounded-lg group-hover:bg-blue-100 transition-colors">
+                <Building2 className="w-5 h-5 text-blue-600" />
+              </div>
               <div>
-                <span className="block text-gray-400 text-xs uppercase tracking-wider">Industry</span>
-                <span className="text-sm">{profile?.industry || 'N/A'}</span>
+                <span className="block text-gray-500 text-xs uppercase tracking-wider font-semibold">Industry</span>
+                <span className="text-sm font-medium text-gray-900">{profile?.industry || 'N/A'}</span>
               </div>
             </div>
 
-            <div className="flex items-start space-x-3">
-              <Users className="w-5 h-5 text-purple-500 mt-0.5" />
+            <div className="flex items-start space-x-3 group">
+              <div className="p-2 bg-purple-50 rounded-lg group-hover:bg-purple-100 transition-colors">
+                <Users className="w-5 h-5 text-purple-600" />
+              </div>
               <div>
-                <span className="block text-gray-400 text-xs uppercase tracking-wider">Employees</span>
-                <span className="text-sm">{profile?.noEmployees?.toLocaleString() || 'N/A'}</span>
+                <span className="block text-gray-500 text-xs uppercase tracking-wider font-semibold">Employees</span>
+                <span className="text-sm font-medium text-gray-900">{profile?.noEmployees?.toLocaleString() || 'N/A'}</span>
               </div>
             </div>
 
-            <div className="flex items-start space-x-3">
-              <Globe className="w-5 h-5 text-green-500 mt-0.5" />
+            <div className="flex items-start space-x-3 group">
+              <div className="p-2 bg-emerald-50 rounded-lg group-hover:bg-emerald-100 transition-colors">
+                <Globe className="w-5 h-5 text-emerald-600" />
+              </div>
               <div>
-                <span className="block text-gray-400 text-xs uppercase tracking-wider">Website</span>
+                <span className="block text-gray-500 text-xs uppercase tracking-wider font-semibold">Website</span>
                 <a
                   href={profile?.website?.startsWith('http') ? profile.website : `https://${profile?.website}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-sm text-blue-400 hover:underline truncate block max-w-[200px]"
+                  className="text-sm text-blue-600 hover:text-blue-800 hover:underline truncate block max-w-[200px] font-medium"
                 >
                   {profile?.website || 'N/A'}
                 </a>
@@ -162,80 +174,99 @@ const StockDetailPage = () => {
         {/* Right Column: Chart & Additional Details */}
         <div className="lg:col-span-2 space-y-6">
           {/* Chart Section */}
-          <div className="bg-[#1e1e1e] rounded-xl p-6 border border-gray-800 h-[500px]">
-            <h3 className="text-lg font-semibold mb-4 text-white">Price History</h3>
-            <div className="h-[400px] w-full">
+          <div className={`${cardClassName} h-[500px] flex flex-col`}>
+            <h3 className="text-lg font-bold mb-4 text-gray-900">Price History</h3>
+            <div className="flex-1 w-full min-h-0">
+              {/* Pass styles or ensure StockChart handles light mode properly. StockChart looks neutral enough or adaptable. */}
               <StockChart refreshTrigger={0} symbol={symbol} />
             </div>
           </div>
 
           {/* About Section */}
-          <div className="bg-[#1e1e1e] rounded-xl p-6 border border-gray-800 space-y-6">
+          <div className={`${cardClassName} space-y-6`}>
             <div>
-              <h3 className="text-lg font-semibold mb-3 text-white">About {info?.organName || profile?.companyName}</h3>
-              <p className="text-gray-300 text-sm leading-relaxed whitespace-pre-wrap">
+              <h3 className="text-lg font-bold mb-3 text-gray-900">About {info?.organName || profile?.companyName}</h3>
+              <p className="text-gray-600 text-sm leading-relaxed whitespace-pre-wrap">
                 {profile?.company_profile || profile?.industry || 'No description available.'}
               </p>
             </div>
 
             {profile?.history && (
               <div>
-                <h4 className="text-md font-medium text-gray-200 mb-2">History</h4>
-                <p className="text-gray-400 text-sm leading-relaxed whitespace-pre-wrap max-h-[200px] overflow-y-auto pr-2 custom-scrollbar">
-                  {profile.history}
-                </p>
+                <h4 className="text-md font-bold text-gray-900 mb-2">History</h4>
+                <div className="text-gray-600 text-sm leading-relaxed bg-gray-50 p-4 rounded-lg border border-gray-100">
+                  {profile.history.split(/ - |;  - /).map((item: string, index: number) => {
+                    const cleanItem = item.trim();
+                    if (!cleanItem) return null;
+                    // If it's the first item and doesn't look like a bullet point, render as is.
+                    // Otherwise prepend dash if missing (split consumes it).
+                    const isBullet = index > 0 || profile.history.startsWith(' - ');
+                    return (
+                      <div key={index} className="mb-2">
+                        {isBullet ? '• ' : ''}{cleanItem.replace(/^[-•]\s*/, '')}
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             )}
           </div>
 
           {/* Detailed Stats Grid */}
-          <div className="bg-[#1e1e1e] rounded-xl p-6 border border-gray-800">
-            <h3 className="text-lg font-semibold mb-4 text-white">Financial & Market Stats</h3>
+          <div className={cardClassName}>
+            <h3 className="text-lg font-bold mb-4 text-gray-900">Financial & Market Stats</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 text-sm">
               <div className="space-y-3">
-                <div className="flex justify-between py-2 border-b border-gray-800">
-                  <span className="text-gray-400">Market Cap</span>
-                  <span>{marketData?.price && profile?.outstandingShare ?
+                <div className="flex justify-between py-2 border-b border-gray-100">
+                  <span className="text-gray-500 font-medium">Market Cap</span>
+                  <span className="font-semibold text-gray-900">{marketData?.price && profile?.outstandingShare ?
                     ((marketData.price * profile.outstandingShare * 1000) / 1000000000).toLocaleString('vi-VN', { maximumFractionDigits: 0 }) + ' Tỷ'
                     : 'N/A'}</span>
                 </div>
-                <div className="flex justify-between py-2 border-b border-gray-800">
-                  <span className="text-gray-400">Charter Capital</span>
-                  <span>{profile?.charter_capital ? (profile.charter_capital / 1000000000).toLocaleString('vi-VN') + ' Tỷ' : 'N/A'}</span>
+                <div className="flex justify-between py-2 border-b border-gray-100">
+                  <span className="text-gray-500 font-medium">Charter Capital</span>
+                  <span className="font-semibold text-gray-900">{profile?.charter_capital ? (profile.charter_capital / 1000000000).toLocaleString('vi-VN') + ' Tỷ' : 'N/A'}</span>
                 </div>
-                <div className="flex justify-between py-2 border-b border-gray-800">
-                  <span className="text-gray-400">Established</span>
-                  <span>{profile?.establishedYear || 'N/A'}</span>
-                </div>
-              </div>
-
-              <div className="space-y-3">
-                <div className="flex justify-between py-2 border-b border-gray-800">
-                  <span className="text-gray-400">Outstanding Shares</span>
-                  <span>{profile?.outstandingShare ? (profile.outstandingShare * 1000000).toLocaleString() : 'N/A'}</span>
-                </div>
-                <div className="flex justify-between py-2 border-b border-gray-800">
-                  <span className="text-gray-400">Foreign Ownership</span>
-                  <span>{profile?.foreignPercent ? (profile.foreignPercent * 100).toFixed(2) + '%' : 'N/A'}</span>
-                </div>
-                <div className="flex justify-between py-2 border-b border-gray-800">
-                  <span className="text-gray-400">Sector (ICB Level 2)</span>
-                  <span>{profile?.icb_name2 || info?.icbCode2 || 'N/A'}</span>
+                <div className="flex justify-between py-2 border-b border-gray-100">
+                  <span className="text-gray-500 font-medium">Established</span>
+                  <span className="font-semibold text-gray-900">{profile?.establishedYear || 'N/A'}</span>
                 </div>
               </div>
 
               <div className="space-y-3">
-                <div className="flex justify-between py-2 border-b border-gray-800">
-                  <span className="text-gray-400">Stock Rating</span>
-                  <span>{profile?.stockRating ? `${profile.stockRating}/5` : 'N/A'}</span>
+                <div className="flex justify-between py-2 border-b border-gray-100">
+                  <span className="text-gray-500 font-medium">Outstanding Shares</span>
+                  <span className="font-semibold text-gray-900">{profile?.outstandingShare ? (profile.outstandingShare * 1000000).toLocaleString() : 'N/A'}</span>
                 </div>
-                <div className="flex justify-between py-2 border-b border-gray-800">
-                  <span className="text-gray-400">Sub-Sector</span>
-                  <span className="truncate max-w-[120px]" title={profile?.icb_name4 || ''}>{profile?.icb_name4 || 'N/A'}</span>
+                <div className="flex justify-between py-2 border-b border-gray-100">
+                  <span className="text-gray-500 font-medium">Foreign Ownership</span>
+                  <span className="font-semibold text-gray-900">{profile?.foreignPercent ? (profile.foreignPercent * 100).toFixed(2) + '%' : 'N/A'}</span>
                 </div>
-                <div className="flex justify-between py-2 border-b border-gray-800">
-                  <span className="text-gray-400">Listing Date</span>
-                  <span>{info?.updated_at ? new Date(info.updated_at).toLocaleDateString('vi-VN') : 'N/A'}</span>
+                <div className="flex justify-between py-2 border-b border-gray-100">
+                  <span className="text-gray-500 font-medium">Sector</span>
+                  <span className="font-semibold text-gray-900">{profile?.icb_name2 || info?.icbCode2 || 'N/A'}</span>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <div className="flex justify-between py-2 border-b border-gray-100">
+                  <span className="text-gray-500 font-medium">Stock Rating</span>
+                  <span className="font-semibold text-gray-900 flex items-center">
+                    {profile?.stockRating ? (
+                      <>
+                        <span className="text-yellow-500 mr-1">★</span>
+                        {profile.stockRating}/5
+                      </>
+                    ) : 'N/A'}
+                  </span>
+                </div>
+                <div className="flex justify-between py-2 border-b border-gray-100">
+                  <span className="text-gray-500 font-medium">Sub-Sector</span>
+                  <span className="truncate max-w-[120px] font-semibold text-gray-900" title={profile?.icb_name4 || ''}>{profile?.icb_name4 || 'N/A'}</span>
+                </div>
+                <div className="flex justify-between py-2 border-b border-gray-100">
+                  <span className="text-gray-500 font-medium">Listing Date</span>
+                  <span className="font-semibold text-gray-900">{info?.updated_at ? new Date(info.updated_at).toLocaleDateString('vi-VN') : 'N/A'}</span>
                 </div>
               </div>
             </div>
