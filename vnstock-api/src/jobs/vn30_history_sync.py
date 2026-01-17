@@ -12,8 +12,9 @@ from src.database.mongodb import db
 from src.services.fetchers.stock_history import StockHistoryFetcher
 from src.services.syncers.stock_history import StockHistorySyncer
 
-# VN30 constituent stocks (as of 2024)
+# VN30 constituent stocks + VN30 Index itself
 VN30_SYMBOLS = [
+    'VN30',  # VN30 Index (for intraday chart)
     'ACB', 'BCM', 'BID', 'BVH', 'CTG', 
     'FPT', 'GAS', 'GVR', 'HDB', 'HPG',
     'MBB', 'MSN', 'MWG', 'PLX', 'POW',

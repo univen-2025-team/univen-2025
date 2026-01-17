@@ -22,6 +22,7 @@ class StockHistoryDTO(BaseModel):
     symbol: str = Field(..., description="Stock ticker symbol")
     date: str = Field(..., description="Trading date in YYYY-MM-DD format")
     interval: str = Field(..., description="Time interval (1m, 5m, 15m, 30m, 1H)")
+    unit: str = Field(default="VND", description="Unit of measurement: 'VND' or 'INDEX'")
     prices: List[PriceBar] = Field(default_factory=list, description="Array of price bars for the day")
     updated_at: Optional[datetime] = Field(default=None, description="Last update timestamp")
     

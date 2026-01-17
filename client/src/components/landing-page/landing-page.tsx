@@ -83,7 +83,7 @@ export default function StockieHomepage() {
     <div className="min-h-screen bg-background text-gray-900">
       {/* Navigation */}
       <nav className={`fixed top-0 w-full z-50 transition-all duration-300 ${isScrolled ? 'bg-white/95 backdrop-blur-lg shadow-lg' : 'bg-transparent'}`}>
-        <div className="max-w-7xl mx-auto px-6 py-4">
+        <div className="max-w-7xl mx-auto px-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
               <Image
