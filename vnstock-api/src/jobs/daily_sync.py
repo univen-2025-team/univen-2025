@@ -83,29 +83,18 @@ def sync_company_profiles():
         for ticker in symbols:
             # Skip if done
             if ticker in done_symbols:
-                # print(f"Skipping {ticker} (Done)")
                 continue
 
             print(f"Processing {ticker}...")
             fetcher = CompanyProfileFetcher(symbol=ticker)
             
-            # Retry mechanism
-            success = False
-            for attempt in range(max_retries):
-                data = fetcher.fetch()
-                
-                if data:
-                    syncer.sync(data)
-                    success = True
-                    break # Success
-                else:
-                    print(f"Attempt {attempt + 1}/{max_retries} failed for {ticker} (No data).")
-                    if attempt < max_retries - 1:
-                        # Short sleep before retry
-                        time.sleep(2)
+            # VnstockClient now handles retries internally
+            data = fetcher.fetch()
             
-            if not success:
-                print(f"Skipping {ticker} after {max_retries} attempts.")
+            if data:
+                syncer.sync(data)
+            else:
+                print(f"Skipping {ticker} (No data).")
             
             # Rate limiting is handled inside VnstockClient (global)
             # Remove manual sleep here to rely on client
