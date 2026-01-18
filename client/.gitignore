@@ -24,6 +24,10 @@
 .DS_Store
 *.pem
 
+# backup files
+*.backup
+.env.backup
+
 # certificates (self-signed for development)
 /certificates
 

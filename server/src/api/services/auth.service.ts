@@ -41,7 +41,8 @@ export default class AuthService {
     public static signUp = async ({
         email,
         password,
-        user_fullName
+        user_fullName,
+        user_dayOfBirth
     }: service.auth.arguments.SignUp) => {
         /* --------------- Check if user is exists -------------- */
         const userIsExist = await UserService.checkUserExist({
@@ -65,7 +66,8 @@ export default class AuthService {
             user_avatar: '',
             user_fullName,
             user_role: await getRoleIdByName(userRole),
-            user_gender: false
+            user_gender: false,
+            user_dayOfBirth: user_dayOfBirth ? new Date(user_dayOfBirth) : undefined
         });
         if (!userInstance) throw new ForbiddenErrorResponse({ message: 'Create user failed!' });
 

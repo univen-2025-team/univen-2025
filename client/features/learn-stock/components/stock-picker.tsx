@@ -16,13 +16,16 @@ export default function StockPicker({ value, onChange, disabled }: StockPickerPr
 
   useEffect(() => {
     const fetchStocks = async () => {
+      console.log('🔍 StockPicker: Starting to fetch stocks...');
       setIsLoading(true)
       try {
         const data = await getAllStocks()
+        console.log('🔍 StockPicker: Received data:', data.length, 'stocks');
         // Filter out VN30 index and sort by symbol
         const filteredStocks = data
           .filter(stock => stock.symbol !== 'VN30')
           .sort((a, b) => a.symbol.localeCompare(b.symbol))
+        console.log('🔍 StockPicker: Filtered stocks:', filteredStocks.length);
         setStocks(filteredStocks)
       } catch (error) {
         console.error('Error fetching stocks:', error)

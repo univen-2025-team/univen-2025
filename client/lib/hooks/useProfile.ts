@@ -49,9 +49,13 @@ export function useProfile(autoFetch: boolean = true): UseProfileReturn {
         balance: data.balance || 0
       }));
     } catch (err) {
+      const axiosError = err as { response?: { status?: number } };
+      // Don't log 400/401 errors (expected when not authenticated)
+      if (axiosError.response?.status !== 400 && axiosError.response?.status !== 401) {
+        console.error('Error fetching profile:', err);
+      }
       const errorMessage = err instanceof Error ? err.message : 'Failed to fetch profile';
       setError(errorMessage);
-      console.error('Error fetching profile:', err);
     } finally {
       setIsLoading(false);
     }

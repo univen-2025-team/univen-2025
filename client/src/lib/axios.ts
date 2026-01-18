@@ -98,6 +98,14 @@ axiosInstance.interceptors.request.use(
 
         if (accessToken) {
             config.headers.Authorization = `Bearer ${accessToken}`;
+        } else {
+            // If no token and trying to access protected endpoints, reject immediately
+            const protectedEndpoints = ['/user/profile', '/user/', '/portfolio', '/orders', '/transactions'];
+            const isProtectedEndpoint = protectedEndpoints.some(endpoint => config.url?.includes(endpoint));
+            if (isProtectedEndpoint) {
+                // Silently reject - don't log error for unauthenticated users
+                return Promise.reject(new Error('No authentication token'));
+            }
         }
 
         return config;
