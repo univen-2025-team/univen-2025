@@ -22,14 +22,25 @@ const COLORS = {
     text: '#6b7280',
     background: '#ffffff',
     crosshair: '#9ca3af',
+    timeline: {
+        bg: '#f8fafc',
+        selection: 'rgba(99, 102, 241, 0.3)',
+        border: '#6366f1',
+    }
 };
+
+const TIMELINE_HEIGHT = 50;
 
 export default function CandlestickChart({ data, valueFormatter }: CandlestickChartProps) {
     const canvasRef = useRef<HTMLCanvasElement>(null);
+    const timelineCanvasRef = useRef<HTMLCanvasElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
+    const timelineContainerRef = useRef<HTMLDivElement>(null);
     const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
     const [viewRange, setViewRange] = useState({ start: 0, end: 0 });
     const [isDragging, setIsDragging] = useState(false);
+    const [isTimelineDragging, setIsTimelineDragging] = useState(false);
+    const [timelineDragType, setTimelineDragType] = useState<'move' | 'left' | 'right' | null>(null);
     const [dragStart, setDragStart] = useState({ x: 0, startIdx: 0 });
     const [hoveredCandle, setHoveredCandle] = useState<CandleDataPoint | null>(null);
     const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
@@ -37,7 +48,6 @@ export default function CandlestickChart({ data, valueFormatter }: CandlestickCh
     // Constants
     const PADDING = { top: 20, right: 70, bottom: 30, left: 10 };
     const MIN_CANDLES = 10;
-    const MAX_CANDLES = 200;
 
     // Initialize view range
     useEffect(() => {
@@ -69,7 +79,7 @@ export default function CandlestickChart({ data, valueFormatter }: CandlestickCh
         return data.slice(viewRange.start, viewRange.end + 1);
     }, [data, viewRange]);
 
-    // Y-axis domain
+    // Y-axis domain for visible data
     const yDomain = useMemo(() => {
         if (!visibleData.length) return { min: 0, max: 1 };
         const lows = visibleData.map(d => d.low);
@@ -80,7 +90,18 @@ export default function CandlestickChart({ data, valueFormatter }: CandlestickCh
         return { min: min - padding, max: max + padding };
     }, [visibleData]);
 
-    // Draw chart
+    // Y-axis domain for all data (timeline)
+    const fullYDomain = useMemo(() => {
+        if (!data.length) return { min: 0, max: 1 };
+        const lows = data.map(d => d.low);
+        const highs = data.map(d => d.high);
+        const min = Math.min(...lows);
+        const max = Math.max(...highs);
+        const padding = (max - min) * 0.1 || max * 0.01;
+        return { min: min - padding, max: max + padding };
+    }, [data]);
+
+    // Draw main chart
     useEffect(() => {
         const canvas = canvasRef.current;
         if (!canvas || !dimensions.width || !dimensions.height) return;
@@ -195,7 +216,6 @@ export default function CandlestickChart({ data, valueFormatter }: CandlestickCh
             ctx.stroke();
 
             // Horizontal line
-            const hoveredPrice = yDomain.max - ((mousePos.y - PADDING.top) / chartHeight) * (yDomain.max - yDomain.min);
             ctx.beginPath();
             ctx.moveTo(PADDING.left, mousePos.y);
             ctx.lineTo(dimensions.width - PADDING.right, mousePos.y);
@@ -205,6 +225,96 @@ export default function CandlestickChart({ data, valueFormatter }: CandlestickCh
         }
 
     }, [dimensions, visibleData, yDomain, valueFormatter, hoveredCandle, mousePos]);
+
+    // Draw timeline canvas
+    useEffect(() => {
+        const canvas = timelineCanvasRef.current;
+        if (!canvas || !dimensions.width) return;
+
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+
+        const dpr = window.devicePixelRatio || 1;
+        canvas.width = dimensions.width * dpr;
+        canvas.height = TIMELINE_HEIGHT * dpr;
+        ctx.scale(dpr, dpr);
+
+        const width = dimensions.width;
+        const height = TIMELINE_HEIGHT;
+        const padding = 5;
+
+        // Clear
+        ctx.fillStyle = COLORS.timeline.bg;
+        ctx.fillRect(0, 0, width, height);
+
+        if (!data.length) return;
+
+        // Draw mini chart
+        const chartWidth = width - padding * 2;
+        const chartHeight = height - padding * 2 - 10;
+        const barWidth = Math.max(1, chartWidth / data.length);
+
+        data.forEach((candle, index) => {
+            const x = padding + (index * chartWidth) / data.length;
+            const isBullish = candle.close >= candle.open;
+            const color = isBullish ? COLORS.bullish : COLORS.bearish;
+
+            // Draw mini bar (simplified)
+            const ratio = (candle.close - fullYDomain.min) / (fullYDomain.max - fullYDomain.min);
+            const barHeight = Math.max(1, chartHeight * ratio);
+            const y = padding + (chartHeight - barHeight);
+
+            ctx.fillStyle = color;
+            ctx.globalAlpha = 0.6;
+            ctx.fillRect(x, y, Math.max(1, barWidth - 0.5), barHeight);
+        });
+
+        ctx.globalAlpha = 1;
+
+        // Draw selection area
+        const selectionStart = padding + (viewRange.start / data.length) * chartWidth;
+        const selectionEnd = padding + ((viewRange.end + 1) / data.length) * chartWidth;
+        const selectionWidth = selectionEnd - selectionStart;
+
+        // Selection background
+        ctx.fillStyle = COLORS.timeline.selection;
+        ctx.fillRect(selectionStart, padding, selectionWidth, chartHeight);
+
+        // Selection borders
+        ctx.strokeStyle = COLORS.timeline.border;
+        ctx.lineWidth = 2;
+        ctx.strokeRect(selectionStart, padding, selectionWidth, chartHeight);
+
+        // Draw handles
+        const handleWidth = 6;
+        ctx.fillStyle = COLORS.timeline.border;
+        // Left handle
+        ctx.fillRect(selectionStart - handleWidth / 2, padding, handleWidth, chartHeight);
+        // Right handle
+        ctx.fillRect(selectionEnd - handleWidth / 2, padding, handleWidth, chartHeight);
+
+        // Draw time labels at bottom
+        ctx.fillStyle = COLORS.text;
+        ctx.font = '9px Inter, sans-serif';
+        ctx.textAlign = 'center';
+
+        const labelCount = 4;
+        for (let i = 0; i <= labelCount; i++) {
+            const idx = Math.floor((i / labelCount) * (data.length - 1));
+            const candle = data[idx];
+            if (candle) {
+                let label = candle.time;
+                if (label.includes(' ')) {
+                    const [datePart] = label.split(' ');
+                    const [, month, day] = datePart.split('-');
+                    label = `${day}/${month}`;
+                }
+                const x = padding + (idx / data.length) * chartWidth;
+                ctx.fillText(label, x, height - 2);
+            }
+        }
+
+    }, [dimensions.width, data, viewRange, fullYDomain]);
 
     // Mouse wheel zoom
     const handleWheel = useCallback((e: WheelEvent) => {
@@ -228,7 +338,7 @@ export default function CandlestickChart({ data, valueFormatter }: CandlestickCh
         return () => container.removeEventListener('wheel', handleWheel);
     }, [handleWheel]);
 
-    // Mouse handlers
+    // Main canvas mouse handlers
     const handleMouseDown = useCallback((e: React.MouseEvent) => {
         setIsDragging(true);
         setDragStart({ x: e.clientX, startIdx: viewRange.start });
@@ -274,6 +384,71 @@ export default function CandlestickChart({ data, valueFormatter }: CandlestickCh
     const handleMouseLeave = useCallback(() => {
         setIsDragging(false);
         setHoveredCandle(null);
+    }, []);
+
+    // Timeline mouse handlers
+    const handleTimelineMouseDown = useCallback((e: React.MouseEvent) => {
+        const rect = timelineCanvasRef.current?.getBoundingClientRect();
+        if (!rect || !data.length) return;
+
+        const x = e.clientX - rect.left;
+        const width = rect.width;
+        const padding = 5;
+        const chartWidth = width - padding * 2;
+
+        const selectionStart = padding + (viewRange.start / data.length) * chartWidth;
+        const selectionEnd = padding + ((viewRange.end + 1) / data.length) * chartWidth;
+
+        // Check if clicking on handles
+        const handleWidth = 10;
+        if (Math.abs(x - selectionStart) < handleWidth) {
+            setTimelineDragType('left');
+        } else if (Math.abs(x - selectionEnd) < handleWidth) {
+            setTimelineDragType('right');
+        } else if (x > selectionStart && x < selectionEnd) {
+            setTimelineDragType('move');
+        } else {
+            // Click outside - move selection there
+            const clickedIndex = Math.floor(((x - padding) / chartWidth) * data.length);
+            const range = viewRange.end - viewRange.start;
+            const newStart = Math.max(0, Math.min(data.length - range - 1, clickedIndex - Math.floor(range / 2)));
+            const newEnd = Math.min(data.length - 1, newStart + range);
+            setViewRange({ start: newStart, end: newEnd });
+            return;
+        }
+
+        setIsTimelineDragging(true);
+        setDragStart({ x: e.clientX, startIdx: viewRange.start });
+    }, [viewRange, data.length]);
+
+    const handleTimelineMouseMove = useCallback((e: React.MouseEvent) => {
+        if (!isTimelineDragging || !timelineDragType) return;
+
+        const rect = timelineCanvasRef.current?.getBoundingClientRect();
+        if (!rect || !data.length) return;
+
+        const deltaX = e.clientX - dragStart.x;
+        const chartWidth = rect.width - 10;
+        const deltaIndex = Math.round((deltaX / chartWidth) * data.length);
+        const range = viewRange.end - viewRange.start;
+
+        if (timelineDragType === 'move') {
+            const newStart = Math.max(0, Math.min(data.length - range - 1, dragStart.startIdx + deltaIndex));
+            const newEnd = Math.min(data.length - 1, newStart + range);
+            setViewRange({ start: newStart, end: newEnd });
+        } else if (timelineDragType === 'left') {
+            const newStart = Math.max(0, Math.min(viewRange.end - MIN_CANDLES, dragStart.startIdx + deltaIndex));
+            setViewRange(prev => ({ ...prev, start: newStart }));
+        } else if (timelineDragType === 'right') {
+            const startEnd = dragStart.startIdx + range;
+            const newEnd = Math.max(viewRange.start + MIN_CANDLES, Math.min(data.length - 1, startEnd + deltaIndex));
+            setViewRange(prev => ({ ...prev, end: newEnd }));
+        }
+    }, [isTimelineDragging, timelineDragType, dragStart, viewRange, data.length]);
+
+    const handleTimelineMouseUp = useCallback(() => {
+        setIsTimelineDragging(false);
+        setTimelineDragType(null);
     }, []);
 
     // Zoom controls
@@ -344,10 +519,10 @@ export default function CandlestickChart({ data, valueFormatter }: CandlestickCh
                 </div>
             </div>
 
-            {/* Canvas container */}
+            {/* Main Chart Canvas */}
             <div
                 ref={containerRef}
-                className="flex-1 relative cursor-crosshair select-none"
+                className="flex-1 relative cursor-crosshair select-none min-h-0"
                 onMouseDown={handleMouseDown}
                 onMouseMove={handleMouseMove}
                 onMouseUp={handleMouseUp}
@@ -376,6 +551,22 @@ export default function CandlestickChart({ data, valueFormatter }: CandlestickCh
                         </div>
                     </div>
                 )}
+            </div>
+
+            {/* Timeline Navigator Canvas */}
+            <div
+                ref={timelineContainerRef}
+                className="w-full cursor-ew-resize select-none border-t border-gray-200"
+                style={{ height: TIMELINE_HEIGHT }}
+                onMouseDown={handleTimelineMouseDown}
+                onMouseMove={handleTimelineMouseMove}
+                onMouseUp={handleTimelineMouseUp}
+                onMouseLeave={handleTimelineMouseUp}
+            >
+                <canvas
+                    ref={timelineCanvasRef}
+                    style={{ width: '100%', height: '100%' }}
+                />
             </div>
         </div>
     );

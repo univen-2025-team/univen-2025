@@ -9,12 +9,13 @@ import { selectUser, logoutUser } from '@/lib/store/authSlice';
 import { appConfig } from '@/config';
 import { sidebarRoutes, isRouteActive } from '@/config/sidebar.config';
 import { getMediaUrl } from '@/lib/api/media.api';
+import { useSidebar } from '@/context/SidebarContext';
 
 import { useBadges } from '@/lib/hooks/useBadges';
 
 export function Sidebar() {
     const [isOpen, setIsOpen] = useState(false);
-    const [isCollapsed, setIsCollapsed] = useState(false);
+    const { isCollapsed, setIsCollapsed } = useSidebar();
     const [showProfileMenu, setShowProfileMenu] = useState(false);
     const profileMenuRef = useRef<HTMLDivElement>(null);
     const pathname = usePathname() || '/';
