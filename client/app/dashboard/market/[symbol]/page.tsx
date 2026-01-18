@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import { useParams } from 'next/navigation';
 import { ArrowLeft, Building2, Globe, Users, TrendingUp, TrendingDown, DollarSign, Maximize2, Minimize2, ShoppingCart, X } from 'lucide-react';
@@ -213,7 +214,7 @@ const StockDetailPage = () => {
         {/* Right Column: Chart & Additional Details */}
         <div className="lg:col-span-2 space-y-6">
           {/* Chart Section */}
-          <div className={`${isFullscreen ? 'fixed inset-0 z-50 bg-white p-6' : `${cardClassName} h-[500px]`} flex flex-col`}>
+          <div className={`${cardClassName} h-[500px] flex flex-col`}>
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-bold text-gray-900">Price History</h3>
               <div className="flex items-center gap-2">
@@ -231,47 +232,100 @@ const StockDetailPage = () => {
                 ))}
                 <div className="w-px h-6 bg-gray-200 mx-1" />
                 <button
-                  onClick={() => setIsFullscreen(!isFullscreen)}
+                  onClick={() => setIsFullscreen(true)}
                   className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 transition-colors"
-                  title={isFullscreen ? "Thu nhỏ" : "Toàn màn hình"}
+                  title="Toàn màn hình"
                 >
-                  {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+                  <Maximize2 className="w-4 h-4" />
                 </button>
               </div>
             </div>
-            <div className={`flex-1 w-full ${isFullscreen ? 'h-[calc(100vh-180px)]' : 'min-h-0'}`}>
+            <div className="flex-1 w-full min-h-0">
               {chartLoading ? (
                 <div className="flex items-center justify-center h-full text-gray-500">
                   <LoadingSpinner />
                 </div>
               ) : candlestickData.length > 0 ? (
-                <CandlestickChart data={candlestickData} valueFormatter={formatPrice} />
+                <CandlestickChart key="normal" data={candlestickData} valueFormatter={formatPrice} />
               ) : (
                 <div className="flex items-center justify-center h-full text-gray-500">
                   Không có dữ liệu biểu đồ
                 </div>
               )}
             </div>
-            {/* Trade buttons - show in fullscreen or below chart */}
-            {isFullscreen && (
-              <div className="flex items-center justify-center gap-4 mt-4 pt-4 border-t border-gray-100">
-                <button
-                  onClick={() => router.push(`/dashboard/trade?symbol=${symbol}&action=buy`)}
-                  className="flex items-center gap-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl transition-colors shadow-lg"
-                >
-                  <ShoppingCart className="w-5 h-5" />
-                  Mua {symbol}
-                </button>
-                <button
-                  onClick={() => router.push(`/dashboard/trade?symbol=${symbol}&action=sell`)}
-                  className="flex items-center gap-2 px-6 py-3 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-xl transition-colors shadow-lg"
-                >
-                  <TrendingDown className="w-5 h-5" />
-                  Bán {symbol}
-                </button>
-              </div>
-            )}
           </div>
+
+          {/* Fullscreen Modal - Using Portal to render outside parent DOM */}
+          {isFullscreen && typeof document !== 'undefined' && createPortal(
+            <div className="fixed inset-0 z-[9999] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+              <div className="bg-white rounded-2xl shadow-2xl w-full h-full max-w-[95vw] max-h-[95vh] flex flex-col overflow-hidden">
+                {/* Modal Header */}
+                <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+                  <div className="flex items-center gap-4">
+                    <h3 className="text-xl font-bold text-gray-900">{symbol} - Price History</h3>
+                    <div className="flex gap-2">
+                      {TIME_RANGES.map((range) => (
+                        <button
+                          key={range}
+                          onClick={() => setSelectedRange(range)}
+                          className={`px-3 py-1.5 rounded-lg font-medium text-sm transition-colors ${selectedRange === range
+                            ? 'bg-primary text-white'
+                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                            }`}
+                        >
+                          {range}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setIsFullscreen(false)}
+                    className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 transition-colors"
+                    title="Đóng"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                {/* Modal Body - Chart */}
+                <div className="flex-1 p-4 min-h-0">
+                  {chartLoading ? (
+                    <div className="flex items-center justify-center h-full text-gray-500">
+                      <LoadingSpinner />
+                    </div>
+                  ) : candlestickData.length > 0 ? (
+                    <CandlestickChart key="fullscreen" data={candlestickData} valueFormatter={formatPrice} />
+                  ) : (
+                    <div className="flex items-center justify-center h-full text-gray-500">
+                      Không có dữ liệu biểu đồ
+                    </div>
+                  )}
+                </div>
+
+                {/* Modal Footer - Trade Buttons */}
+                <div className="flex items-center justify-center gap-4 px-6 py-4 border-t border-gray-100 bg-gray-50">
+                  <button
+                    onClick={() => router.push(`/dashboard/trade?symbol=${symbol}&action=buy`)}
+                    className="flex items-center gap-2 px-8 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl transition-colors shadow-lg"
+                  >
+                    <ShoppingCart className="w-5 h-5" />
+                    Mua {symbol}
+                  </button>
+                  <button
+                    onClick={() => router.push(`/dashboard/trade?symbol=${symbol}&action=sell`)}
+                    className="flex items-center gap-2 px-8 py-3 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-xl transition-colors shadow-lg"
+                  >
+                    <TrendingDown className="w-5 h-5" />
+                    Bán {symbol}
+                  </button>
+                  <span className="text-sm text-gray-500 ml-4">
+                    Giá: <span className="font-semibold text-gray-900">{marketData?.price ? (marketData.price * 1000).toLocaleString('vi-VN') : '---'}</span> VND
+                  </span>
+                </div>
+              </div>
+            </div>,
+            document.body
+          )}
 
           {/* Quick Trade Card - only show when not fullscreen */}
           {!isFullscreen && (
