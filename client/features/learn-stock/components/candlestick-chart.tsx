@@ -20,6 +20,7 @@ export default function CandlestickChart({ symbol }: CandlestickChartProps) {
   // Local UI state for toggles
   const [showVolume, setShowVolume] = useState(true)
   const [showEvents, setShowEvents] = useState(true)
+  const [timeRange, setTimeRange] = useState<'1M' | '3M' | '6M' | '1Y' | 'All'>('All')
 
   // Global store state
   const {
@@ -231,6 +232,8 @@ export default function CandlestickChart({ symbol }: CandlestickChartProps) {
         setShowVolume={setShowVolume}
         showEvents={showEvents}
         setShowEvents={setShowEvents}
+        timeRange={timeRange}
+        setTimeRange={setTimeRange}
       />
 
       <div className="relative flex-grow min-h-[400px]" ref={chartContainerRef}>
