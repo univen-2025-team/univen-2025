@@ -1,6 +1,7 @@
 'use client';
 
 import { useRef, useEffect, useState, useCallback, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 
 type CandleDataPoint = {
     time: string;
@@ -56,6 +57,9 @@ export default function CandlestickChart({ data, valueFormatter, onLoadMore }: C
     const [isSelecting, setIsSelecting] = useState(false);
     const [selectionRange, setSelectionRange] = useState<{ start: number; end: number } | null>(null);
     const [selectionStartX, setSelectionStartX] = useState(0);
+
+    // Context Menu State
+    const [contextMenu, setContextMenu] = useState<{ x: number, y: number } | null>(null);
 
     // State Refs for Event Listeners (Prevent Stale Closures)
     const viewRangeRef = useRef(viewRange);
@@ -447,10 +451,12 @@ export default function CandlestickChart({ data, valueFormatter, onLoadMore }: C
             setIsSelecting(true);
             setSelectionStartX(globalIndex);
             setSelectionRange({ start: globalIndex, end: globalIndex });
+            setContextMenu(null);
         }
         // Left click to drag/pan
         else if (e.button === 0) {
             setIsDragging(true);
+            setContextMenu(null);
             setDragStart({ x: e.clientX, startIdx: viewRange.start });
         }
     }, [viewRange.start, dimensions, visibleData.length]);
@@ -568,6 +574,17 @@ export default function CandlestickChart({ data, valueFormatter, onLoadMore }: C
                     );
                     if (dist < 5) {
                         setSelectionRange(null);
+                        setContextMenu(null);
+                    } else {
+                        // Drag complete -> Show menu
+                        const rect = containerRef.current?.getBoundingClientRect();
+                        if (rect) {
+                            // Limit X to be within container
+                            const x = Math.min(e.clientX, rect.right - 200);
+                            // Limit Y to be within viewport/container
+                            const y = Math.min(e.clientY, window.innerHeight - 100);
+                            setContextMenu({ x, y });
+                        }
                     }
                     dragStartWithRightClickRef.current = null;
                 }
@@ -812,6 +829,47 @@ export default function CandlestickChart({ data, valueFormatter, onLoadMore }: C
                         </div>
                     </div>
                 </div>
+            )}
+
+
+
+            {/* Context Menu */}
+            {contextMenu && typeof document !== 'undefined' && createPortal(
+                <div
+                    className="fixed z-[9999] bg-white border border-gray-200 rounded-lg shadow-xl overflow-hidden min-w-[180px]"
+                    style={{ left: contextMenu.x, top: contextMenu.y }}
+                    onMouseDown={(e) => e.stopPropagation()}
+                >
+                    <div className="py-1">
+                        <button
+                            className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                            onClick={() => {
+                                // To be implemented
+                                console.log('Giải thích biến động');
+                                setContextMenu(null);
+                            }}
+                        >
+                            <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            Giải thích biến động
+                        </button>
+                        <button
+                            className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                            onClick={() => {
+                                // To be implemented
+                                console.log('Tổng hợp tin tức');
+                                setContextMenu(null);
+                            }}
+                        >
+                            <svg className="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
+                            </svg>
+                            Tổng hợp tin tức
+                        </button>
+                    </div>
+                </div>,
+                document.body
             )}
 
             {/* Main Chart Canvas */}
