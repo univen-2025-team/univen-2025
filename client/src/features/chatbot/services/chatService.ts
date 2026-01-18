@@ -63,22 +63,22 @@ export const getAgentApiUrl = (): string => {
  */
 const extractSymbol = (text: string): string | undefined => {
   const upperText = text.toUpperCase().trim()
-  
+
   // Danh sách symbol phổ biến (ưu tiên)
   const commonSymbols = ['VCB', 'VNM', 'MWG', 'VIC', 'VHM', 'HPG', 'FPT', 'MSN', 'TCB', 'BID', 'CTG', 'ACB', 'MBB', 'VPB', 'STB', 'TPB', 'EIB', 'HDB', 'SSI', 'VCI', 'VND', 'BSI', 'VIX', 'VRE', 'VGC', 'VSH', 'VHC', 'VSC', 'VPI', 'VCI']
-  
+
   // Nếu text chỉ là symbol (2-5 chữ cái in hoa, không có khoảng trắng hoặc ký tự đặc biệt)
   if (/^[A-Z]{2,5}$/.test(upperText)) {
     return upperText
   }
-  
+
   // Tìm symbol phổ biến trong text trước
   for (const sym of commonSymbols) {
     if (upperText.includes(sym)) {
       return sym
     }
   }
-  
+
   // Nếu không tìm thấy symbol phổ biến, tìm bất kỳ pattern 2-5 chữ cái in hoa
   const symbolMatch = upperText.match(/\b[A-Z]{2,5}\b/)
   return symbolMatch ? symbolMatch[0] : undefined
@@ -94,7 +94,7 @@ export const createDefaultUiEffects = (text: string): FeatureInstruction[] => {
   // Detect intent và tạo default component
   // Ưu tiên check các pattern cụ thể trước (tin tức thị trường, chi tiết, mua)
   // Sau đó mới check pattern chung (thị trường)
-  
+
   if (lowerText.includes('tin tức') || lowerText.includes('news')) {
     // Extract symbol nếu có (ví dụ: "tin tức VCB" -> "VCB")
     const symbol = extractSymbol(text)
@@ -103,7 +103,7 @@ export const createDefaultUiEffects = (text: string): FeatureInstruction[] => {
     const mockNewsItems = [
       {
         id: 'mock-1',
-        title: symbol 
+        title: symbol
           ? `${symbol} công bố kết quả kinh doanh quý mới nhất`
           : 'Thị trường chứng khoán Việt Nam tăng điểm mạnh trong phiên giao dịch hôm nay',
         source: 'VnExpress',
@@ -231,13 +231,13 @@ export const buildConversationHistory = (messages: ChatMessage[]): Array<{ role:
       role: (msg.role === 'user' ? 'user' : 'assistant') as 'user' | 'assistant',
       content: msg.text,
     }))
-  
+
   // Đảm bảo message cuối cùng là từ user (theo tài liệu)
   // Nếu message cuối cùng không phải từ user, log warning
   if (history.length > 0 && history[history.length - 1].role !== 'user') {
     console.warn('⚠️ Last message in conversation history is not from user. This may cause issues with the API.')
   }
-  
+
   return history
 }
 
@@ -262,7 +262,7 @@ export const fetchUserProfile = async (userId: string, fallbackUser?: any): Prom
   } catch (error) {
     // Nếu không lấy được profile, vẫn tiếp tục với thông tin từ Redux
     console.warn('⚠️ Không thể lấy user profile từ backend, sử dụng thông tin từ Redux:', error)
-    
+
     // Fallback: sử dụng thông tin từ Redux store nếu có
     if (fallbackUser) {
       return {
@@ -278,7 +278,7 @@ export const fetchUserProfile = async (userId: string, fallbackUser?: any): Prom
         user_dayOfBirth: fallbackUser.user_dayOfBirth,
       } as UserProfile
     }
-    
+
     return null
   }
 }
@@ -337,16 +337,6 @@ const GROQ_MODELS = [
 ] as const
 
 /**
- * Lấy Groq API key từ env
- */
-const getGroqApiKey = (): string | null => {
-  if (typeof window !== 'undefined') {
-    return process.env.NEXT_PUBLIC_GROQ_API_KEY || null
-  }
-  return process.env.GROQ_API_KEY || process.env.NEXT_PUBLIC_GROQ_API_KEY || null
-}
-
-/**
  * Parse intent từ Groq response và map sang UI effects
  * Sử dụng cả text và reply để phân loại chính xác hơn
  */
@@ -359,8 +349,8 @@ const parseGroqIntent = (userText: string, groqReply: string): FeatureInstructio
 
   // Phân loại intent - ưu tiên các pattern cụ thể
   if (
-    combinedText.includes('thị trường') || 
-    combinedText.includes('market') || 
+    combinedText.includes('thị trường') ||
+    combinedText.includes('market') ||
     combinedText.includes('tổng quan') ||
     combinedText.includes('vn30') ||
     combinedText.includes('index') ||
@@ -370,8 +360,8 @@ const parseGroqIntent = (userText: string, groqReply: string): FeatureInstructio
   ) {
     effects.push({ type: 'SHOW_MARKET_OVERVIEW' })
   } else if (
-    combinedText.includes('mua') || 
-    combinedText.includes('buy') || 
+    combinedText.includes('mua') ||
+    combinedText.includes('buy') ||
     combinedText.includes('đặt lệnh mua') ||
     combinedText.includes('mua cổ phiếu')
   ) {
@@ -385,8 +375,8 @@ const parseGroqIntent = (userText: string, groqReply: string): FeatureInstructio
       },
     })
   } else if (
-    combinedText.includes('bán') || 
-    combinedText.includes('sell') || 
+    combinedText.includes('bán') ||
+    combinedText.includes('sell') ||
     combinedText.includes('đặt lệnh bán') ||
     combinedText.includes('bán cổ phiếu')
   ) {
@@ -401,7 +391,7 @@ const parseGroqIntent = (userText: string, groqReply: string): FeatureInstructio
       },
     })
   } else if (
-    combinedText.includes('tin tức') || 
+    combinedText.includes('tin tức') ||
     combinedText.includes('news') ||
     combinedText.includes('tin tức thị trường')
   ) {
@@ -413,9 +403,9 @@ const parseGroqIntent = (userText: string, groqReply: string): FeatureInstructio
       },
     })
   } else if (
-    combinedText.includes('chi tiết') || 
-    combinedText.includes('detail') || 
-    combinedText.includes('giá') || 
+    combinedText.includes('chi tiết') ||
+    combinedText.includes('detail') ||
+    combinedText.includes('giá') ||
     symbol ||
     combinedText.includes('thông tin cổ phiếu')
   ) {
@@ -432,9 +422,9 @@ const parseGroqIntent = (userText: string, groqReply: string): FeatureInstructio
       },
     })
   } else if (
-    (combinedText.includes('xác nhận') || 
-    combinedText.includes('confirm') || 
-    combinedText.includes('xác nhận giao dịch')) &&
+    (combinedText.includes('xác nhận') ||
+      combinedText.includes('confirm') ||
+      combinedText.includes('xác nhận giao dịch')) &&
     // CHỈ tạo CONFIRM_TRANSACTION nếu KHÔNG có "mua" hoặc "bán" đơn thuần (để tránh nhầm với OPEN_BUY_STOCK/OPEN_SELL_STOCK)
     !(combinedText.includes('mua') && !combinedText.includes('xác nhận mua')) &&
     !(combinedText.includes('bán') && !combinedText.includes('xác nhận bán')) &&
@@ -453,8 +443,8 @@ const parseGroqIntent = (userText: string, groqReply: string): FeatureInstructio
       },
     })
   } else if (
-    combinedText.includes('tài khoản') || 
-    combinedText.includes('profile') || 
+    combinedText.includes('tài khoản') ||
+    combinedText.includes('profile') ||
     combinedText.includes('thông tin cá nhân') ||
     combinedText.includes('số dư')
   ) {
@@ -465,8 +455,8 @@ const parseGroqIntent = (userText: string, groqReply: string): FeatureInstructio
       },
     })
   } else if (
-    combinedText.includes('lịch sử') || 
-    combinedText.includes('history') || 
+    combinedText.includes('lịch sử') ||
+    combinedText.includes('history') ||
     combinedText.includes('giao dịch đã thực hiện') ||
     combinedText.includes('lịch sử giao dịch')
   ) {
@@ -478,8 +468,8 @@ const parseGroqIntent = (userText: string, groqReply: string): FeatureInstructio
       },
     })
   } else if (
-    combinedText.includes('thống kê') || 
-    combinedText.includes('stats') || 
+    combinedText.includes('thống kê') ||
+    combinedText.includes('stats') ||
     combinedText.includes('tổng kết') ||
     combinedText.includes('thống kê giao dịch')
   ) {
@@ -490,9 +480,9 @@ const parseGroqIntent = (userText: string, groqReply: string): FeatureInstructio
       },
     })
   } else if (
-    (combinedText.includes('xếp hạng') || 
-    combinedText.includes('ranking') || 
-    combinedText.includes('bảng xếp hạng')) &&
+    (combinedText.includes('xếp hạng') ||
+      combinedText.includes('ranking') ||
+      combinedText.includes('bảng xếp hạng')) &&
     !combinedText.includes('cổ phiếu') // Loại trừ "top cổ phiếu"
   ) {
     effects.push({
@@ -526,10 +516,10 @@ export const callGroqAPI = async (
   }
 
   const model = GROQ_MODELS[modelIndex]
-  
+
   try {
     console.log(`🤖 Calling Groq API via Next.js endpoint with model: ${model}`)
-    
+
     const systemPrompt = `Bạn là trợ lý chứng khoán Việt Nam. Phân tích câu hỏi của người dùng và trả lời ngắn gọn, rõ ràng bằng tiếng Việt.
 
 Dựa trên câu hỏi từ người dùng, trả về một trong các effect sau (chỉ trả về tên effect, không có description):
@@ -579,38 +569,38 @@ BẮT BUỘC trả về theo cấu trúc JSON hợp lệ (không có markdown, k
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
       console.log(`❌ Groq API error (${response.status}):`, errorData)
-      
+
       // Thử model tiếp theo nếu lỗi do token limit
       if (response.status === 429 || response.status === 413 || errorData.error?.includes('token')) {
         console.warn(`⚠️ Token limit reached for ${model}, trying next model...`)
         return callGroqAPI(messages, modelIndex + 1)
       }
-      
+
       return null
     }
 
     const data = await response.json()
     const rawContent = data.content || ''
     const lastUserMessage = messages[messages.length - 1]?.content || ''
-    
+
     console.log('🔍 ========== GROQ API RESPONSE DEBUG ==========')
     console.log('📥 Raw response from Groq:', rawContent)
     console.log('📝 Last user message:', lastUserMessage)
     console.log('🤖 Model used:', model)
-    
+
     // Parse JSON từ reply
     let parsedData: {
       reply?: string
       uiEffects?: string
       suggestions?: string[]
     } = {}
-    
+
     try {
       // Loại bỏ markdown code blocks nếu có
       let jsonString = rawContent.trim()
       console.log('🧹 Original JSON string length:', jsonString.length)
       console.log('🧹 First 200 chars:', jsonString.substring(0, 200))
-      
+
       if (jsonString.startsWith('```json')) {
         console.log('🔧 Removing ```json markdown wrapper...')
         jsonString = jsonString.replace(/^```json\s*/, '').replace(/\s*```$/, '')
@@ -618,10 +608,10 @@ BẮT BUỘC trả về theo cấu trúc JSON hợp lệ (không có markdown, k
         console.log('🔧 Removing ``` markdown wrapper...')
         jsonString = jsonString.replace(/^```\s*/, '').replace(/\s*```$/, '')
       }
-      
+
       console.log('📦 Cleaned JSON string length:', jsonString.length)
       console.log('📦 Cleaned JSON string:', jsonString)
-      
+
       parsedData = JSON.parse(jsonString)
       console.log('✅ Successfully parsed JSON!')
       console.log('📦 Parsed data:', JSON.stringify(parsedData, null, 2))
@@ -648,23 +638,23 @@ BẮT BUỘC trả về theo cấu trúc JSON hợp lệ (không có markdown, k
         suggestions,
       }
     }
-    
+
     // Extract reply
     const reply = parsedData.reply || rawContent || 'Xin lỗi, tôi không thể trả lời câu hỏi này.'
     console.log('💬 Final reply:', reply)
-    
+
     // Parse uiEffects từ string thành FeatureInstruction[]
     let uiEffects: FeatureInstruction[] = []
     const uiEffectString = parsedData.uiEffects?.trim().toUpperCase()
     console.log('🎯 uiEffectString (raw):', parsedData.uiEffects)
     console.log('🎯 uiEffectString (uppercase):', uiEffectString)
-    
+
     if (uiEffectString && uiEffectString !== 'NONE') {
       // Parse effect string thành FeatureInstruction
       const symbol = extractSymbol(lastUserMessage) || extractSymbol(reply)
       console.log('🔤 Extracted symbol:', symbol)
       console.log('🔄 Processing effect:', uiEffectString)
-      
+
       switch (uiEffectString) {
         case 'SHOW_MARKET_OVERVIEW':
           console.log('✅ Matched: SHOW_MARKET_OVERVIEW')
@@ -717,12 +707,12 @@ BẮT BUỘC trả về theo cấu trúc JSON hợp lệ (không có markdown, k
           // CHỈ tạo CONFIRM_TRANSACTION nếu user thực sự xác nhận (có từ "xác nhận" trong text)
           const userTextLower = lastUserMessage.toLowerCase()
           const replyLower = reply.toLowerCase()
-          const hasConfirmKeyword = 
-            userTextLower.includes('xác nhận') || 
+          const hasConfirmKeyword =
+            userTextLower.includes('xác nhận') ||
             userTextLower.includes('confirm') ||
             replyLower.includes('xác nhận') ||
             replyLower.includes('confirm')
-          
+
           if (hasConfirmKeyword) {
             uiEffects.push({
               type: 'CONFIRM_TRANSACTION',
@@ -821,20 +811,20 @@ BẮT BUỘC trả về theo cấu trúc JSON hợp lệ (không có markdown, k
       console.log('⚠️ No uiEffect or "NONE", defaulting to SHOW_MARKET_OVERVIEW')
       uiEffects = [{ type: 'SHOW_MARKET_OVERVIEW' }]
     }
-    
+
     console.log('🎨 Final uiEffects:', JSON.stringify(uiEffects, null, 2))
-    
+
     // Parse suggestions từ string[] thành SuggestionMessage[]
     const suggestions: SuggestionMessage[] = parsedData.suggestions
       ? parsedData.suggestions.map((text, index) => ({
-          text: text.trim(),
-          icon: index === 0 ? '🌐' : index === 1 ? '❓' : '💡',
-        }))
+        text: text.trim(),
+        icon: index === 0 ? '🌐' : index === 1 ? '❓' : '💡',
+      }))
       : [
-          { text: 'Xem tổng quan thị trường', icon: '🌐' },
-          { text: 'Tìm hiểu thêm', icon: '❓' },
-        ]
-    
+        { text: 'Xem tổng quan thị trường', icon: '🌐' },
+        { text: 'Tìm hiểu thêm', icon: '❓' },
+      ]
+
     console.log('💡 Final suggestions:', suggestions)
 
     console.log(`✅ ========== GROQ API RESPONSE SUMMARY ==========`)
@@ -844,7 +834,7 @@ BẮT BUỘC trả về theo cấu trúc JSON hợp lệ (không có markdown, k
     console.log(`✅ UI Effects count: ${uiEffects.length}`)
     console.log(`✅ Suggestions count: ${suggestions.length}`)
     console.log(`✅ ================================================`)
-    
+
     return { reply, uiEffects, suggestions }
   } catch (error: any) {
     // Nếu lỗi do token limit, thử model tiếp theo
@@ -866,7 +856,7 @@ export const sendChatMessage = async (
   agentApiUrl: string
 ): Promise<{ data: ChatApiResponse | null; error: Error | null }> => {
   const apiUrl = `${agentApiUrl}/api/v1/chat`
-  
+
   // Log chi tiết để debug full context và meta
   console.log('🔗 Calling AGENT_API directly:', apiUrl)
   console.log('📋 Request meta (with user info):', request.meta)
@@ -932,7 +922,7 @@ export const sendChatMessage = async (
         error: errorText,
         userId: request.meta.user_id,
       })
-      
+
       // Fallback to Groq khi lỗi
       console.warn('⚠️ AGENT_API error, falling back to Groq...')
       const groqResult = await callGroqAPI(request.messages)
@@ -946,7 +936,7 @@ export const sendChatMessage = async (
           error: null,
         }
       }
-      
+
       return {
         data: null,
         error: new Error(`AGENT_API error: ${response.status}`),
@@ -959,7 +949,7 @@ export const sendChatMessage = async (
       uiEffectsCount: responseData.ui_effects?.length || 0,
       suggestionsCount: responseData.suggestion_messages?.length || 0,
     })
-    
+
     return {
       data: responseData as ChatApiResponse,
       error: null,
@@ -972,7 +962,7 @@ export const sendChatMessage = async (
       userId: request.meta.user_id,
       message: fetchError instanceof Error ? fetchError.message : 'Unknown error',
     })
-    
+
     // Fallback to Groq khi network error
     console.warn('⚠️ AGENT_API network error, falling back to Groq...')
     const groqResult = await callGroqAPI(request.messages)
@@ -986,7 +976,7 @@ export const sendChatMessage = async (
         error: null,
       }
     }
-    
+
     return {
       data: null,
       error: fetchError instanceof Error ? fetchError : new Error('Network error'),
@@ -1001,7 +991,7 @@ export const createFallbackResponse = async (
   defaultEffects: FeatureInstruction[]
 ): Promise<ChatApiResponse> => {
   console.log('⚠️ AGENT_API failed, fetching from backend market API...')
-  
+
   // Fetch data từ backend market API dựa trên default effects
   let fallbackReply = 'Đang tải thông tin từ hệ thống...'
   let enhancedEffects = [...defaultEffects]
@@ -1009,14 +999,14 @@ export const createFallbackResponse = async (
   try {
     if (defaultEffects.length > 0) {
       const effect = defaultEffects[0]
-      
+
       if (effect.type === 'OPEN_STOCK_DETAIL') {
         const symbol = effect.payload.symbol
         console.log(`📊 Fetching stock data for ${symbol} from backend...`)
-        
+
         try {
           const stockData = await getStockData(symbol)
-          
+
           if (stockData) {
             enhancedEffects = [{
               type: 'OPEN_STOCK_DETAIL',
@@ -1035,7 +1025,7 @@ export const createFallbackResponse = async (
             console.warn(`⚠️ Could not fetch stock data for ${symbol}, using mock data`)
             const mockPrice = 95000 + Math.floor(Math.random() * 10000)
             const mockChangePercent = (Math.random() * 4 - 2).toFixed(2)
-            
+
             enhancedEffects = [{
               type: 'OPEN_STOCK_DETAIL',
               payload: {
@@ -1065,7 +1055,7 @@ export const createFallbackResponse = async (
             message: stockError instanceof Error ? stockError.message : 'Unknown error',
             stack: stockError instanceof Error ? stockError.stack : undefined,
           })
-          
+
           // Dùng mock data khi lỗi (giữ nguyên từ default effect hoặc tạo mới)
           const existingEffect = enhancedEffects.find(e => e.type === 'OPEN_STOCK_DETAIL')
           if (existingEffect && existingEffect.type === 'OPEN_STOCK_DETAIL') {
@@ -1075,7 +1065,7 @@ export const createFallbackResponse = async (
             // Tạo mock data mới
             const mockPrice = 95000 + Math.floor(Math.random() * 10000)
             const mockChangePercent = (Math.random() * 4 - 2).toFixed(2)
-            
+
             enhancedEffects = [{
               type: 'OPEN_STOCK_DETAIL',
               payload: {
@@ -1100,7 +1090,7 @@ export const createFallbackResponse = async (
       } else if (effect.type === 'SHOW_MARKET_OVERVIEW') {
         console.log('📈 Fetching market overview from backend...')
         const marketData = await getLatestMarketData()
-        
+
         if (marketData) {
           fallbackReply = `Tổng quan thị trường: VN30 Index ${marketData.vn30Index.index.toLocaleString('vi-VN')} điểm (${marketData.vn30Index.changePercent > 0 ? '+' : ''}${marketData.vn30Index.changePercent.toFixed(2)}%).`
         } else {
@@ -1110,7 +1100,7 @@ export const createFallbackResponse = async (
         const symbol = effect.payload.symbol
         console.log(`💰 Fetching stock price for ${symbol} from backend...`)
         const stockData = await getStockData(symbol)
-        
+
         if (stockData) {
           enhancedEffects = [{
             type: 'OPEN_BUY_STOCK',
@@ -1128,7 +1118,7 @@ export const createFallbackResponse = async (
         // News component sẽ tự fetch từ backend, chỉ cần giữ nguyên effect
         const symbol = effect.payload.symbol
         console.log(`📰 Opening news component${symbol ? ` for ${symbol}` : ''}...`)
-        fallbackReply = symbol 
+        fallbackReply = symbol
           ? `Đang tải tin tức về ${symbol}...`
           : 'Đang tải tin tức thị trường...'
         // Giữ nguyên enhancedEffects (đã có OPEN_NEWS)
@@ -1152,7 +1142,7 @@ export const createFallbackResponse = async (
       { text: 'Tìm hiểu thêm', icon: '❓' },
     ],
   }
-  
+
   console.log('✅ Fallback response created from backend data')
   return response
 }
@@ -1167,7 +1157,7 @@ export const parseChatResponse = (data: ChatApiResponse): {
 } => {
   // 1. Parse reply (BẮT BUỘC) - Text response từ agent
   const replyText = data.reply || 'Xin lỗi, tôi không thể trả lời câu hỏi này.'
-  
+
   // Kiểm tra nếu reply chứa [DEBUG] (theo Error Handling trong API_RESPONSE_FORMAT.md)
   const isDebugMessage = replyText.includes('[DEBUG]')
   if (isDebugMessage) {
@@ -1177,7 +1167,7 @@ export const parseChatResponse = (data: ChatApiResponse): {
 
   // 2. Parse UI effects - Danh sách UI components cần render
   const uiEffects: FeatureInstruction[] = data.ui_effects || []
-  
+
   // Map intradayChart từ { time, price } sang { time, value } nếu cần
   uiEffects.forEach((effect) => {
     if (effect.type === 'OPEN_STOCK_DETAIL' && effect.payload.intradayChart) {
@@ -1189,14 +1179,14 @@ export const parseChatResponse = (data: ChatApiResponse): {
   })
 
   // 3. Parse suggestion_messages - Gợi ý câu hỏi tiếp theo (luôn có ít nhất 1)
-  const suggestionMessages: SuggestionMessage[] = 
+  const suggestionMessages: SuggestionMessage[] =
     data.suggestion_messages && data.suggestion_messages.length > 0
       ? data.suggestion_messages
       : [
-          // Fallback suggestions nếu API không trả về (theo Error Handling)
-          { text: 'Xem tổng quan thị trường', icon: '🌐' },
-          { text: 'Tìm hiểu thêm', icon: '❓' },
-        ]
+        // Fallback suggestions nếu API không trả về (theo Error Handling)
+        { text: 'Xem tổng quan thị trường', icon: '🌐' },
+        { text: 'Tìm hiểu thêm', icon: '❓' },
+      ]
 
   // 4. Parse raw_agent_output - Debug info (optional)
   if (data.raw_agent_output) {

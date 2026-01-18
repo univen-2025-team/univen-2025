@@ -13,6 +13,7 @@ import axios from 'axios';
 import { VNSTOCK_API_URL } from '@/configs/vnstock.config';
 import QueueService from './queue.service';
 import { eachDayOfInterval, format } from 'date-fns';
+import { getLatestTradingDate, getDateRangeForFilter } from '@/utils/date-utils';
 
 // Lean types (without Document methods)
 type MarketDataLean = {
@@ -89,41 +90,35 @@ export default class MarketCacheService {
 
     /**
      * Get latest stock history with Queue fallback support
-     * For "Latest" request, we still try synchronous fetch for UX, 
-     * but we could fallback to Queue if sync fails.
+     * Uses new date logic:
+     * - Saturday/Sunday: returns Friday's data
+     * - Weekdays: returns previous day's data
      */
     static async getLatestStockHistory(symbol: string, interval: string = '1m'): Promise<StockHistoryLean | null> {
         try {
-            const result = await StockHistoryModel.findOne({
-                symbol: symbol.toUpperCase(),
-                interval
-            })
-                .sort({ date: -1 })
-                .lean()
-                .exec();
+            // Calculate target date using new logic
+            const targetDate = getLatestTradingDate();
+            this.logger.info(`getLatestStockHistory: Looking for ${symbol} on ${targetDate}`);
 
-            if (result) return result as StockHistoryLean;
+            // First try to get data for the target date
+            let result = await this.getStockHistory(symbol, targetDate, interval);
+            if (result) return result;
 
-            // Cache miss - Use Queue or Direct? 
-            // User 'filter change' implies historical. 'Latest' implies current.
-            // For current price, fast direct sync is better.
-            this.logger.info(`Cache miss for ${symbol}, attempting on-demand sync...`);
+            // If not found, try with fallback to previous available date
+            result = await this.getStockHistoryWithFallback(symbol, targetDate, interval);
+            if (result) return result;
+
+            // Cache miss - attempt on-demand sync
+            this.logger.info(`Cache miss for ${symbol} on ${targetDate}, attempting on-demand sync...`);
             try {
-                await axios.get(`${VNSTOCK_API_URL}/sync-stock?symbol=${symbol}`);
+                await axios.get(`${VNSTOCK_API_URL}/sync-stock?symbol=${symbol}&date=${targetDate}`);
 
-                const retryResult = await StockHistoryModel.findOne({
-                    symbol: symbol.toUpperCase(),
-                    interval
-                })
-                    .sort({ date: -1 })
-                    .lean()
-                    .exec();
-
-                if (retryResult) return retryResult as StockHistoryLean;
+                const retryResult = await this.getStockHistory(symbol, targetDate, interval);
+                if (retryResult) return retryResult;
             } catch (error) {
                 this.logger.error(`Direct sync failed, queuing job for ${symbol}`, error as any);
                 // Queue for later retry
-                QueueService.getInstance().addStockSyncJob(symbol);
+                QueueService.getInstance().addStockSyncJob(symbol, targetDate);
             }
 
             return null;
@@ -476,38 +471,53 @@ export default class MarketCacheService {
     /**
      * Get stock Intraday data
      * Fetches multiple days back to satisfy the limit or time range.
-     * Triggers sync if data is stale.
+     * Triggers sync for missing dates via queue.
+     * 
+     * New date logic for filters:
+     * - End date: Uses getLatestTradingDate() (Sat/Sun → Friday, weekdays → prev day)
+     * - Missing dates in MongoDB are queued for vnstock worker
+     * 
+     * @param symbol Stock symbol
+     * @param filter Filter type: '1D', '1W', '1M', '3M', '6M', '1Y', 'YTD'
+     * @param start Optional explicit start date (overrides filter)
+     * @param end Optional explicit end date (overrides filter)
      */
-    static async getStockIntraday(symbol: string, limit: number = 300, start?: string, end?: string): Promise<any[]> {
+    static async getStockIntraday(symbol: string, filter?: string, start?: string, end?: string): Promise<any[]> {
         try {
             const query: any = {
                 symbol: symbol.toUpperCase(),
                 interval: '1m'
             };
 
-            // Date filtering
-            if (start) {
-                let startDateVal = start;
+            let startDateVal: string;
+            let endDateVal: string;
+
+            // Determine date range
+            if (start && end) {
+                // Explicit date range provided
                 const startDateObj = new Date(start);
-                if (!isNaN(startDateObj.getTime())) {
-                    startDateVal = format(startDateObj, 'yyyy-MM-dd');
-                }
-
-                query.date = { $gte: startDateVal };
-
-                if (end) {
-                    let endDateVal = end;
-                    const endDateObj = new Date(end);
-                    if (!isNaN(endDateObj.getTime())) {
-                        endDateVal = format(endDateObj, 'yyyy-MM-dd');
-                    }
-                    query.date.$lte = endDateVal;
-                }
+                const endDateObj = new Date(end);
+                startDateVal = !isNaN(startDateObj.getTime()) ? format(startDateObj, 'yyyy-MM-dd') : start;
+                endDateVal = !isNaN(endDateObj.getTime()) ? format(endDateObj, 'yyyy-MM-dd') : end;
+            } else if (filter) {
+                // Use filter-based date range with new trading date logic
+                const dateRange = getDateRangeForFilter(filter);
+                startDateVal = dateRange.start;
+                endDateVal = dateRange.end;
+                this.logger.info(`StockIntraday: Filter ${filter} => ${startDateVal} to ${endDateVal}`);
+            } else {
+                // Default: single day using new trading date logic
+                endDateVal = getLatestTradingDate();
+                startDateVal = endDateVal;
             }
 
-            // docLimit: if date range set, possibly fetch more. 
-            // 7 days is usually enough for "Intraday" default, but if user asks for specific range, they might ask for old data.
-            const docLimit = start ? 100 : 7;
+            query.date = { $gte: startDateVal, $lte: endDateVal };
+
+            // docLimit based on date range span
+            const startDate = new Date(startDateVal);
+            const endDate = new Date(endDateVal);
+            const daySpan = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+            const docLimit = Math.max(daySpan, 7);
 
             const historyDocs = await StockHistoryModel.find(query)
                 .sort({ date: -1 })
@@ -515,16 +525,36 @@ export default class MarketCacheService {
                 .lean()
                 .exec();
 
-            // Check Freshness (only if default "latest" behavior)
-            const today = format(new Date(), 'yyyy-MM-dd');
-            if (!start) {
-                const latestDoc = historyDocs[0];
-                const dayOfWeek = new Date().getDay();
-                const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+            // Queue missing dates if a date range is specified
+            if (startDateVal !== endDateVal) {
+                // Find dates we have in DB
+                const existingDates = new Set(historyDocs.map((doc: any) => doc.date));
 
-                if (!latestDoc || ((latestDoc as any).date < today && !isWeekend)) {
-                    this.logger.info(`StockIntraday: Data stale for ${symbol}. Queuing sync...`);
-                    QueueService.getInstance().addStockSyncJob(symbol);
+                // Generate all dates in range and queue missing ones
+                const allDates = eachDayOfInterval({ start: startDate, end: endDate });
+                const queueService = QueueService.getInstance();
+                let queuedCount = 0;
+
+                for (const dateObj of allDates) {
+                    const dayOfWeek = dateObj.getDay();
+                    // Skip weekends (0 = Sunday, 6 = Saturday)
+                    if (dayOfWeek === 0 || dayOfWeek === 6) continue;
+
+                    const dateStr = format(dateObj, 'yyyy-MM-dd');
+                    if (!existingDates.has(dateStr)) {
+                        await queueService.addStockSyncJob(symbol, dateStr);
+                        queuedCount++;
+                    }
+                }
+
+                if (queuedCount > 0) {
+                    this.logger.info(`StockIntraday: Queued ${queuedCount} missing dates for ${symbol}`);
+                }
+            } else {
+                // Single day request - check freshness and queue if missing
+                if (!historyDocs || historyDocs.length === 0) {
+                    this.logger.info(`StockIntraday: No data for ${symbol} on ${endDateVal}. Queuing sync...`);
+                    QueueService.getInstance().addStockSyncJob(symbol, endDateVal);
                 }
             }
 
@@ -532,29 +562,8 @@ export default class MarketCacheService {
                 return [];
             }
 
+            // Aggregate prices with date injection
             let aggregatedPrices: IPriceBar[] = [];
-            for (let i = historyDocs.length - 1; i >= 0; i--) {
-                const doc = historyDocs[i] as any;
-                if (doc.prices) {
-                    aggregatedPrices = aggregatedPrices.concat(doc.prices);
-                    // Attach date to each price for frontend usage if tricky
-                    // But we will map it below using doc.date
-                    // Wait, logic below uses `(p as any).date`.
-                    // Does `prices` have `date`? No, doc has `date`.
-                    // We need to inject date into price object here or below.
-                    // The map below `(p as any).date` assumes `p` has date.
-                    // Original price object `IPriceBar` likely doesn't have date.
-                    // In previous code `(p as any).date` might have been undefined? 
-                    // No, previous code didn't have `date` map. I added it in Step 2345 (which failed) then Step 2352 (which succeeded).
-                    // In current view (Step 2371 Line 541), it has `date: (p as any).date`.
-                    // `p` comes from `doc.prices`. Does `doc.prices` elements have `date`?
-                    // Typically NO, unless Mongoose schema defines it?
-                    // If not, we should assign it from `doc.date`.
-                }
-            }
-
-            // Re-aggregate with date injection
-            aggregatedPrices = [];
             for (let i = historyDocs.length - 1; i >= 0; i--) {
                 const doc = historyDocs[i] as any;
                 if (doc.prices) {
@@ -566,15 +575,13 @@ export default class MarketCacheService {
                 }
             }
 
-            // Trace back limit
-            let resultPrices = aggregatedPrices;
-            if (!start && limit > 0 && limit < aggregatedPrices.length) {
-                resultPrices = aggregatedPrices.slice(-limit);
-            }
-
-            return resultPrices.map((p: any) => ({
+            return aggregatedPrices.map((p: any) => ({
                 time: p.time,
-                price: p.close,
+                open: p.open,
+                high: p.high,
+                low: p.low,
+                close: p.close,
+                price: p.close,  // Keep for backward compatibility
                 volume: p.volume,
                 date: p.date
             }));

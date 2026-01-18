@@ -2,7 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '../ui/Button';
 import { CandlestickChart } from '../visuals/CandlestickChart';
-import { MOCK_CHART_DATA } from '../../constants';
+import { MOCK_CHART_DATA } from '../constants';
 import { MessageSquare, ArrowRight, TrendingUp, ShieldCheck } from 'lucide-react';
 
 export const Hero = () => {
@@ -13,9 +13,9 @@ export const Hero = () => {
       <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-indigo-500/5 rounded-full blur-[100px] pointer-events-none" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
-        
+
         {/* Left: Content */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.6 }}
@@ -34,7 +34,7 @@ export const Hero = () => {
               real market moves
             </span>
           </h1>
-          
+
           <p className="text-lg text-slate-400 mb-8 leading-relaxed max-w-lg">
             Understand why prices move, not just how. Learn directly from real charts, historical events, and get instant guidance from your personal AI tutor.
           </p>
@@ -63,7 +63,7 @@ export const Hero = () => {
         </motion.div>
 
         {/* Right: Visual */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.2 }}
@@ -71,40 +71,40 @@ export const Hero = () => {
         >
           {/* Main Chart Card */}
           <div className="relative z-10 bg-slate-900/80 backdrop-blur-xl rounded-2xl p-2 border border-slate-700/50 shadow-2xl">
-             <div className="absolute -top-4 -right-4 bg-brand-500 text-white px-4 py-1.5 rounded-full text-xs font-bold shadow-lg shadow-brand-500/30 animate-bounce">
+            <div className="absolute -top-4 -right-4 bg-brand-500 text-white px-4 py-1.5 rounded-full text-xs font-bold shadow-lg shadow-brand-500/30 animate-bounce">
               Live Analysis
             </div>
-            
+
             <div className="bg-slate-950 rounded-xl p-4 mb-4 flex items-center justify-between border-b border-slate-800">
-                <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-xs font-bold text-white">TSLA</div>
-                    <div>
-                        <div className="text-sm font-bold text-white">Tesla Inc.</div>
-                        <div className="text-xs text-slate-500">NASDAQ</div>
-                    </div>
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-xs font-bold text-white">TSLA</div>
+                <div>
+                  <div className="text-sm font-bold text-white">Tesla Inc.</div>
+                  <div className="text-xs text-slate-500">NASDAQ</div>
                 </div>
-                <div className="text-right">
-                    <div className="text-sm font-bold text-emerald-400">+2.4%</div>
-                    <div className="text-xs text-slate-500">Past hour</div>
-                </div>
+              </div>
+              <div className="text-right">
+                <div className="text-sm font-bold text-emerald-400">+2.4%</div>
+                <div className="text-xs text-slate-500">Past hour</div>
+              </div>
             </div>
 
             <CandlestickChart data={MOCK_CHART_DATA} />
-            
+
             <div className="mt-4 flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-                 <div className="shrink-0 bg-slate-800/50 border border-slate-700 rounded-lg p-3 w-48 hover:border-brand-500/50 transition-colors cursor-pointer">
-                    <div className="text-xs text-brand-400 mb-1 font-mono">LESSON 1</div>
-                    <div className="text-sm text-white font-medium">Spotting Breakouts</div>
-                 </div>
-                 <div className="shrink-0 bg-slate-800/50 border border-slate-700 rounded-lg p-3 w-48 hover:border-brand-500/50 transition-colors cursor-pointer">
-                    <div className="text-xs text-indigo-400 mb-1 font-mono">LESSON 2</div>
-                    <div className="text-sm text-white font-medium">Volume Analysis</div>
-                 </div>
+              <div className="shrink-0 bg-slate-800/50 border border-slate-700 rounded-lg p-3 w-48 hover:border-brand-500/50 transition-colors cursor-pointer">
+                <div className="text-xs text-brand-400 mb-1 font-mono">LESSON 1</div>
+                <div className="text-sm text-white font-medium">Spotting Breakouts</div>
+              </div>
+              <div className="shrink-0 bg-slate-800/50 border border-slate-700 rounded-lg p-3 w-48 hover:border-brand-500/50 transition-colors cursor-pointer">
+                <div className="text-xs text-indigo-400 mb-1 font-mono">LESSON 2</div>
+                <div className="text-sm text-white font-medium">Volume Analysis</div>
+              </div>
             </div>
           </div>
 
           {/* Floating AI Bubble */}
-          <motion.div 
+          <motion.div
             animate={{ y: [0, -10, 0] }}
             transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
             className="absolute -bottom-6 -left-6 z-20 max-w-[260px]"
