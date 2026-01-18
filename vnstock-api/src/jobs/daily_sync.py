@@ -9,37 +9,31 @@ from src.database.mongodb import db
 
 def check_startup_sync():
     """
-    Checks if data for today exists. If not, triggers sync.
+    Checks if data for today is COMPLETE. If not, triggers sync.
     """
     try:
         print("Checking if startup sync is needed...")
         collection = db.get_database()["company_profiles"]
-        # Get latest updated record
-        last_record = collection.find_one(sort=[("updated_at", -1)])
         
-        should_sync = False
-        if not last_record:
-            print("Startup Check: No data found.")
-            should_sync = True
+        # Get start of today
+        today_start = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+        
+        # Count synced items for today
+        done_count = collection.count_documents({'updated_at': {'$gte': today_start}})
+        
+        print(f"Startup Check: Found {done_count} companies synced today.")
+        
+        # Heuristic: If we have very few records (e.g. < 1000), likely incomplete.
+        # Or ideally, compare with total expected (approx 1600-1700)
+        # We'll set a threshold. If significantly less than 1600, we trigger sync.
+        # The sync job itself will safely skip existing ones, so false positives are cheap.
+        EXPECTED_MIN = 1500
+        
+        if done_count < EXPECTED_MIN:
+             print(f"Startup Check: Data incomplete ({done_count}/{EXPECTED_MIN}). Triggering sync/resume...")
+             daily_sync_job()
         else:
-            last_update = last_record.get('updated_at')
-            if not last_update:
-                should_sync = True
-            elif isinstance(last_update, datetime):
-                # Ensure we sync if the last update was NOT today
-                # If last_update is today, we skip.
-                if last_update.date() < datetime.utcnow().date():
-                    print(f"Startup Check: Data is stale (Last update: {last_update}).")
-                    should_sync = True
-                else:
-                    print(f"Startup Check: Data is up-to-date (Last update: {last_update}).")
-            else:
-                 # Fallback if type is weird
-                 should_sync = True
-
-        if should_sync:
-            print("Triggering immediate sync...")
-            daily_sync_job()
+             print("Startup Check: Data appears complete for today.")
             
     except Exception as e:
         print(f"Error checking startup sync: {e}")
@@ -59,6 +53,7 @@ def sync_stock_symbols():
 def sync_company_profiles():
     """
     Syncs company profile (overview) for a list of companies.
+    Resumes where left off.
     """
     try:
         print("Fetching list of companies...")
@@ -71,32 +66,50 @@ def sync_company_profiles():
 
         # Fetch all companies (limit removed)
         symbols = listing_df['symbol'].tolist()
-        print(f"Entities to sync: {len(symbols)}")
+        total_symbols = len(symbols)
+        print(f"Entities to sync: {total_symbols}")
 
         syncer = CompanyProfileSyncer()
+        collection = db.get_database()["company_profiles"]
+        
+        # Smart Resume: Pre-fetch list of already done symbols for today
+        today_start = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+        done_cursor = collection.find({'updated_at': {'$gte': today_start}}, {'symbol': 1})
+        done_symbols = set(doc['symbol'] for doc in done_cursor)
+        
+        print(f"Already synced today: {len(done_symbols)}. Remaining: {total_symbols - len(done_symbols)}")
         
         max_retries = 3
         for ticker in symbols:
+            # Skip if done
+            if ticker in done_symbols:
+                # print(f"Skipping {ticker} (Done)")
+                continue
+
             print(f"Processing {ticker}...")
             fetcher = CompanyProfileFetcher(symbol=ticker)
             
             # Retry mechanism
+            success = False
             for attempt in range(max_retries):
                 data = fetcher.fetch()
                 
                 if data:
                     syncer.sync(data)
-                    break # Success, move to rate limiting
+                    success = True
+                    break # Success
                 else:
                     print(f"Attempt {attempt + 1}/{max_retries} failed for {ticker} (No data).")
                     if attempt < max_retries - 1:
-                        print(f"Retrying in 10s...")
-                        time.sleep(10)
-                    else:
-                        print(f"Skipping {ticker} after {max_retries} attempts.")
+                        # Short sleep before retry
+                        time.sleep(2)
             
-            # Rate limiting
-            time.sleep(10)
+            if not success:
+                print(f"Skipping {ticker} after {max_retries} attempts.")
+            
+            # Rate limiting is handled inside VnstockClient (global)
+            # Remove manual sleep here to rely on client
+            # time.sleep(10) # REMOVED
                 
     except Exception as e:
         print(f"Error in sync_company_profiles: {e}")
