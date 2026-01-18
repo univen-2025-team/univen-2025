@@ -84,21 +84,23 @@ export function Sidebar() {
 
             <aside
                 className={`fixed lg:static inset-y-0 left-0 z-40 ${isCollapsed ? 'w-20' : 'w-64'
-                    } bg-white/95 backdrop-blur-sm border-r border-gray-200 shadow-xl transform transition-all duration-300 ease-in-out ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+                    } bg-white/95 backdrop-blur-sm border-r border-gray-200 shadow-xl transform transition-all duration-300 ease-in-out overflow-x-hidden ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
                     }`}
             >
                 <div className="h-full flex flex-col">
                     {/* Header */}
-                    <div className="p-4 border-b border-gray-200 flex items-center justify-between gap-2">
-                        <Link href="/" className="flex items-center gap-3">
-                            <Image
-                                src="/stockie-logo.png"
-                                alt="Stockie"
-                                width={isCollapsed ? 40 : 120}
-                                height={isCollapsed ? 40 : 40}
-                                className="object-contain"
-                                priority
-                            />
+                    <div className={`p-4 border-b border-gray-200 flex ${isCollapsed ? 'flex-col justify-center' : 'flex-row items-center justify-between'} gap-2 overflow-hidden`}>
+                        <Link href="/" className={`flex items-center gap-3 ${isCollapsed ? 'justify-center' : ''}`}>
+                            <div className={`relative ${isCollapsed ? 'w-10 h-10' : 'w-[120px] h-10'}`}>
+                                <Image
+                                    src="/stockie-logo.png"
+                                    alt="Stockie"
+                                    fill
+                                    sizes="(max-width: 768px) 40px, 120px"
+                                    className="object-contain"
+                                    priority
+                                />
+                            </div>
                         </Link>
 
                         {/* Collapse Toggle (desktop) */}
@@ -124,7 +126,7 @@ export function Sidebar() {
                     </div>
 
                     {/* Navigation */}
-                    <nav className="flex-1 p-3 overflow-y-auto">
+                    <nav className="flex-1 p-3 overflow-y-auto overflow-x-hidden">
                         <div className="space-y-1">
                             {sidebarRoutes.map((route) => {
                                 const active = isRouteActive(route, pathname);

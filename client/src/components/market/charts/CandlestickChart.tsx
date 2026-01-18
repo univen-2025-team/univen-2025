@@ -13,6 +13,7 @@ type CandleDataPoint = {
 type CandlestickChartProps = {
     data: CandleDataPoint[];
     valueFormatter: (value: number) => string;
+    onLoadMore?: (direction: 'left' | 'right') => void;
 };
 
 const COLORS = {
@@ -35,7 +36,7 @@ const COLORS = {
 
 const TIMELINE_HEIGHT = 50;
 
-export default function CandlestickChart({ data, valueFormatter }: CandlestickChartProps) {
+export default function CandlestickChart({ data, valueFormatter, onLoadMore }: CandlestickChartProps) {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const timelineCanvasRef = useRef<HTMLCanvasElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
@@ -48,25 +49,84 @@ export default function CandlestickChart({ data, valueFormatter }: CandlestickCh
     const [dragStart, setDragStart] = useState({ x: 0, startIdx: 0 });
     const [hoveredCandle, setHoveredCandle] = useState<CandleDataPoint | null>(null);
     const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+    const loadMoreThrottleRef = useRef<number>(0);
+    const dragStartWithRightClickRef = useRef<{ x: number, y: number } | null>(null);
 
-    // Selection mode for analysis
-    const [selectionMode, setSelectionMode] = useState(false);
+    // Selection State (Restored)
     const [isSelecting, setIsSelecting] = useState(false);
     const [selectionRange, setSelectionRange] = useState<{ start: number; end: number } | null>(null);
     const [selectionStartX, setSelectionStartX] = useState(0);
+
+    // State Refs for Event Listeners (Prevent Stale Closures)
+    const viewRangeRef = useRef(viewRange);
+    const selectionStartXRef = useRef(selectionStartX);
+    const isSelectingRef = useRef(isSelecting);
+    const isDraggingRef = useRef(isDragging);
+    const dragStartRef = useRef(dragStart);
+    const dataRef = useRef(data);
+    const dimensionsRef = useRef(dimensions);
+
+    // Sync Refs
+    useEffect(() => { viewRangeRef.current = viewRange; }, [viewRange]);
+    useEffect(() => { selectionStartXRef.current = selectionStartX; }, [selectionStartX]);
+    useEffect(() => { isSelectingRef.current = isSelecting; }, [isSelecting]);
+    useEffect(() => { isDraggingRef.current = isDragging; }, [isDragging]);
+    useEffect(() => { dragStartRef.current = dragStart; }, [dragStart]);
+    useEffect(() => { dataRef.current = data; }, [data]);
+    useEffect(() => { dimensionsRef.current = dimensions; }, [dimensions]);
+
+    // Stable ref for prop
+    const onLoadMoreRef = useRef(onLoadMore);
+    useEffect(() => { onLoadMoreRef.current = onLoadMore; }, [onLoadMore]);
+
+    // Constants
+    const scrollIntervalRef = useRef<number | null>(null);
+    const lastDataLengthRef = useRef(0);
+
+    // Track previous data length to adjust view on prepend
+    useEffect(() => {
+        if (lastDataLengthRef.current > 0 && data.length > lastDataLengthRef.current) {
+            const diff = data.length - lastDataLengthRef.current;
+            // If we are mostly scrolled to the right, this might be append
+            // If we are performing "load more left", we are at start=0
+
+            // Heuristic: If close to 0, it's a prepend
+            if (viewRange.start < 50) {
+                // Adjust view to keep relative position (prevent jump)
+                // UNLESS we are auto-scrolling left (intent is to see new data).
+                // Actually, standard behavior for prepend is to shift view index by diff
+                setViewRange(prev => ({
+                    start: prev.start + diff,
+                    end: prev.end + diff
+                }));
+                // Also adjust selection if it exists
+                if (selectionRange) {
+                    setSelectionRange(prev => prev ? ({
+                        start: prev.start + diff,
+                        end: prev.end + diff
+                    }) : null);
+                    setSelectionStartX(prev => prev + diff);
+                }
+            }
+        }
+        lastDataLengthRef.current = data.length;
+    }, [data.length]);
 
     // Constants
     const PADDING = { top: 20, right: 70, bottom: 30, left: 10 };
     const MIN_CANDLES = 10;
 
-    // Initialize view range
+    // Initialize view range, smart update on data change
     useEffect(() => {
         if (data.length > 0) {
-            const visibleCount = Math.min(50, data.length);
-            setViewRange({
-                start: Math.max(0, data.length - visibleCount),
-                end: data.length - 1
-            });
+            // First load
+            if (viewRange.end === 0) {
+                const visibleCount = Math.min(50, data.length);
+                setViewRange({
+                    start: Math.max(0, data.length - visibleCount),
+                    end: data.length - 1
+                });
+            }
         }
     }, [data.length]);
 
@@ -214,7 +274,7 @@ export default function CandlestickChart({ data, valueFormatter }: CandlestickCh
         }
 
         // Draw crosshair if hovering (only when not in selection mode)
-        if (!selectionMode && hoveredCandle && mousePos.x > PADDING.left && mousePos.x < dimensions.width - PADDING.right) {
+        if (!selectionRange && hoveredCandle && mousePos.x > PADDING.left && mousePos.x < dimensions.width - PADDING.right) {
             ctx.strokeStyle = COLORS.crosshair;
             ctx.setLineDash([3, 3]);
             ctx.lineWidth = 1;
@@ -253,7 +313,7 @@ export default function CandlestickChart({ data, valueFormatter }: CandlestickCh
             }
         }
 
-    }, [dimensions, visibleData, yDomain, valueFormatter, hoveredCandle, mousePos, selectionMode, selectionRange, viewRange]);
+    }, [dimensions, visibleData, yDomain, valueFormatter, hoveredCandle, mousePos, selectionRange, viewRange]);
 
     // Draw timeline canvas
     useEffect(() => {
@@ -369,9 +429,14 @@ export default function CandlestickChart({ data, valueFormatter }: CandlestickCh
 
     // Main canvas mouse handlers
     const handleMouseDown = useCallback((e: React.MouseEvent) => {
-        if (selectionMode) {
+        // Right click to select
+        if (e.button === 2) {
+            e.preventDefault();
             const rect = canvasRef.current?.getBoundingClientRect();
             if (!rect) return;
+
+            // Track start position for "click vs drag" check
+            dragStartWithRightClickRef.current = { x: e.clientX, y: e.clientY };
 
             const x = e.clientX - rect.left;
             const chartWidth = dimensions.width - PADDING.left - PADDING.right;
@@ -381,12 +446,141 @@ export default function CandlestickChart({ data, valueFormatter }: CandlestickCh
             setIsSelecting(true);
             setSelectionStartX(globalIndex);
             setSelectionRange({ start: globalIndex, end: globalIndex });
-        } else {
+        }
+        // Left click to drag/pan
+        else if (e.button === 0) {
             setIsDragging(true);
             setDragStart({ x: e.clientX, startIdx: viewRange.start });
         }
-    }, [selectionMode, viewRange.start, dimensions, visibleData.length]);
+    }, [viewRange.start, dimensions, visibleData.length]);
 
+    // --- Global Interaction Handlers (FIXED) ---
+    useEffect(() => {
+        const handleWindowMouseMove = (e: MouseEvent) => {
+            if (!isSelectingRef.current && !isDraggingRef.current) return;
+
+            const rect = canvasRef.current?.getBoundingClientRect();
+            if (!rect) return;
+
+            const x = e.clientX - rect.left;
+
+            const currentDimensions = dimensionsRef.current;
+            const currentData = dataRef.current;
+            const currentViewRange = viewRangeRef.current;
+
+            const chartWidth = currentDimensions.width - PADDING.left - PADDING.right;
+            const visibleLen = currentViewRange.end - currentViewRange.start + 1;
+
+            // 1. Handle Selection (Right Click Drag)
+            if (isSelectingRef.current) {
+                const clampedX = Math.max(PADDING.left, Math.min(currentDimensions.width - PADDING.right, x));
+                const rawIndex = Math.floor((clampedX - PADDING.left) / (chartWidth / visibleLen));
+                const globalIndex = currentViewRange.start + Math.max(0, Math.min(visibleLen - 1, rawIndex));
+
+                setSelectionRange({
+                    start: Math.min(selectionStartXRef.current, globalIndex),
+                    end: Math.max(selectionStartXRef.current, globalIndex)
+                });
+
+                // Auto-Scroll Logic for Edges
+                const EDGE_THRESHOLD = 50;
+                if (x < EDGE_THRESHOLD) {
+                    if (!scrollIntervalRef.current) {
+                        scrollIntervalRef.current = window.setInterval(() => {
+                            setViewRange(prev => {
+                                if (prev.start <= 0) {
+                                    if (onLoadMoreRef.current && (!loadMoreThrottleRef.current || Date.now() - loadMoreThrottleRef.current > 1000)) {
+                                        loadMoreThrottleRef.current = Date.now();
+                                        onLoadMoreRef.current('left');
+                                    }
+                                    return prev;
+                                }
+                                const shift = 1;
+                                return { start: Math.max(0, prev.start - shift), end: prev.end - shift };
+                            });
+                            setSelectionRange(prev => {
+                                if (!prev) return null;
+                                return {
+                                    start: Math.min(selectionStartXRef.current, viewRangeRef.current.start),
+                                    end: Math.max(selectionStartXRef.current, viewRangeRef.current.end)
+                                };
+                            });
+                        }, 50);
+                    }
+                } else if (x > currentDimensions.width - EDGE_THRESHOLD) {
+                    if (!scrollIntervalRef.current) {
+                        scrollIntervalRef.current = window.setInterval(() => {
+                            setViewRange(prev => {
+                                if (prev.end >= dataRef.current.length - 1) {
+                                    if (onLoadMoreRef.current && (!loadMoreThrottleRef.current || Date.now() - loadMoreThrottleRef.current > 1000)) {
+                                        loadMoreThrottleRef.current = Date.now();
+                                        onLoadMoreRef.current('right');
+                                    }
+                                    return prev;
+                                }
+                                const shift = 1;
+                                return { start: prev.start + shift, end: Math.min(dataRef.current.length - 1, prev.end + shift) };
+                            });
+                        }, 50);
+                    }
+                } else {
+                    if (scrollIntervalRef.current) {
+                        clearInterval(scrollIntervalRef.current);
+                        scrollIntervalRef.current = null;
+                    }
+                }
+            }
+            // 2. Handle Pan Drag (Left Click)
+            else if (isDraggingRef.current) {
+                const delta = e.clientX - dragStartRef.current.x;
+                const pointsToMove = Math.round((delta / chartWidth) * (currentViewRange.end - currentViewRange.start) * -0.5);
+                const maxStart = currentData.length - (currentViewRange.end - currentViewRange.start) - 1;
+
+                const newStart = Math.max(0, Math.min(maxStart, dragStartRef.current.startIdx + pointsToMove));
+                const range = currentViewRange.end - currentViewRange.start;
+                const newEnd = Math.min(currentData.length - 1, newStart + range);
+
+                setViewRange({ start: newStart, end: newEnd });
+            }
+        };
+
+        const handleWindowMouseUp = (e: MouseEvent) => {
+            if (isSelectingRef.current || isDraggingRef.current) {
+                if (scrollIntervalRef.current) {
+                    clearInterval(scrollIntervalRef.current);
+                    scrollIntervalRef.current = null;
+                }
+
+                if (e.button === 2 && dragStartWithRightClickRef.current) {
+                    const dist = Math.sqrt(
+                        Math.pow(e.clientX - dragStartWithRightClickRef.current.x, 2) +
+                        Math.pow(e.clientY - dragStartWithRightClickRef.current.y, 2)
+                    );
+                    if (dist < 5) {
+                        setSelectionRange(null);
+                    }
+                    dragStartWithRightClickRef.current = null;
+                }
+
+                setIsDragging(false);
+                setIsSelecting(false);
+            }
+        };
+
+        window.addEventListener('mousemove', handleWindowMouseMove);
+        window.addEventListener('mouseup', handleWindowMouseUp);
+
+        return () => {
+            window.removeEventListener('mousemove', handleWindowMouseMove);
+            window.removeEventListener('mouseup', handleWindowMouseUp);
+            if (scrollIntervalRef.current) {
+                clearInterval(scrollIntervalRef.current);
+                scrollIntervalRef.current = null;
+            }
+        };
+    }, []);
+
+    // Local handler ONLY for hover tooltips
     const handleMouseMove = useCallback((e: React.MouseEvent) => {
         const rect = canvasRef.current?.getBoundingClientRect();
         if (!rect) return;
@@ -395,7 +589,6 @@ export default function CandlestickChart({ data, valueFormatter }: CandlestickCh
         const y = e.clientY - rect.top;
         setMousePos({ x, y });
 
-        // Find hovered candle
         const chartWidth = dimensions.width - PADDING.left - PADDING.right;
         const candleWidth = chartWidth / visibleData.length;
         const candleIndex = Math.floor((x - PADDING.left) / candleWidth);
@@ -405,37 +598,9 @@ export default function CandlestickChart({ data, valueFormatter }: CandlestickCh
         } else {
             setHoveredCandle(null);
         }
-
-        // Handle selection drag
-        if (isSelecting && selectionMode) {
-            const globalIndex = viewRange.start + Math.max(0, Math.min(visibleData.length - 1, candleIndex));
-            setSelectionRange({
-                start: Math.min(selectionStartX, globalIndex),
-                end: Math.max(selectionStartX, globalIndex)
-            });
-        }
-        // Handle pan drag
-        else if (isDragging && !selectionMode) {
-            const delta = e.clientX - dragStart.x;
-            const pointsToMove = Math.round((delta / chartWidth) * (viewRange.end - viewRange.start) * -0.5);
-            const maxStart = data.length - (viewRange.end - viewRange.start) - 1;
-
-            const newStart = Math.max(0, Math.min(maxStart, dragStart.startIdx + pointsToMove));
-            const range = viewRange.end - viewRange.start;
-            const newEnd = Math.min(data.length - 1, newStart + range);
-
-            setViewRange({ start: newStart, end: newEnd });
-        }
-    }, [isDragging, isSelecting, selectionMode, selectionStartX, dragStart, viewRange, dimensions, visibleData, data.length]);
-
-    const handleMouseUp = useCallback(() => {
-        setIsDragging(false);
-        setIsSelecting(false);
-    }, []);
+    }, [dimensions, visibleData]);
 
     const handleMouseLeave = useCallback(() => {
-        setIsDragging(false);
-        setIsSelecting(false);
         setHoveredCandle(null);
     }, []);
 
@@ -588,29 +753,13 @@ export default function CandlestickChart({ data, valueFormatter }: CandlestickCh
                     {selectionRange && (
                         <button
                             onClick={() => setSelectionRange(null)}
-                            className="text-xs text-amber-600 hover:text-amber-700"
+                            className="text-xs text-amber-600 hover:text-amber-700 font-medium"
                         >
                             Xóa vùng chọn
                         </button>
                     )}
                 </div>
                 <div className="flex items-center gap-2">
-                    <button
-                        onClick={() => {
-                            setSelectionMode(!selectionMode);
-                            if (selectionMode) setSelectionRange(null);
-                        }}
-                        className={`px-2 py-1 rounded-lg text-xs font-medium transition-colors ${selectionMode
-                                ? 'bg-amber-500 text-white'
-                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                            }`}
-                        title={selectionMode ? "Tắt chế độ chọn" : "Chọn vùng phân tích"}
-                    >
-                        <svg className="w-4 h-4 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16m-7 6h7" />
-                        </svg>
-                        {selectionMode ? 'Đang chọn' : 'Chọn vùng'}
-                    </button>
                     <div className="w-px h-4 bg-gray-200" />
                     <button onClick={handleZoomIn} className="p-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 transition-colors" title="Phóng to">
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -661,8 +810,8 @@ export default function CandlestickChart({ data, valueFormatter }: CandlestickCh
                 className="flex-1 relative cursor-crosshair select-none min-h-0"
                 onMouseDown={handleMouseDown}
                 onMouseMove={handleMouseMove}
-                onMouseUp={handleMouseUp}
                 onMouseLeave={handleMouseLeave}
+                onContextMenu={(e) => e.preventDefault()}
             >
                 <canvas
                     ref={canvasRef}
