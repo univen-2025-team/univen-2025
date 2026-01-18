@@ -74,7 +74,7 @@ export default function MarketPage() {
     const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
     const [buyStock, setBuyStock] = useState<StockData | null>(null);
     const [isBuyModalOpen, setIsBuyModalOpen] = useState(false);
-    const [viewMode, setViewMode] = useState<'all' | 'watchlist'>('all');
+    const [viewMode, setViewMode] = useState<'all' | 'watchlist' | 'news'>('all');
     const [historyRange, setHistoryRange] = useState('10M');
     const [topStocksByPrice, setTopStocksByPrice] = useState<StockData[]>([]);
 

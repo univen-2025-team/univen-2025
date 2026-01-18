@@ -9,6 +9,7 @@ import VN30IndexCard from '@/components/market/VN30IndexCard';
 import VN30IndexChart from '@/components/market/VN30IndexChart';
 import TopStocksChart from '@/components/market/TopStocksChart';
 import StockTable from '@/components/market/StockTable';
+import MarketNews from '@/components/market/MarketNews';
 import MarketLoadingSpinner from '@/components/market/MarketLoadingSpinner';
 import ErrorDisplay from '@/components/market/ErrorDisplay';
 import { MarketOverviewData } from '@/features/types/features';
@@ -291,6 +292,8 @@ export function MarketOverviewFeature({ data }: MarketOverviewFeatureProps) {
                 onOrderChange={setOrder}
                 onRefresh={fetchMarketData}
             />
+
+            <MarketNews />
 
             <StockDetailModal
                 isOpen={!!selectedStock}
