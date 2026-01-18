@@ -577,7 +577,11 @@ export default class MarketCacheService {
 
             return aggregatedPrices.map((p: any) => ({
                 time: p.time,
-                price: p.close,
+                open: p.open,
+                high: p.high,
+                low: p.low,
+                close: p.close,
+                price: p.close,  // Keep for backward compatibility
                 volume: p.volume,
                 date: p.date
             }));
