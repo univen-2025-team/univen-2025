@@ -1,0 +1,150 @@
+
+from datetime import datetime, timedelta
+from src.core.vnstock_client import VnstockClient
+
+class StockNewsFetcher:
+    def __init__(self, symbol):
+        self.symbol = symbol
+        if self.symbol == 'MARKET':
+             self.symbol = 'VNINDEX' # Map MARKET to VNINDEX for API
+        self.client = VnstockClient.get_instance()
+
+    def fetch_smart(self, missing_dates):
+        """
+        Fetches news for the given symbol until all missing_dates are covered.
+        
+        Args:
+            missing_dates (list): List of date strings 'YYYY-MM-DD' that need data.
+        
+        Returns:
+            dict: Dictionary with key as date string and value as list of news items.
+                  e.g., {'2025-01-18': [...], '2025-01-17': []}
+        """
+        if not missing_dates:
+            return {}
+
+        # Convert missing_dates to set for fast lookup and find the oldest date limit
+        needed_dates = set(missing_dates)
+        
+        # Sort dates just in case, oldest first to determine cutoff
+        sorted_dates = sorted(missing_dates)
+        oldest_needed_date_str = sorted_dates[0]
+        oldest_needed_date = datetime.strptime(oldest_needed_date_str, '%Y-%m-%d').date()
+
+        # Grouped results
+        grouped_news = {d: [] for d in needed_dates}
+        
+        # 30 day safety limit from today logic is handled by caller (Node.js) mostly, 
+        # but we also stop if we go too far back past oldest_needed_date
+        
+        # Use Vnstock builder
+        # For news, 'source' param might vary but usually VCI is good standard in vnstock
+        stock = self.client.stock(symbol=self.symbol, source='VCI')
+        
+        page = 0
+        MAX_PAGES = 1 # Pagination not supported by current/wrapped library method
+        
+        print(f"[StockNewsFetcher] Starting smart fetch for {self.symbol}. Missing: {len(needed_dates)} days. Oldest: {oldest_needed_date_str}")
+
+        while page < MAX_PAGES:
+            # Call API with Rate Limit
+            print(f"[StockNewsFetcher] Fetching page {page}...")
+            # Note: vnstock company.news() gets data when called. 
+            # We need to wrap the actual call.
+            # vnstock API: stock.company.news() returns DataFrame/List
+            # It internally manages page param if we could pass it.
+            # Wait, standard vnstock might not expose page param easily in all versions.
+            # Let's check typical usage. usually stock.company.news(page=...) works.
+            
+            # Using partial or lambda to pass to client.call
+            # Note: pagination arguments 'page'/'page_size' failed. 
+            # vnstock might not support pagination on this method or uses different params.
+            # We fetch what we can (default page 0).
+            news_data = self.client.call(lambda: stock.company.news())
+
+            
+            if news_data is None: 
+                print(f"[StockNewsFetcher] Page {page} returned None (End or Error).")
+                break
+                
+            # Convert DataFrame to records if it's a DF (vnstock usually returns DF)
+            if hasattr(news_data, 'to_dict'):
+               news_list = news_data.to_dict('records')
+            else:
+               news_list = news_data # Assume list
+
+            if not news_list:
+                print(f"[StockNewsFetcher] Page {page} empty. Stopping.")
+                break
+
+            # Process news items
+            found_this_page = False
+            for item in news_list:
+                # 'public_date' or 'date' or 'created_at' depending on source
+                # Vnstock VCI source typically has 'public_date' or similar. 
+                # Let's handle generic fields or specific VCI fields.
+                # Common fields: time, title, source, link...
+                
+                # Check date field. Usually 'time' or 'date' in YYYY-MM-DD
+                # VCI source often returns date in format 'YYYY-MM-DD ...'
+                raw_date = item.get('public_date') or item.get('date') or item.get('time')
+                
+                if not raw_date: continue
+                
+                # Extract YYYY-MM-DD
+                # Extract YYYY-MM-DD
+                try:
+                    current_item_date = None
+                    str_val = str(raw_date).strip()
+                    
+                    # Check if numeric (timestamp in ms)
+                    if str_val.isdigit():
+                        # Assume milliseconds
+                        ts = int(str_val) / 1000
+                        current_item_date = datetime.fromtimestamp(ts).date()
+                    elif ' ' in str_val:
+                         # Handle "2025-01-18 10:00:00"
+                        date_str = str_val.split(' ')[0] 
+                        current_item_date = datetime.strptime(date_str, '%Y-%m-%d').date()
+                    else:
+                        # Handle "2025-01-18"
+                        current_item_date = datetime.strptime(str_val, '%Y-%m-%d').date()
+
+                    if current_item_date:
+                        current_item_date_str = str(current_item_date)
+                        
+                        # Store if it's one of the needed dates
+                        if current_item_date_str in grouped_news:
+                            # Map keys explicitly
+                            clean_item = {
+                                'id': str(item.get('news_id') or item.get('id') or ''),
+                                'title': item.get('news_title') or item.get('title') or '',
+                                'short_content': item.get('news_short_content') or item.get('short_content') or '',
+                                'full_content': item.get('news_full_content') or item.get('full_content') or '',
+                                'source_link': item.get('news_source_link') or item.get('source_link') or '',
+                                'image_url': item.get('news_image_url') or item.get('image_url') or '',
+                                'public_date': str(raw_date),
+                                'price_change_pct': item.get('price_change_pct', 0)
+                            }
+                            grouped_news[current_item_date_str].append(clean_item)
+                            found_this_page = True
+                        
+                        # Stop condition: If we reached a date older than our oldest needed date
+                        if current_item_date < oldest_needed_date:
+                            print(f"[StockNewsFetcher] Reached date {current_item_date_str} which is older than limit {oldest_needed_date_str}. Stopping.")
+                            return grouped_news
+
+                except Exception as e:
+                    # print(f"Date parse error: {e} for {raw_date}")
+                    continue
+
+            # If the entire page has dates NEWER than what we look for? No, pages go new -> old.
+            # So if we process a page and the last item is still NEWER than our newest needed date (rare if missing dates are recent), we continue.
+            # If the last item is OLDER than our oldest needed date, handled above.
+            
+            # What if we found some data for some dates but not all?
+            # We continue to next page.
+            
+            page += 1
+            
+        return grouped_news
