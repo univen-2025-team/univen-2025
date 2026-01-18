@@ -1,3 +1,5 @@
+'use client';
+
 import { API_URL } from '@/config/app';
 import { useEffect, useRef, useState } from 'react';
 import { io, Socket } from 'socket.io-client';

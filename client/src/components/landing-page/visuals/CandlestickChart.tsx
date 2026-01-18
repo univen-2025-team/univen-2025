@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { CandleData } from '../../types';
+import { CandleData } from '../types';
 import { Info, Zap } from 'lucide-react';
 
 interface CandlestickChartProps {
@@ -33,7 +33,7 @@ export const CandlestickChart: React.FC<CandlestickChartProps> = ({ data, intera
           const isBullish = candle.close >= candle.open;
           const colorClass = isBullish ? 'bg-fintech-bull' : 'bg-fintech-bear';
           const shadowClass = isBullish ? 'shadow-[0_0_10px_rgba(16,185,129,0.3)]' : 'shadow-[0_0_10px_rgba(244,63,94,0.3)]';
-          
+
           const highY = getY(candle.high);
           const lowY = getY(candle.low);
           const openY = getY(candle.open);
@@ -55,19 +55,19 @@ export const CandlestickChart: React.FC<CandlestickChartProps> = ({ data, intera
               onMouseLeave={() => interactive && setHoveredCandle(null)}
             >
               {/* Wick */}
-              <div 
+              <div
                 className={`absolute w-[2px] ${isBullish ? 'bg-emerald-500/50' : 'bg-rose-500/50'}`}
                 style={{ top: `${wickTop}%`, height: `${wickHeight}%` }}
               />
               {/* Body */}
-              <div 
+              <div
                 className={`absolute w-full max-w-[12px] sm:max-w-[20px] rounded-sm ${colorClass} ${shadowClass} transition-all duration-200 group-hover/candle:brightness-110`}
                 style={{ top: `${bodyTop}%`, height: `${Math.max(bodyHeight, 1)}%` }}
               />
-              
+
               {/* Event Marker */}
               {candle.event && (
-                <motion.div 
+                <motion.div
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
                   transition={{ delay: index * 0.1 + 0.5 }}

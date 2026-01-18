@@ -1,15 +1,6 @@
-import { useMemo } from "react";
-import {
-    CartesianGrid,
-    ResponsiveContainer,
-    Tooltip,
-    XAxis,
-    YAxis,
-    ComposedChart,
-    Bar,
-    Cell,
-    ReferenceLine,
-} from "recharts";
+'use client';
+
+import { useRef, useEffect, useState, useCallback, useMemo } from 'react';
 
 type CandleDataPoint = {
     time: string;
@@ -22,222 +13,856 @@ type CandleDataPoint = {
 type CandlestickChartProps = {
     data: CandleDataPoint[];
     valueFormatter: (value: number) => string;
+    onLoadMore?: (direction: 'left' | 'right') => void;
 };
 
-const formatTimeLabel = (value: string | number | undefined) => {
-    if (!value) {
-        return "";
+const COLORS = {
+    bullish: '#16a34a',
+    bearish: '#dc2626',
+    grid: '#e5e7eb',
+    text: '#6b7280',
+    background: '#ffffff',
+    crosshair: '#9ca3af',
+    timeline: {
+        bg: '#f8fafc',
+        selection: 'rgba(99, 102, 241, 0.3)',
+        border: '#6366f1',
+    },
+    analysis: {
+        bg: 'rgba(251, 191, 36, 0.2)',
+        border: '#f59e0b',
     }
-    const date = new Date(value);
-    if (Number.isNaN(date.getTime())) {
-        return String(value);
-    }
-    return date.toLocaleTimeString("en-US", {
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: true,
-    });
 };
 
-type CandleTooltipProps = {
-    active?: boolean;
-    payload?: Array<{ payload: CandleDataPoint }>;
-    label?: string | number;
-    valueFormatter: (value: number) => string;
-};
+const TIMELINE_HEIGHT = 50;
 
-const CandleTooltip = ({ active, payload, label, valueFormatter }: CandleTooltipProps) => {
-    if (!active || !payload || !payload.length) {
-        return null;
-    }
+export default function CandlestickChart({ data, valueFormatter, onLoadMore }: CandlestickChartProps) {
+    const canvasRef = useRef<HTMLCanvasElement>(null);
+    const timelineCanvasRef = useRef<HTMLCanvasElement>(null);
+    const containerRef = useRef<HTMLDivElement>(null);
+    const timelineContainerRef = useRef<HTMLDivElement>(null);
+    const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
+    const [viewRange, setViewRange] = useState({ start: 0, end: 0 });
+    const [isDragging, setIsDragging] = useState(false);
+    const [isTimelineDragging, setIsTimelineDragging] = useState(false);
+    const [timelineDragType, setTimelineDragType] = useState<'move' | 'left' | 'right' | null>(null);
+    const [dragStart, setDragStart] = useState({ x: 0, startIdx: 0 });
+    const [hoveredCandle, setHoveredCandle] = useState<CandleDataPoint | null>(null);
+    const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+    const loadMoreThrottleRef = useRef<number>(0);
+    const dragStartWithRightClickRef = useRef<{ x: number, y: number } | null>(null);
 
-    const candle = payload[0].payload as CandleDataPoint;
-    const display = (value: number) => valueFormatter(value);
+    // Selection State (Restored)
+    const [isSelecting, setIsSelecting] = useState(false);
+    const [selectionRange, setSelectionRange] = useState<{ start: number; end: number } | null>(null);
+    const [selectionStartX, setSelectionStartX] = useState(0);
 
-    return (
-        <div className="rounded-lg border border-gray-200 bg-white/95 px-3 py-2 text-sm shadow-md">
-            <p className="font-semibold text-gray-900">{formatTimeLabel(candle.time)}</p>
-            <div className="mt-1 space-y-0.5 text-gray-700">
-                <p>Mở cửa: <span className="font-medium text-gray-900">{display(candle.open)}</span></p>
-                <p>Đóng cửa: <span className="font-medium text-gray-900">{display(candle.close)}</span></p>
-                <p>Cao nhất: <span className="font-medium text-gray-900">{display(candle.high)}</span></p>
-                <p>Thấp nhất: <span className="font-medium text-gray-900">{display(candle.low)}</span></p>
-            </div>
-        </div>
-    );
-};
+    // State Refs for Event Listeners (Prevent Stale Closures)
+    const viewRangeRef = useRef(viewRange);
+    const selectionStartXRef = useRef(selectionStartX);
+    const isSelectingRef = useRef(isSelecting);
+    const isDraggingRef = useRef(isDragging);
+    const dragStartRef = useRef(dragStart);
+    const dataRef = useRef(data);
+    const dimensionsRef = useRef(dimensions);
 
-export default function CandlestickChart({ data, valueFormatter }: CandlestickChartProps) {
-    const processedData = useMemo(
-        () =>
-            data.map((point) => {
-                const isBullish = point.close >= point.open;
-                return {
-                    ...point,
-                    wick: [point.low, point.high],
-                    body: [Math.min(point.open, point.close), Math.max(point.open, point.close)],
-                    color: isBullish ? "#16a34a" : "#dc2626",
-                };
-            }),
-        [data]
-    );
+    // Sync Refs
+    useEffect(() => { viewRangeRef.current = viewRange; }, [viewRange]);
+    useEffect(() => { selectionStartXRef.current = selectionStartX; }, [selectionStartX]);
+    useEffect(() => { isSelectingRef.current = isSelecting; }, [isSelecting]);
+    useEffect(() => { isDraggingRef.current = isDragging; }, [isDragging]);
+    useEffect(() => { dragStartRef.current = dragStart; }, [dragStart]);
+    useEffect(() => { dataRef.current = data; }, [data]);
+    useEffect(() => { dimensionsRef.current = dimensions; }, [dimensions]);
 
-    const xTicks = useMemo(() => {
-        if (processedData.length <= 15) {
-            return processedData.map((item) => item.time);
-        }
-        const desiredTicks = 6;
-        const step = Math.max(1, Math.floor(processedData.length / desiredTicks));
-        const ticks: string[] = [];
-        processedData.forEach((item, index) => {
-            if (index % step === 0) {
-                ticks.push(item.time);
+    // Stable ref for prop
+    const onLoadMoreRef = useRef(onLoadMore);
+    useEffect(() => { onLoadMoreRef.current = onLoadMore; }, [onLoadMore]);
+
+    // Constants
+    const scrollIntervalRef = useRef<number | null>(null);
+    const scrollStartTimeRef = useRef<number>(0);
+    const lastDataLengthRef = useRef(0);
+
+    // Track previous data length to adjust view on prepend
+    useEffect(() => {
+        if (lastDataLengthRef.current > 0 && data.length > lastDataLengthRef.current) {
+            const diff = data.length - lastDataLengthRef.current;
+            // If we are mostly scrolled to the right, this might be append
+            // If we are performing "load more left", we are at start=0
+
+            // Heuristic: If close to 0, it's a prepend
+            if (viewRange.start < 50) {
+                // Adjust view to keep relative position (prevent jump)
+                // UNLESS we are auto-scrolling left (intent is to see new data).
+                // Actually, standard behavior for prepend is to shift view index by diff
+                setViewRange(prev => ({
+                    start: prev.start + diff,
+                    end: prev.end + diff
+                }));
+                // Also adjust selection if it exists
+                if (selectionRange) {
+                    setSelectionRange(prev => prev ? ({
+                        start: prev.start + diff,
+                        end: prev.end + diff
+                    }) : null);
+                    setSelectionStartX(prev => prev + diff);
+                }
             }
-        });
-        const last = processedData[processedData.length - 1]?.time;
-        if (last && ticks[ticks.length - 1] !== last) {
-            ticks.push(last);
         }
-        return ticks;
-    }, [processedData]);
+        lastDataLengthRef.current = data.length;
+    }, [data.length]);
 
-    const timeReferenceLines = useMemo(() => {
-        if (processedData.length <= 1) {
-            return [];
-        }
+    // Constants
+    const PADDING = { top: 20, right: 70, bottom: 30, left: 10 };
+    const MIN_CANDLES = 10;
 
-        const desiredLines = processedData.length <= 12 ? processedData.length : 6;
-        const step = Math.max(1, Math.floor(processedData.length / desiredLines));
-        const refs: string[] = [];
-
-        processedData.forEach((item, index) => {
-            if (index % step === 0) {
-                refs.push(item.time);
+    // Initialize view range, smart update on data change
+    useEffect(() => {
+        if (data.length > 0) {
+            // First load
+            if (viewRange.end === 0) {
+                const visibleCount = Math.min(50, data.length);
+                setViewRange({
+                    start: Math.max(0, data.length - visibleCount),
+                    end: data.length - 1
+                });
             }
-        });
-
-        const last = processedData[processedData.length - 1]?.time;
-        if (last && refs[refs.length - 1] !== last) {
-            refs.push(last);
         }
+    }, [data.length]);
 
-        return Array.from(new Set(refs));
-    }, [processedData]);
+    // Handle resize
+    useEffect(() => {
+        const updateDimensions = () => {
+            if (containerRef.current) {
+                const { width, height } = containerRef.current.getBoundingClientRect();
+                setDimensions({ width, height });
+            }
+        };
 
-    const yDomain = useMemo<[number, number]>(() => {
-        if (!data.length) {
-            return [0, 1];
-        }
+        updateDimensions();
+        window.addEventListener('resize', updateDimensions);
+        return () => window.removeEventListener('resize', updateDimensions);
+    }, []);
 
-        const lows = data.map((d) => d.low);
-        const highs = data.map((d) => d.high);
-        const minLow = Math.min(...lows);
-        const maxHigh = Math.max(...highs);
+    // Visible data
+    const visibleData = useMemo(() => {
+        return data.slice(viewRange.start, viewRange.end + 1);
+    }, [data, viewRange]);
 
-        if (!Number.isFinite(minLow) || !Number.isFinite(maxHigh)) {
-            return [0, 1];
-        }
+    // Y-axis domain for visible data
+    const yDomain = useMemo(() => {
+        if (!visibleData.length) return { min: 0, max: 1 };
+        const lows = visibleData.map(d => d.low);
+        const highs = visibleData.map(d => d.high);
+        const min = Math.min(...lows);
+        const max = Math.max(...highs);
+        const padding = (max - min) * 0.1 || max * 0.01;
+        return { min: min - padding, max: max + padding };
+    }, [visibleData]);
 
-        const padding = (maxHigh - minLow) * 0.1 || Math.max(Math.abs(maxHigh) * 0.01, 1);
-        return [minLow - padding, maxHigh + padding];
+    // Y-axis domain for all data (timeline)
+    const fullYDomain = useMemo(() => {
+        if (!data.length) return { min: 0, max: 1 };
+        const lows = data.map(d => d.low);
+        const highs = data.map(d => d.high);
+        const min = Math.min(...lows);
+        const max = Math.max(...highs);
+        const padding = (max - min) * 0.1 || max * 0.01;
+        return { min: min - padding, max: max + padding };
     }, [data]);
+
+    // Draw main chart
+    useEffect(() => {
+        const canvas = canvasRef.current;
+        if (!canvas || !dimensions.width || !dimensions.height) return;
+
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+
+        const dpr = window.devicePixelRatio || 1;
+        canvas.width = dimensions.width * dpr;
+        canvas.height = dimensions.height * dpr;
+        ctx.scale(dpr, dpr);
+
+        const chartWidth = dimensions.width - PADDING.left - PADDING.right;
+        const chartHeight = dimensions.height - PADDING.top - PADDING.bottom;
+
+        // Clear
+        ctx.fillStyle = COLORS.background;
+        ctx.fillRect(0, 0, dimensions.width, dimensions.height);
+
+        if (!visibleData.length) {
+            ctx.fillStyle = COLORS.text;
+            ctx.font = '14px Inter, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('Đang thu thập dữ liệu...', dimensions.width / 2, dimensions.height / 2);
+            return;
+        }
+
+        // Scale functions
+        const xScale = (index: number) => PADDING.left + (index + 0.5) * (chartWidth / visibleData.length);
+        const yScale = (value: number) => {
+            const ratio = (value - yDomain.min) / (yDomain.max - yDomain.min);
+            return PADDING.top + chartHeight * (1 - ratio);
+        };
+
+        // Draw grid lines
+        ctx.strokeStyle = COLORS.grid;
+        ctx.lineWidth = 1;
+        const yTicks = 5;
+        for (let i = 0; i <= yTicks; i++) {
+            const y = PADDING.top + (chartHeight / yTicks) * i;
+            ctx.beginPath();
+            ctx.setLineDash([3, 3]);
+            ctx.moveTo(PADDING.left, y);
+            ctx.lineTo(dimensions.width - PADDING.right, y);
+            ctx.stroke();
+        }
+        ctx.setLineDash([]);
+
+        // Draw Y-axis labels
+        ctx.fillStyle = COLORS.text;
+        ctx.font = '11px Inter, sans-serif';
+        ctx.textAlign = 'left';
+        for (let i = 0; i <= yTicks; i++) {
+            const value = yDomain.max - ((yDomain.max - yDomain.min) / yTicks) * i;
+            const y = PADDING.top + (chartHeight / yTicks) * i;
+            ctx.fillText(valueFormatter(value), dimensions.width - PADDING.right + 5, y + 4);
+        }
+
+        // Draw candles
+        const candleWidth = Math.max(2, (chartWidth / visibleData.length) * 0.7);
+        const wickWidth = 1;
+
+        visibleData.forEach((candle, index) => {
+            const x = xScale(index);
+            const isBullish = candle.close >= candle.open;
+            const color = isBullish ? COLORS.bullish : COLORS.bearish;
+
+            // Draw wick
+            ctx.strokeStyle = color;
+            ctx.lineWidth = wickWidth;
+            ctx.beginPath();
+            ctx.moveTo(x, yScale(candle.high));
+            ctx.lineTo(x, yScale(candle.low));
+            ctx.stroke();
+
+            // Draw body
+            const bodyTop = yScale(Math.max(candle.open, candle.close));
+            const bodyBottom = yScale(Math.min(candle.open, candle.close));
+            const bodyHeight = Math.max(1, bodyBottom - bodyTop);
+
+            ctx.fillStyle = color;
+            ctx.fillRect(x - candleWidth / 2, bodyTop, candleWidth, bodyHeight);
+        });
+
+        // Draw X-axis labels
+        const xLabelCount = Math.min(6, visibleData.length);
+        const xStep = Math.floor(visibleData.length / xLabelCount);
+        ctx.fillStyle = COLORS.text;
+        ctx.font = '10px Inter, sans-serif';
+        ctx.textAlign = 'center';
+
+        for (let i = 0; i < visibleData.length; i += xStep) {
+            const candle = visibleData[i];
+            const x = xScale(i);
+            let label = candle.time;
+            if (label.includes(' ')) {
+                label = label.split(' ')[1]?.substring(0, 5) || label;
+            }
+            ctx.fillText(label, x, dimensions.height - 8);
+        }
+
+        // Draw crosshair if hovering (only when not in selection mode)
+        if (!selectionRange && hoveredCandle && mousePos.x > PADDING.left && mousePos.x < dimensions.width - PADDING.right) {
+            ctx.strokeStyle = COLORS.crosshair;
+            ctx.setLineDash([3, 3]);
+            ctx.lineWidth = 1;
+
+            // Vertical line
+            ctx.beginPath();
+            ctx.moveTo(mousePos.x, PADDING.top);
+            ctx.lineTo(mousePos.x, dimensions.height - PADDING.bottom);
+            ctx.stroke();
+
+            // Horizontal line
+            ctx.beginPath();
+            ctx.moveTo(PADDING.left, mousePos.y);
+            ctx.lineTo(dimensions.width - PADDING.right, mousePos.y);
+            ctx.stroke();
+
+            ctx.setLineDash([]);
+        }
+
+        // Draw selection region for analysis
+        if (selectionRange && visibleData.length > 0) {
+            const selStart = Math.max(0, selectionRange.start - viewRange.start);
+            const selEnd = Math.min(visibleData.length - 1, selectionRange.end - viewRange.start);
+
+            if (selEnd >= selStart && selStart < visibleData.length && selEnd >= 0) {
+                const x1 = xScale(selStart) - (chartWidth / visibleData.length) / 2;
+                const x2 = xScale(selEnd) + (chartWidth / visibleData.length) / 2;
+
+                ctx.fillStyle = COLORS.analysis.bg;
+                ctx.fillRect(x1, PADDING.top, x2 - x1, chartHeight);
+
+                ctx.strokeStyle = COLORS.analysis.border;
+                ctx.lineWidth = 2;
+                ctx.setLineDash([]);
+                ctx.strokeRect(x1, PADDING.top, x2 - x1, chartHeight);
+            }
+        }
+
+    }, [dimensions, visibleData, yDomain, valueFormatter, hoveredCandle, mousePos, selectionRange, viewRange]);
+
+    // Draw timeline canvas
+    useEffect(() => {
+        const canvas = timelineCanvasRef.current;
+        if (!canvas || !dimensions.width) return;
+
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+
+        const dpr = window.devicePixelRatio || 1;
+        canvas.width = dimensions.width * dpr;
+        canvas.height = TIMELINE_HEIGHT * dpr;
+        ctx.scale(dpr, dpr);
+
+        const width = dimensions.width;
+        const height = TIMELINE_HEIGHT;
+        const padding = 5;
+
+        // Clear
+        ctx.fillStyle = COLORS.timeline.bg;
+        ctx.fillRect(0, 0, width, height);
+
+        if (!data.length) return;
+
+        // Draw mini chart
+        const chartWidth = width - padding * 2;
+        const chartHeight = height - padding * 2 - 10;
+        const barWidth = Math.max(1, chartWidth / data.length);
+
+        data.forEach((candle, index) => {
+            const x = padding + (index * chartWidth) / data.length;
+            const isBullish = candle.close >= candle.open;
+            const color = isBullish ? COLORS.bullish : COLORS.bearish;
+
+            // Draw mini bar (simplified)
+            const ratio = (candle.close - fullYDomain.min) / (fullYDomain.max - fullYDomain.min);
+            const barHeight = Math.max(1, chartHeight * ratio);
+            const y = padding + (chartHeight - barHeight);
+
+            ctx.fillStyle = color;
+            ctx.globalAlpha = 0.6;
+            ctx.fillRect(x, y, Math.max(1, barWidth - 0.5), barHeight);
+        });
+
+        ctx.globalAlpha = 1;
+
+        // Draw selection area
+        const selectionStart = padding + (viewRange.start / data.length) * chartWidth;
+        const selectionEnd = padding + ((viewRange.end + 1) / data.length) * chartWidth;
+        const selectionWidth = selectionEnd - selectionStart;
+
+        // Selection background
+        ctx.fillStyle = COLORS.timeline.selection;
+        ctx.fillRect(selectionStart, padding, selectionWidth, chartHeight);
+
+        // Selection borders
+        ctx.strokeStyle = COLORS.timeline.border;
+        ctx.lineWidth = 2;
+        ctx.strokeRect(selectionStart, padding, selectionWidth, chartHeight);
+
+        // Draw handles
+        const handleWidth = 6;
+        ctx.fillStyle = COLORS.timeline.border;
+        // Left handle
+        ctx.fillRect(selectionStart - handleWidth / 2, padding, handleWidth, chartHeight);
+        // Right handle
+        ctx.fillRect(selectionEnd - handleWidth / 2, padding, handleWidth, chartHeight);
+
+        // Draw time labels at bottom
+        ctx.fillStyle = COLORS.text;
+        ctx.font = '9px Inter, sans-serif';
+        ctx.textAlign = 'center';
+
+        const labelCount = 4;
+        for (let i = 0; i <= labelCount; i++) {
+            const idx = Math.floor((i / labelCount) * (data.length - 1));
+            const candle = data[idx];
+            if (candle) {
+                let label = candle.time;
+                if (label.includes(' ')) {
+                    const [datePart] = label.split(' ');
+                    const [, month, day] = datePart.split('-');
+                    label = `${day}/${month}`;
+                }
+                const x = padding + (idx / data.length) * chartWidth;
+                ctx.fillText(label, x, height - 2);
+            }
+        }
+
+    }, [dimensions.width, data, viewRange, fullYDomain]);
+
+    // Mouse wheel zoom
+    const handleWheel = useCallback((e: WheelEvent) => {
+        e.preventDefault();
+        const zoomFactor = e.deltaY > 0 ? 1.15 : 0.87;
+        const currentRange = viewRange.end - viewRange.start;
+        const newRange = Math.max(MIN_CANDLES, Math.min(data.length, Math.round(currentRange * zoomFactor)));
+
+        const center = (viewRange.start + viewRange.end) / 2;
+        const newStart = Math.max(0, Math.round(center - newRange / 2));
+        const newEnd = Math.min(data.length - 1, newStart + newRange);
+
+        setViewRange({ start: newStart, end: Math.max(newStart + MIN_CANDLES, newEnd) });
+    }, [viewRange, data.length]);
+
+    // Register wheel event
+    useEffect(() => {
+        const container = containerRef.current;
+        if (!container) return;
+        container.addEventListener('wheel', handleWheel, { passive: false });
+        return () => container.removeEventListener('wheel', handleWheel);
+    }, [handleWheel]);
+
+    // Main canvas mouse handlers
+    const handleMouseDown = useCallback((e: React.MouseEvent) => {
+        // Right click to select
+        if (e.button === 2) {
+            e.preventDefault();
+            const rect = canvasRef.current?.getBoundingClientRect();
+            if (!rect) return;
+
+            // Track start position for "click vs drag" check
+            dragStartWithRightClickRef.current = { x: e.clientX, y: e.clientY };
+
+            const x = e.clientX - rect.left;
+            const chartWidth = dimensions.width - PADDING.left - PADDING.right;
+            const candleIndex = Math.floor((x - PADDING.left) / (chartWidth / visibleData.length));
+            const globalIndex = viewRange.start + Math.max(0, Math.min(visibleData.length - 1, candleIndex));
+
+            setIsSelecting(true);
+            setSelectionStartX(globalIndex);
+            setSelectionRange({ start: globalIndex, end: globalIndex });
+        }
+        // Left click to drag/pan
+        else if (e.button === 0) {
+            setIsDragging(true);
+            setDragStart({ x: e.clientX, startIdx: viewRange.start });
+        }
+    }, [viewRange.start, dimensions, visibleData.length]);
+
+    // --- Global Interaction Handlers (FIXED) ---
+    useEffect(() => {
+        const handleWindowMouseMove = (e: MouseEvent) => {
+            if (!isSelectingRef.current && !isDraggingRef.current) return;
+
+            const rect = canvasRef.current?.getBoundingClientRect();
+            if (!rect) return;
+
+            const x = e.clientX - rect.left;
+
+            const currentDimensions = dimensionsRef.current;
+            const currentData = dataRef.current;
+            const currentViewRange = viewRangeRef.current;
+
+            const chartWidth = currentDimensions.width - PADDING.left - PADDING.right;
+            const visibleLen = currentViewRange.end - currentViewRange.start + 1;
+
+            // 1. Handle Selection (Right Click Drag)
+            if (isSelectingRef.current) {
+                const clampedX = Math.max(PADDING.left, Math.min(currentDimensions.width - PADDING.right, x));
+                const rawIndex = Math.floor((clampedX - PADDING.left) / (chartWidth / visibleLen));
+                const globalIndex = currentViewRange.start + Math.max(0, Math.min(visibleLen - 1, rawIndex));
+
+                setSelectionRange({
+                    start: Math.min(selectionStartXRef.current, globalIndex),
+                    end: Math.max(selectionStartXRef.current, globalIndex)
+                });
+
+                // Auto-Scroll Logic for Edges
+                const EDGE_THRESHOLD = 50;
+                if (x < EDGE_THRESHOLD) {
+                    if (!scrollIntervalRef.current) {
+                        scrollStartTimeRef.current = Date.now();
+                        scrollIntervalRef.current = window.setInterval(() => {
+                            const elapsed = Date.now() - scrollStartTimeRef.current;
+                            // Accelerate: 1 (start) -> +1 every 200ms -> Max 20 speed
+                            const shift = Math.min(20, 1 + Math.floor(elapsed / 200));
+
+                            setViewRange(prev => {
+                                if (prev.start <= 0) {
+                                    if (onLoadMoreRef.current && (!loadMoreThrottleRef.current || Date.now() - loadMoreThrottleRef.current > 1000)) {
+                                        loadMoreThrottleRef.current = Date.now();
+                                        onLoadMoreRef.current('left');
+                                    }
+                                    return prev;
+                                }
+
+                                return { start: Math.max(0, prev.start - shift), end: prev.end - shift };
+                            });
+                            setSelectionRange(prev => {
+                                if (!prev) return null;
+                                return {
+                                    start: Math.min(selectionStartXRef.current, viewRangeRef.current.start),
+                                    end: Math.max(selectionStartXRef.current, viewRangeRef.current.end)
+                                };
+                            });
+                        }, 50);
+                    }
+                } else if (x > currentDimensions.width - EDGE_THRESHOLD) {
+                    if (!scrollIntervalRef.current) {
+                        scrollStartTimeRef.current = Date.now();
+                        scrollIntervalRef.current = window.setInterval(() => {
+                            const elapsed = Date.now() - scrollStartTimeRef.current;
+                            // Accelerate: 1 (start) -> +1 every 200ms -> Max 20 speed
+                            const shift = Math.min(20, 1 + Math.floor(elapsed / 200));
+
+                            setViewRange(prev => {
+                                if (prev.end >= dataRef.current.length - 1) {
+                                    if (onLoadMoreRef.current && (!loadMoreThrottleRef.current || Date.now() - loadMoreThrottleRef.current > 1000)) {
+                                        loadMoreThrottleRef.current = Date.now();
+                                        onLoadMoreRef.current('right');
+                                    }
+                                    return prev;
+                                }
+                                return { start: prev.start + shift, end: Math.min(dataRef.current.length - 1, prev.end + shift) };
+                            });
+                        }, 50);
+                    }
+                } else {
+                    if (scrollIntervalRef.current) {
+                        clearInterval(scrollIntervalRef.current);
+                        scrollIntervalRef.current = null;
+                    }
+                }
+            }
+            // 2. Handle Pan Drag (Left Click)
+            else if (isDraggingRef.current) {
+                const delta = e.clientX - dragStartRef.current.x;
+                const pointsToMove = Math.round((delta / chartWidth) * (currentViewRange.end - currentViewRange.start) * -0.5);
+                const maxStart = currentData.length - (currentViewRange.end - currentViewRange.start) - 1;
+
+                const newStart = Math.max(0, Math.min(maxStart, dragStartRef.current.startIdx + pointsToMove));
+                const range = currentViewRange.end - currentViewRange.start;
+                const newEnd = Math.min(currentData.length - 1, newStart + range);
+
+                setViewRange({ start: newStart, end: newEnd });
+            }
+        };
+
+        const handleWindowMouseUp = (e: MouseEvent) => {
+            if (isSelectingRef.current || isDraggingRef.current) {
+                if (scrollIntervalRef.current) {
+                    clearInterval(scrollIntervalRef.current);
+                    scrollIntervalRef.current = null;
+                }
+
+                if (e.button === 2 && dragStartWithRightClickRef.current) {
+                    const dist = Math.sqrt(
+                        Math.pow(e.clientX - dragStartWithRightClickRef.current.x, 2) +
+                        Math.pow(e.clientY - dragStartWithRightClickRef.current.y, 2)
+                    );
+                    if (dist < 5) {
+                        setSelectionRange(null);
+                    }
+                    dragStartWithRightClickRef.current = null;
+                }
+
+                setIsDragging(false);
+                setIsSelecting(false);
+            }
+        };
+
+        window.addEventListener('mousemove', handleWindowMouseMove);
+        window.addEventListener('mouseup', handleWindowMouseUp);
+
+        return () => {
+            window.removeEventListener('mousemove', handleWindowMouseMove);
+            window.removeEventListener('mouseup', handleWindowMouseUp);
+            if (scrollIntervalRef.current) {
+                clearInterval(scrollIntervalRef.current);
+                scrollIntervalRef.current = null;
+            }
+        };
+    }, []);
+
+    // Local handler ONLY for hover tooltips
+    const handleMouseMove = useCallback((e: React.MouseEvent) => {
+        const rect = canvasRef.current?.getBoundingClientRect();
+        if (!rect) return;
+
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        setMousePos({ x, y });
+
+        const chartWidth = dimensions.width - PADDING.left - PADDING.right;
+        const candleWidth = chartWidth / visibleData.length;
+        const candleIndex = Math.floor((x - PADDING.left) / candleWidth);
+
+        if (candleIndex >= 0 && candleIndex < visibleData.length) {
+            setHoveredCandle(visibleData[candleIndex]);
+        } else {
+            setHoveredCandle(null);
+        }
+    }, [dimensions, visibleData]);
+
+    const handleMouseLeave = useCallback(() => {
+        setHoveredCandle(null);
+    }, []);
+
+    // Timeline mouse handlers
+    const handleTimelineMouseDown = useCallback((e: React.MouseEvent) => {
+        const rect = timelineCanvasRef.current?.getBoundingClientRect();
+        if (!rect || !data.length) return;
+
+        const x = e.clientX - rect.left;
+        const width = rect.width;
+        const padding = 5;
+        const chartWidth = width - padding * 2;
+
+        const selectionStart = padding + (viewRange.start / data.length) * chartWidth;
+        const selectionEnd = padding + ((viewRange.end + 1) / data.length) * chartWidth;
+
+        // Check if clicking on handles
+        const handleWidth = 10;
+        if (Math.abs(x - selectionStart) < handleWidth) {
+            setTimelineDragType('left');
+        } else if (Math.abs(x - selectionEnd) < handleWidth) {
+            setTimelineDragType('right');
+        } else if (x > selectionStart && x < selectionEnd) {
+            setTimelineDragType('move');
+        } else {
+            // Click outside - move selection there
+            const clickedIndex = Math.floor(((x - padding) / chartWidth) * data.length);
+            const range = viewRange.end - viewRange.start;
+            const newStart = Math.max(0, Math.min(data.length - range - 1, clickedIndex - Math.floor(range / 2)));
+            const newEnd = Math.min(data.length - 1, newStart + range);
+            setViewRange({ start: newStart, end: newEnd });
+            return;
+        }
+
+        setIsTimelineDragging(true);
+        setDragStart({ x: e.clientX, startIdx: viewRange.start });
+    }, [viewRange, data.length]);
+
+    const handleTimelineMouseMove = useCallback((e: React.MouseEvent) => {
+        if (!isTimelineDragging || !timelineDragType) return;
+
+        const rect = timelineCanvasRef.current?.getBoundingClientRect();
+        if (!rect || !data.length) return;
+
+        const deltaX = e.clientX - dragStart.x;
+        const chartWidth = rect.width - 10;
+        const deltaIndex = Math.round((deltaX / chartWidth) * data.length);
+        const range = viewRange.end - viewRange.start;
+
+        if (timelineDragType === 'move') {
+            const newStart = Math.max(0, Math.min(data.length - range - 1, dragStart.startIdx + deltaIndex));
+            const newEnd = Math.min(data.length - 1, newStart + range);
+            setViewRange({ start: newStart, end: newEnd });
+        } else if (timelineDragType === 'left') {
+            const newStart = Math.max(0, Math.min(viewRange.end - MIN_CANDLES, dragStart.startIdx + deltaIndex));
+            setViewRange(prev => ({ ...prev, start: newStart }));
+        } else if (timelineDragType === 'right') {
+            const startEnd = dragStart.startIdx + range;
+            const newEnd = Math.max(viewRange.start + MIN_CANDLES, Math.min(data.length - 1, startEnd + deltaIndex));
+            setViewRange(prev => ({ ...prev, end: newEnd }));
+        }
+    }, [isTimelineDragging, timelineDragType, dragStart, viewRange, data.length]);
+
+    const handleTimelineMouseUp = useCallback(() => {
+        setIsTimelineDragging(false);
+        setTimelineDragType(null);
+    }, []);
+
+    // Zoom controls
+    const handleZoomIn = useCallback(() => {
+        const currentRange = viewRange.end - viewRange.start;
+        const newRange = Math.max(MIN_CANDLES, Math.round(currentRange * 0.7));
+        const center = (viewRange.start + viewRange.end) / 2;
+        const newStart = Math.max(0, Math.round(center - newRange / 2));
+        const newEnd = Math.min(data.length - 1, newStart + newRange);
+        setViewRange({ start: newStart, end: newEnd });
+    }, [viewRange, data.length]);
+
+    const handleZoomOut = useCallback(() => {
+        const currentRange = viewRange.end - viewRange.start;
+        const newRange = Math.min(data.length, Math.round(currentRange * 1.4));
+        const center = (viewRange.start + viewRange.end) / 2;
+        const newStart = Math.max(0, Math.round(center - newRange / 2));
+        const newEnd = Math.min(data.length - 1, newStart + newRange);
+        setViewRange({ start: newStart, end: newEnd });
+    }, [viewRange, data.length]);
+
+    const handleResetZoom = useCallback(() => {
+        setViewRange({ start: 0, end: data.length - 1 });
+    }, [data.length]);
+
+    // Format tooltip time
+    const formatTooltipTime = (time: string) => {
+        if (time && time.includes(' ')) {
+            const [datePart, timePart] = time.split(' ');
+            const [year, month, day] = datePart.split('-');
+            return `${day}/${month}/${year} ${timePart?.substring(0, 5) || ''}`;
+        }
+        return time;
+    };
+
+    // Calculate analysis for selected region
+    const selectionAnalysis = useMemo(() => {
+        if (!selectionRange || selectionRange.start > selectionRange.end) return null;
+
+        const selectedData = data.slice(selectionRange.start, selectionRange.end + 1);
+        if (selectedData.length === 0) return null;
+
+        const firstCandle = selectedData[0];
+        const lastCandle = selectedData[selectedData.length - 1];
+        const lows = selectedData.map(d => d.low);
+        const highs = selectedData.map(d => d.high);
+        const opens = selectedData.map(d => d.open);
+        const closes = selectedData.map(d => d.close);
+
+        const minPrice = Math.min(...lows);
+        const maxPrice = Math.max(...highs);
+        const priceChange = lastCandle.close - firstCandle.open;
+        const priceChangePercent = (priceChange / firstCandle.open) * 100;
+        const avgClose = closes.reduce((a, b) => a + b, 0) / closes.length;
+
+        return {
+            count: selectedData.length,
+            minPrice,
+            maxPrice,
+            priceChange,
+            priceChangePercent,
+            avgClose,
+            startTime: firstCandle.time,
+            endTime: lastCandle.time,
+        };
+    }, [data, selectionRange]);
 
     if (!data.length) {
         return (
-            <div className="flex h-72 items-center justify-center text-gray-500">
+            <div className="flex h-full items-center justify-center text-gray-500">
                 Đang thu thập dữ liệu nến...
             </div>
         );
     }
 
-    const lastClose = processedData[processedData.length - 1]?.close;
-
-    const firstTime = processedData[0]?.time;
-    const lastTime = processedData[processedData.length - 1]?.time;
-
     return (
         <div className="flex h-full w-full flex-col">
-            <div className="flex-1">
-                <ResponsiveContainer width="100%" height="100%">
-                    <ComposedChart data={processedData} margin={{ top: 16, right: 16, left: 16, bottom: 8 }}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                        <XAxis
-                            xAxisId="wick"
-                            dataKey="time"
-                            stroke="#94a3b8"
-                            style={{ fontSize: "12px" }}
-                            tickLine={false}
-                            axisLine={false}
-                            minTickGap={24}
-                            interval={processedData.length <= 15 ? 0 : undefined}
-                            ticks={processedData.length > 15 ? xTicks : undefined}
-                            tickFormatter={formatTimeLabel}
-                        />
-                        <XAxis xAxisId="body" dataKey="time" hide />
-                        <YAxis
-                            stroke="#6b7280"
-                            style={{ fontSize: "12px" }}
-                            domain={yDomain}
-                            tickFormatter={(value) => valueFormatter(Number(value))}
-                            tickLine={false}
-                            axisLine={false}
-                        />
-                        <Tooltip
-                            cursor={{ stroke: "#9ca3af", strokeDasharray: "3 3" }}
-                            content={(props) => (
-                                <CandleTooltip
-                                    active={props.active}
-                                    payload={props.payload as Array<{ payload: CandleDataPoint }> | undefined}
-                                    label={props.label}
-                                    valueFormatter={valueFormatter}
-                                />
-                            )}
-                        />
-                        {timeReferenceLines.map((time) => (
-                            <ReferenceLine
-                                key={`time-line-${time}`}
-                                xAxisId="wick"
-                                x={time}
-                                stroke="#e2e8f0"
-                                strokeDasharray="4 4"
-                                strokeOpacity={0.8}
-                                label={{
-                                    position: "top",
-                                    value: formatTimeLabel(time),
-                                    fill: "#94a3b8",
-                                    fontSize: 10,
-                                    dy: -4,
-                                }}
-                            />
-                        ))}
-                        <Bar dataKey="wick" xAxisId="wick" barSize={2} isAnimationActive={false}>
-                            {processedData.map((entry, index) => (
-                                <Cell key={`wick-${entry.time}-${index}`} fill={entry.color} />
-                            ))}
-                        </Bar>
-                        <Bar dataKey="body" xAxisId="body" barSize={10} isAnimationActive={false}>
-                            {processedData.map((entry, index) => (
-                                <Cell key={`body-${entry.time}-${index}`} fill={entry.color} />
-                            ))}
-                        </Bar>
-                        {typeof lastClose === "number" && (
-                            <ReferenceLine
-                                y={lastClose}
-                                stroke="#0E1A3C"
-                                strokeDasharray="3 3"
-                                label={{
-                                    position: "left",
-                                    value: valueFormatter(lastClose),
-                                    fill: "#0E1A3C",
-                                    fontSize: 12,
-                                }}
-                            />
-                        )}
-                    </ComposedChart>
-                </ResponsiveContainer>
+            {/* Controls */}
+            <div className="flex items-center justify-between mb-2 px-1">
+                <div className="flex items-center gap-2">
+                    <span className="text-xs text-gray-400">
+                        {viewRange.end - viewRange.start + 1} / {data.length} điểm
+                    </span>
+                    {selectionRange && (
+                        <button
+                            onClick={() => setSelectionRange(null)}
+                            className="text-xs text-amber-600 hover:text-amber-700 font-medium"
+                        >
+                            Xóa vùng chọn
+                        </button>
+                    )}
+                </div>
+                <div className="flex items-center gap-2">
+                    <div className="w-px h-4 bg-gray-200" />
+                    <button onClick={handleZoomIn} className="p-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 transition-colors" title="Phóng to">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m3-3H7" />
+                        </svg>
+                    </button>
+                    <button onClick={handleZoomOut} className="p-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 transition-colors" title="Thu nhỏ">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM13 10H7" />
+                        </svg>
+                    </button>
+                    <button onClick={handleResetZoom} className="p-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 transition-colors" title="Đặt lại">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                    </button>
+                </div>
             </div>
 
+            {/* Analysis Panel */}
+            {selectionAnalysis && (
+                <div className="mb-2 px-1">
+                    <div className="bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 text-xs">
+                        <div className="flex items-center justify-between flex-wrap gap-2">
+                            <span className="font-semibold text-amber-800">
+                                Phân tích vùng ({selectionAnalysis.count} nến)
+                            </span>
+                            <div className="flex items-center gap-4 text-amber-700">
+                                <span>Thấp: <strong className="text-red-600">{valueFormatter(selectionAnalysis.minPrice)}</strong></span>
+                                <span>Cao: <strong className="text-green-600">{valueFormatter(selectionAnalysis.maxPrice)}</strong></span>
+                                <span>TB: <strong>{valueFormatter(selectionAnalysis.avgClose)}</strong></span>
+                                <span>
+                                    Biến động:
+                                    <strong className={selectionAnalysis.priceChange >= 0 ? 'text-green-600 ml-1' : 'text-red-600 ml-1'}>
+                                        {selectionAnalysis.priceChange >= 0 ? '+' : ''}{valueFormatter(selectionAnalysis.priceChange)}
+                                        ({selectionAnalysis.priceChangePercent >= 0 ? '+' : ''}{selectionAnalysis.priceChangePercent.toFixed(2)}%)
+                                    </strong>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Main Chart Canvas */}
+            <div
+                ref={containerRef}
+                className="flex-1 relative cursor-crosshair select-none min-h-0"
+                onMouseDown={handleMouseDown}
+                onMouseMove={handleMouseMove}
+                onMouseLeave={handleMouseLeave}
+                onContextMenu={(e) => e.preventDefault()}
+            >
+                <canvas
+                    ref={canvasRef}
+                    style={{ width: '100%', height: '100%' }}
+                />
+
+                {/* Tooltip */}
+                {hoveredCandle && (
+                    <div
+                        className="absolute bg-white/95 border border-gray-200 rounded-lg px-3 py-2 text-sm shadow-lg pointer-events-none z-10"
+                        style={{
+                            left: Math.min(mousePos.x + 15, dimensions.width - 160),
+                            top: Math.max(mousePos.y - 100, 10),
+                        }}
+                    >
+                        <p className="font-semibold text-gray-900 mb-1">{formatTooltipTime(hoveredCandle.time)}</p>
+                        <div className="space-y-0.5 text-gray-700 text-xs">
+                            <p>Mở: <span className="font-medium text-gray-900">{valueFormatter(hoveredCandle.open)}</span></p>
+                            <p>Đóng: <span className="font-medium text-gray-900">{valueFormatter(hoveredCandle.close)}</span></p>
+                            <p>Cao: <span className="font-medium text-gray-900">{valueFormatter(hoveredCandle.high)}</span></p>
+                            <p>Thấp: <span className="font-medium text-gray-900">{valueFormatter(hoveredCandle.low)}</span></p>
+                        </div>
+                    </div>
+                )}
+            </div>
+
+            {/* Timeline Navigator Canvas */}
+            <div
+                ref={timelineContainerRef}
+                className="w-full cursor-ew-resize select-none border-t border-gray-200"
+                style={{ height: TIMELINE_HEIGHT }}
+                onMouseDown={handleTimelineMouseDown}
+                onMouseMove={handleTimelineMouseMove}
+                onMouseUp={handleTimelineMouseUp}
+                onMouseLeave={handleTimelineMouseUp}
+            >
+                <canvas
+                    ref={timelineCanvasRef}
+                    style={{ width: '100%', height: '100%' }}
+                />
+            </div>
         </div>
     );
 }
-

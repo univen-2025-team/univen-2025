@@ -1,11 +1,12 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import axios from '@/lib/axios';
 import { useToast } from '@/components/toast/toast-provider';
 import { useWatchlist } from '@/lib/hooks/useWatchlist';
 import { useMarketSocket } from '@/lib/hooks/useMarketSocket';
+import { useDragSelect } from '@/lib/hooks/useDragSelect';
 
 // Components
 import { MarketHeader } from '@/features/market-overview/components/market-header';
@@ -148,9 +149,11 @@ export default function MarketPage() {
     };
 
     // Fetch market data
-    const fetchMarketData = async () => {
+    const fetchMarketData = async (showFullScreenLoader = true) => {
         try {
-            setLoading(true);
+            if (showFullScreenLoader) {
+                setLoading(true);
+            }
             const response = await axios.get('/market');
 
             console.log('🔍 API Response:', response);
@@ -189,12 +192,14 @@ export default function MarketPage() {
             setError(err.message || 'Không thể tải dữ liệu thị trường');
             showToast('error', 'Không thể tải dữ liệu thị trường', 3000);
         } finally {
-            setLoading(false);
+            if (showFullScreenLoader) {
+                setLoading(false);
+            }
         }
     };
 
     useEffect(() => {
-        fetchMarketData();
+        fetchMarketData(true);
         fetchHistory(historyRange);
     }, []);
 
@@ -326,6 +331,38 @@ export default function MarketPage() {
         setIsBuyModalOpen(true);
     };
 
+    // Drag Select Integration
+    const containerRef = useRef<HTMLDivElement>(null);
+    const lastFetchTimeRef = useRef<number>(0);
+
+    const handleEdgeHover = useCallback((edge: 'top' | 'bottom' | 'left' | 'right') => {
+        const now = Date.now();
+        // Throttle fetches to once every 2 seconds
+        if (now - lastFetchTimeRef.current < 2000) return;
+
+        if (['bottom', 'right', 'left', 'top'].includes(edge)) {
+            lastFetchTimeRef.current = now;
+            showToast('info', `Đang tải thêm dữ liệu (${edge})...`, 2000);
+            fetchMarketData(false);
+        }
+    }, []); // Empty deps as fetchMarketData and showToast are stable or imported
+
+    const { isSelecting, selectionBox } = useDragSelect({
+        containerRef,
+        onEdgeHover: handleEdgeHover,
+        onSelectionComplete: (box) => {
+            // "chiều ngang giữa 2 điểm start, end là vùng cần phân tích"
+            const startX = box.x;
+            const endX = box.x + box.width;
+
+            console.log(`Selection Complete: Horizontal Range ${startX} - ${endX}`);
+
+            // Logic to identify data within this range would go here.
+            // For now, we confirm the action to the user.
+            showToast('success', `Đã chọn vùng phân tích: ${Math.round(startX)}px - ${Math.round(endX)}px`, 3000);
+        }
+    });
+
     if (loading) {
         return (
             <div className="flex items-center justify-center h-screen">
@@ -371,7 +408,20 @@ export default function MarketPage() {
     }
 
     return (
-        <div className="space-y-6 pb-8">
+        <div className="space-y-6 pb-8 relative min-h-[calc(100vh-100px)]" ref={containerRef}>
+            {/* Selection Overlay */}
+            {isSelecting && selectionBox && (
+                <div
+                    className="absolute border-2 border-primary bg-primary/20 pointer-events-none z-50 rounded-sm"
+                    style={{
+                        left: selectionBox.x,
+                        top: selectionBox.y,
+                        width: selectionBox.width,
+                        height: selectionBox.height
+                    }}
+                />
+            )}
+
             {/* Header */}
             <MarketHeader />
 

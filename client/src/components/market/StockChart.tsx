@@ -188,7 +188,18 @@ export default function StockChart({ symbol, refreshTrigger = 0 }: StockChartPro
                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" opacity={0.8} />
                         <XAxis
                             dataKey="time"
-                            hide={true} // Hide X axis for cleaner look or style it
+                            tick={{ fontSize: 10, fill: '#6b7280' }}
+                            axisLine={false}
+                            tickLine={false}
+                            tickFormatter={(value) => {
+                                // Format: extract time part (HH:MM) from "YYYY-MM-DD HH:MM:SS"
+                                if (value && value.includes(' ')) {
+                                    return value.split(' ')[1]?.substring(0, 5) || value;
+                                }
+                                return value?.substring(0, 5) || value;
+                            }}
+                            interval="preserveStartEnd"
+                            minTickGap={50}
                         />
                         <YAxis
                             domain={['auto', 'auto']}
@@ -207,8 +218,17 @@ export default function StockChart({ symbol, refreshTrigger = 0 }: StockChartPro
                                 borderRadius: '0.5rem',
                                 boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
                             }}
-                            formatter={(value: number) => [(value * 1000).toLocaleString(), 'Price']}
-                            labelStyle={{ color: '#6b7280' }}
+                            formatter={(value: number) => [(value * 1000).toLocaleString(), 'Giá']}
+                            labelFormatter={(label) => {
+                                // Format label as "DD/MM/YYYY HH:MM"
+                                if (label && label.includes(' ')) {
+                                    const [datePart, timePart] = label.split(' ');
+                                    const [year, month, day] = datePart.split('-');
+                                    return `${day}/${month}/${year} ${timePart?.substring(0, 5) || ''}`;
+                                }
+                                return label;
+                            }}
+                            labelStyle={{ color: '#6b7280', fontWeight: 'bold' }}
                         />
                         <ReferenceLine
                             y={firstValue}
