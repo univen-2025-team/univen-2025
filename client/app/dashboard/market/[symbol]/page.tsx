@@ -1,13 +1,14 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useParams } from 'next/navigation';
-import { ArrowLeft, Building2, Globe, Users, TrendingUp, TrendingDown, DollarSign } from 'lucide-react';
+import { ArrowLeft, Building2, Globe, Users, TrendingUp, TrendingDown, DollarSign, Maximize2, Minimize2, ShoppingCart, X } from 'lucide-react';
 import Image from 'next/image';
 import LoadingSpinner from '@/components/dashboard/LoadingSpinner';
 import ErrorMessage from '@/components/common/ErrorMessage';
-import StockChart from '@/components/market/StockChart';
+import CandlestickChart from '@/components/market/charts/CandlestickChart';
+import { formatPrice } from '@/components/market/utils';
 import api from '@/lib/axios';
 
 const StockDetailPage = () => {
@@ -18,6 +19,12 @@ const StockDetailPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [stockData, setStockData] = useState<any>(null);
+  const [chartData, setChartData] = useState<any[]>([]);
+  const [chartLoading, setChartLoading] = useState(true);
+  const [selectedRange, setSelectedRange] = useState('1D');
+
+  const TIME_RANGES = ['1D', '1W', '1M'];
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   useEffect(() => {
     const fetchStockDetails = async () => {
@@ -39,6 +46,38 @@ const StockDetailPage = () => {
       fetchStockDetails();
     }
   }, [symbol]);
+
+  // Fetch chart data based on selected range
+  useEffect(() => {
+    const fetchChartData = async () => {
+      if (!symbol) return;
+      try {
+        setChartLoading(true);
+        const response = await api.get(`/market/stock/${symbol}/intraday?filter=${selectedRange}`);
+        if (response.data?.metadata?.history) {
+          setChartData(response.data.metadata.history);
+        }
+      } catch (err) {
+        console.error('Error fetching chart data:', err);
+      } finally {
+        setChartLoading(false);
+      }
+    };
+
+    fetchChartData();
+  }, [symbol, selectedRange]);
+
+  // Transform chart data for candlestick
+  const candlestickData = useMemo(() => {
+    if (!chartData.length) return [];
+    return chartData.map((point: any) => ({
+      time: point.date ? `${point.date} ${point.time}` : point.time,
+      open: point.open ?? point.price,
+      close: point.close ?? point.price,
+      high: point.high ?? point.price,
+      low: point.low ?? point.price,
+    }));
+  }, [chartData]);
 
   if (loading) return <LoadingSpinner />;
   if (error) return <ErrorMessage message={error} />;
@@ -174,13 +213,91 @@ const StockDetailPage = () => {
         {/* Right Column: Chart & Additional Details */}
         <div className="lg:col-span-2 space-y-6">
           {/* Chart Section */}
-          <div className={`${cardClassName} h-[500px] flex flex-col`}>
-            <h3 className="text-lg font-bold mb-4 text-gray-900">Price History</h3>
-            <div className="flex-1 w-full min-h-0">
-              {/* Pass styles or ensure StockChart handles light mode properly. StockChart looks neutral enough or adaptable. */}
-              <StockChart refreshTrigger={0} symbol={symbol} />
+          <div className={`${isFullscreen ? 'fixed inset-0 z-50 bg-white p-6' : `${cardClassName} h-[500px]`} flex flex-col`}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-bold text-gray-900">Price History</h3>
+              <div className="flex items-center gap-2">
+                {TIME_RANGES.map((range) => (
+                  <button
+                    key={range}
+                    onClick={() => setSelectedRange(range)}
+                    className={`px-3 py-1.5 rounded-lg font-medium text-sm transition-colors ${selectedRange === range
+                      ? 'bg-primary text-white'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      }`}
+                  >
+                    {range}
+                  </button>
+                ))}
+                <div className="w-px h-6 bg-gray-200 mx-1" />
+                <button
+                  onClick={() => setIsFullscreen(!isFullscreen)}
+                  className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 transition-colors"
+                  title={isFullscreen ? "Thu nhỏ" : "Toàn màn hình"}
+                >
+                  {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+                </button>
+              </div>
             </div>
+            <div className={`flex-1 w-full ${isFullscreen ? 'h-[calc(100vh-180px)]' : 'min-h-0'}`}>
+              {chartLoading ? (
+                <div className="flex items-center justify-center h-full text-gray-500">
+                  <LoadingSpinner />
+                </div>
+              ) : candlestickData.length > 0 ? (
+                <CandlestickChart data={candlestickData} valueFormatter={formatPrice} />
+              ) : (
+                <div className="flex items-center justify-center h-full text-gray-500">
+                  Không có dữ liệu biểu đồ
+                </div>
+              )}
+            </div>
+            {/* Trade buttons - show in fullscreen or below chart */}
+            {isFullscreen && (
+              <div className="flex items-center justify-center gap-4 mt-4 pt-4 border-t border-gray-100">
+                <button
+                  onClick={() => router.push(`/dashboard/trade?symbol=${symbol}&action=buy`)}
+                  className="flex items-center gap-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl transition-colors shadow-lg"
+                >
+                  <ShoppingCart className="w-5 h-5" />
+                  Mua {symbol}
+                </button>
+                <button
+                  onClick={() => router.push(`/dashboard/trade?symbol=${symbol}&action=sell`)}
+                  className="flex items-center gap-2 px-6 py-3 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-xl transition-colors shadow-lg"
+                >
+                  <TrendingDown className="w-5 h-5" />
+                  Bán {symbol}
+                </button>
+              </div>
+            )}
           </div>
+
+          {/* Quick Trade Card - only show when not fullscreen */}
+          {!isFullscreen && (
+            <div className={`${cardClassName}`}>
+              <h3 className="text-lg font-bold text-gray-900 mb-4">Giao dịch nhanh</h3>
+              <div className="flex items-center gap-4">
+                <button
+                  onClick={() => router.push(`/dashboard/trade?symbol=${symbol}&action=buy`)}
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl transition-colors"
+                >
+                  <ShoppingCart className="w-5 h-5" />
+                  Mua {symbol}
+                </button>
+                <button
+                  onClick={() => router.push(`/dashboard/trade?symbol=${symbol}&action=sell`)}
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-xl transition-colors"
+                >
+                  <TrendingDown className="w-5 h-5" />
+                  Bán {symbol}
+                </button>
+              </div>
+              <p className="text-xs text-gray-500 mt-3 text-center">
+                Giá hiện tại: {marketData?.price ? (marketData.price * 1000).toLocaleString('vi-VN') : '---'} VND
+              </p>
+            </div>
+          )}
 
           {/* About Section */}
           <div className={`${cardClassName} space-y-6`}>
