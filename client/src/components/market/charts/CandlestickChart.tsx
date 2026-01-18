@@ -26,6 +26,10 @@ const COLORS = {
         bg: '#f8fafc',
         selection: 'rgba(99, 102, 241, 0.3)',
         border: '#6366f1',
+    },
+    analysis: {
+        bg: 'rgba(251, 191, 36, 0.2)',
+        border: '#f59e0b',
     }
 };
 
@@ -44,6 +48,12 @@ export default function CandlestickChart({ data, valueFormatter }: CandlestickCh
     const [dragStart, setDragStart] = useState({ x: 0, startIdx: 0 });
     const [hoveredCandle, setHoveredCandle] = useState<CandleDataPoint | null>(null);
     const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+
+    // Selection mode for analysis
+    const [selectionMode, setSelectionMode] = useState(false);
+    const [isSelecting, setIsSelecting] = useState(false);
+    const [selectionRange, setSelectionRange] = useState<{ start: number; end: number } | null>(null);
+    const [selectionStartX, setSelectionStartX] = useState(0);
 
     // Constants
     const PADDING = { top: 20, right: 70, bottom: 30, left: 10 };
@@ -203,8 +213,8 @@ export default function CandlestickChart({ data, valueFormatter }: CandlestickCh
             ctx.fillText(label, x, dimensions.height - 8);
         }
 
-        // Draw crosshair if hovering
-        if (hoveredCandle && mousePos.x > PADDING.left && mousePos.x < dimensions.width - PADDING.right) {
+        // Draw crosshair if hovering (only when not in selection mode)
+        if (!selectionMode && hoveredCandle && mousePos.x > PADDING.left && mousePos.x < dimensions.width - PADDING.right) {
             ctx.strokeStyle = COLORS.crosshair;
             ctx.setLineDash([3, 3]);
             ctx.lineWidth = 1;
@@ -224,7 +234,26 @@ export default function CandlestickChart({ data, valueFormatter }: CandlestickCh
             ctx.setLineDash([]);
         }
 
-    }, [dimensions, visibleData, yDomain, valueFormatter, hoveredCandle, mousePos]);
+        // Draw selection region for analysis
+        if (selectionRange && visibleData.length > 0) {
+            const selStart = Math.max(0, selectionRange.start - viewRange.start);
+            const selEnd = Math.min(visibleData.length - 1, selectionRange.end - viewRange.start);
+
+            if (selEnd >= selStart && selStart < visibleData.length && selEnd >= 0) {
+                const x1 = xScale(selStart) - (chartWidth / visibleData.length) / 2;
+                const x2 = xScale(selEnd) + (chartWidth / visibleData.length) / 2;
+
+                ctx.fillStyle = COLORS.analysis.bg;
+                ctx.fillRect(x1, PADDING.top, x2 - x1, chartHeight);
+
+                ctx.strokeStyle = COLORS.analysis.border;
+                ctx.lineWidth = 2;
+                ctx.setLineDash([]);
+                ctx.strokeRect(x1, PADDING.top, x2 - x1, chartHeight);
+            }
+        }
+
+    }, [dimensions, visibleData, yDomain, valueFormatter, hoveredCandle, mousePos, selectionMode, selectionRange, viewRange]);
 
     // Draw timeline canvas
     useEffect(() => {
@@ -340,9 +369,23 @@ export default function CandlestickChart({ data, valueFormatter }: CandlestickCh
 
     // Main canvas mouse handlers
     const handleMouseDown = useCallback((e: React.MouseEvent) => {
-        setIsDragging(true);
-        setDragStart({ x: e.clientX, startIdx: viewRange.start });
-    }, [viewRange.start]);
+        if (selectionMode) {
+            const rect = canvasRef.current?.getBoundingClientRect();
+            if (!rect) return;
+
+            const x = e.clientX - rect.left;
+            const chartWidth = dimensions.width - PADDING.left - PADDING.right;
+            const candleIndex = Math.floor((x - PADDING.left) / (chartWidth / visibleData.length));
+            const globalIndex = viewRange.start + Math.max(0, Math.min(visibleData.length - 1, candleIndex));
+
+            setIsSelecting(true);
+            setSelectionStartX(globalIndex);
+            setSelectionRange({ start: globalIndex, end: globalIndex });
+        } else {
+            setIsDragging(true);
+            setDragStart({ x: e.clientX, startIdx: viewRange.start });
+        }
+    }, [selectionMode, viewRange.start, dimensions, visibleData.length]);
 
     const handleMouseMove = useCallback((e: React.MouseEvent) => {
         const rect = canvasRef.current?.getBoundingClientRect();
@@ -363,8 +406,16 @@ export default function CandlestickChart({ data, valueFormatter }: CandlestickCh
             setHoveredCandle(null);
         }
 
-        // Handle drag
-        if (isDragging) {
+        // Handle selection drag
+        if (isSelecting && selectionMode) {
+            const globalIndex = viewRange.start + Math.max(0, Math.min(visibleData.length - 1, candleIndex));
+            setSelectionRange({
+                start: Math.min(selectionStartX, globalIndex),
+                end: Math.max(selectionStartX, globalIndex)
+            });
+        }
+        // Handle pan drag
+        else if (isDragging && !selectionMode) {
             const delta = e.clientX - dragStart.x;
             const pointsToMove = Math.round((delta / chartWidth) * (viewRange.end - viewRange.start) * -0.5);
             const maxStart = data.length - (viewRange.end - viewRange.start) - 1;
@@ -375,14 +426,16 @@ export default function CandlestickChart({ data, valueFormatter }: CandlestickCh
 
             setViewRange({ start: newStart, end: newEnd });
         }
-    }, [isDragging, dragStart, viewRange, dimensions, visibleData, data.length]);
+    }, [isDragging, isSelecting, selectionMode, selectionStartX, dragStart, viewRange, dimensions, visibleData, data.length]);
 
     const handleMouseUp = useCallback(() => {
         setIsDragging(false);
+        setIsSelecting(false);
     }, []);
 
     const handleMouseLeave = useCallback(() => {
         setIsDragging(false);
+        setIsSelecting(false);
         setHoveredCandle(null);
     }, []);
 
@@ -484,6 +537,38 @@ export default function CandlestickChart({ data, valueFormatter }: CandlestickCh
         return time;
     };
 
+    // Calculate analysis for selected region
+    const selectionAnalysis = useMemo(() => {
+        if (!selectionRange || selectionRange.start > selectionRange.end) return null;
+
+        const selectedData = data.slice(selectionRange.start, selectionRange.end + 1);
+        if (selectedData.length === 0) return null;
+
+        const firstCandle = selectedData[0];
+        const lastCandle = selectedData[selectedData.length - 1];
+        const lows = selectedData.map(d => d.low);
+        const highs = selectedData.map(d => d.high);
+        const opens = selectedData.map(d => d.open);
+        const closes = selectedData.map(d => d.close);
+
+        const minPrice = Math.min(...lows);
+        const maxPrice = Math.max(...highs);
+        const priceChange = lastCandle.close - firstCandle.open;
+        const priceChangePercent = (priceChange / firstCandle.open) * 100;
+        const avgClose = closes.reduce((a, b) => a + b, 0) / closes.length;
+
+        return {
+            count: selectedData.length,
+            minPrice,
+            maxPrice,
+            priceChange,
+            priceChangePercent,
+            avgClose,
+            startTime: firstCandle.time,
+            endTime: lastCandle.time,
+        };
+    }, [data, selectionRange]);
+
     if (!data.length) {
         return (
             <div className="flex h-full items-center justify-center text-gray-500">
@@ -496,11 +581,37 @@ export default function CandlestickChart({ data, valueFormatter }: CandlestickCh
         <div className="flex h-full w-full flex-col">
             {/* Controls */}
             <div className="flex items-center justify-between mb-2 px-1">
-                <span className="text-xs text-gray-400">
-                    {viewRange.end - viewRange.start + 1} / {data.length} điểm
-                </span>
                 <div className="flex items-center gap-2">
-                    <span className="text-xs text-gray-500 hidden sm:block">Cuộn chuột để zoom</span>
+                    <span className="text-xs text-gray-400">
+                        {viewRange.end - viewRange.start + 1} / {data.length} điểm
+                    </span>
+                    {selectionRange && (
+                        <button
+                            onClick={() => setSelectionRange(null)}
+                            className="text-xs text-amber-600 hover:text-amber-700"
+                        >
+                            Xóa vùng chọn
+                        </button>
+                    )}
+                </div>
+                <div className="flex items-center gap-2">
+                    <button
+                        onClick={() => {
+                            setSelectionMode(!selectionMode);
+                            if (selectionMode) setSelectionRange(null);
+                        }}
+                        className={`px-2 py-1 rounded-lg text-xs font-medium transition-colors ${selectionMode
+                                ? 'bg-amber-500 text-white'
+                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                            }`}
+                        title={selectionMode ? "Tắt chế độ chọn" : "Chọn vùng phân tích"}
+                    >
+                        <svg className="w-4 h-4 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16m-7 6h7" />
+                        </svg>
+                        {selectionMode ? 'Đang chọn' : 'Chọn vùng'}
+                    </button>
+                    <div className="w-px h-4 bg-gray-200" />
                     <button onClick={handleZoomIn} className="p-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 transition-colors" title="Phóng to">
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m3-3H7" />
@@ -518,6 +629,31 @@ export default function CandlestickChart({ data, valueFormatter }: CandlestickCh
                     </button>
                 </div>
             </div>
+
+            {/* Analysis Panel */}
+            {selectionAnalysis && (
+                <div className="mb-2 px-1">
+                    <div className="bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 text-xs">
+                        <div className="flex items-center justify-between flex-wrap gap-2">
+                            <span className="font-semibold text-amber-800">
+                                Phân tích vùng ({selectionAnalysis.count} nến)
+                            </span>
+                            <div className="flex items-center gap-4 text-amber-700">
+                                <span>Thấp: <strong className="text-red-600">{valueFormatter(selectionAnalysis.minPrice)}</strong></span>
+                                <span>Cao: <strong className="text-green-600">{valueFormatter(selectionAnalysis.maxPrice)}</strong></span>
+                                <span>TB: <strong>{valueFormatter(selectionAnalysis.avgClose)}</strong></span>
+                                <span>
+                                    Biến động:
+                                    <strong className={selectionAnalysis.priceChange >= 0 ? 'text-green-600 ml-1' : 'text-red-600 ml-1'}>
+                                        {selectionAnalysis.priceChange >= 0 ? '+' : ''}{valueFormatter(selectionAnalysis.priceChange)}
+                                        ({selectionAnalysis.priceChangePercent >= 0 ? '+' : ''}{selectionAnalysis.priceChangePercent.toFixed(2)}%)
+                                    </strong>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Main Chart Canvas */}
             <div
