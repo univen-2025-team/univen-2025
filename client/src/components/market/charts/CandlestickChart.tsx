@@ -15,6 +15,7 @@ type CandlestickChartProps = {
     data: CandleDataPoint[];
     valueFormatter: (value: number) => string;
     onLoadMore?: (direction: 'left' | 'right') => void;
+    onNewsFilter?: (range: { start: string, end: string }) => void;
 };
 
 const COLORS = {
@@ -37,7 +38,7 @@ const COLORS = {
 
 const TIMELINE_HEIGHT = 50;
 
-export default function CandlestickChart({ data, valueFormatter, onLoadMore }: CandlestickChartProps) {
+export default function CandlestickChart({ data, valueFormatter, onLoadMore, onNewsFilter }: CandlestickChartProps) {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const timelineCanvasRef = useRef<HTMLCanvasElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
@@ -857,8 +858,13 @@ export default function CandlestickChart({ data, valueFormatter, onLoadMore }: C
                         <button
                             className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
                             onClick={() => {
-                                // To be implemented
-                                console.log('Tổng hợp tin tức');
+                                if (selectionAnalysis && onNewsFilter) {
+                                    // Extract dates (YYYY-MM-DD)
+                                    // time format is likely "YYYY-MM-DD HH:mm..."
+                                    const start = selectionAnalysis.startTime.split(' ')[0];
+                                    const end = selectionAnalysis.endTime.split(' ')[0];
+                                    onNewsFilter({ start, end });
+                                }
                                 setContextMenu(null);
                             }}
                         >
