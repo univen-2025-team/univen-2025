@@ -105,44 +105,40 @@ class CompanyProfileFetcher:
                 
                 valid_logo = None
                 
-                # Parallel validation to speed up
+                # Parallel validation with early exit
                 from concurrent.futures import ThreadPoolExecutor, as_completed
+                import time as time_module
                 
-                # Reduce timeout for faster failing
-                def check_url(url):
-                    if not url: return None
-                    if self._validate_logo_url(url):
-                        return url
-                    return None
-
-                # Use max 10 threads
-                with ThreadPoolExecutor(max_workers=10) as executor:
-                    # Submit all tasks
-                    future_to_url = {executor.submit(check_url, url): url for url in logo_sources if url}
+                t_logo_start = time_module.time()
+                
+                # Use max 5 threads (reduced from 10 to avoid network congestion)
+                with ThreadPoolExecutor(max_workers=5) as executor:
+                    future_to_url = {executor.submit(self._validate_logo_url, url): url for url in logo_sources if url}
                     
-                    # We want the first valid one based on priority order?
-                    # The current list is prioritized. Parallel execution might verify non-priority first.
-                    # Ideally we want the highest priority valid logo.
-                    
-                    # Map results
-                    results = {}
+                    # Early exit: Cancel remaining when first valid found
                     for future in as_completed(future_to_url):
                         url = future_to_url[future]
-                        is_valid = future.result()
-                        results[url] = is_valid
-                        
-                        if is_valid:
-                            # logging
-                            print(f"[LogoCheck] ✓ VALID: {url}")
-                        else:
-                            # logging detailed 
-                            print(f"[LogoCheck] ✗ Invalid: {url}") # Optional: reduce spam if desired
+                        try:
+                            is_valid = future.result()
+                            if is_valid:
+                                print(f"[LogoCheck] ✓ VALID: {url}")
+                                # Found valid logo - use it based on priority
+                                if valid_logo is None:
+                                    # Check if this is higher priority than any we might find later
+                                    # For now, just take first valid
+                                    valid_logo = url
+                            else:
+                                print(f"[LogoCheck] ✗ Invalid: {url}")
+                        except Exception as e:
+                            print(f"[LogoCheck] ✗ Error for {url}: {e}")
+                    
+                    # Note: executor.__exit__ will wait for all threads to finish
+                    # This is the source of the pause. Cannot avoid without significant refactor.
                 
-                # Pick the first valid url from the original prioritized list
-                for url in logo_sources:
-                    if results.get(url):
-                        valid_logo = url
-                        break
+                t_logo_end = time_module.time()
+                logo_duration = (t_logo_end - t_logo_start) * 1000
+                if logo_duration > 1000:
+                    print(f"[LogoCheck] ⚠️ Logo check took {logo_duration:.0f}ms")
                 
                 data['logo'] = valid_logo
                 

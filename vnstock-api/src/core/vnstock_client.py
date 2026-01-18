@@ -9,6 +9,7 @@ import itertools
 class VnstockClient:
     _instance = None
     _lock = threading.Lock()
+    _stats_lock = threading.Lock()  # Separate lock for stats to avoid blocking
     
     # Configuration
     MAX_RETRIES = 20  # Max retries for transient errors
@@ -33,7 +34,7 @@ class VnstockClient:
         # Cycle iterator for round robin
         self._key_cycle = itertools.cycle(self.api_keys)
         
-        print(f"[VnstockClient] Initialized with {len(self.api_keys)} keys. Strategy: Round Robin with Rate Limit Handling")
+        print(f"[VnstockClient] Initialized with {len(self.api_keys)} keys. Strategy: Round Robin with Rate Limit Handling (Thread-Safe)")
 
     @staticmethod
     def get_instance():
@@ -54,6 +55,7 @@ class VnstockClient:
         Round Robin: Get next available key.
         If a key is in cooldown, skip to next.
         If all keys are in cooldown, wait for the soonest one.
+        MUST be called with self._lock held.
         """
         now = time.time()
         
@@ -80,10 +82,28 @@ class VnstockClient:
     def _mark_key_rate_limited(self, key):
         """
         Mark a key as rate limited - put it in cooldown for 65 seconds.
+        Thread-safe.
         """
         with self._lock:
             self._key_cooldowns[key] = time.time() + self.RATE_LIMIT_WAIT
             print(f"[VnstockClient] Key {key[:20]}... marked as RATE LIMITED. Cooldown for {self.RATE_LIMIT_WAIT}s")
+
+    def _update_stats_and_log(self, key, attempt):
+        """
+        Update request counter and print status. Thread-safe.
+        """
+        with self._stats_lock:
+            now = time.time()
+            stats = self._key_stats[key]
+            if now - stats['minute_start'] >= 60:
+                # Reset counter for this key every minute
+                stats['count'] = 0
+                stats['minute_start'] = now
+            stats['count'] += 1
+            
+            # Build status string for all keys
+            key_status = " | ".join([f"{k[:8]}:{self._key_stats[k]['count']}/60" for k in self.api_keys])
+            print(f"[VnstockClient] Attempt {attempt}/{self.MAX_RETRIES} | Active: {key[:15]}... | [{key_status}]")
 
     def _is_rate_limit_error(self, e):
         """
@@ -131,14 +151,21 @@ class VnstockClient:
         """
         Execute API call with round-robin key selection.
         Handles rate limiting by waiting 60s when detected.
+        Thread-safe for concurrent job execution.
         """
         attempt = 0
         last_error = None
         
         while attempt < self.MAX_RETRIES:
-            # Get next available key (may wait if all in cooldown)
+            # Get next available key - lock held for minimum time
+            t_lock_start = time.time()
             with self._lock:
                 key, wait_time = self._get_next_available_key()
+            t_lock_end = time.time()
+            lock_duration = (t_lock_end - t_lock_start) * 1000  # ms
+            
+            if lock_duration > 100:  # Log if lock took >100ms
+                print(f"[VnstockClient] ⚠️ Lock contention detected: {lock_duration:.0f}ms")
             
             if wait_time > 0:
                 print(f"[VnstockClient] All keys in cooldown. Waiting {wait_time:.1f}s...")
@@ -146,18 +173,11 @@ class VnstockClient:
             
             attempt += 1
             
-            # Update request counter for this key
-            now = time.time()
-            stats = self._key_stats[key]
-            if now - stats['minute_start'] >= 60:
-                # Reset counter for this key every minute
-                stats['count'] = 0
-                stats['minute_start'] = now
-            stats['count'] += 1
+            # Update stats (thread-safe)
+            self._update_stats_and_log(key, attempt)
             
-            # Build status string for all keys
-            key_status = " | ".join([f"{k[:8]}:{self._key_stats[k]['count']}/60" for k in self.api_keys])
-            print(f"[VnstockClient] Attempt {attempt}/{self.MAX_RETRIES} | Active: {key[:15]}... | [{key_status}]")
+            # Measure API call time
+            t_api_start = time.time()
             
             try:
                 result = func(*args, **kwargs)
