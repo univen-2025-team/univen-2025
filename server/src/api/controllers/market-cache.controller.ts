@@ -7,6 +7,7 @@ import { Request, Response, NextFunction } from 'express';
 import { OkResponse } from '@/response/success.response';
 import { NotFoundErrorResponse, BadRequestErrorResponse } from '@/response/error.response';
 import MarketCacheService from '@/services/market-cache.service';
+import StockNewsService from '@/services/stock-news.service';
 
 export default class MarketCacheController {
     /**
@@ -230,6 +231,35 @@ export default class MarketCacheController {
                     symbol: symbol.toUpperCase(),
                     history,
                     total: history.length
+                }
+            }).send(res);
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    /**
+     * GET /api/cached/news/:symbol
+     * Get stock news
+     */
+    static async getStockNews(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { symbol } = req.params;
+
+            if (!symbol) {
+                throw new BadRequestErrorResponse({
+                    message: 'Stock symbol is required'
+                });
+            }
+
+            const news = await StockNewsService.getInstance().getNews(symbol);
+
+            new OkResponse({
+                message: 'Stock news retrieved successfully',
+                metadata: {
+                    symbol: symbol.toUpperCase(),
+                    news,
+                    total: news.length
                 }
             }).send(res);
         } catch (error) {

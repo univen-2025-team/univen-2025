@@ -2,6 +2,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 from src.jobs.daily_sync import daily_sync_job
 from src.jobs.vn30_history_sync import sync_vn30_daily
+from src.jobs.news_sync import check_and_enqueue_news_sync
 import time
 
 class Scheduler:
@@ -15,6 +16,15 @@ class Scheduler:
             trigger=CronTrigger(hour=1, minute=0),
             id='daily_sync_job',
             name='Daily Data Sync',
+            replace_existing=True
+        )
+
+        # Add Daily News Sync Check (VN30 + MARKET) at 1:30 AM
+        self.scheduler.add_job(
+            check_and_enqueue_news_sync,
+            trigger=CronTrigger(hour=1, minute=30),
+            id='daily_news_sync_job',
+            name='Daily News Sync Check',
             replace_existing=True
         )
         

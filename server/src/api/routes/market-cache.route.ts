@@ -29,4 +29,7 @@ router.get('/details/:symbol', MarketCacheController.getStockDetails);
 // GET /api/cached/stock/:symbol/intraday - Get stock intraday data
 router.get('/stock/:symbol/intraday', MarketCacheController.getStockIntraday);
 
+// GET /api/cached/news/:symbol - Get stock news
+router.get('/news/:symbol', MarketCacheController.getStockNews);
+
 export default router;

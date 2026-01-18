@@ -17,6 +17,7 @@ from src.config.app_config import AppConfig
 from src.jobs.scheduler import Scheduler
 from src.jobs.daily_sync import check_startup_sync
 from src.jobs.vn30_history_sync import startup_vn30_sync
+from src.jobs.news_sync import check_and_enqueue_news_sync
 from src.services.fetchers.stock_history import StockHistoryFetcher
 from src.services.syncers.stock_history import StockHistorySyncer
 from src.worker import StockSyncWorker
@@ -62,6 +63,13 @@ async def startup_event():
             startup_vn30_sync()
         except Exception as e:
             print(f"VN30 startup sync warning: {e}")
+            
+        # Run News Sync Check on Startup (as requested)
+        try:
+            print("Running startup News Sync Check...")
+            check_and_enqueue_news_sync()
+        except Exception as e:
+            print(f"News startup sync warning: {e}")
             
     except Exception as e:
         print(f"Failed to initialize: {e}")

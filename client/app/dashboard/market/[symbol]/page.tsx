@@ -1,16 +1,17 @@
 'use client';
 
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useRouter, useParams } from 'next/navigation';
 import {
   ArrowLeft, Building2, Globe, Users, TrendingUp, TrendingDown,
-  DollarSign, Maximize2, Minimize2, ShoppingCart, X, History, Wallet
+  DollarSign, Maximize2, Minimize2, ShoppingCart, X, History, Wallet, Newspaper
 } from 'lucide-react';
 import Image from 'next/image';
 import LoadingSpinner from '@/components/dashboard/LoadingSpinner';
 import ErrorMessage from '@/components/common/ErrorMessage';
 import CandlestickChart from '@/components/market/charts/CandlestickChart';
+import NewsFeed from '@/components/market/NewsFeed';
 import { formatPrice } from '@/components/market/utils';
 import api from '@/lib/axios';
 import { useAppSelector } from '@/lib/store/hooks';
@@ -38,6 +39,23 @@ const StockDetailPage = () => {
 
   const TIME_RANGES = ['1D', '1W', '1M'];
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [newsFilterRange, setNewsFilterRange] = useState<{ start: Date; end: Date } | null>(null);
+  const newsSectionRef = useRef<HTMLDivElement>(null);
+
+  const handleNewsFilter = ({ start, end }: { start: string; end: string }) => {
+    setNewsFilterRange({
+      start: new Date(start),
+      end: new Date(end)
+    });
+    setIsFullscreen(false);
+
+    // Small timeout to allow modal close render
+    setTimeout(() => {
+      if (newsSectionRef.current) {
+        newsSectionRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 100);
+  };
 
   // Fetch Stock Details
   useEffect(() => {
@@ -304,7 +322,13 @@ const StockDetailPage = () => {
               <LoadingSpinner />
             </div>
           ) : candlestickData.length > 0 ? (
-            <CandlestickChart key="normal" data={candlestickData} valueFormatter={formatPrice} onLoadMore={handleLoadMore} />
+            <CandlestickChart
+              key="normal"
+              data={candlestickData}
+              valueFormatter={formatPrice}
+              onLoadMore={handleLoadMore}
+              onNewsFilter={handleNewsFilter}
+            />
           ) : (
             <div className="flex items-center justify-center h-full text-gray-500">
               Không có dữ liệu biểu đồ
@@ -347,7 +371,15 @@ const StockDetailPage = () => {
             </div>
             {/* Chart Body */}
             <div className="flex-1 min-h-0">
-              {chartLoading ? (<LoadingSpinner />) : (<CandlestickChart key="fullscreen" data={candlestickData} valueFormatter={formatPrice} onLoadMore={handleLoadMore} />)}
+              {chartLoading ? (<LoadingSpinner />) : (
+                <CandlestickChart
+                  key="fullscreen"
+                  data={candlestickData}
+                  valueFormatter={formatPrice}
+                  onLoadMore={handleLoadMore}
+                  onNewsFilter={handleNewsFilter}
+                />
+              )}
             </div>
             {/* Footer Actions */}
             <div className="px-6 py-3 border-t border-gray-100 bg-gray-50 flex justify-end gap-4">
@@ -480,6 +512,19 @@ const StockDetailPage = () => {
                 </div>
               </div>
             )}
+          </div>
+
+          {/* News Section */}
+          <div ref={newsSectionRef} className={`${cardClassName} overflow-hidden scroll-mt-20`}>
+            <h3 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
+              <Newspaper className="w-5 h-5 text-orange-500" />
+              Tin tức & Sự kiện
+            </h3>
+            <NewsFeed
+              symbol={symbol}
+              filterRange={newsFilterRange}
+              onClearFilter={() => setNewsFilterRange(null)}
+            />
           </div>
 
         </div>
