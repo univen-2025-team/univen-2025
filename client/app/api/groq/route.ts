@@ -1,6 +1,6 @@
 import Groq from 'groq-sdk'
 import { NextRequest, NextResponse } from 'next/server'
-import { GROQ_API_KEY } from '@/config/app'
+import { GROQ_API_KEY } from '@/config/server'
 
 const groq = new Groq({
   apiKey: GROQ_API_KEY,
