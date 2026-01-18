@@ -590,4 +590,29 @@ export default class MarketCacheService {
             return [];
         }
     }
+
+    /**
+     * Get stock news from vnstock-api
+     */
+    static async getStockNews(symbol: string, limit: number = 20): Promise<any> {
+        try {
+            const response = await axios.get(`${VNSTOCK_API_URL}/news/${symbol.toUpperCase()}`, {
+                params: { limit },
+                timeout: 15000
+            });
+            
+            if (response.data && response.data.status === 'success') {
+                return {
+                    symbol: response.data.symbol,
+                    items: response.data.data || [],
+                    total: response.data.total || 0
+                };
+            }
+            
+            return { symbol: symbol.toUpperCase(), items: [], total: 0 };
+        } catch (error) {
+            this.logger.error(`Error getting stock news for ${symbol}`, error as any);
+            return { symbol: symbol.toUpperCase(), items: [], total: 0 };
+        }
+    }
 }

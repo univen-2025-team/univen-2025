@@ -81,6 +81,58 @@ class SyncRequest(BaseModel):
 def health_check():
     return {"status": "ok", "service": "vnstock-api"}
 
+@app.get("/news/{symbol}")
+def get_stock_news(symbol: str, limit: int = 20):
+    """
+    Get news for a stock symbol.
+    Returns latest news articles related to the stock.
+    """
+    try:
+        symbol = symbol.upper()
+        print(f"Fetching news for {symbol}")
+        
+        from vnstock import Vnstock
+        stock = Vnstock().stock(symbol=symbol, source='VCI')
+        news_df = stock.company.news()
+        
+        if news_df is None or news_df.empty:
+            return {"status": "success", "data": [], "symbol": symbol}
+        
+        # Convert to list of dicts and limit results
+        news_list = news_df.head(limit).to_dict('records')
+        
+        # Transform data to cleaner format
+        result = []
+        for item in news_list:
+            # Convert timestamp (milliseconds) to readable format
+            pub_date = item.get('public_date')
+            if pub_date:
+                from datetime import datetime
+                pub_datetime = datetime.fromtimestamp(pub_date / 1000)
+                formatted_date = pub_datetime.strftime('%Y-%m-%d %H:%M')
+            else:
+                formatted_date = None
+                
+            result.append({
+                'id': item.get('id') or item.get('news_id'),
+                'title': item.get('news_title', ''),
+                'shortContent': item.get('news_short_content', ''),
+                'fullContent': item.get('news_full_content', ''),
+                'imageUrl': item.get('news_image_url', ''),
+                'sourceLink': item.get('news_source_link', ''),
+                'publishedAt': formatted_date,
+                'publishedTimestamp': pub_date,
+                'closePrice': item.get('close_price'),
+                'refPrice': item.get('ref_price'),
+                'priceChangePct': item.get('price_change_pct'),
+            })
+        
+        return {"status": "success", "data": result, "symbol": symbol, "total": len(result)}
+        
+    except Exception as e:
+        print(f"Error fetching news for {symbol}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 @app.get("/sync-stock")
 def sync_stock(symbol: str):
     """

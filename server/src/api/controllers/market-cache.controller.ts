@@ -236,4 +236,30 @@ export default class MarketCacheController {
             next(error);
         }
     }
+
+    /**
+     * GET /api/market/news/:symbol
+     * Get stock news from vnstock-api
+     */
+    static async getStockNews(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { symbol } = req.params;
+            const limit = parseInt(req.query.limit as string) || 20;
+
+            if (!symbol) {
+                throw new BadRequestErrorResponse({
+                    message: 'Stock symbol is required'
+                });
+            }
+
+            const news = await MarketCacheService.getStockNews(symbol, limit);
+
+            new OkResponse({
+                message: 'Stock news retrieved successfully',
+                metadata: news
+            }).send(res);
+        } catch (error) {
+            next(error);
+        }
+    }
 }

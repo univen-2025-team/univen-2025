@@ -346,3 +346,51 @@ export async function getVN30History(
         return [];
     }
 }
+
+/**
+ * Stock News Item interface
+ */
+export interface StockNewsItem {
+    id: string;
+    title: string;
+    shortContent: string;
+    fullContent: string;
+    imageUrl: string;
+    sourceLink: string;
+    publishedAt: string;
+    publishedTimestamp: number;
+    closePrice: number;
+    refPrice: number;
+    priceChangePct: number;
+}
+
+/**
+ * Get stock news by symbol
+ */
+export async function getStockNews(
+    symbol: string,
+    limit: number = 20
+): Promise<{ symbol: string; items: StockNewsItem[]; total: number }> {
+    try {
+        const response = await fetch(
+            `${API_BASE_URL}/market/news/${symbol.toUpperCase()}?limit=${limit}`,
+            {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            }
+        );
+
+        if (!response.ok) {
+            console.error('Failed to fetch stock news:', response.statusText);
+            return { symbol: symbol.toUpperCase(), items: [], total: 0 };
+        }
+
+        const result = await response.json();
+        return result.metadata || { symbol: symbol.toUpperCase(), items: [], total: 0 };
+    } catch (error) {
+        console.error('Error fetching stock news:', error);
+        return { symbol: symbol.toUpperCase(), items: [], total: 0 };
+    }
+}
