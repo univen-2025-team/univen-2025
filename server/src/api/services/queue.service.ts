@@ -1,6 +1,7 @@
 import Redis from 'ioredis';
 import LoggerService from './logger.service';
 import { REDIS_CONFIG } from '@/configs/redis.config';
+import StockNewsModel from '../models/stock-news.model';
 
 class QueueService {
     private static instance: QueueService;
@@ -102,8 +103,6 @@ class QueueService {
             }
 
             // Find existing records in DB
-            const StockNewsModel = require('../models/stock-news.model').default;
-
             const existingDocs = await StockNewsModel.find({
                 symbol: symbol.toUpperCase(),
                 date: { $in: datesToCheck }

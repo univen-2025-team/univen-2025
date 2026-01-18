@@ -2,6 +2,7 @@
 import time
 import threading
 import os
+import sys
 from vnstock import Vnstock
 import itertools
 
@@ -10,15 +11,11 @@ class VnstockClient:
     _lock = threading.Lock()
     
     # Configuration
-    _base_delay = 10.0 # Default seconds per key/slot
+    MAX_RETRIES = 20  # Max retries for transient errors
+    RETRY_BACKOFF = 2.0  # Seconds to wait between normal retries
+    RATE_LIMIT_WAIT = 65  # Seconds to wait when rate limited (vnstock says 60s)
     
     def __init__(self):
-        # Load delay from env
-        try:
-            self._base_delay = float(os.getenv('VNSTOCK_RATE_LIMIT_DELAY', '10.0'))
-        except:
-            self._base_delay = 10.0
-            
         # Load API keys from env or use default
         # Support both plural (KEYS) and singular (KEY) naming
         api_keys_str = os.getenv('VNSTOCK_API_KEYS', os.getenv('VNSTOCK_API_KEY', ''))
@@ -26,14 +23,17 @@ class VnstockClient:
         
         if not self.api_keys:
             self.api_keys = ['default']
-            
-        # Initialize slots: {key: last_call_time}
-        self._slots = {k: 0.0 for k in self.api_keys}
         
-        # Cycle iterator for simple rotation
+        # Track which keys are in cooldown: {key: cooldown_until_timestamp}
+        self._key_cooldowns = {k: 0.0 for k in self.api_keys}
+        
+        # Request counter per key per minute: {key: {'count': int, 'minute_start': float}}
+        self._key_stats = {k: {'count': 0, 'minute_start': time.time()} for k in self.api_keys}
+            
+        # Cycle iterator for round robin
         self._key_cycle = itertools.cycle(self.api_keys)
         
-        print(f"[VnstockClient] Initialized with {len(self.api_keys)} keys. Base delay: {self._base_delay}s")
+        print(f"[VnstockClient] Initialized with {len(self.api_keys)} keys. Strategy: Round Robin with Rate Limit Handling")
 
     @staticmethod
     def get_instance():
@@ -47,93 +47,161 @@ class VnstockClient:
         """
         Returns the stock object builder. 
         """
-        # Note: stock() builder doesn't trigger API call, so no rate limit needed here.
-        # However, if we need to pass a key to Vnstock, we might need to do it here or during call.
-        # Vnstock(source='...').stock(...)
         return Vnstock(source=source, symbol=symbol)
 
-    def _get_best_slot(self):
+    def _get_next_available_key(self):
         """
-        Finds the best available key (ready now or soonest).
-        Returns (key, wait_time)
+        Round Robin: Get next available key.
+        If a key is in cooldown, skip to next.
+        If all keys are in cooldown, wait for the soonest one.
         """
         now = time.time()
-        best_key = None
+        
+        # Try to find a ready key (check all keys once)
+        for _ in range(len(self.api_keys)):
+            key = next(self._key_cycle)
+            cooldown_until = self._key_cooldowns.get(key, 0)
+            
+            if now >= cooldown_until:
+                return key, 0  # Ready immediately
+        
+        # All keys in cooldown - find the one that will be ready soonest
+        soonest_key = None
         min_wait = float('inf')
         
-    def _get_best_slot(self):
-        """
-        Finds the next key in rotation strategy (Round Robin).
-        Returns (key, wait_time)
-        """
-        now = time.time()
+        for key, cooldown_until in self._key_cooldowns.items():
+            wait = cooldown_until - now
+            if wait < min_wait:
+                min_wait = wait
+                soonest_key = key
         
-        # Strict Round Robin: Always pick next key
-        # This ensures even distribution and avoids 'stuck on first key' when calls are slow.
-        key = next(self._key_cycle)
-        
-        last_time = self._slots[key]
-        elapsed = now - last_time
-        wait = max(0, self._base_delay - elapsed)
-        
-        return key, wait
+        return soonest_key, max(0, min_wait)
 
-    def wait_for_rate_limit(self):
+    def _mark_key_rate_limited(self, key):
         """
-        Blocks until a slot is available.
-        Returns the key that was reserved.
+        Mark a key as rate limited - put it in cooldown for 65 seconds.
         """
         with self._lock:
-            key, wait_time = self._get_best_slot()
-            
-            if wait_time > 0:
-                print(f"[RateLimit] Slot busy (Key: {key}). Sleeping {wait_time:.2f}s...")
-                time.sleep(wait_time)
-            else:
-                print(f"[RateLimit] Key '{key}' ready. Sleeping 0s.")
-            
-            # Update last call time for this key
-            self._slots[key] = time.time()
-            return key
+            self._key_cooldowns[key] = time.time() + self.RATE_LIMIT_WAIT
+            print(f"[VnstockClient] Key {key[:20]}... marked as RATE LIMITED. Cooldown for {self.RATE_LIMIT_WAIT}s")
+
+    def _is_rate_limit_error(self, e):
+        """
+        Check if this exception is a rate limit error from vnstock.
+        """
+        error_str = str(e).lower()
+        rate_limit_indicators = [
+            'rate limit',
+            'ratelimit',
+            'giới hạn api',
+            '60/60',
+            'ratelimitexceeded',
+        ]
+        return any(indicator in error_str for indicator in rate_limit_indicators)
+
+    def _is_no_data_error(self, e):
+        """
+        Check if error indicates "no data available" (should skip, not retry).
+        """
+        error_str = str(e).lower()
+        no_data_indicators = [
+            "'nonetype' object has no attribute",
+            "no data",
+            "empty",
+            "not found",
+        ]
+        return any(indicator in error_str for indicator in no_data_indicators)
+
+    def _unwrap_retry_error(self, e):
+        """
+        Unwrap tenacity RetryError to get the real exception.
+        """
+        try:
+            from tenacity import RetryError
+            if isinstance(e, RetryError):
+                if e.last_attempt:
+                    real_e = e.last_attempt.exception()
+                    if real_e:
+                        return real_e
+        except ImportError:
+            pass
+        return e
 
     def call(self, func, *args, **kwargs):
         """
-        Wrapper to execute an API call with rate limiting.
-        Injects 'api_key' into kwargs if applicable (and if func accepts it).
+        Execute API call with round-robin key selection.
+        Handles rate limiting by waiting 60s when detected.
         """
-        key = self.wait_for_rate_limit()
+        attempt = 0
+        last_error = None
         
-        # Optional: Inject key if it's not the default placeholder
-        # This depends on if the content of 'func' can accept it.
-        # Since 'func' is usually a lambda `lambda: stock.company.news()`, we can't easily inject.
-        # But we achieved the timing distribution.
-        
-        try:
-            return func(*args, **kwargs)
-        except Exception as e:
-            # Unwrap tenacity RetryError if present
+        while attempt < self.MAX_RETRIES:
+            # Get next available key (may wait if all in cooldown)
+            with self._lock:
+                key, wait_time = self._get_next_available_key()
+            
+            if wait_time > 0:
+                print(f"[VnstockClient] All keys in cooldown. Waiting {wait_time:.1f}s...")
+                time.sleep(wait_time)
+            
+            attempt += 1
+            
+            # Update request counter for this key
+            now = time.time()
+            stats = self._key_stats[key]
+            if now - stats['minute_start'] >= 60:
+                # Reset counter for this key every minute
+                stats['count'] = 0
+                stats['minute_start'] = now
+            stats['count'] += 1
+            
+            # Build status string for all keys
+            key_status = " | ".join([f"{k[:8]}:{self._key_stats[k]['count']}/60" for k in self.api_keys])
+            print(f"[VnstockClient] Attempt {attempt}/{self.MAX_RETRIES} | Active: {key[:15]}... | [{key_status}]")
+            
             try:
-                # Attempt to import tenacity (it's a dependency of vnstock)
-                from tenacity import RetryError
-                if isinstance(e, RetryError):
-                    # Try to get the underlying exception from the last attempt
-                    if e.last_attempt:
-                        try:
-                            # Re-raise the underlying exception to be caught/logged below
-                            # or just extract it
-                            real_e = e.last_attempt.exception()
-                            if real_e:
-                                print(f"[VnstockClient] Underlying Error (Key: {key}): {type(real_e).__name__}: {real_e}")
-                                # Use the real exception for traceback
-                                e = real_e
-                        except:
-                            pass
-            except ImportError:
-                pass
-
-            import traceback
-            # Only print traceback if it's NOT a standard "No data" or expected error? 
-            # For now, print all to debug the AttributeError.
-            print(f"[VnstockClient] API Call Error (Key: {key}): {e}")
-            # traceback.print_exc() # detailed stack trace
-            return None
+                result = func(*args, **kwargs)
+                if result is not None:
+                    return result
+                else:
+                    # Result is None - could be "no data" situation
+                    print(f"[VnstockClient] Call returned None (Key: {key[:20]})")
+                    return None  # Don't retry for None results
+                    
+            except SystemExit as e:
+                # vnstock calls sys.exit() on rate limit - catch it!
+                print(f"[VnstockClient] Caught SystemExit (likely rate limit): {e}")
+                
+                if self._is_rate_limit_error(e):
+                    self._mark_key_rate_limited(key)
+                    # Continue to next iteration (will use different key or wait)
+                    continue
+                else:
+                    # Unknown SystemExit - re-raise
+                    raise
+                    
+            except Exception as e:
+                real_e = self._unwrap_retry_error(e)
+                last_error = real_e
+                
+                # Check if rate limited
+                if self._is_rate_limit_error(real_e):
+                    print(f"[VnstockClient] Rate limit detected (Key: {key[:20]})")
+                    self._mark_key_rate_limited(key)
+                    continue  # Try with next key
+                
+                # Check if this is a "no data" error (don't retry)
+                if self._is_no_data_error(real_e):
+                    print(f"[VnstockClient] No data error (Key: {key[:20]}): {type(real_e).__name__}: {real_e}")
+                    return None  # Skip, don't retry
+                
+                # Transient error - retry with next key
+                print(f"[VnstockClient] Transient error (Key: {key[:20]}): {type(real_e).__name__}: {real_e}")
+                
+                if attempt < self.MAX_RETRIES:
+                    print(f"[VnstockClient] Retrying in {self.RETRY_BACKOFF}s...")
+                    time.sleep(self.RETRY_BACKOFF)
+        
+        # Exhausted all retries
+        print(f"[VnstockClient] Failed after {self.MAX_RETRIES} attempts. Last error: {last_error}")
+        return None
