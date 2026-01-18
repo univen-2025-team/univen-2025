@@ -48,28 +48,39 @@ async def startup_event():
         # Start Worker
         worker.start()
         
-        # Run startup syncs in background (not awaiting to avoid blocking startup)
-        # However, for simplicity here, we can run them sequentially or trust scheduler
-        # check_startup_sync() is usually fast or should be async.
-        # Let's run basic startup syncs.
-        try:
-             check_startup_sync()
-        except Exception as e:
-            print(f"Startup sync warning: {e}")
-
-        # VN30 sync might take time, maybe skip or run in thread if too long
-        # mostly it's fast if data exists
-        try:
-            startup_vn30_sync()
-        except Exception as e:
-            print(f"VN30 startup sync warning: {e}")
-            
-        # Run News Sync Check on Startup (as requested)
-        try:
-            print("Running startup News Sync Check...")
-            check_and_enqueue_news_sync()
-        except Exception as e:
-            print(f"News startup sync warning: {e}")
+        # Run startup syncs in BACKGROUND THREADS (non-blocking)
+        import threading
+        
+        def run_startup_sync():
+            try:
+                print("[Background] Starting company profile sync...")
+                check_startup_sync()
+                print("[Background] Company profile sync completed.")
+            except Exception as e:
+                print(f"[Background] Startup sync error: {e}")
+        
+        def run_vn30_sync():
+            try:
+                print("[Background] Starting VN30 history sync...")
+                startup_vn30_sync()
+                print("[Background] VN30 sync completed.")
+            except Exception as e:
+                print(f"[Background] VN30 sync error: {e}")
+        
+        def run_news_sync():
+            try:
+                print("[Background] Starting News sync check...")
+                check_and_enqueue_news_sync()
+                print("[Background] News sync check completed.")
+            except Exception as e:
+                print(f"[Background] News sync error: {e}")
+        
+        # Start all syncs in parallel background threads
+        threading.Thread(target=run_startup_sync, daemon=True, name="StartupSync").start()
+        threading.Thread(target=run_vn30_sync, daemon=True, name="VN30Sync").start()
+        threading.Thread(target=run_news_sync, daemon=True, name="NewsSync").start()
+        
+        print("All startup sync tasks launched in background threads.")
             
     except Exception as e:
         print(f"Failed to initialize: {e}")

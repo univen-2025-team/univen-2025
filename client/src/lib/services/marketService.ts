@@ -196,3 +196,29 @@ export const fetchStockDetail = async (
         };
     }
 };
+
+export const fetchStockNews = async (symbol: string): Promise<any> => {
+    try {
+        const apiBaseUrl = API_URL;
+        const response = await fetch(`${apiBaseUrl}/market/news/${symbol}`, {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' },
+            cache: 'no-store'
+        });
+
+        if (!response.ok) throw new Error('Failed to fetch news');
+
+        const result = await response.json();
+
+        if (result.statusCode === 200 && result.metadata) {
+            return {
+                success: true,
+                data: result.metadata
+            };
+        }
+        return { success: false, error: result.message };
+    } catch (error) {
+        console.error('Fetch news error:', error);
+        return { success: false, error: 'Network error' };
+    }
+};
