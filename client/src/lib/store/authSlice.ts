@@ -218,11 +218,23 @@ export const logoutUser = createAsyncThunk('auth/logout', async () => {
 
 export const getCurrentUser = createAsyncThunk(
     'auth/getCurrentUser',
-    async (_, { rejectWithValue }) => {
+    async (_, { rejectWithValue, getState }) => {
+        // Check if we have a token first
+        const accessToken = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+        if (!accessToken) {
+            return rejectWithValue('Not authenticated');
+        }
+
         try {
             const profile = await userApi.getProfile();
             return buildUserFromProfile(profile);
         } catch (error: unknown) {
+            // Don't log 400/401 errors (expected when not authenticated)
+            const axiosError = error as { response?: { status?: number; data?: { message?: string; error?: string } } };
+            if (axiosError.response?.status === 400 || axiosError.response?.status === 401) {
+                return rejectWithValue('Not authenticated');
+            }
+
             console.error('Get current user error:', error);
 
             // Extract error message from API response

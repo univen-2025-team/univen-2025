@@ -23,6 +23,7 @@ export default function RegisterPage() {
       email: '',
       password: '',
       confirmPassword: '',
+      user_dayOfBirth: '',
       terms: false,
     },
     validationSchema: signUpSchema,
@@ -92,6 +93,42 @@ export default function RegisterPage() {
                     <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                   </svg>
                   {formik.errors.user_fullName}
+                </p>
+              )}
+            </div>
+
+            {/* Date of Birth */}
+            <div>
+              <label htmlFor="user_dayOfBirth" className="block text-sm font-semibold text-gray-700 mb-2">
+                Ngày sinh <span className="text-error">*</span>
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                </div>
+                <input
+                  id="user_dayOfBirth"
+                  name="user_dayOfBirth"
+                  type="date"
+                  max={new Date().toISOString().split('T')[0]}
+                  value={formik.values.user_dayOfBirth}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  className={`block w-full pl-10 pr-3 py-3 border ${
+                    formik.touched.user_dayOfBirth && formik.errors.user_dayOfBirth
+                      ? 'border-error focus:ring-error'
+                      : 'border-gray-300 focus:ring-ring'
+                  } rounded-lg focus:outline-none focus:ring-2 focus:border-transparent transition-all text-gray-900 placeholder-gray-400`}
+                />
+              </div>
+              {formik.touched.user_dayOfBirth && formik.errors.user_dayOfBirth && (
+                <p className="mt-2 text-sm text-error flex items-center">
+                  <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                  </svg>
+                  {formik.errors.user_dayOfBirth}
                 </p>
               )}
             </div>

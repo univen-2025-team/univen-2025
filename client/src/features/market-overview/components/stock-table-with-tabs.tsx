@@ -40,8 +40,8 @@ export function StockTableWithTabs({
     isInWatchlist,
     toggleWatchlist
 }: StockTableWithTabsProps) {
-    const formatNumber = (num: number) => num.toLocaleString('vi-VN');
-    const formatPrice = (price: number) => formatNumber(price) + ' VND';
+    const formatNumber = (num: number | undefined | null) => (num ?? 0).toLocaleString('vi-VN');
+    const formatPrice = (price: number | undefined | null) => formatNumber(price) + ' VND';
 
     const getChangeColor = (value: number) => {
         if (value > 0) return 'text-green-600';
@@ -179,8 +179,8 @@ export function StockTableWithTabs({
                                             stock.changePercent
                                         )}`}
                                     >
-                                        {stock.changePercent > 0 ? '+' : ''}
-                                        {stock.changePercent}%
+                                        {(stock.changePercent ?? 0) > 0 ? '+' : ''}
+                                        {stock.changePercent ?? 0}%
                                     </td>
                                     <td className="px-4 py-3 text-right text-gray-600 text-sm">
                                         {stock.previousClose

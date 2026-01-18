@@ -77,8 +77,8 @@ export function TopGainersLosers({
                             ) : (
                                 <TrendingDown className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                             )}
-                            {stock.changePercent > 0 ? '+' : ''}
-                            {stock.changePercent.toFixed(2)}%
+                            {(stock.changePercent ?? stock.change ?? 0) > 0 ? '+' : ''}
+                            {(stock.changePercent ?? stock.change ?? 0).toFixed(2)}%
                         </div>
                     </div>
 

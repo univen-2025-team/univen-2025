@@ -35,18 +35,27 @@ export default function LearnStockPage() {
         fetchStockData();
     }, [selectedStock]);
 
-    // Calculate percentage change: (price - previousClose) / previousClose * 100
-    const calculateChangePercent = () => {
-        if (!stockData || !stockData.previousClose) return 0;
-        return ((stockData.price - stockData.previousClose) / stockData.previousClose) * 100;
+    // Use changePercent from API directly, or calculate if previousClose is available
+    const getChangePercent = () => {
+        if (!stockData) return 0;
+        // API already provides changePercent
+        if (stockData.changePercent !== undefined) {
+            return stockData.changePercent;
+        }
+        // Fallback: calculate from previousClose if available
+        if (stockData.previousClose && stockData.previousClose > 0) {
+            return ((stockData.price - stockData.previousClose) / stockData.previousClose) * 100;
+        }
+        return 0;
     };
 
-    const changePercent = calculateChangePercent();
+    const changePercent = getChangePercent();
     const isPositive = changePercent >= 0;
 
     // Format price with thousand separator
+    // API returns price in thousands (e.g., 27.6 = 27,600 VND), multiply by 1000
     const formatPrice = (price: number) => {
-        return price.toLocaleString('vi-VN');
+        return (price * 1000).toLocaleString('vi-VN');
     };
 
     const handleGenerateLessons = async () => {
@@ -126,17 +135,6 @@ export default function LearnStockPage() {
                         <p className="text-sm text-muted-foreground mt-2">
                             From price movements
                         </p>
-                    </Card>
-
-                    <Card className="p-6 bg-card border-border">
-                        <h3 className="text-sm font-medium text-muted-foreground mb-2">
-                            Difficulty Level
-                        </h3>
-                        <div className="flex gap-2 mt-3">
-                            <span className="px-3 py-1 rounded-full text-xs font-medium bg-secondary text-secondary-foreground">
-                                Beginner
-                            </span>
-                        </div>
                     </Card>
                 </div>
             </div>

@@ -11,7 +11,9 @@ declare global {
             interface SignUpSchema
                 extends Required<
                     Pick<model.auth.UserSchema, 'user_fullName' | 'password' | 'email'>
-                > {}
+                > {
+                user_dayOfBirth?: Date | string;
+            }
 
             interface SignUpShop
                 extends Omit<model.shop.ShopSchema, 'shop_logo' | 'shop_userId'>,

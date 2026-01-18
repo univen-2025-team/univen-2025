@@ -46,6 +46,9 @@ export const signUpSchema = Yup.object({
     confirmPassword: Yup.string()
         .oneOf([Yup.ref('password')], 'Mật khẩu xác nhận không khớp')
         .required('Vui lòng xác nhận mật khẩu'),
+    user_dayOfBirth: Yup.date()
+        .max(new Date(), 'Ngày sinh không thể trong tương lai')
+        .required('Vui lòng nhập ngày sinh'),
     terms: Yup.boolean()
         .oneOf([true], 'Bạn phải đồng ý với điều khoản dịch vụ')
         .required('Bạn phải đồng ý với điều khoản dịch vụ'),

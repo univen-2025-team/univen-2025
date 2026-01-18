@@ -52,6 +52,10 @@ export const signUpSchema = userBase.pick({
     user_fullName: true,
     email: true,
     password: true
+}).extend({
+    user_dayOfBirth: z.string().or(z.date()).transform(val => new Date(val)).refine(date => date <= new Date(), {
+        message: 'Ngày sinh không thể trong tương lai'
+    })
 });
 export type SignUpSchema = z.infer<typeof signUpSchema>;
 
