@@ -212,7 +212,7 @@ export default class MarketCacheController {
     static async getStockIntraday(req: Request, res: Response, next: NextFunction) {
         try {
             const { symbol } = req.params;
-            const limit = parseInt(req.query.limit as string) || 300;
+            const filter = req.query.filter as string;
             const start = req.query.start as string;
             const end = req.query.end as string;
 
@@ -222,7 +222,7 @@ export default class MarketCacheController {
                 });
             }
 
-            const history = await MarketCacheService.getStockIntraday(symbol, limit, start, end);
+            const history = await MarketCacheService.getStockIntraday(symbol, filter, start, end);
 
             new OkResponse({
                 message: 'Stock intraday data retrieved successfully',
