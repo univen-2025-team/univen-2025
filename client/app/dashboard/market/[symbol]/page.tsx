@@ -2,20 +2,28 @@
 
 import { useEffect, useState, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import { useRouter } from 'next/navigation';
-import { useParams } from 'next/navigation';
-import { ArrowLeft, Building2, Globe, Users, TrendingUp, TrendingDown, DollarSign, Maximize2, Minimize2, ShoppingCart, X } from 'lucide-react';
+import { useRouter, useParams } from 'next/navigation';
+import {
+  ArrowLeft, Building2, Globe, Users, TrendingUp, TrendingDown,
+  DollarSign, Maximize2, Minimize2, ShoppingCart, X, History, Wallet
+} from 'lucide-react';
 import Image from 'next/image';
 import LoadingSpinner from '@/components/dashboard/LoadingSpinner';
 import ErrorMessage from '@/components/common/ErrorMessage';
 import CandlestickChart from '@/components/market/charts/CandlestickChart';
 import { formatPrice } from '@/components/market/utils';
 import api from '@/lib/axios';
+import { useAppSelector } from '@/lib/store/hooks';
+import { transactionApi } from '@/lib/api/transaction.api';
+import { TransactionHistoryItem } from '@/lib/types/transactions';
+import { useToast } from '@/components/toast/toast-provider';
 
 const StockDetailPage = () => {
   const params = useParams();
   const router = useRouter();
   const symbol = params.symbol as string;
+  const { user } = useAppSelector(state => state.auth);
+  const { showToast } = useToast();
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -24,9 +32,14 @@ const StockDetailPage = () => {
   const [chartLoading, setChartLoading] = useState(true);
   const [selectedRange, setSelectedRange] = useState('1D');
 
+  // Transaction state
+  const [transactions, setTransactions] = useState<TransactionHistoryItem[]>([]);
+  const [positionLoading, setPositionLoading] = useState(false);
+
   const TIME_RANGES = ['1D', '1W', '1M'];
   const [isFullscreen, setIsFullscreen] = useState(false);
 
+  // Fetch Stock Details
   useEffect(() => {
     const fetchStockDetails = async () => {
       try {
@@ -48,7 +61,7 @@ const StockDetailPage = () => {
     }
   }, [symbol]);
 
-  // Fetch chart data based on selected range
+  // Fetch Chart Data
   useEffect(() => {
     const fetchChartData = async () => {
       if (!symbol) return;
@@ -68,7 +81,75 @@ const StockDetailPage = () => {
     fetchChartData();
   }, [symbol, selectedRange]);
 
-  // Transform chart data for candlestick
+  // Fetch User Transactions for this symbol
+  useEffect(() => {
+    const fetchTransactions = async () => {
+      if (!symbol || !user?._id) return;
+      try {
+        setPositionLoading(true);
+        const response = await transactionApi.getTransactionHistory(user._id, {
+          filters: { stock_code: symbol }
+        });
+        if (response.transactions) {
+          setTransactions(response.transactions);
+        }
+      } catch (err) {
+        console.error('Error fetching transactions:', err);
+      } finally {
+        setPositionLoading(false);
+      }
+    };
+
+    fetchTransactions();
+    fetchTransactions();
+  }, [symbol, user?._id]);
+
+  // Handle Load More (Mocking older data)
+  const handleLoadMore = async (direction: 'left' | 'right') => {
+    if (chartLoading || direction === 'right') return; // Only mocking historic data for now
+
+    showToast('info', "Đang tải thêm dữ liệu quá khứ...", 2000);
+
+    // Mock delay
+    await new Promise(resolve => setTimeout(resolve, 800));
+
+    setChartData(prev => {
+      if (!prev.length) return prev;
+
+      // Generate 50 dummy candles before the first one
+      const first = prev[0];
+      const newCandles = [];
+      let currentPrice = first.open || first.price;
+      const oneMinute = 60 * 1000;
+      let currentTime = new Date(first.date ? `${first.date} ${first.time}` : first.time).getTime();
+
+      for (let i = 0; i < 50; i++) {
+        currentTime -= oneMinute;
+        const open = currentPrice;
+        const close = open * (1 + (Math.random() * 0.01 - 0.005));
+        const high = Math.max(open, close) * (1 + Math.random() * 0.002);
+        const low = Math.min(open, close) * (1 - Math.random() * 0.002);
+
+        // Format time back to string matches source format mostly
+        const dateObj = new Date(currentTime);
+        // Simple hacky format to match typical API response structure if needed, 
+        // but our transformer handles ISO strings or "YYYY-MM-DD HH:mm:ss"
+        const timeStr = dateObj.toISOString().replace('T', ' ').substring(0, 19);
+
+        newCandles.unshift({
+          time: timeStr,
+          open, high, low, close,
+          price: close, // fallback
+          volume: Math.floor(Math.random() * 10000)
+        });
+        currentPrice = close; // continuity
+      }
+
+      return [...newCandles, ...prev];
+    });
+  };
+
+  // Transform chart data
   const candlestickData = useMemo(() => {
     if (!chartData.length) return [];
     return chartData.map((point: any) => ({
@@ -79,6 +160,21 @@ const StockDetailPage = () => {
       low: point.low ?? point.price,
     }));
   }, [chartData]);
+
+  // Calculate quick position summary
+  const positionSummary = useMemo(() => {
+    let totalShares = 0;
+    // Note: This is an estimation based on history since we don't have a direct portfolio API endpoint for single stock
+    // Real portfolio calculation should be done backend-side or via a proper Portfolio API
+    // Here we just list recent transactions and basic stats
+    return transactions.reduce((acc, tx) => {
+      if (tx.transaction_status === 'COMPLETED') {
+        if (tx.transaction_type === 'BUY') acc += tx.quantity;
+        else if (tx.transaction_type === 'SELL') acc -= tx.quantity;
+      }
+      return acc;
+    }, 0);
+  }, [transactions]);
 
   if (loading) return <LoadingSpinner />;
   if (error) return <ErrorMessage message={error} />;
@@ -92,373 +188,327 @@ const StockDetailPage = () => {
 
   return (
     <div className="space-y-6 animate-fade-in pb-8">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <button
-          onClick={() => router.back()}
-          className="flex items-center text-gray-500 hover:text-gray-900 transition-colors font-medium"
-        >
-          <ArrowLeft className="w-5 h-5 mr-2" />
-          Back to Market
-        </button>
-      </div>
-
-      {/* Main Content */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left Column: Info & Stats */}
-        <div className="lg:col-span-1 space-y-6">
-          {/* Stock Overview Card */}
-          <div className={cardClassName}>
-            <div className="flex items-center space-x-4 mb-6">
-              <div className="w-16 h-16 relative bg-gray-50 rounded-lg p-2 flex items-center justify-center overflow-hidden border border-gray-100 shadow-sm">
-                {profile?.logo ? (
-                  <img
-                    src={profile.logo}
-                    alt={symbol}
-                    className="object-contain w-full h-full"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${symbol}&background=random`;
-                    }}
-                  />
-                ) : (
-                  <span className="text-xl font-bold text-gray-700">{symbol}</span>
-                )}
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">{symbol}</h1>
-                <p className="text-gray-500 text-sm font-medium">{info?.organShortName || profile?.companyShortName || symbol}</p>
-                <div className="mt-1 inline-block px-2.5 py-0.5 rounded text-xs font-semibold bg-gray-100 text-gray-600 border border-gray-200">
-                  {info?.exchange || profile?.exchange || 'HOSE'}
-                </div>
-              </div>
+      {/* 1. Header & Quick Info */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <button
+            onClick={() => router.back()}
+            className="p-2 hover:bg-gray-100 rounded-lg transition-colors text-gray-500 hover:text-gray-900"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 relative bg-white rounded-lg p-1 flex items-center justify-center border border-gray-100 shadow-sm">
+              {profile?.logo ? (
+                <img
+                  src={profile.logo}
+                  alt={symbol}
+                  className="object-contain w-full h-full"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${symbol}&background=random`;
+                  }}
+                />
+              ) : (
+                <span className="text-lg font-bold text-gray-700">{symbol}</span>
+              )}
             </div>
-
-            <div className="mb-6">
-              <div className="text-3xl font-bold flex items-center text-gray-900">
-                {marketData?.price ? (marketData.price * 1000).toLocaleString('vi-VN') : '---'}
-                <span className="text-sm font-medium text-gray-500 ml-1">VND</span>
-              </div>
-              <div className={`flex items-center mt-1 font-semibold ${isPositive ? 'text-emerald-600' : 'text-red-500'}`}>
-                {isPositive ? <TrendingUp className="w-4 h-4 mr-1" /> : <TrendingDown className="w-4 h-4 mr-1" />}
-                <span>{marketData?.change > 0 ? '+' : ''}{marketData?.change * 1000}</span>
-                <span className="ml-1 opacity-90">({marketData?.changePercent}%)</span>
-              </div>
-            </div>
-
-            <div className="space-y-4 pt-4 border-t border-gray-100">
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-500 font-medium">Open</span>
-                <span className="font-semibold text-gray-900">{(marketData?.open * 1000).toLocaleString()}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-500 font-medium">High</span>
-                <span className="font-semibold text-gray-900">{(marketData?.high * 1000).toLocaleString()}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-500 font-medium">Low</span>
-                <span className="font-semibold text-gray-900">{(marketData?.low * 1000).toLocaleString()}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-500 font-medium">Volume</span>
-                <span className="font-semibold text-gray-900">{marketData?.volume?.toLocaleString()}</span>
-              </div>
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900 leading-none">{symbol}</h1>
+              <p className="text-sm text-gray-500 font-medium truncate max-w-[200px] md:max-w-md">
+                {info?.organShortName || profile?.companyShortName || symbol}
+              </p>
             </div>
           </div>
-
-          {/* Company Profile Card */}
-          <div className={`${cardClassName} space-y-4`}>
-            <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-              <Building2 className="w-5 h-5 text-gray-400" />
-              Company Profile
-            </h3>
-
-            <div className="flex items-start space-x-3 group">
-              <div className="p-2 bg-blue-50 rounded-lg group-hover:bg-blue-100 transition-colors">
-                <Building2 className="w-5 h-5 text-blue-600" />
-              </div>
-              <div>
-                <span className="block text-gray-500 text-xs uppercase tracking-wider font-semibold">Industry</span>
-                <span className="text-sm font-medium text-gray-900">{profile?.industry || 'N/A'}</span>
-              </div>
+          <div className="hidden md:flex flex-col items-start px-4 border-l border-gray-200">
+            <div className="text-2xl font-bold flex items-center text-gray-900 leading-none">
+              {marketData?.price ? (marketData.price * 1000).toLocaleString('vi-VN') : '---'}
+              <span className="text-xs font-medium text-gray-500 ml-1">VND</span>
             </div>
-
-            <div className="flex items-start space-x-3 group">
-              <div className="p-2 bg-purple-50 rounded-lg group-hover:bg-purple-100 transition-colors">
-                <Users className="w-5 h-5 text-purple-600" />
-              </div>
-              <div>
-                <span className="block text-gray-500 text-xs uppercase tracking-wider font-semibold">Employees</span>
-                <span className="text-sm font-medium text-gray-900">{profile?.noEmployees?.toLocaleString() || 'N/A'}</span>
-              </div>
-            </div>
-
-            <div className="flex items-start space-x-3 group">
-              <div className="p-2 bg-emerald-50 rounded-lg group-hover:bg-emerald-100 transition-colors">
-                <Globe className="w-5 h-5 text-emerald-600" />
-              </div>
-              <div>
-                <span className="block text-gray-500 text-xs uppercase tracking-wider font-semibold">Website</span>
-                <a
-                  href={profile?.website?.startsWith('http') ? profile.website : `https://${profile?.website}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-sm text-blue-600 hover:text-blue-800 hover:underline truncate block max-w-[200px] font-medium"
-                >
-                  {profile?.website || 'N/A'}
-                </a>
-              </div>
+            <div className={`flex items-center text-sm font-semibold mt-1 ${isPositive ? 'text-emerald-600' : 'text-red-500'}`}>
+              {isPositive ? <TrendingUp className="w-3 h-3 mr-1" /> : <TrendingDown className="w-3 h-3 mr-1" />}
+              <span>{marketData?.change > 0 ? '+' : ''}{marketData?.change * 1000}</span>
+              <span className="ml-1 opacity-90">({marketData?.changePercent}%)</span>
             </div>
           </div>
         </div>
 
-        {/* Right Column: Chart & Additional Details */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Chart Section */}
-          <div className={`${cardClassName} h-[500px] flex flex-col`}>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-bold text-gray-900">Price History</h3>
-              <div className="flex items-center gap-2">
-                {TIME_RANGES.map((range) => (
-                  <button
-                    key={range}
-                    onClick={() => setSelectedRange(range)}
-                    className={`px-3 py-1.5 rounded-lg font-medium text-sm transition-colors ${selectedRange === range
-                      ? 'bg-primary text-white'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                      }`}
-                  >
-                    {range}
-                  </button>
-                ))}
-                <div className="w-px h-6 bg-gray-200 mx-1" />
+        {/* Quick Actions */}
+        <div className="flex items-center gap-2">
+          {!isFullscreen && (
+            <>
+              <button
+                onClick={() => router.push(`/dashboard/trade?symbol=${symbol}&action=buy`)}
+                className="flex items-center gap-2 px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg transition-colors shadow-sm"
+              >
+                <ShoppingCart className="w-4 h-4" />
+                Mua
+              </button>
+              <button
+                onClick={() => router.push(`/dashboard/trade?symbol=${symbol}&action=sell`)}
+                className="flex items-center gap-2 px-6 py-2.5 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-lg transition-colors shadow-sm"
+              >
+                <DollarSign className="w-4 h-4" />
+                Bán
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* Mobile Price Display (Visible only on mobile) */}
+      <div className="md:hidden flex items-center justify-between bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+        <div className="text-3xl font-bold text-gray-900">
+          {marketData?.price ? (marketData.price * 1000).toLocaleString('vi-VN') : '---'}
+          <span className="text-sm font-medium text-gray-500 ml-1">VND</span>
+        </div>
+        <div className={`flex items-center font-bold px-3 py-1 rounded-lg ${isPositive ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-500'}`}>
+          {isPositive ? <TrendingUp className="w-4 h-4 mr-1" /> : <TrendingDown className="w-4 h-4 mr-1" />}
+          <span>{marketData?.changePercent}%</span>
+        </div>
+      </div>
+
+      {/* 2. Full Width Chart */}
+      <div className={`${cardClassName} h-[70vh] flex flex-col p-0 overflow-hidden`}>
+        <div className="flex items-center justify-between p-4 border-b border-gray-100 bg-gray-50/50">
+          <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+            <TrendingUp className="w-5 h-5 text-gray-500" />
+            Biểu đồ giá
+          </h3>
+          <div className="flex items-center gap-2">
+            <div className="flex bg-white rounded-lg p-0.5 border border-gray-200 shadow-sm">
+              {TIME_RANGES.map((range) => (
                 <button
-                  onClick={() => setIsFullscreen(true)}
-                  className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 transition-colors"
-                  title="Toàn màn hình"
+                  key={range}
+                  onClick={() => setSelectedRange(range)}
+                  className={`px-3 py-1 rounded-md text-xs font-bold transition-all ${selectedRange === range
+                    ? 'bg-gray-900 text-white shadow-sm'
+                    : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'
+                    }`}
                 >
-                  <Maximize2 className="w-4 h-4" />
+                  {range}
                 </button>
+              ))}
+            </div>
+            <div className="w-px h-5 bg-gray-200 mx-1" />
+            <button
+              onClick={() => setIsFullscreen(true)}
+              className="p-1.5 rounded-lg hover:bg-gray-200 text-gray-500 hover:text-gray-900 transition-colors"
+            >
+              <Maximize2 className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+        <div className="flex-1 w-full min-h-0 relative">
+          {chartLoading ? (
+            <div className="flex items-center justify-center h-full text-gray-500">
+              <LoadingSpinner />
+            </div>
+          ) : candlestickData.length > 0 ? (
+            <CandlestickChart key="normal" data={candlestickData} valueFormatter={formatPrice} onLoadMore={handleLoadMore} />
+          ) : (
+            <div className="flex items-center justify-center h-full text-gray-500">
+              Không có dữ liệu biểu đồ
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Fullscreen Modal Portal */}
+      {isFullscreen && typeof document !== 'undefined' && createPortal(
+        <div className="fixed inset-0 z-[99999] bg-white flex flex-col w-screen h-screen">
+          <div className="w-full h-full flex flex-col overflow-hidden">
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 py-3 border-b border-gray-100">
+              <div className="flex items-center gap-4">
+                <h3 className="text-xl font-bold text-gray-900">{symbol}</h3>
+                <div className={`flex items-center font-semibold px-2 py-0.5 rounded ${isPositive ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-500'}`}>
+                  {marketData?.price ? (marketData.price * 1000).toLocaleString('vi-VN') : '---'}
+                  <span className="text-xs ml-1">VND</span>
+                  <span className="text-xs ml-2 opacity-80">({marketData?.changePercent}%)</span>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="flex bg-gray-100 rounded-lg p-1">
+                  {TIME_RANGES.map((range) => (
+                    <button
+                      key={range}
+                      onClick={() => setSelectedRange(range)}
+                      className={`px-4 py-1.5 rounded-md text-sm font-bold transition-all ${selectedRange === range
+                        ? 'bg-white text-black shadow-sm'
+                        : 'text-gray-500 hover:text-gray-900'
+                        }`}
+                    >
+                      {range}
+                    </button>
+                  ))}
+                </div>
+                <button onClick={() => setIsFullscreen(false)} className="p-2 hover:bg-gray-100 rounded-lg"><X className="w-5 h-5" /></button>
               </div>
             </div>
-            <div className="flex-1 w-full min-h-0">
-              {chartLoading ? (
-                <div className="flex items-center justify-center h-full text-gray-500">
-                  <LoadingSpinner />
-                </div>
-              ) : candlestickData.length > 0 ? (
-                <CandlestickChart key="normal" data={candlestickData} valueFormatter={formatPrice} />
-              ) : (
-                <div className="flex items-center justify-center h-full text-gray-500">
-                  Không có dữ liệu biểu đồ
-                </div>
-              )}
+            {/* Chart Body */}
+            <div className="flex-1 min-h-0">
+              {chartLoading ? (<LoadingSpinner />) : (<CandlestickChart key="fullscreen" data={candlestickData} valueFormatter={formatPrice} onLoadMore={handleLoadMore} />)}
+            </div>
+            {/* Footer Actions */}
+            <div className="px-6 py-3 border-t border-gray-100 bg-gray-50 flex justify-end gap-4">
+              <button
+                onClick={() => router.push(`/dashboard/trade?symbol=${symbol}&action=buy`)}
+                className="px-8 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg shadow-sm"
+              >Mua Ngay</button>
+              <button
+                onClick={() => router.push(`/dashboard/trade?symbol=${symbol}&action=sell`)}
+                className="px-8 py-2 bg-red-500 hover:bg-red-600 text-white font-bold rounded-lg shadow-sm"
+              >Bán Ngay</button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* 3. Details Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+        {/* Left Column: Stats & Info */}
+        <div className="lg:col-span-2 space-y-6">
+
+          {/* Financial Stats */}
+          <div className={cardClassName}>
+            <h3 className="text-lg font-bold mb-4 text-gray-900 flex items-center gap-2">
+              <TrendingUp className="w-5 h-5 text-blue-600" />
+              Thống kê tài chính
+            </h3>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-y-4 gap-x-8 text-sm">
+              {/* Row 1 */}
+              <div className="flex flex-col">
+                <span className="text-gray-500 mb-1">Tham chiếu</span>
+                <span className="font-semibold text-lg">{(marketData?.reference * 1000).toLocaleString() || '---'}</span>
+              </div>
+              <div className="flex flex-col">
+                <span className="text-gray-500 mb-1">Mở cửa</span>
+                <span className="font-semibold text-lg">{(marketData?.open * 1000).toLocaleString() || '---'}</span>
+              </div>
+              <div className="flex flex-col">
+                <span className="text-gray-500 mb-1">Khối lượng</span>
+                <span className="font-semibold text-lg">{marketData?.volume?.toLocaleString() || '---'}</span>
+              </div>
+
+              {/* Row 2 */}
+              <div className="flex flex-col border-t border-gray-100 pt-3">
+                <span className="text-gray-500 mb-1">Cao nhất</span>
+                <span className="font-semibold text-emerald-600 text-lg">{(marketData?.high * 1000).toLocaleString() || '---'}</span>
+              </div>
+              <div className="flex flex-col border-t border-gray-100 pt-3">
+                <span className="text-gray-500 mb-1">Thấp nhất</span>
+                <span className="font-semibold text-red-500 text-lg">{(marketData?.low * 1000).toLocaleString() || '---'}</span>
+              </div>
+              <div className="flex flex-col border-t border-gray-100 pt-3">
+                <span className="text-gray-500 mb-1">Vốn hóa</span>
+                <span className="font-semibold text-lg">
+                  {marketData?.price && profile?.outstandingShare ?
+                    ((marketData.price * profile.outstandingShare * 1000) / 1000000000).toLocaleString('vi-VN', { maximumFractionDigits: 0 }) + ' Tỷ'
+                    : 'N/A'}
+                </span>
+              </div>
             </div>
           </div>
 
-          {/* Fullscreen Modal - Using Portal to render outside parent DOM */}
-          {isFullscreen && typeof document !== 'undefined' && createPortal(
-            <div className="fixed inset-0 z-[9999] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
-              <div className="bg-white rounded-2xl shadow-2xl w-full h-full max-w-[95vw] max-h-[95vh] flex flex-col overflow-hidden">
-                {/* Modal Header */}
-                <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-                  <div className="flex items-center gap-4">
-                    <h3 className="text-xl font-bold text-gray-900">{symbol} - Price History</h3>
-                    <div className="flex gap-2">
-                      {TIME_RANGES.map((range) => (
-                        <button
-                          key={range}
-                          onClick={() => setSelectedRange(range)}
-                          className={`px-3 py-1.5 rounded-lg font-medium text-sm transition-colors ${selectedRange === range
-                            ? 'bg-primary text-white'
-                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                            }`}
-                        >
-                          {range}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => setIsFullscreen(false)}
-                    className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 transition-colors"
-                    title="Đóng"
-                  >
-                    <X className="w-5 h-5" />
-                  </button>
+          {/* About Company */}
+          <div className={`${cardClassName} space-y-4`}>
+            <h3 className="text-lg font-bold text-gray-900 mb-2 flex items-center gap-2">
+              <Building2 className="w-5 h-5 text-purple-600" />
+              Về doanh nghiệp
+            </h3>
+            <p className="text-gray-600 text-sm leading-relaxed whitespace-pre-wrap">
+              {profile?.company_profile || profile?.industry || 'Chưa có mô tả chi tiết.'}
+            </p>
+            <div className="grid grid-cols-2 gap-4 pt-4 border-t border-gray-100">
+              <div>
+                <span className="text-xs text-gray-500 uppercase font-bold">Ngành</span>
+                <p className="font-medium text-gray-900">{profile?.industry || 'N/A'}</p>
+              </div>
+              <div>
+                <span className="text-xs text-gray-500 uppercase font-bold">Nhân sự</span>
+                <p className="font-medium text-gray-900">{profile?.noEmployees?.toLocaleString() || 'N/A'}</p>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        {/* Right Column: User Info & Company Sidebar */}
+        <div className="lg:col-span-1 space-y-6">
+
+          {/* YOUR POSITION CARD (New Feature) */}
+          <div className={`${cardClassName} border-l-4 border-l-blue-500`}>
+            <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+              <Wallet className="w-5 h-5 text-blue-500" />
+              Vị thế của bạn
+            </h3>
+
+            {positionLoading ? (
+              <div className="py-8"><LoadingSpinner /></div>
+            ) : transactions.length > 0 ? (
+              <div className="space-y-4">
+                <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
+                  <span className="text-sm text-gray-500 block mb-1">Tổng SL ước tính</span>
+                  <span className="text-2xl font-bold text-gray-900">{positionSummary.toLocaleString()} <span className="text-xs font-normal text-gray-500">CP</span></span>
                 </div>
 
-                {/* Modal Body - Chart */}
-                <div className="flex-1 p-4 min-h-0">
-                  {chartLoading ? (
-                    <div className="flex items-center justify-center h-full text-gray-500">
-                      <LoadingSpinner />
-                    </div>
-                  ) : candlestickData.length > 0 ? (
-                    <CandlestickChart key="fullscreen" data={candlestickData} valueFormatter={formatPrice} />
-                  ) : (
-                    <div className="flex items-center justify-center h-full text-gray-500">
-                      Không có dữ liệu biểu đồ
-                    </div>
+                <div>
+                  <h4 className="text-xs font-bold text-gray-500 uppercase mb-2 flex items-center gap-1">
+                    <History className="w-3 h-3" /> Giao dịch gần đây
+                  </h4>
+                  <div className="space-y-2 max-h-[200px] overflow-y-auto pr-1">
+                    {transactions.slice(0, 5).map((tx) => (
+                      <div key={tx._id} className="flex justify-between items-center text-sm p-2 hover:bg-gray-50 rounded border border-transparent hover:border-gray-100 transition-colors">
+                        <div className="flex flex-col">
+                          <span className={`font-bold text-xs ${tx.transaction_type === 'BUY' ? 'text-emerald-600' : 'text-red-500'}`}>
+                            {tx.transaction_type === 'BUY' ? 'MUA' : 'BÁN'}
+                          </span>
+                          <span className="text-[10px] text-gray-400">{new Date(tx.createdAt).toLocaleDateString()}</span>
+                        </div>
+                        <div className="text-right">
+                          <div className="font-medium">{tx.quantity.toLocaleString()}</div>
+                          <div className="text-xs text-gray-500">@{tx.price_per_unit.toLocaleString()}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  {transactions.length > 5 && (
+                    <button className="w-full text-center text-xs text-blue-600 mt-2 hover:underline">Xem tất cả</button>
                   )}
                 </div>
-
-                {/* Modal Footer - Trade Buttons */}
-                <div className="flex items-center justify-center gap-4 px-6 py-4 border-t border-gray-100 bg-gray-50">
-                  <button
-                    onClick={() => router.push(`/dashboard/trade?symbol=${symbol}&action=buy`)}
-                    className="flex items-center gap-2 px-8 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl transition-colors shadow-lg"
-                  >
-                    <ShoppingCart className="w-5 h-5" />
-                    Mua {symbol}
-                  </button>
-                  <button
-                    onClick={() => router.push(`/dashboard/trade?symbol=${symbol}&action=sell`)}
-                    className="flex items-center gap-2 px-8 py-3 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-xl transition-colors shadow-lg"
-                  >
-                    <TrendingDown className="w-5 h-5" />
-                    Bán {symbol}
-                  </button>
-                  <span className="text-sm text-gray-500 ml-4">
-                    Giá: <span className="font-semibold text-gray-900">{marketData?.price ? (marketData.price * 1000).toLocaleString('vi-VN') : '---'}</span> VND
-                  </span>
-                </div>
               </div>
-            </div>,
-            document.body
-          )}
-
-          {/* Quick Trade Card - only show when not fullscreen */}
-          {!isFullscreen && (
-            <div className={`${cardClassName}`}>
-              <h3 className="text-lg font-bold text-gray-900 mb-4">Giao dịch nhanh</h3>
-              <div className="flex items-center gap-4">
+            ) : (
+              <div className="text-center py-6 text-gray-500 bg-gray-50 rounded-xl border border-dashed border-gray-200">
+                <p className="text-sm">Bạn chưa có giao dịch nào với mã này.</p>
                 <button
-                  onClick={() => router.push(`/dashboard/trade?symbol=${symbol}&action=buy`)}
-                  className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl transition-colors"
+                  onClick={() => router.push(`/dashboard/trade?symbol=${symbol}`)}
+                  className="mt-3 text-sm font-bold text-blue-600 hover:text-blue-700"
                 >
-                  <ShoppingCart className="w-5 h-5" />
-                  Mua {symbol}
+                  Giao dịch ngay
                 </button>
-                <button
-                  onClick={() => router.push(`/dashboard/trade?symbol=${symbol}&action=sell`)}
-                  className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-xl transition-colors"
-                >
-                  <TrendingDown className="w-5 h-5" />
-                  Bán {symbol}
-                </button>
-              </div>
-              <p className="text-xs text-gray-500 mt-3 text-center">
-                Giá hiện tại: {marketData?.price ? (marketData.price * 1000).toLocaleString('vi-VN') : '---'} VND
-              </p>
-            </div>
-          )}
-
-          {/* About Section */}
-          <div className={`${cardClassName} space-y-6`}>
-            <div>
-              <h3 className="text-lg font-bold mb-3 text-gray-900">About {info?.organName || profile?.companyName}</h3>
-              <p className="text-gray-600 text-sm leading-relaxed whitespace-pre-wrap">
-                {profile?.company_profile || profile?.industry || 'No description available.'}
-              </p>
-            </div>
-
-            {profile?.history && (
-              <div>
-                <h4 className="text-md font-bold text-gray-900 mb-2">History</h4>
-                <div className="text-gray-600 text-sm leading-relaxed bg-gray-50 p-4 rounded-lg border border-gray-100">
-                  {profile.history.split(/ - |;  - /).map((item: string, index: number) => {
-                    const cleanItem = item.trim();
-                    if (!cleanItem) return null;
-
-                    const isBullet = index > 0 || profile.history.startsWith(' - ');
-                    const content = cleanItem.replace(/^[-•]\s*/, '');
-
-                    // Check for date pattern (starts with Ngày/Tháng/Năm followed by colon)
-                    const dateMatch = content.match(/^((?:Ngày|Tháng|Năm)\s[^:]+):/);
-
-                    if (dateMatch) {
-                      const datePart = dateMatch[1];
-                      const remainingPart = content.substring(dateMatch[0].length);
-                      return (
-                        <div key={index} className="mb-2">
-                          {isBullet ? <span className="mr-2">•</span> : ''}
-                          <span className="font-bold text-gray-900">{datePart}:</span>
-                          {remainingPart}
-                        </div>
-                      );
-                    }
-
-                    return (
-                      <div key={index} className="mb-2">
-                        {isBullet ? <span className="mr-2">•</span> : ''}{content}
-                      </div>
-                    );
-                  })}
-                </div>
               </div>
             )}
           </div>
 
-          {/* Detailed Stats Grid */}
+          {/* Company Contact */}
           <div className={cardClassName}>
-            <h3 className="text-lg font-bold mb-4 text-gray-900">Financial & Market Stats</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 text-sm">
-              <div className="space-y-3">
-                <div className="flex justify-between py-2 border-b border-gray-100">
-                  <span className="text-gray-500 font-medium">Market Cap</span>
-                  <span className="font-semibold text-gray-900">{marketData?.price && profile?.outstandingShare ?
-                    ((marketData.price * profile.outstandingShare * 1000) / 1000000000).toLocaleString('vi-VN', { maximumFractionDigits: 0 }) + ' Tỷ'
-                    : 'N/A'}</span>
-                </div>
-                <div className="flex justify-between py-2 border-b border-gray-100">
-                  <span className="text-gray-500 font-medium">Charter Capital</span>
-                  <span className="font-semibold text-gray-900">{profile?.charter_capital ? (profile.charter_capital / 1000000000).toLocaleString('vi-VN') + ' Tỷ' : 'N/A'}</span>
-                </div>
-                <div className="flex justify-between py-2 border-b border-gray-100">
-                  <span className="text-gray-500 font-medium">Established</span>
-                  <span className="font-semibold text-gray-900">{profile?.establishedYear || 'N/A'}</span>
-                </div>
+            <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-4">Thông tin liên hệ</h3>
+            <div className="space-y-3 text-sm">
+              <div className="flex items-start gap-3">
+                <Globe className="w-4 h-4 text-gray-400 mt-0.5" />
+                <a href={profile?.website} target="_blank" className="text-blue-600 hover:underline truncate">{profile?.website || 'N/A'}</a>
               </div>
-
-              <div className="space-y-3">
-                <div className="flex justify-between py-2 border-b border-gray-100">
-                  <span className="text-gray-500 font-medium">Outstanding Shares</span>
-                  <span className="font-semibold text-gray-900">{profile?.outstandingShare ? (profile.outstandingShare * 1000000).toLocaleString() : 'N/A'}</span>
-                </div>
-                <div className="flex justify-between py-2 border-b border-gray-100">
-                  <span className="text-gray-500 font-medium">Foreign Ownership</span>
-                  <span className="font-semibold text-gray-900">{profile?.foreignPercent ? (profile.foreignPercent * 100).toFixed(2) + '%' : 'N/A'}</span>
-                </div>
-                <div className="flex justify-between py-2 border-b border-gray-100">
-                  <span className="text-gray-500 font-medium">Sector</span>
-                  <span className="font-semibold text-gray-900">{profile?.icb_name2 || info?.icbCode2 || 'N/A'}</span>
-                </div>
-              </div>
-
-              <div className="space-y-3">
-                <div className="flex justify-between py-2 border-b border-gray-100">
-                  <span className="text-gray-500 font-medium">Stock Rating</span>
-                  <span className="font-semibold text-gray-900 flex items-center">
-                    {profile?.stockRating ? (
-                      <>
-                        <span className="text-yellow-500 mr-1">★</span>
-                        {profile.stockRating}/5
-                      </>
-                    ) : 'N/A'}
-                  </span>
-                </div>
-                <div className="flex justify-between py-2 border-b border-gray-100">
-                  <span className="text-gray-500 font-medium">Sub-Sector</span>
-                  <span className="truncate max-w-[120px] font-semibold text-gray-900" title={profile?.icb_name4 || ''}>{profile?.icb_name4 || 'N/A'}</span>
-                </div>
-                <div className="flex justify-between py-2 border-b border-gray-100">
-                  <span className="text-gray-500 font-medium">Listing Date</span>
-                  <span className="font-semibold text-gray-900">{info?.updated_at ? new Date(info.updated_at).toLocaleDateString('vi-VN') : 'N/A'}</span>
-                </div>
+              <div className="flex items-start gap-3">
+                <Building2 className="w-4 h-4 text-gray-400 mt-0.5" />
+                <span className="text-gray-600">{info?.exchange || 'HOSE'}</span>
               </div>
             </div>
           </div>
+
         </div>
+
       </div>
     </div>
   );
