@@ -413,24 +413,73 @@ const StockDetailPage = () => {
           </div>
 
           {/* About Company */}
-          <div className={`${cardClassName} space-y-4`}>
-            <h3 className="text-lg font-bold text-gray-900 mb-2 flex items-center gap-2">
-              <Building2 className="w-5 h-5 text-purple-600" />
-              Về doanh nghiệp
-            </h3>
-            <p className="text-gray-600 text-sm leading-relaxed whitespace-pre-wrap">
-              {profile?.company_profile || profile?.industry || 'Chưa có mô tả chi tiết.'}
-            </p>
-            <div className="grid grid-cols-2 gap-4 pt-4 border-t border-gray-100">
-              <div>
-                <span className="text-xs text-gray-500 uppercase font-bold">Ngành</span>
-                <p className="font-medium text-gray-900">{profile?.industry || 'N/A'}</p>
-              </div>
-              <div>
-                <span className="text-xs text-gray-500 uppercase font-bold">Nhân sự</span>
-                <p className="font-medium text-gray-900">{profile?.noEmployees?.toLocaleString() || 'N/A'}</p>
+          <div className={`${cardClassName} space-y-6`}>
+            <div>
+              <h3 className="text-lg font-bold text-gray-900 mb-2 flex items-center gap-2">
+                <Building2 className="w-5 h-5 text-purple-600" />
+                Về doanh nghiệp
+              </h3>
+              <p className="text-gray-600 text-sm leading-relaxed whitespace-pre-wrap mb-4 font-normal text-justify">
+                {profile?.company_profile || profile?.industry || 'Chưa có mô tả chi tiết.'}
+              </p>
+
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 py-4 border-t border-b border-gray-100 mb-4">
+                <div>
+                  <span className="text-xs text-gray-500 uppercase font-bold block mb-1">Ngành</span>
+                  <p className="font-medium text-gray-900 text-sm">{profile?.industry || 'N/A'}</p>
+                </div>
+                <div>
+                  <span className="text-xs text-gray-500 uppercase font-bold block mb-1">Thành lập</span>
+                  <p className="font-medium text-gray-900 text-sm">{profile?.establishedYear || 'N/A'}</p>
+                </div>
+                <div>
+                  <span className="text-xs text-gray-500 uppercase font-bold block mb-1">Vốn điều lệ</span>
+                  <p className="font-medium text-gray-900 text-sm">
+                    {profile?.charter_capital ? (profile.charter_capital / 1000000000).toLocaleString('vi-VN') + ' tỷ' : 'N/A'}
+                  </p>
+                </div>
+                <div>
+                  <span className="text-xs text-gray-500 uppercase font-bold block mb-1">KL Niêm yết</span>
+                  <p className="font-medium text-gray-900 text-sm">
+                    {profile?.issueShare ? profile.issueShare.toLocaleString('vi-VN') : 'N/A'}
+                  </p>
+                </div>
               </div>
             </div>
+
+            {/* History Section */}
+            {profile?.history && (
+              <div className="pt-2">
+                <h4 className="text-md font-bold text-gray-800 mb-3 flex items-center gap-2">
+                  <History className="w-4 h-4 text-gray-500" />
+                  Lịch sử hình thành
+                </h4>
+                <div className="space-y-2 text-sm text-gray-600">
+                  {profile.history.split('- ').map((item: string, index: number) => {
+                    if (!item.trim()) return null;
+                    // Try to identify date pattern at the start (e.g., "Ngày 03/05/2002:", "Tháng 11/2004:")
+                    const match = item.match(/^((?:Ngày|Tháng|Năm) \d{1,2}(?:\/\d{1,2})?(?:\/\d{4})?):?(.*)/);
+                    if (match) {
+                      return (
+                        <div key={index} className="flex gap-2">
+                          <div className="min-w-[4px] mt-1.5 h-1.5 rounded-full bg-purple-300 shrink-0" />
+                          <p>
+                            <span className="font-bold text-gray-900">{match[1]}:</span>
+                            {match[2]}
+                          </p>
+                        </div>
+                      );
+                    }
+                    return (
+                      <div key={index} className="flex gap-2">
+                        <div className="min-w-[4px] mt-1.5 h-1.5 rounded-full bg-gray-300 shrink-0" />
+                        <p>{item}</p>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
 
         </div>
