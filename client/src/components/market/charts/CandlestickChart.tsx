@@ -81,6 +81,7 @@ export default function CandlestickChart({ data, valueFormatter, onLoadMore }: C
 
     // Constants
     const scrollIntervalRef = useRef<number | null>(null);
+    const scrollStartTimeRef = useRef<number>(0);
     const lastDataLengthRef = useRef(0);
 
     // Track previous data length to adjust view on prepend
@@ -486,7 +487,12 @@ export default function CandlestickChart({ data, valueFormatter, onLoadMore }: C
                 const EDGE_THRESHOLD = 50;
                 if (x < EDGE_THRESHOLD) {
                     if (!scrollIntervalRef.current) {
+                        scrollStartTimeRef.current = Date.now();
                         scrollIntervalRef.current = window.setInterval(() => {
+                            const elapsed = Date.now() - scrollStartTimeRef.current;
+                            // Accelerate: 1 (start) -> +1 every 200ms -> Max 20 speed
+                            const shift = Math.min(20, 1 + Math.floor(elapsed / 200));
+
                             setViewRange(prev => {
                                 if (prev.start <= 0) {
                                     if (onLoadMoreRef.current && (!loadMoreThrottleRef.current || Date.now() - loadMoreThrottleRef.current > 1000)) {
@@ -495,7 +501,7 @@ export default function CandlestickChart({ data, valueFormatter, onLoadMore }: C
                                     }
                                     return prev;
                                 }
-                                const shift = 1;
+
                                 return { start: Math.max(0, prev.start - shift), end: prev.end - shift };
                             });
                             setSelectionRange(prev => {
@@ -509,7 +515,12 @@ export default function CandlestickChart({ data, valueFormatter, onLoadMore }: C
                     }
                 } else if (x > currentDimensions.width - EDGE_THRESHOLD) {
                     if (!scrollIntervalRef.current) {
+                        scrollStartTimeRef.current = Date.now();
                         scrollIntervalRef.current = window.setInterval(() => {
+                            const elapsed = Date.now() - scrollStartTimeRef.current;
+                            // Accelerate: 1 (start) -> +1 every 200ms -> Max 20 speed
+                            const shift = Math.min(20, 1 + Math.floor(elapsed / 200));
+
                             setViewRange(prev => {
                                 if (prev.end >= dataRef.current.length - 1) {
                                     if (onLoadMoreRef.current && (!loadMoreThrottleRef.current || Date.now() - loadMoreThrottleRef.current > 1000)) {
@@ -518,7 +529,6 @@ export default function CandlestickChart({ data, valueFormatter, onLoadMore }: C
                                     }
                                     return prev;
                                 }
-                                const shift = 1;
                                 return { start: prev.start + shift, end: Math.min(dataRef.current.length - 1, prev.end + shift) };
                             });
                         }, 50);
