@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useMemo, useRef } from 'react';
+import { useEffect, useState, useMemo, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { useRouter, useParams } from 'next/navigation';
 import {
@@ -22,7 +22,7 @@ import { useToast } from '@/components/toast/toast-provider';
 const StockDetailPage = () => {
   const params = useParams();
   const router = useRouter();
-  const symbol = params.symbol as string;
+  const symbol = (params.symbol as string).toUpperCase();
   const { user } = useAppSelector(state => state.auth);
   const { showToast } = useToast();
 
@@ -37,7 +37,7 @@ const StockDetailPage = () => {
   const [transactions, setTransactions] = useState<TransactionHistoryItem[]>([]);
   const [positionLoading, setPositionLoading] = useState(false);
 
-  const TIME_RANGES = ['1D', '1W', '1M'];
+  const TIME_RANGES = ['1D', '1W', '1M', '3M', '6M', '1Y'];
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [newsFilterRange, setNewsFilterRange] = useState<{ start: Date; end: Date } | null>(null);
   const newsSectionRef = useRef<HTMLDivElement>(null);
@@ -80,24 +80,35 @@ const StockDetailPage = () => {
   }, [symbol]);
 
   // Fetch Chart Data
-  useEffect(() => {
-    const fetchChartData = async () => {
-      if (!symbol) return;
-      try {
-        setChartLoading(true);
-        const response = await api.get(`/market/stock/${symbol}/intraday?filter=${selectedRange}`);
-        if (response.data?.metadata?.history) {
-          setChartData(response.data.metadata.history);
+  const fetchChartData = useCallback(async (options?: { refresh?: boolean }) => {
+    if (!symbol) return;
+    try {
+      setChartLoading(true);
+      const refreshParam = options?.refresh ? '&refresh=true' : '';
+      const response = await api.get(`/market/stock/${symbol}/intraday?filter=${selectedRange}${refreshParam}`);
+      if (response.data?.metadata?.history) {
+        setChartData(response.data.metadata.history);
+        if (options?.refresh) {
+          showToast('success', 'Đã làm mới dữ liệu');
         }
-      } catch (err) {
-        console.error('Error fetching chart data:', err);
-      } finally {
-        setChartLoading(false);
       }
-    };
+    } catch (err) {
+      console.error('Error fetching chart data:', err);
+      if (options?.refresh) {
+        showToast('error', 'Làm mới thất bại');
+      }
+    } finally {
+      setChartLoading(false);
+    }
+  }, [symbol, selectedRange, showToast]);
 
+  useEffect(() => {
     fetchChartData();
-  }, [symbol, selectedRange]);
+  }, [fetchChartData]);
+
+  const handleRefresh = useCallback(() => {
+    fetchChartData({ refresh: true });
+  }, [fetchChartData]);
 
   // Fetch User Transactions for this symbol
   useEffect(() => {
@@ -328,6 +339,7 @@ const StockDetailPage = () => {
               valueFormatter={formatPrice}
               onLoadMore={handleLoadMore}
               onNewsFilter={handleNewsFilter}
+              onRefresh={handleRefresh}
             />
           ) : (
             <div className="flex items-center justify-center h-full text-gray-500">
@@ -378,6 +390,7 @@ const StockDetailPage = () => {
                   valueFormatter={formatPrice}
                   onLoadMore={handleLoadMore}
                   onNewsFilter={handleNewsFilter}
+                  onRefresh={handleRefresh}
                 />
               )}
             </div>

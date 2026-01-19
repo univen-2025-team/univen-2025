@@ -9,7 +9,7 @@ export const STOCK_TRANSACTION_COLLECTION_NAME = 'stock_transactions';
 const stockTransactionSchema = new Schema<model.stockTransaction.StockTransactionSchema>(
     {
         /* ---------------------- User Info ---------------------- */
-        user_id: { type: ObjectId, required, ref: USER_MODEL_NAME, index: true },
+        user_id: { type: ObjectId, required, ref: USER_MODEL_NAME },
 
         /* -------------------- Transaction Info -------------------- */
         transaction_type: {
@@ -20,7 +20,7 @@ const stockTransactionSchema = new Schema<model.stockTransaction.StockTransactio
         },
 
         /* -------------------- Stock Details -------------------- */
-        stock_code: { type: String, required, index: true }, // Mã cổ phiếu (e.g., "VNM", "FPT")
+        stock_code: { type: String, required }, // Mã cổ phiếu (e.g., "VNM", "FPT")
         stock_name: { type: String, required }, // Tên cổ phiếu
         quantity: { type: Number, required, min: 1 }, // Số lượng cổ phiếu giao dịch
         price_per_unit: { type: Number, required, min: 0 }, // Giá một cổ phiếu tại thời điểm giao dịch

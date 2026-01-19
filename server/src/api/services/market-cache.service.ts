@@ -233,10 +233,67 @@ export default class MarketCacheService {
     /**
      * Get all stocks for a specific date
      */
-    static async getAllStocksByDate(date: string, interval: string = '1m'): Promise<StockHistoryLean[]> {
+    /**
+     * Get all stocks for a specific date
+     */
+    static async getAllStocksByDate(date: string, interval: string = '1m'): Promise<any[]> {
         try {
             const results = await StockHistoryModel.find({ date, interval }).lean().exec();
-            return results as StockHistoryLean[];
+
+            // Transform raw history to summary format expected by frontend
+            return results.map((doc: any) => {
+                const prices = doc.prices || [];
+                if (prices.length === 0) {
+                    return {
+                        symbol: doc.symbol,
+                        date: doc.date,
+                        companyName: doc.symbol,
+                        price: 0,
+                        change: 0,
+                        changePercent: 0,
+                        volume: 0,
+                        high: 0,
+                        low: 0,
+                        open: 0,
+                        close: 0,
+                        previousClose: 0
+                    };
+                }
+
+                const first = prices[0];
+                const last = prices[prices.length - 1];
+                const open = first.open;
+                const close = last.close;
+
+                // Calculate aggregations
+                let high = prices[0].high;
+                let low = prices[0].low;
+                let volume = 0;
+
+                for (const p of prices) {
+                    if (p.high > high) high = p.high;
+                    if (p.low < low) low = p.low;
+                    volume += p.volume;
+                }
+
+                const change = close - open;
+                const changePercent = open > 0 ? (change / open) * 100 : 0;
+
+                return {
+                    symbol: doc.symbol,
+                    date: doc.date,
+                    companyName: doc.symbol, // Detailed info requires profile join, skipping for performance
+                    price: close, // Current price is last close
+                    change: parseFloat(change.toFixed(2)),
+                    changePercent: parseFloat(changePercent.toFixed(2)),
+                    volume,
+                    high,
+                    low,
+                    open,
+                    close,
+                    previousClose: open // Approximate as Open
+                };
+            });
         } catch (error) {
             this.logger.error(`Error getting all stocks for ${date}`, error as any);
             return [];
@@ -482,7 +539,7 @@ export default class MarketCacheService {
      * @param start Optional explicit start date (overrides filter)
      * @param end Optional explicit end date (overrides filter)
      */
-    static async getStockIntraday(symbol: string, filter?: string, start?: string, end?: string): Promise<any[]> {
+    static async getStockIntraday(symbol: string, filter?: string, start?: string, end?: string, forceRefresh: boolean = false): Promise<any[]> {
         try {
             const query: any = {
                 symbol: symbol.toUpperCase(),
@@ -509,6 +566,20 @@ export default class MarketCacheService {
                 // Default: single day using new trading date logic
                 endDateVal = getLatestTradingDate();
                 startDateVal = endDateVal;
+            }
+
+            // FORCE REFRESH LOGIC
+            if (forceRefresh) {
+                this.logger.info(`StockIntraday: Force refresh requested for ${symbol} on ${endDateVal}`);
+                try {
+                    // Attempt direct sync for the latest date (end date)
+                    await axios.get(`${VNSTOCK_API_URL}/sync-stock?symbol=${symbol}&date=${endDateVal}`);
+                    // Optionally we could sync startDateVal too if different, but usually users refresh for latest data
+                } catch (error) {
+                    this.logger.error(`StockIntraday: Force sync failed for ${symbol}`, error as any);
+                    // Fallback to queue
+                    QueueService.getInstance().addStockSyncJob(symbol, endDateVal);
+                }
             }
 
             query.date = { $gte: startDateVal, $lte: endDateVal };

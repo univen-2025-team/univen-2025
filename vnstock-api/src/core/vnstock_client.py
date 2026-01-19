@@ -1,112 +1,62 @@
 
+import io
+import contextlib
+import re
 import time
 import threading
 import os
 import sys
+import warnings
+import logging
 from vnstock import Vnstock
 import itertools
 
+# Suppress pandas FutureWarnings (e.g. applymap deprecated)
+warnings.simplefilter(action='ignore', category=FutureWarning)
+
+class RateLimitError(Exception):
+    def __init__(self, wait_time):
+        self.wait_time = wait_time
+        super().__init__(f"Rate Limit Exceeded. Backoff {wait_time}s")
+
 class VnstockClient:
     _instance = None
-    _lock = threading.Lock()
     _stats_lock = threading.Lock()
     
     # Configuration
     MAX_RETRIES = 20
     RETRY_BACKOFF = 2.0
     RATE_LIMIT_WAIT = 65  # Long wait when 429 occurs
-    KEY_COOLDOWN = 3.0    # Strict spacing per key: 3 seconds
     
     def __init__(self):
         # Load API keys from env or use default
         api_keys_str = os.getenv('VNSTOCK_API_KEYS', os.getenv('VNSTOCK_API_KEY', ''))
-        self.api_keys = [k.strip() for k in api_keys_str.split(',') if k.strip()]
         
-        if not self.api_keys:
+        # STRICT SINGLE KEY MODE: Only take the first key
+        primary_key = api_keys_str.split(',')[0].strip()
+        
+        if primary_key:
+            self.api_keys = [primary_key]
+        else:
             self.api_keys = ['default']
-        
-        # Track when each key was last used: {key: timestamp}
-        # Initialized to 0.0 so all keys are ready initially
-        self._key_last_used = {k: 0.0 for k in self.api_keys}
-        
-        # Track which keys are temporarily banned (due to 429): {key: ban_until_ts}
-        self._key_bans = {k: 0.0 for k in self.api_keys}
         
         # Request counter per key per minute (for logging)
         self._key_stats = {k: {'count': 0, 'minute_start': time.time()} for k in self.api_keys}
-            
-        # Determine starting index for round-robin scans to ensure fairness
-        self._scan_index = 0
         
-        print(f"[VnstockClient] Initialized with {len(self.api_keys)} keys. Strategy: Strict {self.KEY_COOLDOWN}s Spacing.")
+        # Global Rate Limit Lock
+        self._global_ban_until = 0.0
+        self._ban_lock = threading.Lock()
+            
+        logging.info(f"[VnstockClient] Initialized with {len(self.api_keys)} keys. Strategy: Reactive Retry with Global Lock.")
 
     @staticmethod
     def get_instance():
         if VnstockClient._instance is None:
-            with VnstockClient._lock:
-                if VnstockClient._instance is None:
-                    VnstockClient._instance = VnstockClient()
+            VnstockClient._instance = VnstockClient()
         return VnstockClient._instance
 
     def stock(self, symbol, source='VCI'):
         return Vnstock(source=source, symbol=symbol)
-
-    def _get_next_available_key(self):
-        """
-        Find a key that satisfies:
-        1. Not banned (due to 429)
-        2. Last used > 3s ago
-        
-        If no key matches #2, calculate wait time for the best candidate.
-        If all keys banned, wait for ban to expire.
-        
-        Returns: (key, wait_time)
-        """
-        now = time.time()
-        
-        # 1. Check for ready keys (round-robin scan start)
-        n = len(self.api_keys)
-        start_idx = self._scan_index
-        
-        for i in range(n):
-            idx = (start_idx + i) % n
-            key = self.api_keys[idx]
-            
-            # Skip if banned
-            if now < self._key_bans[key]:
-                continue
-                
-            # Check 3s cooldown
-            time_since_last = now - self._key_last_used[key]
-            if time_since_last >= self.KEY_COOLDOWN:
-                # Key is ready!
-                self._scan_index = (idx + 1) % n # Update scan start for fairness
-                return key, 0
-        
-        # 2. No ready keys. Find the one that will be ready soonest.
-        soonest_key = None
-        min_wait = float('inf')
-        
-        for key in self.api_keys:
-            # Calculate wait based on Ban OR Cooldown
-            ban_wait = max(0, self._key_bans[key] - now)
-            cooldown_wait = max(0, self.KEY_COOLDOWN - (now - self._key_last_used[key]))
-            
-            total_wait = max(ban_wait, cooldown_wait)
-            
-            if total_wait < min_wait:
-                min_wait = total_wait
-                soonest_key = key
-        
-        # Return soonest key and how long to wait
-        # Caller will sleep this amount
-        return soonest_key, min_wait
-
-    def _mark_key_rate_limited(self, key):
-        """Mark a key as BANNED for 65s due to 429."""
-        with self._lock:
-            self._key_bans[key] = time.time() + self.RATE_LIMIT_WAIT
-            print(f"[VnstockClient] 🚫 Key {key[:10]}... BANNED for {self.RATE_LIMIT_WAIT}s (Rate Limit Hit)")
 
     def _update_stats_and_log(self, key, attempt):
         """Update last_used timestamp and stats."""
@@ -121,7 +71,7 @@ class VnstockClient:
             
             # Build status string
             key_status = " | ".join([f"{k[:5]}:{self._key_stats[k]['count']}" for k in self.api_keys])
-            print(f"[VnstockClient] Keys: [{key_status}] | Using: {key[:10]}...")
+            logging.info(f"[VnstockClient] Keys: [{key_status}] | Using: {key[:10]}...")
 
     def _is_rate_limit_error(self, e):
         error_str = str(e).lower()
@@ -136,64 +86,143 @@ class VnstockClient:
             pass
         return e
 
+    def is_global_ban_active(self):
+        """Check if any ban is active."""
+        with self._ban_lock:
+             return time.time() < self._global_ban_until
+             
+    def _check_global_ban(self):
+        """Raise error immediately if ban is active."""
+        with self._ban_lock:
+            now = time.time()
+            if now < self._global_ban_until:
+                wait_seconds = self._global_ban_until - now
+                if wait_seconds > 0:
+                     raise RateLimitError(wait_seconds)
+
+    def _set_global_ban(self, seconds):
+        """Activate global ban for all threads."""
+        with self._ban_lock:
+            # Only extend if new ban is longer than existing
+            expire_at = time.time() + seconds
+            if expire_at > self._global_ban_until:
+                self._global_ban_until = expire_at
+                logging.warning(f"[VnstockClient] 🛑 Global Ban Activated for {seconds}s.")
+
     def call(self, func, *args, **kwargs):
         """
-        Execute API call enforcing 3s spacing per key.
-        BLOCKING: Waits for a key to be ready (3s rule).
-        This ensures we never fire faster than allowed.
+        Execute API call with reactive retries.
+        No preemptive locking/cooldown.
         """
         attempt = 0
+        key = self.api_keys[0] # Always use the single primary key
         
         while attempt < self.MAX_RETRIES:
-            wait_time = 0
-            key = None
+            # 1. Check Global Ban first - RAISE if blocked
+            self._check_global_ban()
             
-            # 1. ACQUIRE KEY
-            with self._lock:
-                key, wait_time = self._get_next_available_key()
-                
-                if wait_time > 0:
-                    # We must wait. Sleep inside call() to block this thread 
-                    # until the key is actually ready.
-                    pass 
-                else:
-                    # Key is ready now. Mark it used immediately so others don't grab it.
-                    self._key_last_used[key] = time.time()
-            
-            # 2. WAIT IF NEEDED (Sleep outside lock ideally, but here we need to ensure flow)
-            if wait_time > 0:
-                # If we have to wait, sleep then Loop again to re-check readiness
-                # (someone else might have grabbed it if we didn't mark used)
-                # But to keep simple: simple blocking sleep here
-                time.sleep(wait_time)
-                # Re-acquire to be safe? Or simple recursion?
-                # Let's simple loop again.
-                continue
-            
-            # 3. EXECUTE
             attempt += 1
             self._update_stats_and_log(key, attempt)
             
+            # Capture stdout and stderr to parse rate limit messages from vnstock
+            f_out = io.StringIO()
+            f_err = io.StringIO()
+            
             try:
-                result = func(*args, **kwargs)
+                with contextlib.redirect_stdout(f_out), contextlib.redirect_stderr(f_err):
+                    result = func(*args, **kwargs)
+                
+                # Print captured output if any
+                output_out = f_out.getvalue()
+                output_err = f_err.getvalue()
+
+                # Filter spam/promotional messages
+                spam_msgs = [
+                    "🚫 Đang bị giới hạn API? Tăng tốc độ gọi API lên 10X với gói Vnstock Insider: https://vnstocks.com/insiders-program"
+                ]
+                
+                for spam in spam_msgs:
+                    output_out = output_out.replace(spam, "")
+                    output_err = output_err.replace(spam, "")
+
+                if output_out.strip(): logging.info(f"[Vnstock Lib Out] {output_out.strip()}")
+                if output_err.strip(): logging.warning(f"[Vnstock Lib Err] {output_err.strip()}")
+
                 if result is not None:
                     return result
                 return None # No data
+            
+            except AttributeError as e:
+                # AttributeError usually implies library/data structure mismatch (e.g. NoneType has no attribute items)
+                # This is NOT a transient error, so we should NOT retry.
+                logging.error(f"[VnstockClient] ⚠️  Library/Data Error ({key[:8]}): {e}. Skipping symbol/job.")
+                return None
                     
             except SystemExit as e:
                 # Rate limit exit from library
-                self._mark_key_rate_limited(key)
-                continue
+                output = f_out.getvalue() + "\n" + f_err.getvalue()
+                logging.warning(f"[VnstockClient] Captured SystemExit Output: {output.strip()}")
                 
+                wait_time = self.RATE_LIMIT_WAIT # Default fallback
+                
+                # Strip ANSI colors if any (simple regex)
+                ansi_escape = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
+                clean_output = ansi_escape.sub('', output)
+                
+                # Regex to find "Chờ X giây"
+                match_vn = re.search(r"Chờ\s+(\d+)\s+giây", clean_output)
+                match_en = re.search(r"Wait\s+(\d+)\s+seconds?", clean_output, re.IGNORECASE)
+                
+                if match_vn:
+                    wait_seconds = int(match_vn.group(1))
+                    wait_time = wait_seconds
+                    logging.warning(f"[VnstockClient] ⏳ Detected Rate Limit (VN). Requested: {wait_time}s.")
+                elif match_en:
+                    wait_seconds = int(match_en.group(1))
+                    wait_time = wait_seconds
+                    logging.warning(f"[VnstockClient] ⏳ Detected Rate Limit (EN). Requested: {wait_time}s.")
+                else:
+                    logging.warning(f"[VnstockClient] 🚫 Rate Limit Hit (SystemExit). Parsing failed, using default {wait_time}s...")
+                    logging.debug(f"[VnstockClient] [DEBUG] Output saw: {repr(clean_output[:200])}")
+                
+                # ADAPTIVE: Add 5% safety buffer
+                original_wait = wait_time
+                wait_time = int(wait_time * 1.05)
+                if wait_time == original_wait: wait_time += 1 # Ensure at least 1s extra
+                
+                logging.warning(f"[VnstockClient] 🛡️ Adaptive: Increasing wait by 5% -> {wait_time}s")
+                
+                self._set_global_ban(wait_time)
+                # RAISE error to abort this worker job and let it be re-queued
+                raise RateLimitError(wait_time)
+                
+            except RateLimitError:
+                 raise # Re-raise self (if caught by Exception below)
+                 
             except Exception as e:
                 real_e = self._unwrap_retry_error(e)
                 
+                # Check for NoneType attribute error (common library bug) which might be wrapped
+                if isinstance(real_e, AttributeError) and "'NoneType' object has no attribute 'items'" in str(real_e):
+                     logging.error(f"[VnstockClient] ⚠️  Library/Data Error ({key[:8]}): {real_e}. Skipping symbol/job.")
+                     return None
+
                 if self._is_rate_limit_error(real_e):
-                    self._mark_key_rate_limited(key)
-                    continue
+                    # ADAPTIVE: Increase default wait time by 5% for future 429s (Cumulative backoff)
+                    self.RATE_LIMIT_WAIT = int(self.RATE_LIMIT_WAIT * 1.05)
+                    
+                    logging.warning(f"[VnstockClient] 🚫 Key {key[:10]}... Rate Limit Hit (429). Waiting {self.RATE_LIMIT_WAIT}s (Adjusted +5%)...")
+                    self._set_global_ban(self.RATE_LIMIT_WAIT)
+                    raise RateLimitError(self.RATE_LIMIT_WAIT)
+                
+                # Check for permanent errors (Invalid Symbol, etc) -> Do not retry
+                error_str = str(real_e)
+                if any(x in error_str for x in ["Mã chứng khoán không hợp lệ", "Invalid symbol", "không tồn tại"]):
+                     logging.error(f"[VnstockClient] ❌ Permanent Error ({key[:8]}): {real_e}. Skipping.")
+                     return None
 
                 # Transient error
-                print(f"[VnstockClient] Error ({key[:8]}): {real_e}")
+                logging.error(f"[VnstockClient] Error ({key[:8]}): {real_e}")
                 time.sleep(1) # Short retry delay
         
         return None
