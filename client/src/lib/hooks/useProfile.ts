@@ -49,9 +49,16 @@ export function useProfile(autoFetch: boolean = true): UseProfileReturn {
         balance: data.balance || 0
       }));
     } catch (err) {
+      const axiosError = err as { response?: { status?: number }; message?: string };
+      // Don't log errors when not authenticated or expected auth errors
+      const isAuthError = axiosError.response?.status === 400 || 
+                          axiosError.response?.status === 401 ||
+                          axiosError.message === 'No authentication token';
+      if (!isAuthError) {
+        console.error('Error fetching profile:', err);
+      }
       const errorMessage = err instanceof Error ? err.message : 'Failed to fetch profile';
       setError(errorMessage);
-      console.error('Error fetching profile:', err);
     } finally {
       setIsLoading(false);
     }

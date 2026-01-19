@@ -43,8 +43,8 @@ export function StockTableWithTabs({
     isInWatchlist,
     toggleWatchlist
 }: StockTableWithTabsProps) {
-    const formatNumber = (num: number) => num.toLocaleString('vi-VN');
-    const formatPrice = (price: number) => formatNumber(price) + ' VND';
+    const formatNumber = (num: number | undefined | null) => (num ?? 0).toLocaleString('vi-VN');
+    const formatPrice = (price: number | undefined | null) => formatNumber(price) + ' VND';
 
     const getChangeColor = (value: number) => {
         if (value > 0) return 'text-green-600';
@@ -144,86 +144,86 @@ export function StockTableWithTabs({
                                         ? `${formatPrice(stock.low)} - ${formatPrice(stock.high)}`
                                         : '-';
 
-                                return (
-                                    <tr
-                                        key={stock.symbol}
-                                        className="border-b border-gray-100 hover:bg-blue-50 transition-colors cursor-pointer"
-                                        onClick={() => onStockClick(stock)}
+                            return (
+                                <tr
+                                    key={stock.symbol}
+                                    className="border-b border-gray-100 hover:bg-blue-50 transition-colors cursor-pointer"
+                                    onClick={() => onStockClick(stock)}
+                                >
+                                    <td
+                                        className="px-2 py-3 text-center"
+                                        onClick={(e) => e.stopPropagation()}
                                     >
-                                        <td
-                                            className="px-2 py-3 text-center"
-                                            onClick={(e) => e.stopPropagation()}
+                                        <WatchlistButton
+                                            symbol={stock.symbol}
+                                            isInWatchlist={isInWatchlist(stock.symbol)}
+                                            onToggle={() => toggleWatchlist(stock.symbol)}
+                                            size="sm"
+                                        />
+                                    </td>
+                                    <td className="px-4 py-3">
+                                        <span className="font-bold text-blue-600 hover:text-blue-800">
+                                            {stock.symbol}
+                                        </span>
+                                    </td>
+                                    <td className="px-4 py-3 text-left">
+                                        <span
+                                            className="text-sm text-gray-700 line-clamp-1"
+                                            title={stock.companyName}
                                         >
-                                            <WatchlistButton
-                                                symbol={stock.symbol}
-                                                isInWatchlist={isInWatchlist(stock.symbol)}
-                                                onToggle={() => toggleWatchlist(stock.symbol)}
-                                                size="sm"
-                                            />
-                                        </td>
-                                        <td className="px-4 py-3">
-                                            <span className="font-bold text-blue-600 hover:text-blue-800">
-                                                {stock.symbol}
-                                            </span>
-                                        </td>
-                                        <td className="px-4 py-3 text-left">
-                                            <span
-                                                className="text-sm text-gray-700 line-clamp-1"
-                                                title={stock.companyName}
-                                            >
-                                                {stock.companyName || '-'}
-                                            </span>
-                                        </td>
-                                        <td
-                                            className={`px-4 py-3 text-right font-bold text-lg ${getChangeColor(
-                                                stock.change
-                                            )}`}
-                                        >
-                                            {formatPrice(stock.price)}
-                                        </td>
-                                        <td
-                                            className={`px-4 py-3 text-right font-semibold ${getChangeColor(
-                                                stock.change
-                                            )}`}
-                                        >
-                                            {stock.change > 0 ? '+' : ''}
-                                            {formatNumber(stock.change)}
-                                        </td>
-                                        <td
-                                            className={`px-4 py-3 text-right font-semibold ${getChangeColor(
-                                                stock.changePercent
-                                            )}`}
-                                        >
-                                            {stock.changePercent > 0 ? '+' : ''}
-                                            {stock.changePercent}%
-                                        </td>
-                                        <td className="px-4 py-3 text-right text-gray-600 text-sm">
-                                            {stock.previousClose
-                                                ? formatPrice(stock.previousClose)
-                                                : '-'}
-                                        </td>
-                                        <td className="px-4 py-3 text-right text-gray-600 text-sm">
-                                            {dayRange}
-                                        </td>
-                                        <td className="px-4 py-3 text-right text-gray-700">
-                                            {formatNumber(stock.volume)}
-                                        </td>
-                                        <td
-                                            className="px-4 py-3 text-center"
-                                            onClick={(e) => e.stopPropagation()}
-                                        >
-                                            <QuickTradeButton
-                                                symbol={stock.symbol}
-                                                price={stock.price}
-                                                onClick={() => onBuyClick(stock)}
-                                                variant="buy"
-                                            />
-                                        </td>
-                                    </tr>
-                                );
-                            })}
-                        </tbody>
-                    </table>
+                                            {stock.companyName || '-'}
+                                        </span>
+                                    </td>
+                                    <td
+                                        className={`px-4 py-3 text-right font-bold text-lg ${getChangeColor(
+                                            stock.change
+                                        )}`}
+                                    >
+                                        {formatPrice(stock.price)}
+                                    </td>
+                                    <td
+                                        className={`px-4 py-3 text-right font-semibold ${getChangeColor(
+                                            stock.change
+                                        )}`}
+                                    >
+                                        {stock.change > 0 ? '+' : ''}
+                                        {formatNumber(stock.change)}
+                                    </td>
+                                    <td
+                                        className={`px-4 py-3 text-right font-semibold ${getChangeColor(
+                                            stock.changePercent
+                                        )}`}
+                                    >
+                                        {(stock.changePercent ?? 0) > 0 ? '+' : ''}
+                                        {stock.changePercent ?? 0}%
+                                    </td>
+                                    <td className="px-4 py-3 text-right text-gray-600 text-sm">
+                                        {stock.previousClose
+                                            ? formatPrice(stock.previousClose)
+                                            : '-'}
+                                    </td>
+                                    <td className="px-4 py-3 text-right text-gray-600 text-sm">
+                                        {dayRange}
+                                    </td>
+                                    <td className="px-4 py-3 text-right text-gray-700">
+                                        {formatNumber(stock.volume)}
+                                    </td>
+                                    <td
+                                        className="px-4 py-3 text-center"
+                                        onClick={(e) => e.stopPropagation()}
+                                    >
+                                        <QuickTradeButton
+                                            symbol={stock.symbol}
+                                            price={stock.price}
+                                            onClick={() => onBuyClick(stock)}
+                                            variant="buy"
+                                        />
+                                    </td>
+                                </tr>
+                            );
+                        })}
+                    </tbody>
+                </table>
 
                     {(!stocks || stocks.length === 0) && (
                         <div className="text-center py-8 text-gray-500">

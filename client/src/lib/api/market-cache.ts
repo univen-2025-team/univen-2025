@@ -193,18 +193,98 @@ export async function getAllStocksByDate(date: string): Promise<CachedStockData[
 
 /**
  * Get all stocks from latest date (without specifying date)
+ * Combines topGainers, topLosers, and topStocksByPrice from market data
  */
 export async function getAllStocks(): Promise<CachedStockData[]> {
     try {
-        // First get available dates
-        const dates = await getAvailableDates(1);
-        if (dates.length === 0) {
-            console.error('No available dates found');
+        console.log('🔍 getAllStocks: Fetching market data...');
+        const marketData = await getLatestMarketData();
+        console.log('🔍 getAllStocks: marketData received:', marketData ? 'Yes' : 'No');
+        
+        if (!marketData) {
+            console.error('No market data available');
             return [];
         }
         
-        // Fetch stocks from the latest date
-        return await getAllStocksByDate(dates[0]);
+        console.log('🔍 getAllStocks: topStocksByPrice count:', marketData.topStocksByPrice?.length || 0);
+        console.log('🔍 getAllStocks: topGainers count:', marketData.topGainers?.length || 0);
+        console.log('🔍 getAllStocks: topLosers count:', marketData.topLosers?.length || 0);
+
+        // Combine all stocks from different sources
+        const allStocksMap = new Map<string, CachedStockData>();
+        
+        // Add from topStocksByPrice first (has most complete data)
+        if (marketData.topStocksByPrice) {
+            marketData.topStocksByPrice.forEach((stock: any) => {
+                if (stock.symbol && stock.symbol !== 'VNINDEX') {
+                    allStocksMap.set(stock.symbol, {
+                        symbol: stock.symbol,
+                        date: stock.date || marketData.date,
+                        companyName: stock.companyName || stock.symbol,
+                        price: stock.price || stock.close || 0,
+                        change: stock.change || 0,
+                        changePercent: stock.changePercent || 0,
+                        volume: stock.volume || 0,
+                        high: stock.high || stock.price || 0,
+                        low: stock.low || stock.price || 0,
+                        open: stock.open || stock.price || 0,
+                        close: stock.close || stock.price || 0,
+                        previousClose: stock.previousClose || (stock.price - stock.change) || 0
+                    });
+                }
+            });
+        }
+
+        // Add from topGainers
+        if (marketData.topGainers) {
+            marketData.topGainers.forEach((stock: any) => {
+                if (stock.symbol && !allStocksMap.has(stock.symbol)) {
+                    allStocksMap.set(stock.symbol, {
+                        symbol: stock.symbol,
+                        date: marketData.date,
+                        companyName: stock.companyName || stock.symbol,
+                        price: stock.price || 0,
+                        change: stock.change || 0,
+                        changePercent: stock.changePercent || 0,
+                        volume: stock.volume || 0,
+                        high: stock.price || 0,
+                        low: stock.price || 0,
+                        open: stock.price || 0,
+                        close: stock.price || 0,
+                        previousClose: stock.price - (stock.change || 0)
+                    });
+                }
+            });
+        }
+
+        // Add from topLosers
+        if (marketData.topLosers) {
+            marketData.topLosers.forEach((stock: any) => {
+                if (stock.symbol && !allStocksMap.has(stock.symbol)) {
+                    allStocksMap.set(stock.symbol, {
+                        symbol: stock.symbol,
+                        date: marketData.date,
+                        companyName: stock.companyName || stock.symbol,
+                        price: stock.price || 0,
+                        change: stock.change || 0,
+                        changePercent: stock.changePercent || 0,
+                        volume: stock.volume || 0,
+                        high: stock.price || 0,
+                        low: stock.price || 0,
+                        open: stock.price || 0,
+                        close: stock.price || 0,
+                        previousClose: stock.price - (stock.change || 0)
+                    });
+                }
+            });
+        }
+
+        // Convert to array and sort by symbol
+        const stocks = Array.from(allStocksMap.values())
+            .sort((a, b) => a.symbol.localeCompare(b.symbol));
+        
+        console.log(`📊 getAllStocks: Found ${stocks.length} stocks`);
+        return stocks;
     } catch (error) {
         console.error('Error fetching all stocks:', error);
         return [];

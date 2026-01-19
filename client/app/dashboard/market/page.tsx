@@ -295,13 +295,13 @@ export default function MarketPage() {
             };
         }
 
-        const advancing = marketData.stocks.filter((s) => s.change > 0).length;
-        const declining = marketData.stocks.filter((s) => s.change < 0).length;
-        const unchanged = marketData.stocks.filter((s) => s.change === 0).length;
-        const totalVolume = marketData.stocks.reduce((sum, s) => sum + s.volume, 0);
+        const advancing = marketData.stocks.filter((s) => (s.change ?? 0) > 0).length;
+        const declining = marketData.stocks.filter((s) => (s.change ?? 0) < 0).length;
+        const unchanged = marketData.stocks.filter((s) => (s.change ?? 0) === 0).length;
+        const totalVolume = marketData.stocks.reduce((sum, s) => sum + (s.volume ?? 0), 0);
         const avgChange =
-            marketData.stocks.reduce((sum, s) => sum + s.changePercent, 0) /
-            marketData.stocks.length;
+            marketData.stocks.reduce((sum, s) => sum + (s.changePercent ?? 0), 0) /
+            (marketData.stocks.length || 1);
 
         const stats = {
             totalStocks: marketData.stocks.length,
