@@ -216,6 +216,7 @@ export default class MarketCacheController {
             const filter = req.query.filter as string;
             const start = req.query.start as string;
             const end = req.query.end as string;
+            const refresh = req.query.refresh === 'true';
 
             if (!symbol) {
                 throw new BadRequestErrorResponse({
@@ -223,7 +224,7 @@ export default class MarketCacheController {
                 });
             }
 
-            const history = await MarketCacheService.getStockIntraday(symbol, filter, start, end);
+            const history = await MarketCacheService.getStockIntraday(symbol, filter, start, end, refresh);
 
             new OkResponse({
                 message: 'Stock intraday data retrieved successfully',

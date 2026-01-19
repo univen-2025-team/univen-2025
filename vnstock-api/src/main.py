@@ -18,6 +18,7 @@ from src.jobs.scheduler import Scheduler
 from src.jobs.daily_sync import check_startup_sync
 from src.jobs.vn30_history_sync import startup_vn30_sync
 from src.jobs.news_sync import check_and_enqueue_news_sync
+from src.jobs.market_stats_gen import generate_daily_market_stats
 from src.services.fetchers.stock_history import StockHistoryFetcher
 from src.services.syncers.stock_history import StockHistorySyncer
 from src.worker import StockSyncWorker
@@ -74,11 +75,22 @@ async def startup_event():
                 print("[Background] News sync check completed.")
             except Exception as e:
                 print(f"[Background] News sync error: {e}")
+
+        def run_market_stats_gen():
+            try:
+                # Wait a bit for other syncs to potentially add data, then run generator
+                time.sleep(5) 
+                print("[Background] Starting Market Stats Generation...")
+                generate_daily_market_stats()
+                print("[Background] Market Stats Generation completed.")
+            except Exception as e:
+                print(f"[Background] Market Stats Gen error: {e}")
         
         # Start all syncs in parallel background threads
         threading.Thread(target=run_startup_sync, daemon=True, name="StartupSync").start()
         threading.Thread(target=run_vn30_sync, daemon=True, name="VN30Sync").start()
         threading.Thread(target=run_news_sync, daemon=True, name="NewsSync").start()
+        threading.Thread(target=run_market_stats_gen, daemon=True, name="MarketStatsGen").start()
         
         print("All startup sync tasks launched in background threads.")
             
@@ -110,24 +122,25 @@ def sync_stock(symbol: str):
         symbol = symbol.upper()
         print(f"Received sync request for {symbol}")
         
-        if not db.client:
-             db.connect()
-
-        fetcher = StockHistoryFetcher(symbol=symbol, interval='1m')
-        # Fetch latest available (handles weekends/holidays)
-        data = fetcher.fetch_latest_available(max_lookback_days=30)
+        # Enqueue job instead of direct fetch
+        import redis
+        import json
+        import time
         
-        if data:
-            syncer = StockHistorySyncer()
-            syncer.sync(data)
-            return {"status": "success", "data": data}
-        else:
-            # If standard fetch fails, it might be because '1m' is not available for older stocks or some issue.
-            # But the user asked to fetch.
-            raise HTTPException(status_code=404, detail=f"No data found for {symbol}")
+        r = redis.Redis(host='redis', port=6379, decode_responses=True)
+        job_data = json.dumps({
+            'symbol': symbol,
+            'source': 'api_request',
+            'timestamp': time.time()
+        })
+        
+        r.lpush('vnstock_sync_queue', job_data)
+        print(f"Enqueued sync job for {symbol}")
+        
+        return {"status": "queued", "message": f"Sync job for {symbol} added to queue"}
             
     except Exception as e:
-        print(f"Sync error for {symbol}: {e}")
+        print(f"Enqueue error for {symbol}: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 def main():

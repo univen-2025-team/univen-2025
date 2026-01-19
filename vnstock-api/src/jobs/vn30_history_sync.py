@@ -24,18 +24,26 @@ VN30_SYMBOLS = [
 ]
 
 
+import redis
+import json
+
 def startup_vn30_sync():
     """
     Startup sync: ensure all VN30 stocks have at least one record.
-    For stocks without data, fetch the most recent available trading day.
-    
-    This runs when the service starts.
+    For stocks without data, enqueue a sync job.
     """
     print("=== VN30 Startup Sync ===")
     
     db.connect()
     syncer = StockHistorySyncer()
     
+    # helper for redis
+    try:
+        r = redis.Redis(host='redis', port=6379, decode_responses=True)
+    except Exception as e:
+        print(f"Redis connect error: {e}")
+        return
+
     missing_symbols = []
     
     for symbol in VN30_SYMBOLS:
@@ -46,92 +54,79 @@ def startup_vn30_sync():
         print("All VN30 stocks have data, startup sync complete.")
         return
     
-    print(f"Found {len(missing_symbols)} stocks without data: {missing_symbols}")
-    print("Fetching initial data...")
-    
-    today = datetime.now().strftime('%Y-%m-%d')
-    successful = 0
+    print(f"Found {len(missing_symbols)} stocks without data. Enqueuing jobs...")
     
     for i, symbol in enumerate(missing_symbols):
-        print(f"\n[{i+1}/{len(missing_symbols)}] Fetching {symbol}...")
-        
-        try:
-            fetcher = StockHistoryFetcher(symbol=symbol, interval='1m')
-            data = fetcher.fetch_latest_available(target_date=today, max_lookback_days=7)
-            
-            if data:
-                syncer.sync(data)
-                successful += 1
-            else:
-                print(f"  Could not find data for {symbol}")
-                
-        except Exception as e:
-            print(f"  Error fetching {symbol}: {e}")
-        
-        # Rate limiting
-        if i < len(missing_symbols) - 1:
-            print(f"  Waiting 10s for rate limit...")
-            time.sleep(10)
+        job_data = json.dumps({
+            'symbol': symbol,
+            'source': 'startup_sync',
+            'timestamp': time.time()
+        })
+        r.lpush('vnstock_sync_queue', job_data)
+        print(f"Enqueued startup sync for {symbol}")
     
-    print(f"\n=== Startup Sync Complete ===")
-    print(f"Initialized {successful}/{len(missing_symbols)} stocks")
+    print(f"\n=== Startup Sync Enqueued ===")
 
 
 def sync_vn30_daily(date: str = None):
     """
-    Daily sync: fetch 1-minute tick data for all VN30 stocks for a specific date.
-    Skips weekends/holidays (when vnstock returns no data).
-    
-    Args:
-        date: Date string in 'YYYY-MM-DD' format. Defaults to today.
+    Daily sync: Check if data exists for date, if not, enqueue job.
     """
     if not date:
-        date = datetime.now().strftime('%Y-%m-%d')
+        now = datetime.now()
+        wd = now.weekday()
+        
+        # Rule: Sat(5), Sun(6), Mon(0) => Get Friday
+        if wd == 5: # Saturday
+            target_date = now - timedelta(days=1)
+        elif wd == 6: # Sunday
+            target_date = now - timedelta(days=2)
+        elif wd == 0: # Monday
+            target_date = now - timedelta(days=3)
+        else:
+            target_date = now
+            
+        date = target_date.strftime('%Y-%m-%d')
     
     print(f"=== VN30 Daily Sync for {date} ===")
     
     db.connect()
     syncer = StockHistorySyncer()
     
-    successful = 0
+    try:
+        r = redis.Redis(host='redis', port=6379, decode_responses=True)
+    except Exception as e:
+        print(f"Redis connect error: {e}")
+        return
+    
+    enqueued = 0
     skipped = 0
-    failed = 0
     
     for i, symbol in enumerate(VN30_SYMBOLS):
-        print(f"\n[{i+1}/{len(VN30_SYMBOLS)}] Processing {symbol}...")
-        
         try:
             # Check if we already have data for this date
             if syncer.has_data_for_date(symbol, date, '1m'):
-                print(f"  Data already exists, skipping")
+                print(f"[{i+1}/{len(VN30_SYMBOLS)}] {symbol}: Data exists, skipping")
                 skipped += 1
                 continue
             
-            # Fetch data
-            fetcher = StockHistoryFetcher(symbol=symbol, interval='1m')
-            data = fetcher.fetch(date)
-            
-            if data:
-                syncer.sync(data)
-                successful += 1
-            else:
-                # No data (weekend/holiday) - this is expected, not an error
-                print(f"  No data for {date} (likely weekend/holiday)")
-                skipped += 1
+            # Enqueue
+            job_data = json.dumps({
+                'symbol': symbol,
+                'date': date,
+                'source': 'daily_sync',
+                'timestamp': time.time()
+            })
+            r.lpush('vnstock_sync_queue', job_data)
+            print(f"[{i+1}/{len(VN30_SYMBOLS)}] {symbol}: Enqueued job")
+            enqueued += 1
                 
         except Exception as e:
-            print(f"  Error: {e}")
-            failed += 1
-        
-        # Rate limiting
-        if i < len(VN30_SYMBOLS) - 1:
-            print(f"  Waiting 10s for rate limit...")
-            time.sleep(10)
-    
-    print(f"\n=== Daily Sync Complete ===")
-    print(f"Successful: {successful}")
+            print(f"  Error checking {symbol}: {e}")
+            
+    print(f"\n=== Daily Sync Enqueue Complete ===")
+    print(f"Enqueued: {enqueued}")
     print(f"Skipped: {skipped}")
-    print(f"Failed: {failed}")
 
 
 def get_stock_price(symbol: str, target_time: str = None, target_date: str = None, interval: str = "1m"):
