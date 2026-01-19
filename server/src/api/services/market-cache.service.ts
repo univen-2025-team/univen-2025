@@ -615,4 +615,47 @@ export default class MarketCacheService {
             return { symbol: symbol.toUpperCase(), items: [], total: 0 };
         }
     }
+
+    /**
+     * Get stock news for a specific symbol and date from vnstock-api
+     * Returns news articles within a date window around the target date
+     */
+    static async getStockNewsByDate(symbol: string, date: string, windowDays: number = 2): Promise<any> {
+        try {
+            const response = await axios.get(
+                `${VNSTOCK_API_URL}/news/${symbol.toUpperCase()}/date/${date}`,
+                {
+                    params: { window_days: windowDays },
+                    timeout: 15000
+                }
+            );
+            
+            if (response.data && response.data.status === 'success') {
+                return {
+                    symbol: response.data.symbol,
+                    targetDate: response.data.targetDate,
+                    windowDays: response.data.windowDays,
+                    items: response.data.data || [],
+                    total: response.data.total || 0
+                };
+            }
+            
+            return { 
+                symbol: symbol.toUpperCase(), 
+                targetDate: date,
+                windowDays,
+                items: [], 
+                total: 0 
+            };
+        } catch (error) {
+            this.logger.error(`Error getting stock news for ${symbol} on ${date}`, error as any);
+            return { 
+                symbol: symbol.toUpperCase(), 
+                targetDate: date,
+                windowDays,
+                items: [], 
+                total: 0 
+            };
+        }
+    }
 }

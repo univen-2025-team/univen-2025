@@ -3,17 +3,56 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import CandlestickChart from './candlestick-chart';
 import LessonsList from './lessons-list';
 import StockPicker from './stock-picker';
-import { mockLessons } from '@/lib/mock-data';
 import { useLearnStockStore } from '../stores/useLearnStockStore';
-import { getStockData, CachedStockData } from '@/lib/api/market-cache';
+import { 
+    getStockData, 
+    CachedStockData, 
+    generateStockLessons, 
+    LearnProductLesson 
+} from '@/lib/api/market-cache';
+import type { Lesson } from '@/lib/types';
+
+// Transform API lesson to UI lesson format
+const transformLesson = (apiLesson: LearnProductLesson): Lesson => {
+    const changePercent = apiLesson.priceChangePercent;
+    let volatilityType: string;
+    
+    if (changePercent >= 5) volatilityType = 'strong_up';
+    else if (changePercent <= -5) volatilityType = 'strong_down';
+    else if (changePercent > 0) volatilityType = 'gap';
+    else volatilityType = 'spike_volume';
+    
+    return {
+        id: apiLesson._id,
+        symbol: apiLesson.symbol,
+        event_date: apiLesson.eventDate.split('T')[0],
+        volatility_type: volatilityType,
+        news_summary: apiLesson.newsSummary || '',
+        lesson_title: apiLesson.lessonTitle,
+        lesson_content: apiLesson.lessonContent,
+        key_takeaways: apiLesson.keyTakeaways,
+        difficulty_level: apiLesson.difficultyLevel,
+        confidence_score: apiLesson.confidenceScore,
+    };
+};
 
 export default function LearnStockPage() {
-    const { selectedStock, setSelectedStock, isLoading, setIsLoading } = useLearnStockStore();
+    const { selectedStock, setSelectedStock, isLoading, setIsLoading, setGeneratedLessons } = useLearnStockStore();
     const [stockData, setStockData] = useState<CachedStockData | null>(null);
     const [priceLoading, setPriceLoading] = useState(false);
+    const [lessons, setLessons] = useState<Lesson[]>([]);
+    const [generationStatus, setGenerationStatus] = useState<{
+        generated: number;
+        cached: number;
+    } | null>(null);
+    const [error, setError] = useState<string | null>(null);
+
+    // Default user age (can be fetched from user profile later)
+    const userAge = 25;
 
     // Fetch stock data when selected stock changes
     useEffect(() => {
@@ -60,13 +99,42 @@ export default function LearnStockPage() {
 
     const handleGenerateLessons = async () => {
         setIsLoading(true);
-        // Simulate API call
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-        setIsLoading(false);
+        setError(null);
+        setGenerationStatus(null);
+        
+        try {
+            // Call real API to generate lessons
+            // threshold: 5% - detect price changes >= 5%
+            // lookbackDays: 365 - analyze 1 year of history
+            const result = await generateStockLessons(selectedStock, userAge, {
+                threshold: 3,
+                lookbackDays: 365,
+                limit: 20
+            });
+            
+            // Transform API lessons to UI format
+            const transformedLessons = result.lessons.map(transformLesson);
+            setLessons(transformedLessons);
+            setGeneratedLessons(transformedLessons);
+            
+            setGenerationStatus({
+                generated: result.generated,
+                cached: result.cached
+            });
+            
+            if (result.total === 0) {
+                setError('Không tìm thấy sự kiện biến động giá đáng kể (>3%) trong 1 năm qua');
+            }
+        } catch (err) {
+            console.error('Error generating lessons:', err);
+            setError('Có lỗi xảy ra khi tạo bài học. Vui lòng thử lại.');
+        } finally {
+            setIsLoading(false);
+        }
     };
 
-    // Filter lessons for selected stock
-    const stockLessons = mockLessons.filter((lesson) => lesson.symbol === selectedStock);
+    // Use generated lessons from state
+    const stockLessons = lessons.filter((lesson) => lesson.symbol === selectedStock);
 
     return (
         <div className="container mx-auto px-4 py-8">
@@ -98,7 +166,30 @@ export default function LearnStockPage() {
                     >
                         {isLoading ? 'Generating...' : 'Generate Lessons'}
                     </Button>
+                    
+                    {/* Generation Status Badge */}
+                    {generationStatus && (
+                        <div className="flex gap-2 items-center">
+                            {generationStatus.generated > 0 && (
+                                <Badge variant="default" className="bg-green-600">
+                                    +{generationStatus.generated} Generated
+                                </Badge>
+                            )}
+                            {generationStatus.cached > 0 && (
+                                <Badge variant="secondary">
+                                    {generationStatus.cached} Cached
+                                </Badge>
+                            )}
+                        </div>
+                    )}
                 </div>
+                
+                {/* Error Message */}
+                {error && (
+                    <div className="mt-4 p-3 bg-destructive/10 border border-destructive/20 rounded-md text-destructive text-sm">
+                        {error}
+                    </div>
+                )}
             </Card>
 
             {/* Main Content */}

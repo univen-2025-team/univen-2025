@@ -262,4 +262,45 @@ export default class MarketCacheController {
             next(error);
         }
     }
+
+    /**
+     * GET /api/market/news/:symbol/date/:date
+     * Get stock news for a specific symbol and date
+     * Returns news articles within a date window (±windowDays) around the target date
+     */
+    static async getStockNewsByDate(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { symbol, date } = req.params;
+            const windowDays = parseInt(req.query.windowDays as string) || 2;
+
+            if (!symbol) {
+                throw new BadRequestErrorResponse({
+                    message: 'Stock symbol is required'
+                });
+            }
+
+            if (!date) {
+                throw new BadRequestErrorResponse({
+                    message: 'Date is required (format: YYYY-MM-DD)'
+                });
+            }
+
+            // Validate date format
+            const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+            if (!dateRegex.test(date)) {
+                throw new BadRequestErrorResponse({
+                    message: 'Invalid date format. Use YYYY-MM-DD'
+                });
+            }
+
+            const news = await MarketCacheService.getStockNewsByDate(symbol, date, windowDays);
+
+            new OkResponse({
+                message: 'Stock news by date retrieved successfully',
+                metadata: news
+            }).send(res);
+        } catch (error) {
+            next(error);
+        }
+    }
 }
