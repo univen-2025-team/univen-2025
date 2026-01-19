@@ -23,46 +23,52 @@ export function MarketStats({
 
     const stats = [
         {
-            label: 'Tổng số mã',
+            label: 'Tổng mã',
             value: totalStocks,
             icon: Activity,
             color: 'text-blue-600',
-            bgColor: 'bg-blue-50'
+            bg: 'bg-blue-50',
+            border: 'border-blue-200'
         },
         {
             label: 'Tăng',
             value: advancing,
             icon: TrendingUp,
-            color: 'text-green-600',
-            bgColor: 'bg-green-50'
+            color: 'text-emerald-600',
+            bg: 'bg-emerald-50',
+            border: 'border-emerald-200'
         },
         {
             label: 'Giảm',
             value: declining,
             icon: TrendingDown,
             color: 'text-red-600',
-            bgColor: 'bg-red-50'
+            bg: 'bg-red-50',
+            border: 'border-red-200'
         },
         {
-            label: 'Đứng',
+            label: 'Đứng giá',
             value: unchanged,
             icon: Minus,
-            color: 'text-yellow-600',
-            bgColor: 'bg-yellow-50'
+            color: 'text-amber-600',
+            bg: 'bg-amber-50',
+            border: 'border-amber-200'
         },
         {
             label: 'Khối lượng (M)',
             value: Math.round(totalVolume / 1000000),
             icon: BarChart3,
             color: 'text-purple-600',
-            bgColor: 'bg-purple-50'
+            bg: 'bg-purple-50',
+            border: 'border-purple-200'
         },
         {
             label: '% TB',
             value: `${avgChange > 0 ? '+' : ''}${avgChange.toFixed(2)}%`,
             icon: DollarSign,
-            color: avgChange >= 0 ? 'text-green-600' : 'text-red-600',
-            bgColor: avgChange >= 0 ? 'bg-green-50' : 'bg-red-50',
+            color: avgChange >= 0 ? 'text-emerald-600' : 'text-red-600',
+            bg: avgChange >= 0 ? 'bg-emerald-50' : 'bg-red-50',
+            border: avgChange >= 0 ? 'border-emerald-200' : 'border-red-200',
             isPercentage: true
         }
     ];
@@ -74,15 +80,15 @@ export function MarketStats({
                 return (
                     <div
                         key={index}
-                        className="bg-white rounded-xl shadow-md p-4 hover:shadow-lg transition-shadow"
+                        className={`group bg-white rounded-xl shadow-sm p-4 border transition-all duration-300 hover:shadow-xl hover:-translate-y-1 ${stat.border}`}
                     >
-                        <div className="flex items-center justify-between mb-2">
-                            <span className="text-sm text-gray-600">{stat.label}</span>
-                            <div className={`p-2 rounded-lg ${stat.bgColor}`}>
+                        <div className="flex items-center justify-between mb-3">
+                            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">{stat.label}</span>
+                            <div className={`p-2 rounded-lg ${stat.bg} transition-colors group-hover:scale-110`}>
                                 <Icon className={`h-4 w-4 ${stat.color}`} />
                             </div>
                         </div>
-                        <div className={`text-2xl font-bold ${stat.color}`}>
+                        <div className={`text-2xl font-bold ${stat.color} tracking-tight`}>
                             {stat.isPercentage ? stat.value : formatNumber(Number(stat.value))}
                         </div>
                     </div>
