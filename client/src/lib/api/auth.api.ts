@@ -45,7 +45,15 @@ export const authApi = {
      */
     login: async (data: LoginRequest): Promise<AuthResponse> => {
         const response = await axiosInstance.post('/auth/login', data);
-        return response.data.metadata;
+        const metadata = response.data?.metadata;
+        
+        // Validate response structure
+        if (!metadata?.token || !metadata?.user) {
+            console.error('Invalid API response structure:', response.data);
+            throw new Error('Invalid server response');
+        }
+        
+        return metadata;
     },
 
     /**

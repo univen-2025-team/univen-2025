@@ -15,3 +15,5 @@ server/yarn.lock
 client/bun.lock
 client-new/bun.lock
 .agent
+
+.env

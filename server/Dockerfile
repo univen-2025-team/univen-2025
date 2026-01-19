@@ -5,8 +5,8 @@ WORKDIR /app
 # Copy package files
 COPY package.json package-lock.json* ./
 
-# Install dependencies
-RUN npm install --legacy-peer-deps --production
+# Install all dependencies (including devDependencies for tsx)
+RUN npm install --legacy-peer-deps
 
 # Copy source code
 COPY . .
@@ -15,7 +15,7 @@ COPY . .
 RUN mkdir -p logs public
 
 # Expose port
-EXPOSE 5000
+EXPOSE 4000
 
-# Start the server
-CMD ["npm", "run", "start"]
+# Start the server (use npx tsx directly to respect NODE_ENV from environment)
+CMD ["npx", "tsx", "server.ts"]

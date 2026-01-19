@@ -1,6 +1,5 @@
-version: '3.8'
-
 services:
+  # (Compose v2 ignores `version:`; keep file simple and rely on default .env loading)
   # =============================================================================
   # Infrastructure Services
   # =============================================================================
@@ -75,11 +74,16 @@ services:
     restart: unless-stopped
     environment:
       NODE_ENV: ${NODE_ENV:-production}
-      SERVER_PORT: ${SERVER_PORT:-5000}
-      MONGODB_URI: ${MONGODB_URI:-mongodb://admin:password123@mongodb:27017/do_an_1?authSource=admin}
+      PORT: 4000
+      SERVER_PORT: 4000
+      MONGODB_URI: ${MONGODB_URI:-mongodb://admin:password123@mongodb:27017/univen2025?authSource=admin}
+      DB_URL: ${MONGODB_URI:-mongodb://admin:password123@mongodb:27017/univen2025?authSource=admin}
       REDIS_URL: ${REDIS_URL:-redis://redis:6379}
+      HOST: 0.0.0.0
+      CLIENT_URL: ${NEXT_PUBLIC_APP_URL:-http://localhost:3000}
     ports:
-      - "${SERVER_PORT:-5000}:5000"
+      # Always map to 4000 to match NEXT_PUBLIC_API_URL
+      - "4000:4000"
     volumes:
       - ./server/logs:/app/logs
       - ./server/public:/app/public
@@ -91,42 +95,59 @@ services:
       redis:
         condition: service_healthy
     healthcheck:
-      test: [ "CMD", "wget", "-q", "--spider", "http://localhost:5000/health" ]
+      # Dùng node để check health endpoint (node:22-alpine không có wget/curl)
+      # Health endpoint ở /v1/api/health, container internal port is always 4000
+      test: [ "CMD-SHELL", "node -e \"require('http').get('http://localhost:4000/v1/api/health',(r)=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))\"" ]
       interval: 30s
       timeout: 10s
-      retries: 3
-      start_period: 40s
+      retries: 5
+      start_period: 60s
 
   client:
     build:
       context: ./client
       dockerfile: Dockerfile
+      args:
+        # Build time args for Next.js (NEXT_PUBLIC_ vars must be set at build time)
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:4000/v1/api}
+        NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-http://localhost:3000}
     container_name: univen-client
     restart: unless-stopped
     environment:
       NODE_ENV: ${NODE_ENV:-production}
-      NEXT_PUBLIC_API_URL: http://server:5000
+      # Runtime env (only works for server-side, NEXT_PUBLIC_ need rebuild)
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:4000/v1/api}
+      NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-http://localhost:3000}
+      NEXT_PUBLIC_AGENT_API: ${NEXT_PUBLIC_AGENT_API:-}
     ports:
       - "${CUSTOMER_PORT:-3000}:3000"
     networks:
       - univen-network
     depends_on:
-      - server
+      server:
+        condition: service_healthy
 
   vnstock-api:
     build:
       context: ./vnstock-api
-      dockerfile: Dockerfile.dev
+      dockerfile: Dockerfile
     container_name: univen-vnstock-api
     restart: unless-stopped
     environment:
-      MONGODB_URI: ${MONGODB_URI}
-      CRONJOB_ENABLED: ${CRONJOB_ENABLED}
-      VNSTOCK_SOURCE: ${VNSTOCK_SOURCE}
+      MONGODB_URI: ${MONGODB_URI:-mongodb://admin:password123@mongodb:27017/univen2025?authSource=admin}
+      CRONJOB_ENABLED: ${CRONJOB_ENABLED:-true}
+      VNSTOCK_SOURCE: ${VNSTOCK_SOURCE:-TCBS}
+      VNSTOCK_API_KEY: ${VNSTOCK_API_KEY:-}
+      PYTHONUNBUFFERED: 1
+      PYTHONDONTWRITEBYTECODE: 1
+    ports:
+      - "8000:8000"
     networks:
       - univen-network
     depends_on:
       mongodb:
+        condition: service_healthy
+      server:
         condition: service_healthy
 
 # =============================================================================

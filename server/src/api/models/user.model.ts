@@ -11,7 +11,7 @@ const userSchema = new Schema<model.auth.UserSchema>(
     {
         /* ---------------------- Authenticate ---------------------- */
         email: { type: String, unique },
-        googleId: { type: String, unique },
+        googleId: { type: String, unique: true, sparse: true }, // sparse: allow multiple null values
         password: { type: String, select: false },
 
         /* ---------------------- Information  ---------------------- */

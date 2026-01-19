@@ -4,7 +4,8 @@ import path from 'path';
 export const API_VERSION = 'v1';
 
 // Server configs
-export const PORT = process.env.PORT || 4000;
+// NOTE: In Docker, internal port is always 4000. Use SERVER_PORT for external mapping.
+export const PORT = process.env.PORT || process.env.SERVER_PORT || 4000;
 export const HOST = process.env.HOST || '0.0.0.0';
 export const BASE_URL = `http://${HOST}:${PORT}`;
 

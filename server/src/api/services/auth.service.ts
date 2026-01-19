@@ -90,11 +90,12 @@ export default class AuthService {
                 publicKey,
                 refreshToken: jwtTokenPair.refreshToken
             })
-        ]).catch(async () => {
+        ]).catch(async (err) => {
+            console.error('Error saving user or key token:', err);
             await KeyTokenService.deleteKeyTokenByUserId(userInstance.id);
             await UserService.removeUser(userInstance.id);
 
-            throw new ForbiddenErrorResponse({ message: 'Error on save user or key token!' });
+            throw new ForbiddenErrorResponse({ message: `Error on save user or key token: ${err.message}` });
         });
 
         return {

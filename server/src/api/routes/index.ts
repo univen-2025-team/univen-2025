@@ -12,6 +12,15 @@ import mediaRoute from './media/index.js';
 
 const rootRoute = Router();
 
+/* -------------------------- Health Check -------------------------- */
+rootRoute.get('/health', (req, res) => {
+    res.status(200).json({ 
+        status: 'ok', 
+        timestamp: new Date().toISOString(),
+        service: 'univen-2025-server'
+    });
+});
+
 /* -------------------------- Auth -------------------------- */
 rootRoute.use('/auth', authRoute);
 

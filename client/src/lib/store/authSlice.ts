@@ -87,6 +87,12 @@ export const loginUser = createAsyncThunk(
             const response = await authApi.login(credentials);
             console.log('Login response:', response);
 
+            // Validate response structure
+            if (!response?.token?.accessToken || !response?.token?.refreshToken) {
+                console.error('Invalid login response structure:', response);
+                return rejectWithValue('Phản hồi từ server không hợp lệ');
+            }
+
             // Save tokens to localStorage for direct access
             if (typeof window !== 'undefined') {
                 localStorage.setItem('accessToken', response.token.accessToken);
