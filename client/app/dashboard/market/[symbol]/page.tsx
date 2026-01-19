@@ -304,12 +304,52 @@ const StockDetailPage = () => {
     }, 0);
   }, [transactions]);
 
+  // Calculate change based on visible chart data (User Request: Start to End of chart)
+  const calculatedChange = useMemo(() => {
+    if (!candlestickData.length) return { change: 0, percent: 0, price: 0 };
+    const first = candlestickData[0];
+    const last = candlestickData[candlestickData.length - 1]; // Use last candle
+
+    // Ensure we handle potentially missing data gracefully
+    if (!first || !last) return { change: 0, percent: 0, price: 0 };
+
+    const startPrice = first.open;
+    const currentPrice = last.close;
+    const change = currentPrice - startPrice;
+    const percent = startPrice > 0 ? ((change / startPrice) * 100) : 0;
+
+    return { change, percent, price: currentPrice };
+  }, [candlestickData]);
+
+  // Flash Animation State
+  const [priceFlash, setPriceFlash] = useState<'green' | 'red' | null>(null);
+  const prevPriceRef = useRef<number>(0);
+
+  useEffect(() => {
+    if (calculatedChange.price !== prevPriceRef.current) {
+      if (prevPriceRef.current > 0) {
+        setPriceFlash(calculatedChange.price > prevPriceRef.current ? 'green' : 'red');
+        setTimeout(() => setPriceFlash(null), 1000); // Reset after 1s
+      }
+      prevPriceRef.current = calculatedChange.price;
+    }
+  }, [calculatedChange.price]);
+
   if (loading) return <LoadingSpinner />;
   if (error) return <ErrorMessage message={error} />;
   if (!stockData) return <ErrorMessage message="Stock not found" />;
 
   const { profile, info, marketData } = stockData;
-  const isPositive = marketData?.change >= 0;
+
+
+  // Use calculated data over socket data for critical stats to ensure consistency with chart
+  const displayData = {
+    price: calculatedChange.price || marketData?.price || 0,
+    change: calculatedChange.change,
+    changePercent: calculatedChange.percent
+  };
+
+  const isPositive = displayData.change >= 0;
 
   // Shared Card Styles
   const cardClassName = "bg-white/95 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300";
@@ -348,14 +388,16 @@ const StockDetailPage = () => {
             </div>
           </div>
           <div className="hidden md:flex flex-col items-start px-4 border-l border-gray-200">
-            <div className="text-2xl font-bold flex items-center text-gray-900 leading-none">
-              {marketData?.price ? (marketData.price * 1000).toLocaleString('vi-VN') : '---'}
-              <span className="text-xs font-medium text-gray-500 ml-1">VND</span>
+            <div className={`transition-all duration-500 rounded px-2 ${priceFlash === 'green' ? 'bg-emerald-100' : priceFlash === 'red' ? 'bg-red-100' : ''}`}>
+              <div className={`text-2xl font-bold flex items-center leading-none ${priceFlash === 'green' ? 'text-emerald-700' : priceFlash === 'red' ? 'text-red-700' : 'text-gray-900'}`}>
+                {(displayData.price * 1000).toLocaleString('vi-VN', { maximumFractionDigits: 0 })}
+                <span className="text-xs font-medium text-gray-500 ml-1">VND</span>
+              </div>
             </div>
             <div className={`flex items-center text-sm font-semibold mt-1 ${isPositive ? 'text-emerald-600' : 'text-red-500'}`}>
               {isPositive ? <TrendingUp className="w-3 h-3 mr-1" /> : <TrendingDown className="w-3 h-3 mr-1" />}
-              <span>{marketData?.change > 0 ? '+' : ''}{marketData?.change * 1000}</span>
-              <span className="ml-1 opacity-90">({marketData?.changePercent}%)</span>
+              <span>{isPositive ? '+' : ''}{(displayData.change * 1000).toLocaleString('vi-VN', { maximumFractionDigits: 0 })}</span>
+              <span className="ml-1 opacity-90">({displayData.changePercent.toFixed(2)}%)</span>
             </div>
           </div>
         </div>
@@ -391,7 +433,7 @@ const StockDetailPage = () => {
         </div>
         <div className={`flex items-center font-bold px-3 py-1 rounded-lg ${isPositive ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-500'}`}>
           {isPositive ? <TrendingUp className="w-4 h-4 mr-1" /> : <TrendingDown className="w-4 h-4 mr-1" />}
-          <span>{marketData?.changePercent}%</span>
+          <span>{marketData?.changePercent?.toFixed(2)}%</span>
         </div>
       </div>
 
@@ -460,7 +502,7 @@ const StockDetailPage = () => {
                 <div className={`flex items-center font-semibold px-2 py-0.5 rounded ${isPositive ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-500'}`}>
                   {marketData?.price ? (marketData.price * 1000).toLocaleString('vi-VN') : '---'}
                   <span className="text-xs ml-1">VND</span>
-                  <span className="text-xs ml-2 opacity-80">({marketData?.changePercent}%)</span>
+                  <span className="text-xs ml-2 opacity-80">({marketData?.changePercent?.toFixed(2)}%)</span>
                 </div>
               </div>
               <div className="flex items-center gap-3">

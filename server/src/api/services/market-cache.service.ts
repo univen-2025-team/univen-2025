@@ -50,7 +50,28 @@ export default class MarketCacheService {
      */
     static async getLatestMarketData(): Promise<MarketDataLean | null> {
         try {
-            const result = await MarketDataModel.findOne({}).sort({ date: -1 }).lean().exec();
+            // Priority: Get data for the "Latest Trading Date" (handles Weekends -> Friday)
+            // This avoids picking up partial/incomplete data inserted for "Today" (e.g. Sunday)
+            const targetDate = getLatestTradingDate();
+            let result = await MarketDataModel.findOne({ date: targetDate }).lean().exec();
+
+            // Fallback: If specific date not found, get the absolute latest in DB
+            if (!result) {
+                result = await MarketDataModel.findOne({}).sort({ date: -1 }).lean().exec();
+            }
+
+            // Fallback for VN30 if 0
+            if (result && (!result.vn30Index || result.vn30Index.index === 0)) {
+                const latestVN30 = await this.getLatestStockData('VN30');
+                if (latestVN30) {
+                    result.vn30Index = {
+                        index: latestVN30.price,
+                        change: latestVN30.change,
+                        changePercent: latestVN30.changePercent
+                    };
+                }
+            }
+
             return result as MarketDataLean | null;
         } catch (error) {
             this.logger.error('Error getting latest market data', error as any);
@@ -219,10 +240,14 @@ export default class MarketCacheService {
             }
 
             const targetHM = targetTime.substring(0, 5);
-            const exactMatch = history.prices.find(p => p.time.substring(0, 5) === targetHM);
+
+            // Helper to get HH:mm from price time
+            const getPriceHM = (t: string) => t.includes(' ') ? t.split(' ')[1].substring(0, 5) : t.substring(0, 5);
+
+            const exactMatch = history.prices.find(p => getPriceHM(p.time) === targetHM);
             if (exactMatch) return exactMatch;
 
-            const earlier = [...history.prices].filter(p => p.time.substring(0, 5) <= targetHM).pop();
+            const earlier = [...history.prices].filter(p => getPriceHM(p.time) <= targetHM).pop();
             return earlier || null;
         } catch (error) {
             this.logger.error(`Error getting price at time for ${symbol}`, error as any);
