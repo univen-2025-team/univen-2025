@@ -7,5 +7,6 @@ watchdog==6.0.0
 fastapi==0.109.2
 uvicorn==0.27.1
 redis==5.0.1
-minio==7.2.3googlenewsdecoder==0.1.7
+minio==7.2.3
+googlenewsdecoder==0.1.7
 selectolax==0.4.6

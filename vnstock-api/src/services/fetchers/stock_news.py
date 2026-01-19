@@ -145,6 +145,8 @@ class StockNewsFetcher:
                     'id': link,
                     'title': title,
                     'short_content': short_content,
+                    # Fallback Source Name from Title "Title - SourceName"
+                    'source': real_source if real_source != "Google News" else (title.split(' - ')[-1] if ' - ' in title else "Google News"),
                     'full_content': '',
                     'source_link': link,
                     'image_url': image_url,
@@ -167,49 +169,97 @@ class StockNewsFetcher:
                     pass
             
             # --- Image & Source Resolution Stage ---
-            # Collect items that need resolution (Google News source)
-            # We want to resolve redirects to get Real Domain / Real Link + Image + Full Content.
+            # Collect items that need resolution (Full Content, Image, Real Source)
+            # We want to resolve redirects/decode for Google News, and just fetch content for others.
             import concurrent.futures
             from urllib.parse import urlparse
             from googlenewsdecoder import new_decoderv1
             
             items_to_resolve = []
-            if source_name == "Google News":
+            # Iterate over ALL news items from this fetch session
+            if grouped_news:
                 for date_key in grouped_news:
                     for item in grouped_news[date_key]:
-                        # Resolve all Google News link to get real source
+                        # Only resolve if content is missing?
+                        # Or checking if it's new? 
+                        # Since grouped_news contains new items (or filtered ones), we should process them.
                         items_to_resolve.append(item)
             
-            # Limit resolution to most recent items to avoid timeouts/bans
-            # Sort by date? Grouped news is by date. Keys are date strings.
-            # Just take top X items.
-            MAX_RESOLVE = 30
+            # Limit resolution if too many (to avoid timeouts) - but we want content for all.
+            # User request: Fetch ALL content regardless of number.
+            MAX_RESOLVE = 10000
             if len(items_to_resolve) > MAX_RESOLVE:
                  items_to_resolve = items_to_resolve[:MAX_RESOLVE]
 
             if items_to_resolve:
-                print(f"[{self.symbol}] Resolving source/images for {len(items_to_resolve)} items...")
+                # print(f"[{self.symbol}] Resolving details for {len(items_to_resolve)} items...")
                 
                 def resolve_item_details(item):
                     try:
-                        url = item['source_link']
+                        url = item.get('source_link', '')
                         final_url = ""
                         domain = ""
                         img_url = ""
                         content_images = []
                         
-                        # 1. Decode Google News URL
-                        try:
-                            decoded = new_decoderv1(url)
-                            if decoded.get('status') and decoded.get('decoded_url'):
-                                final_url = decoded['decoded_url']
-                                domain = urlparse(final_url).netloc.replace('www.', '')
-                        except:
-                            # Fallback if decoder fails, try direct (might fail mostly)
+                        # 1. Determine Final URL
+                        if "news.google.com" in url:
+                             # Decode Google News URL
+                            try:
+                                decoded = new_decoderv1(url)
+                                if decoded.get('status') and decoded.get('decoded_url'):
+                                    final_url = decoded['decoded_url']
+                                    domain = urlparse(final_url).netloc.replace('www.', '')
+                            except:
+                                pass
+                            
+                            # Fallback: Try to fetch and look for JS redirect
+                            if not final_url:
+                                try:
+                                    # Google Link
+                                    r_check = requests.get(url, headers={'User-Agent': 'Mozilla/5.0...'}, timeout=5)
+                                    if r_check.status_code == 200:
+                                        # Parse with BS4 to find the main link
+                                        soup_check = BeautifulSoup(r_check.content, 'html.parser')
+                                        # Google redirect usually has a central link "Click here"
+                                        # Or simple <a href="...">
+                                        # Or in script window.location.replace
+                                        
+                                        # Method A: Find First A tag that doesn't contain google
+                                        found_link = None
+                                        for a in soup_check.find_all('a', href=True):
+                                            href = a['href']
+                                            if href.startswith('http') and 'google' not in href and 'gstatic' not in href:
+                                                found_link = href
+                                                break
+                                        
+                                        if found_link:
+                                            final_url = found_link
+                                        else:
+                                            # Method B: Regex in scripts
+                                            import re
+                                            urls = re.findall(r'(https?://[^"\'>\s]+)', r_check.text)
+                                            # rigorous filter
+                                            valid = [u for u in urls if 'google' not in u and 'w3.org' not in u and 'gstatic' not in u and 'googleusercontent' not in u and 'angular.dev' not in u]
+                                            if valid:
+                                                final_url = valid[0]
+                                                
+                                        if final_url:
+                                            try:
+                                                domain = urlparse(final_url).netloc.replace('www.', '')
+                                            except: pass
+                                except:
+                                    pass
+                        else:
+                            # Direct link (CafeF, etc)
                             final_url = url
+                            try:
+                                domain = urlparse(final_url).netloc.replace('www.', '')
+                            except: pass
                         
                         if not final_url: 
-                            return item, "", "", "", ""
+                            final_url = url # fallback
+                        
 
                         # 2. Fetch Content
                         headers = {
@@ -262,21 +312,19 @@ class StockNewsFetcher:
                                 for img in article.find_all('img'):
                                     src = img.get('src') or img.get('data-src')
                                     if src and src.startswith('http'):
-                                        # Filter out small icons/pixels? 
-                                        # Heuristic: Ignore if 'icon' in name or known tracking domains?
-                                        # For now, just collect valid http links.
                                         content_images.append(src)
                                 
                                 # 2. Set fields
                                 if content_images:
-                                    # User requested: Thumbnail = First image inside content
                                     img_url = content_images[0]
                                     item['images'] = content_images
                                 
-                                # Clean further inside the article?
-                                # For now, just getting the HTML string is good.
                                 full_content = str(article)
-                                
+                            else:
+                                pass # No article found
+                        else:
+                             pass # Fetch failed
+
                         return item, final_url, domain, img_url, full_content, content_images
                     except Exception as e:
                         print(f"Resolve Error: {e}")
@@ -291,20 +339,34 @@ class StockNewsFetcher:
                         if final_url and "news.google.com" not in final_url:
                             item['source_link'] = final_url
                             item['id'] = final_url 
-                            
-                        # If we have a real domain, we are certain about the source.
+                        
+                        if domain:
+                            item['source_domain'] = domain
+                        else:
+                             try:
+                                 item['source_domain'] = urlparse(final_url).netloc.replace('www.', '')
+                             except: pass
+
+                        if full_content:
+                            item['full_content'] = full_content
+                            # Update short_content if empty or too short
+                            if len(item.get('short_content', '')) < 50:
+                                clean = BeautifulSoup(full_content, 'html.parser').get_text(separator=' ', strip=True)
+                                item['short_content'] = clean[:200] + '...'
+
+                        # Source Logic
                         if domain and "google.com" not in domain:
-                            item['source'] = domain
+                            if ' - ' in item.get('title', ''):
+                                pass 
+                            else:
+                                item['source'] = domain
                         
                         # Update Image Logic
                         if img_url:
                              item['image_url'] = img_url
                         
                         if content_images:
-                             item['images'] = content_images
-                            
-                        if full_content:
-                            item['full_content'] = full_content
+                              item['images'] = content_images
             
         except Exception as e:
             print(f"Exception fetching RSS: {e}")

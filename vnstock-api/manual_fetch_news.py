@@ -9,7 +9,7 @@ if __name__ == "__main__":
     db.connect()
     collection = db.get_database()["stock_news"]
     
-    symbols = ['MARKET', 'SSI']
+    symbols = ['MARKET', 'SSI', 'FPT']
     for symbol in symbols:
         print(f"Fetching manually for {symbol}...")
         fetcher = StockNewsFetcher(symbol)
