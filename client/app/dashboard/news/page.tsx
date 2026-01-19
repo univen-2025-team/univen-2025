@@ -6,11 +6,21 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Newspaper, ExternalLink, RefreshCcw, TrendingUp, Clock, ChevronLeft, ChevronRight } from 'lucide-react';
-
-// ... (existing constants)
-
-// ... imports
 import NewsDetailModal from '@/components/market/NewsDetailModal';
+
+interface NewsItem {
+    id?: string;
+    title: string;
+    description?: string;
+    link?: string;
+    image_url?: string;
+    publishDate?: string;
+    source?: string;
+
+    // Add other fields as needed for the modal compatibility
+    full_content?: string;
+    source_link?: string;
+}
 
 export default function NewsPage() {
     const [news, setNews] = useState<NewsItem[]>([]);

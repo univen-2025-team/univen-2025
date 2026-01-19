@@ -219,10 +219,14 @@ export const fetchStockNews = async (symbol: string): Promise<any> => {
                     id: item.id || `news-${Math.random().toString(36).substr(2, 9)}`,
                     title: item.title,
                     link: item.source_link || '#',
+                    source_link: item.source_link,
                     publishDate: item.public_date || day.date,
-                    source: 'Tin tức tổng hợp',
+                    source: item.source || item.source_domain || 'Tin tức tổng hợp',
                     description: item.short_content || '',
-                    image_url: item.image_url
+                    image_url: item.image_url,
+                    full_content: item.full_content,
+                    source_domain: item.source_domain,
+                    images: item.images
                 }))
             );
 

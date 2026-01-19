@@ -7,6 +7,9 @@ type SidebarContextType = {
     isCollapsed: boolean;
     setIsCollapsed: (value: boolean) => void;
     toggleCollapsed: () => void;
+    isChatOpen: boolean;
+    setIsChatOpen: (value: boolean) => void;
+    toggleChat: () => void;
 };
 
 const SidebarContext = createContext<SidebarContextType | undefined>(undefined);
@@ -18,6 +21,11 @@ const AUTO_COLLAPSE_ROUTES = [
 
 export function SidebarProvider({ children }: { children: ReactNode }) {
     const [isCollapsed, setIsCollapsed] = useState(false);
+
+    // Chat state declared here to be accessible
+    const [isChatOpen, setIsChatOpen] = useState(false);
+    const toggleChat = () => setIsChatOpen(prev => !prev);
+
     const pathname = usePathname();
 
     // Auto-collapse for specific routes
@@ -31,10 +39,20 @@ export function SidebarProvider({ children }: { children: ReactNode }) {
         }
     }, [pathname]);
 
+    // Auto-collapse sidebar when chat opens
+    useEffect(() => {
+        if (isChatOpen) {
+            setIsCollapsed(true);
+        }
+    }, [isChatOpen]);
+
     const toggleCollapsed = () => setIsCollapsed(prev => !prev);
 
     return (
-        <SidebarContext.Provider value={{ isCollapsed, setIsCollapsed, toggleCollapsed }}>
+        <SidebarContext.Provider value={{
+            isCollapsed, setIsCollapsed, toggleCollapsed,
+            isChatOpen, setIsChatOpen, toggleChat
+        }}>
             {children}
         </SidebarContext.Provider>
     );
