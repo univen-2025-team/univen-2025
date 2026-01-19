@@ -362,13 +362,20 @@ export default function CandlestickChart({ data, valueFormatter, onLoadMore, onN
             ctx.setLineDash([3, 3]);
             ctx.lineWidth = 1;
 
-            // Vertical line
+            // Calculate Snap X (Center of the hovered candle)
+            // Re-calculate index to ensure we snap to the CURRENT rendered data (handle updates)
+            const candleWidth = chartWidth / visibleData.length;
+            const rawIndex = Math.floor((mousePos.x - PADDING.left) / candleWidth);
+            const clampedIndex = Math.max(0, Math.min(visibleData.length - 1, rawIndex));
+            const snapX = xScale(clampedIndex);
+
+            // Vertical line (Snapped)
             ctx.beginPath();
-            ctx.moveTo(mousePos.x, PADDING.top);
-            ctx.lineTo(mousePos.x, dimensions.height - PADDING.bottom);
+            ctx.moveTo(snapX, PADDING.top);
+            ctx.lineTo(snapX, dimensions.height - PADDING.bottom);
             ctx.stroke();
 
-            // Horizontal line
+            // Horizontal line (Follows mouse exactly for precision)
             ctx.beginPath();
             ctx.moveTo(PADDING.left, mousePos.y);
             ctx.lineTo(dimensions.width - PADDING.right, mousePos.y);

@@ -28,11 +28,18 @@ export const getSimulationTargetDate = (): Date => {
  */
 export const isMarketOpen = (): boolean => {
     // Implement based on Server Time (assumed UTC+7 or handling local time via Env)
-    // Here we use local time of the server environment.
+    // FORCE Vietnam Time (UTC+7) for accurate check
     const now = new Date();
-    const hours = now.getHours();
-    const minutes = now.getMinutes();
-    const time = hours * 100 + minutes;
+    const vnTimeStr = new Intl.DateTimeFormat('en-GB', {
+        timeZone: 'Asia/Ho_Chi_Minh',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false
+    }).format(now);
+
+    // vnTimeStr is "HH:mm"
+    const [h, m] = vnTimeStr.split(':').map(Number);
+    const time = h * 100 + m;
 
     // Morning: 09:00 (900) - 11:30 (1130)
     // Afternoon: 13:00 (1300) - 14:45 (1445)
@@ -49,9 +56,19 @@ export const getSimulatedTimePoint = (): Date => {
     const targetDate = getSimulationTargetDate();
     const now = new Date();
 
+    // Get Vietnam Time
+    const vnTimeStr = new Intl.DateTimeFormat('en-GB', {
+        timeZone: 'Asia/Ho_Chi_Minh',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false
+    }).format(now);
+
+    const [h, m] = vnTimeStr.split(':').map(Number);
+
     return set(targetDate, {
-        hours: now.getHours(),
-        minutes: now.getMinutes(),
+        hours: h,
+        minutes: m,
         seconds: 0,
         milliseconds: 0
     });
