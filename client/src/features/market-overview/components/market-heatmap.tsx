@@ -184,7 +184,7 @@ export function MarketHeatmap({ stocks }: MarketHeatmapProps) {
                 </div>
             </div>
 
-            <ResponsiveContainer width="100%" height={500}>
+            <ResponsiveContainer width="100%" height={500} debounce={200}>
                 <Treemap
                     data={treemapData}
                     dataKey="value"
