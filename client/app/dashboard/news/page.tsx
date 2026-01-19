@@ -4,24 +4,21 @@ import { useEffect, useState } from 'react';
 import { fetchStockNews } from '@/lib/services/marketService';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Newspaper, ExternalLink, RefreshCcw, TrendingUp, Clock } from 'lucide-react';
-import LoadingSpinner from '@/components/dashboard/LoadingSpinner';
+import { Button } from '@/components/ui/button';
+import { Newspaper, ExternalLink, RefreshCcw, TrendingUp, Clock, ChevronLeft, ChevronRight } from 'lucide-react';
 
-interface NewsItem {
-    id: string;
-    title: string;
-    link: string;
-    publishDate: string;
-    source: string;
-    description?: string;
-    image_url?: string; // Assuming API provides this, otherwise we mock or use placeholders
-    relatedStock?: string; // Optional related stock
-}
+// ... (existing constants)
+
+// ... imports
+import NewsDetailModal from '@/components/market/NewsDetailModal';
 
 export default function NewsPage() {
     const [news, setNews] = useState<NewsItem[]>([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [selectedNews, setSelectedNews] = useState<NewsItem | null>(null);
+    const ITEMS_PER_PAGE = 10;
 
     const loadNews = async () => {
         try {
@@ -46,24 +43,28 @@ export default function NewsPage() {
     const handleRefresh = () => {
         setRefreshing(true);
         loadNews();
+        setCurrentPage(1); // Reset to page 1 on refresh
     };
 
-    if (loading && !refreshing && news.length === 0) {
-        return (
-            <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
-                <LoadingSpinner />
-                <p className="text-gray-500">Đang cập nhật tin tức thị trường...</p>
-            </div>
-        );
-    }
+    // ... (Loading state check remains same)
 
     // Featured news (first item)
     const featuredNews = news[0];
     const otherNews = news.slice(1);
 
+    const totalPages = Math.ceil(otherNews.length / ITEMS_PER_PAGE);
+    const paginatedNews = otherNews.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+
+    const handlePageChange = (newPage: number) => {
+        setCurrentPage(newPage);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
     return (
-        <div className="space-y-8 pb-10 animate-fade-in">
+        <div className="space-y-8 pb-10 animate-fade-in relative">
             {/* Header */}
+            {/* ... (Header remains same) */}
+
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                     <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
@@ -93,12 +94,10 @@ export default function NewsPage() {
                     {/* Main Content Column */}
                     <div className="lg:col-span-2 space-y-8">
                         {/* Featured News */}
-                        {featuredNews && (
-                            <a
-                                href={featuredNews.link}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="group block relative overflow-hidden rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300"
+                        {featuredNews && currentPage === 1 && (
+                            <div
+                                onClick={() => setSelectedNews(featuredNews)}
+                                className="group block relative overflow-hidden rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300 cursor-pointer"
                             >
                                 <div className="aspect-video relative bg-gray-100">
                                     {featuredNews.image_url ? (
@@ -125,7 +124,7 @@ export default function NewsPage() {
                                         </Badge>
                                         <span className="flex items-center gap-1">
                                             <Clock className="w-3 h-3" />
-                                            {new Date(featuredNews.publishDate).toLocaleDateString('vi-VN', {
+                                            {new Date(featuredNews.publishDate!).toLocaleDateString('vi-VN', {
                                                 year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
                                             })}
                                         </span>
@@ -140,7 +139,7 @@ export default function NewsPage() {
                                         Đọc tiếp <ExternalLink className="w-4 h-4 ml-1" />
                                     </div>
                                 </div>
-                            </a>
+                            </div>
                         )}
 
                         {/* Recent News Grid */}
@@ -150,13 +149,11 @@ export default function NewsPage() {
                                 Tin Mới Nhất
                             </h3>
                             <div className="grid gap-4">
-                                {otherNews.map((item, index) => (
-                                    <a
+                                {paginatedNews.map((item, index) => (
+                                    <div
                                         key={item.id || index}
-                                        href={item.link}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="flex flex-col sm:flex-row gap-4 p-4 bg-white rounded-xl border border-gray-100 hover:border-blue-200 hover:shadow-md transition-all duration-200 group"
+                                        onClick={() => setSelectedNews(item)}
+                                        className="flex flex-col sm:flex-row gap-4 p-4 bg-white rounded-xl border border-gray-100 hover:border-blue-200 hover:shadow-md transition-all duration-200 group cursor-pointer"
                                     >
                                         <div className="w-full sm:w-48 h-32 bg-gray-100 rounded-lg overflow-hidden shrink-0">
                                             {item.image_url ? (
@@ -178,7 +175,7 @@ export default function NewsPage() {
                                                         {item.source}
                                                     </Badge>
                                                     <span className="text-xs text-gray-400">
-                                                        {new Date(item.publishDate).toLocaleDateString('vi-VN')}
+                                                        {item.publishDate ? new Date(item.publishDate).toLocaleDateString('vi-VN') : ''}
                                                     </span>
                                                 </div>
                                                 <h4 className="font-bold text-gray-900 group-hover:text-blue-600 transition-colors line-clamp-2 mb-2">
@@ -189,13 +186,38 @@ export default function NewsPage() {
                                                 </p>
                                             </div>
                                         </div>
-                                    </a>
+                                    </div>
                                 ))}
                             </div>
+
+                            {/* Pagination Controls */}
+                            {totalPages > 1 && (
+                                <div className="flex justify-center items-center gap-4 mt-8">
+                                    <Button
+                                        variant="outline"
+                                        size="icon"
+                                        onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
+                                        disabled={currentPage === 1}
+                                    >
+                                        <ChevronLeft className="w-4 h-4" />
+                                    </Button>
+                                    <span className="text-sm font-medium text-gray-600">
+                                        Trang {currentPage} / {totalPages}
+                                    </span>
+                                    <Button
+                                        variant="outline"
+                                        size="icon"
+                                        onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
+                                        disabled={currentPage >= totalPages}
+                                    >
+                                        <ChevronRight className="w-4 h-4" />
+                                    </Button>
+                                </div>
+                            )}
                         </div>
                     </div>
 
-                    {/* Right Column: Trending / Categories (Mock for now) */}
+                    {/* Right Column: Trending / Categories */}
                     <div className="space-y-6">
                         <Card>
                             <CardHeader>
@@ -206,7 +228,6 @@ export default function NewsPage() {
                             </CardHeader>
                             <CardContent className="space-y-4">
                                 <p className="text-sm text-gray-500 italic">Tính năng đang phát triển...</p>
-                                {/* We could add Tag Cloud or Most Read list here later */}
                             </CardContent>
                         </Card>
 
@@ -220,6 +241,12 @@ export default function NewsPage() {
                     </div>
                 </div>
             )}
+
+            <NewsDetailModal
+                isOpen={!!selectedNews}
+                newsItem={selectedNews}
+                onClose={() => setSelectedNews(null)}
+            />
         </div>
     );
 }

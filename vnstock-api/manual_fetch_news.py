@@ -15,9 +15,11 @@ if __name__ == "__main__":
         fetcher = StockNewsFetcher(symbol)
         
         # We need to simulate 'missing_dates' logic.
-        # Just ask for today/tomorrow simulation dates.
-        # e.g. 2026-01-19
-        missing_dates = ['2026-01-19', '2026-01-18', '2026-01-20'] 
+        # Ask for last 30 days to ensure we update everything
+        today = datetime.strptime('2026-01-19', '%Y-%m-%d').date()
+        missing_dates = [(today - timedelta(days=i)).strftime('%Y-%m-%d') for i in range(30)]
+        # Add future dates just in case
+        missing_dates.append('2026-01-20') 
         
         data = fetcher.fetch_smart(missing_dates)
         
