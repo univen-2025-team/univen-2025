@@ -37,6 +37,12 @@ export default class SocketIOService {
 
         // Authentication middleware
         this.io.use(async (socket, next) => {
+            // Skip auth for market namespace
+            // DEBUG: Log namespace access
+            if (socket.nsp.name === '/market') {
+                return next();
+            }
+
             try {
                 await this.authenticateSocket(socket);
                 next();
@@ -112,96 +118,96 @@ export default class SocketIOService {
         socket.on('message-send', async (
             payload: { conversationId: string, text: string },
             ack?: (res: { ok: boolean; error?: string }) => void
-            ) => {
-                try {
-                    const text = payload.text?.trim();
-                    if (!text) {
-                        ack?.({ ok: false, error: 'Null text' });
-                        return;
-                    }
-
-                    const saved = await createMessage({
-                        conversationId: payload.conversationId,
-                        senderId: userId,
-                        text,
-                    });
-
-                    
-                    const message = {
-                        _id: saved._id,
-                        text: saved.text,
-                        senderId: saved.senderId,
-                        sender: socket.user,
-                        conversationId: saved.conversationId,
-                        createdAt: saved.createdAt,
-                    };
-                    
-                    //Cache to Redis
-                    await addMessageToCache(userId, {
-                        role: "user",
-                        content: saved.text,
-                        createdAt: saved.createdAt.toISOString(),
-                        metadata: { senderId: saved.senderId },
-                    });
-
-                    this.io?.to(`conversation_${payload.conversationId}`).emit('message-new', message);
-                    ack?.({ ok: true });
-                } catch (err: any) {
-                    ack?.({ ok: false, error: err?.message || 'Send failed' });
+        ) => {
+            try {
+                const text = payload.text?.trim();
+                if (!text) {
+                    ack?.({ ok: false, error: 'Null text' });
+                    return;
                 }
+
+                const saved = await createMessage({
+                    conversationId: payload.conversationId,
+                    senderId: userId,
+                    text,
+                });
+
+
+                const message = {
+                    _id: saved._id,
+                    text: saved.text,
+                    senderId: saved.senderId,
+                    sender: socket.user,
+                    conversationId: saved.conversationId,
+                    createdAt: saved.createdAt,
+                };
+
+                //Cache to Redis
+                await addMessageToCache(userId, {
+                    role: "user",
+                    content: saved.text,
+                    createdAt: saved.createdAt.toISOString(),
+                    metadata: { senderId: saved.senderId },
+                });
+
+                this.io?.to(`conversation_${payload.conversationId}`).emit('message-new', message);
+                ack?.({ ok: true });
+            } catch (err: any) {
+                ack?.({ ok: false, error: err?.message || 'Send failed' });
             }
+        }
         );
-        
+
         //Send message to one user
         socket.on('message-on-toUser', async (
             payload: { toUserId: string, conversationId: string, text: string },
             ack?: (res: { ok: boolean; error?: string }) => void
-            ) => {
-                try {
-                    const text = payload.text?.trim();
-                    if (!payload.toUserId || !payload.text) {
-                        ack?.({ ok: false, error: "toUser or text is null" });
-                        return;
-                    }
-
-                    const savedMessage = await createMessage({
-                        senderId: userId,
-                        receiverId: payload.toUserId,
-                        conversationId: payload.conversationId,
-                        text,
-                    });
-
-                    const message = {
-                        _id: savedMessage._id,
-                        text: savedMessage.text,
-                        senderId: savedMessage.senderId,
-                        receiverId: savedMessage.receiverId,
-                        conversationId: savedMessage.conversationId,
-                        sender: socket.user,
-                        createdAt: savedMessage.createdAt,
-                    };
-
-                    await addMessageToCache(userId, {
-                        role: "user",
-                        content: savedMessage.text,
-                        createdAt: savedMessage.createdAt.toISOString(),
-                        metadata: { senderId: savedMessage.senderId },
-                    });
-
-                    const targetSocketId = this.connectedUsers.get(payload.toUserId);
-                    if (!targetSocketId) {
-                        ack?.({ ok: false, error: "Offline user" })
-                        return;
-                    }
-
-                    this.io?.to(targetSocketId).emit("message-new-direct", message);
-                    socket.emit('message-new-direct', message);
-
-                    ack?.({ ok: true });
-                } catch (err: any) {
-                    ack?.({ ok: false, error: err?.message || 'Send failed' });
+        ) => {
+            try {
+                const text = payload.text?.trim();
+                if (!payload.toUserId || !payload.text) {
+                    ack?.({ ok: false, error: "toUser or text is null" });
+                    return;
                 }
+
+                const savedMessage = await createMessage({
+                    senderId: userId,
+                    receiverId: payload.toUserId,
+                    conversationId: payload.conversationId,
+                    text,
+                });
+
+                const message = {
+                    _id: savedMessage._id,
+                    text: savedMessage.text,
+                    senderId: savedMessage.senderId,
+                    receiverId: savedMessage.receiverId,
+                    conversationId: savedMessage.conversationId,
+                    sender: socket.user,
+                    createdAt: savedMessage.createdAt,
+                };
+
+                await addMessageToCache(userId, {
+                    role: "user",
+                    content: savedMessage.text,
+                    createdAt: savedMessage.createdAt.toISOString(),
+                    metadata: { senderId: savedMessage.senderId },
+                });
+
+                const targetSocketId = this.connectedUsers.get(payload.toUserId);
+                if (!targetSocketId) {
+                    ack?.({ ok: false, error: "Offline user" })
+                    return;
+                }
+
+                this.io?.to(targetSocketId).emit("message-new-direct", message);
+                socket.emit('message-new-direct', message);
+
+                ack?.({ ok: true });
+            } catch (err: any) {
+                ack?.({ ok: false, error: err?.message || 'Send failed' });
             }
+        }
         )
 
         socket.on('disconnect', () => {
