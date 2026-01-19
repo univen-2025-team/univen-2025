@@ -117,4 +117,12 @@ export const authApi = {
     const response = await axiosInstance.post('/auth/google', { token });
     return response.data.metadata;
   },
+
+  /**
+   * Đăng nhập với tài khoản khách
+   */
+  loginAsGuest: async (): Promise<AuthResponse> => {
+    const response = await axiosInstance.post('/auth/guest');
+    return response.data.metadata;
+  },
 };

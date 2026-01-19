@@ -34,8 +34,7 @@ export type FeatureId =
 export type BuyFlowStep = {
   id: string
   title: string
-  // Backend có thể trả về null -> cho phép null để khỏi lỗi khi parse
-  description: string | null
+  description?: string
   helperText?: string
   fields?: {
     type: 'text' | 'number' | 'select'
@@ -97,8 +96,7 @@ export type StockDetailData = {
   description?: string
   price: number
   changePercent: number
-  // API trả intradayChart: [{ time, price }]
-  intradayChart: { time: string; price: number }[]
+  intradayChart: { time: string; value: number }[]
 }
 
 // Feature State
@@ -114,21 +112,21 @@ export type FeatureState = {
 // Feature Instruction (mapping 1–1 với API ui_effects)
 export type FeatureInstruction =
   | {
-      type: 'SHOW_MARKET_OVERVIEW'
-    }
+    type: 'SHOW_MARKET_OVERVIEW'
+  }
   | {
-      type: 'OPEN_BUY_STOCK'
-      payload: {
-        symbol: string
-        currentPrice: number
-        steps: BuyFlowStep[]
-      }
+    type: 'OPEN_BUY_STOCK'
+    payload: {
+      symbol: string
+      currentPrice: number
+      steps: BuyFlowStep[]
     }
+  }
   | {
-      type: 'OPEN_NEWS'
-      payload: NewsData
-    }
+    type: 'OPEN_NEWS'
+    payload: NewsData
+  }
   | {
-      type: 'OPEN_STOCK_DETAIL'
-      payload: StockDetailData
-    }
+    type: 'OPEN_STOCK_DETAIL'
+    payload: StockDetailData
+  }
