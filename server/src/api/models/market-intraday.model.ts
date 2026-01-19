@@ -20,8 +20,7 @@ const MarketIntradaySchema = new Schema(
     {
         symbol: {
             type: String,
-            required: true,
-            index: true
+            required: true
         },
         time: {
             type: String, // Keeping as string to match source format, can be converted to Date if needed
