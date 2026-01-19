@@ -340,6 +340,7 @@ const StockDetailPage = () => {
               onLoadMore={handleLoadMore}
               onNewsFilter={handleNewsFilter}
               onRefresh={handleRefresh}
+              selectedRange={selectedRange}
             />
           ) : (
             <div className="flex items-center justify-center h-full text-gray-500">
@@ -391,6 +392,7 @@ const StockDetailPage = () => {
                   onLoadMore={handleLoadMore}
                   onNewsFilter={handleNewsFilter}
                   onRefresh={handleRefresh}
+                  selectedRange={selectedRange}
                 />
               )}
             </div>

@@ -17,6 +17,7 @@ type CandlestickChartProps = {
     onLoadMore?: (direction: 'left' | 'right') => void;
     onNewsFilter?: (range: { start: string, end: string }) => void;
     onRefresh?: () => void;
+    selectedRange?: string;
 };
 
 const COLORS = {
@@ -39,7 +40,7 @@ const COLORS = {
 
 const TIMELINE_HEIGHT = 50;
 
-export default function CandlestickChart({ data, valueFormatter, onLoadMore, onNewsFilter, onRefresh }: CandlestickChartProps) {
+export default function CandlestickChart({ data, valueFormatter, onLoadMore, onNewsFilter, onRefresh, selectedRange }: CandlestickChartProps) {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const timelineCanvasRef = useRef<HTMLCanvasElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
@@ -126,7 +127,11 @@ export default function CandlestickChart({ data, valueFormatter, onLoadMore, onN
     // Initialize view range, smart update on data change
     useEffect(() => {
         if (data.length > 0) {
-            // First load
+            // First load or Range Switch (if we assume switching range implies showing all)
+            // But we must distinguish initial load vs prepend.
+            // Simplified: If selectedRange changes, show all.
+            // We handle this in a separate effect below.
+
             if (viewRange.end === 0) {
                 const visibleCount = Math.min(50, data.length);
                 setViewRange({
@@ -136,6 +141,15 @@ export default function CandlestickChart({ data, valueFormatter, onLoadMore, onN
             }
         }
     }, [data.length]);
+
+    // Reset Zoom on Range Change
+    useEffect(() => {
+        if (data.length > 0) {
+            // For larger ranges (1Y, 6M, 3M), showing full range is usually preferred
+            // For 1D, maybe showing all is good too (intraday).
+            setViewRange({ start: 0, end: data.length - 1 });
+        }
+    }, [selectedRange, data.length]);
 
     // Handle resize
     useEffect(() => {
@@ -237,6 +251,68 @@ export default function CandlestickChart({ data, valueFormatter, onLoadMore, onN
             ctx.fillText(valueFormatter(value), dimensions.width - PADDING.right + 5, y + 4);
         }
 
+        // Draw Vertical Grid Lines based on Range
+        if (selectedRange && visibleData.length > 1) {
+            ctx.strokeStyle = COLORS.grid;
+            ctx.lineWidth = 1;
+            ctx.setLineDash([3, 3]);
+            ctx.beginPath();
+
+            visibleData.forEach((candle, i) => {
+                if (i === 0) return;
+                const prevCandle = visibleData[i - 1];
+
+                // Match logic with string parsing to avoid timezone pitfalls
+                const parseDateParts = (timeStr: string) => {
+                    const parts = timeStr.split(/[- :T]/);
+                    return {
+                        year: parseInt(parts[0]),
+                        month: parseInt(parts[1]), // 1-12
+                        day: parseInt(parts[2]),
+                        hour: parseInt(parts[3] || '0'),
+                    };
+                };
+
+                const curr = parseDateParts(candle.time);
+                const prev = parseDateParts(prevCandle.time);
+
+                let isBoundary = false;
+
+                if (selectedRange === '1D') {
+                    // 1D: Separator between Morning (< 13:00) and Afternoon (>= 13:00) sessions
+                    // Morning typically ends 11:30, Afternoon starts 13:00
+                    isBoundary = curr.hour >= 13 && prev.hour < 13;
+                } else if (selectedRange === '1W') {
+                    // 1W: Separator by DAY
+                    isBoundary = curr.day !== prev.day;
+                } else if (selectedRange === '1M') {
+                    // 1M: Separator by WEEK
+                    // Use Date object for day-of-week calculation (safer than manual math)
+                    const dCurr = new Date(curr.year, curr.month - 1, curr.day);
+                    const dPrev = new Date(prev.year, prev.month - 1, prev.day);
+                    const dayDiff = (dCurr.getTime() - dPrev.getTime()) / (1000 * 3600 * 24);
+                    // New week if Day < Prev Day (e.g. Mon < Fri) OR significant gap (>4 days)
+                    isBoundary = dCurr.getDay() < dPrev.getDay() || dayDiff > 4;
+                } else if (selectedRange === '3M' || selectedRange === '6M') {
+                    // 3M/6M: Separator by MONTH
+                    isBoundary = curr.month !== prev.month;
+                } else if (selectedRange === '1Y') {
+                    // 1Y: Separator by QUARTER
+                    const currQuarter = Math.ceil(curr.month / 3);
+                    const prevQuarter = Math.ceil(prev.month / 3);
+                    isBoundary = currQuarter !== prevQuarter || curr.year !== prev.year;
+                }
+
+                if (isBoundary) {
+                    const x = xScale(i) - (chartWidth / visibleData.length) / 2; // Draw between candles
+                    ctx.moveTo(x, PADDING.top);
+                    ctx.lineTo(x, dimensions.height - PADDING.bottom);
+                }
+            });
+            ctx.stroke();
+            ctx.setLineDash([]);
+        }
+
         // Draw candles
         const candleWidth = Math.max(2, (chartWidth / visibleData.length) * 0.7);
         const wickWidth = 1;
@@ -320,7 +396,7 @@ export default function CandlestickChart({ data, valueFormatter, onLoadMore, onN
             }
         }
 
-    }, [dimensions, visibleData, yDomain, valueFormatter, hoveredCandle, mousePos, selectionRange, viewRange]);
+    }, [dimensions, visibleData, yDomain, valueFormatter, hoveredCandle, mousePos, selectionRange, viewRange, selectedRange]);
 
     // Draw timeline canvas
     useEffect(() => {
