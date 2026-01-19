@@ -61,17 +61,49 @@ export function GlobalChatSidebar() {
         };
     }, [isResizing, handleMouseMove, handleMouseUp]);
 
+    // Handle ESC key to close
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'Escape' && isChatOpen) {
+                setIsChatOpen(false);
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [isChatOpen, setIsChatOpen]);
+
+    // Show hint on first open
+    const [showEscHint, setShowEscHint] = useState(false);
+    useEffect(() => {
+        if (isChatOpen) {
+            const hasSeenHint = localStorage.getItem('hasSeenChatEscHint');
+            if (!hasSeenHint) {
+                setShowEscHint(true);
+                const timer = setTimeout(() => {
+                    setShowEscHint(false);
+                    localStorage.setItem('hasSeenChatEscHint', 'true');
+                }, 5000);
+                return () => clearTimeout(timer);
+            }
+        } else {
+            setShowEscHint(false);
+        }
+    }, [isChatOpen]);
+
     // Always render for transition
     const isOpen = isChatOpen;
 
     return (
         <div
             ref={sidebarRef}
-            className={`fixed top-0 right-0 h-full bg-white shadow-2xl z-[100] border-l border-gray-200 flex flex-col transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : 'translate-x-full'
+            className={`h-full bg-white border-l border-gray-200 flex flex-col transition-all duration-300 ease-in-out shrink-0 overflow-hidden relative shadow-xl ${isOpen ? 'opacity-100' : 'opacity-0'
                 }`}
             style={{
-                width: chatWidth,
-                maxWidth: '100vw'
+                width: isOpen ? chatWidth : 0,
+                minWidth: isOpen ? MIN_CHAT_WIDTH : 0,
+                willChange: 'width', // Optimization: Hint browser of impending change
+                contain: 'layout paint' // Optimization: Isolate layout
             }}
         >
             {/* Resize Handle */}
@@ -83,7 +115,7 @@ export function GlobalChatSidebar() {
             </div>
 
             {/* Unique Header */}
-            <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 bg-gray-50/50 shrink-0">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 bg-gray-50/50 shrink-0 relative">
                 <div className="flex items-center gap-2 select-none">
                     <MessageCircle className="w-5 h-5 text-primary" />
                     <span className="font-bold text-gray-900">AI Advisor</span>
@@ -95,6 +127,14 @@ export function GlobalChatSidebar() {
                 >
                     <X className="w-5 h-5" />
                 </button>
+
+                {/* ESC Hint Tooltip */}
+                {showEscHint && (
+                    <div className="absolute top-12 right-2 bg-gray-800 text-white text-xs px-3 py-1.5 rounded-lg shadow-xl animate-bounce pointer-events-none z-50 whitespace-nowrap">
+                        Mẹo: Nhấn <b>ESC</b> để đóng
+                        <div className="absolute -top-1 right-3 w-2 h-2 bg-gray-800 rotate-45"></div>
+                    </div>
+                )}
             </div>
 
             {/* Content */}

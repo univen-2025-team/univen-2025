@@ -36,7 +36,7 @@ export function TopStocksChart({
     return (
         <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 p-6">
             <h3 className="text-lg font-bold text-gray-900 mb-4">{title}</h3>
-            <ResponsiveContainer width="100%" height={300}>
+            <ResponsiveContainer width="100%" height={300} debounce={200}>
                 <BarChart data={chartData}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="symbol" />

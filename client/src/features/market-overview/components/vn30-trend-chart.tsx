@@ -162,9 +162,8 @@ export function VN30TrendChart({
             <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-4">
                     <div
-                        className={`w-12 h-12 rounded-xl flex items-center justify-center ${
-                            isUp ? 'bg-emerald-100' : 'bg-red-100'
-                        }`}
+                        className={`w-12 h-12 rounded-xl flex items-center justify-center ${isUp ? 'bg-emerald-100' : 'bg-red-100'
+                            }`}
                     >
                         {isUp ? (
                             <svg
@@ -204,11 +203,10 @@ export function VN30TrendChart({
                                 điểm
                             </span>
                             <span
-                                className={`text-sm font-semibold px-2 py-0.5 rounded-full ${
-                                    isUp
+                                className={`text-sm font-semibold px-2 py-0.5 rounded-full ${isUp
                                         ? 'bg-emerald-100 text-emerald-700'
                                         : 'bg-red-100 text-red-700'
-                                }`}
+                                    }`}
                             >
                                 {isUp ? '+' : ''}
                                 {change.toFixed(2)} điểm ({isUp ? '+' : ''}
@@ -258,7 +256,7 @@ export function VN30TrendChart({
             </div>
 
             {/* Chart */}
-            <ResponsiveContainer width="100%" height={400}>
+            <ResponsiveContainer width="100%" height={400} debounce={200}>
                 <AreaChart data={data}>
                     <defs>
                         <linearGradient id="greenGradient" x1="0" y1="0" x2="0" y2="1">
