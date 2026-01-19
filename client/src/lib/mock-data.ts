@@ -1,4 +1,5 @@
 import type { Lesson, CandleData } from "./types"
+import { generatedLessons } from "./generated-lessons"
 
 export const mockLessons: Lesson[] = [
   {
@@ -196,6 +197,7 @@ Các vụ kiện tụng (nếu có) tại thị trường Mỹ luôn là một �
     difficulty_level: "intermediate",
     confidence_score: 0.89,
   },
+  ...generatedLessons,
 ]
 
 export const mockChartData: {

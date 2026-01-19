@@ -4,10 +4,21 @@
 
 ### Production Mode
 ```bash
-docker compose up -d
+docker compose build
 ```
 
-### Development Mode (Fast Refresh)
+### Development Mode (macOS Optimized)
+If you are on macOS, use this command to avoid port conflicts (AirPlay uses port 5000) and improve performance:
+```bash
+docker compose -f docker-compose.mac.yml up
+```
+```bash
+docker compose -f docker-compose.mac.yml up
+```
+*   **Server URL**: `http://localhost:4000` (Avoids AirPlay port 5000 conflict)
+*   **Client URL**: `http://localhost:3000` (Running in Docker)
+
+### Development Mode (Standard)
 ```bash
 docker compose -f docker-compose.dev.yml up
 ```

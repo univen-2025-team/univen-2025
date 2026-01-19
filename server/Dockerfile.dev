@@ -9,8 +9,11 @@ COPY package.json package-lock.json* ./
 # Install dependencies (including devDependencies for tsx)
 RUN npm install --legacy-peer-deps
 
+# Install tsx globally to ensure it's available
+RUN npm install -g tsx
+
 # Expose port
 EXPOSE 5000
 
-# Start dev server with tsx watch mode (works without bun)
-CMD ["npx", "tsx", "watch", "server.ts"]
+# Start dev server with tsx watch mode
+CMD ["tsx", "watch", "server.ts"]
