@@ -6,8 +6,8 @@ WORKDIR /app
 # Copy package files
 COPY package.json package-lock.json* ./
 
-# Install dependencies (including devDependencies for tsx)
-RUN npm install --legacy-peer-deps
+# Install dependencies (including devDependencies for tsx) and tzdata for timezone support
+RUN apk add --no-cache tzdata && npm install --legacy-peer-deps
 
 # Expose port
 EXPOSE 4000

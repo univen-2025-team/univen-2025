@@ -134,7 +134,7 @@ def sync_stock(symbol: str):
             'timestamp': time.time()
         })
         
-        r.lpush('vnstock_sync_queue', job_data)
+        r.rpush('vnstock_sync_queue', job_data)
         print(f"Enqueued sync job for {symbol}")
         
         return {"status": "queued", "message": f"Sync job for {symbol} added to queue"}

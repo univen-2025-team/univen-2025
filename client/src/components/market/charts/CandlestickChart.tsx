@@ -362,13 +362,20 @@ export default function CandlestickChart({ data, valueFormatter, onLoadMore, onN
             ctx.setLineDash([3, 3]);
             ctx.lineWidth = 1;
 
-            // Vertical line
+            // Calculate Snap X (Center of the hovered candle)
+            // Re-calculate index to ensure we snap to the CURRENT rendered data (handle updates)
+            const candleWidth = chartWidth / visibleData.length;
+            const rawIndex = Math.floor((mousePos.x - PADDING.left) / candleWidth);
+            const clampedIndex = Math.max(0, Math.min(visibleData.length - 1, rawIndex));
+            const snapX = xScale(clampedIndex);
+
+            // Vertical line (Snapped)
             ctx.beginPath();
-            ctx.moveTo(mousePos.x, PADDING.top);
-            ctx.lineTo(mousePos.x, dimensions.height - PADDING.bottom);
+            ctx.moveTo(snapX, PADDING.top);
+            ctx.lineTo(snapX, dimensions.height - PADDING.bottom);
             ctx.stroke();
 
-            // Horizontal line
+            // Horizontal line (Follows mouse exactly for precision)
             ctx.beginPath();
             ctx.moveTo(PADDING.left, mousePos.y);
             ctx.lineTo(dimensions.width - PADDING.right, mousePos.y);
@@ -865,29 +872,54 @@ export default function CandlestickChart({ data, valueFormatter, onLoadMore, onN
                     )}
                 </div>
                 <div className="flex items-center gap-2">
-                    <div className="w-px h-4 bg-gray-200" />
-                    {onRefresh && (
-                        <button onClick={onRefresh} className="p-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 transition-colors" title="Làm mới dữ liệu">
+                    {/* Market Status Indicator */}
+                    <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-gray-50 border border-gray-100 mr-2">
+                        <div className={`w-2 h-2 rounded-full ${(() => {
+                            const now = new Date();
+                            const hours = now.getHours();
+                            const minutes = now.getMinutes();
+                            const time = hours * 100 + minutes;
+                            // Market Hours: 9:00 - 11:30, 13:00 - 14:45
+                            const isOpen = (time >= 900 && time <= 1130) || (time >= 1300 && time <= 1445);
+                            return isOpen ? 'bg-green-500 animate-pulse' : 'bg-gray-400';
+                        })()}`} />
+                        <span className="text-xs font-medium text-gray-600">
+                            {(() => {
+                                const now = new Date();
+                                const hours = now.getHours();
+                                const minutes = now.getMinutes();
+                                const time = hours * 100 + minutes;
+                                const isOpen = (time >= 900 && time <= 1130) || (time >= 1300 && time <= 1445);
+                                return isOpen ? 'Market Open' : 'Market Closed';
+                            })()}
+                        </span>
+                    </div>
+
+                    <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-lg">
+                        {onRefresh && (
+                            <button onClick={onRefresh} className="p-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-600 transition-colors border border-blue-100" title="Làm mới dữ liệu từ máy chủ">
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                </svg>
+                            </button>
+                        )}
+                        <div className="w-px h-4 bg-gray-200" />
+                        <button onClick={handleZoomIn} className="p-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 transition-colors" title="Phóng to">
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m3-3H7" />
                             </svg>
                         </button>
-                    )}
-                    <button onClick={handleZoomIn} className="p-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 transition-colors" title="Phóng to">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m3-3H7" />
-                        </svg>
-                    </button>
-                    <button onClick={handleZoomOut} className="p-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 transition-colors" title="Thu nhỏ">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM13 10H7" />
-                        </svg>
-                    </button>
-                    <button onClick={handleResetZoom} className="p-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 transition-colors" title="Đặt lại">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                        </svg>
-                    </button>
+                        <button onClick={handleZoomOut} className="p-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 transition-colors" title="Thu nhỏ">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM13 10H7" />
+                            </svg>
+                        </button>
+                        <button onClick={handleResetZoom} className="p-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 transition-colors" title="Xem toàn bộ dữ liệu (Reset)">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+                            </svg>
+                        </button>
+                    </div>
                 </div>
             </div>
 

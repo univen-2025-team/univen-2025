@@ -1,138 +1,137 @@
-from datetime import datetime, timedelta
+
+from datetime import datetime
+import requests
+import time
+from typing import Dict, List
+import urllib.parse
+from bs4 import BeautifulSoup
 from src.core.vnstock_client import VnstockClient
-from vnstock import Company
 
 class StockNewsFetcher:
     def __init__(self, symbol):
         self.symbol = symbol
         self.original_symbol = symbol
-        # Map MARKET to E1VFVN30 (ETF VN30) because 'VNINDEX' is not a stock and doesn't support company.news()
-        if self.symbol == 'MARKET':
-             self.symbol = 'E1VFVN30' 
-        
         self.client = VnstockClient.get_instance()
 
-    def fetch_smart(self, missing_dates):
+    def fetch_smart(self, missing_dates: List[str]) -> Dict[str, List[Dict]]:
         """
-        Fetches news for the given symbol until all missing_dates are covered.
+        Fetches news for the given symbol using Google News RSS.
         """
         if not missing_dates:
             return {}
 
         needed_dates = set(missing_dates)
-        sorted_dates = sorted(missing_dates)
-        oldest_needed_date_str = sorted_dates[0]
-        oldest_needed_date = datetime.strptime(oldest_needed_date_str, '%Y-%m-%d').date()
-
+        # Sort to find oldest
+        # But RSS is always latest. We can't really pagination back in history easily with RSS.
+        # But Google News RSS usually gives 100 items. That might cover 30 days.
+        
         grouped_news = {d: [] for d in needed_dates}
         
-        # User Feedback: TCBS is not supported. Use VCI for everything.
-        source = 'VCI'
-        print(f"[StockNewsFetcher] Setup: Symbol={self.symbol} (Orig={self.original_symbol}), Source={source}")
-
-        # stock = self.client.stock(symbol=self.symbol, source=source) # Incorrect usage causing AttributeError
-        
-        page = 0
-        MAX_PAGES = 1 
-        
-        print(f"[StockNewsFetcher] Starting smart fetch for {self.symbol}. Missing: {len(needed_dates)} days. Oldest: {oldest_needed_date_str}")
-
-        while page < MAX_PAGES:
-            print(f"[StockNewsFetcher] Fetching page {page}...")
+        if self.symbol in ['MARKET', 'VNINDEX']:
+            url = "https://cafef.vn/thi-truong-chung-khoan.rss"
+            source_name = "CafeF"
+        elif self.symbol == 'VN30':
+             # Try CafeF for VN30 if possible, otherwise fallback to Google
+             # CafeF doesn't have specific VN30 RSS, but market RSS covers it.
+             # Let's stick to Google for VN30 specific to be safe, or just use Market RSS?
+             # User probably wants Market News generally.
+             query = "Chỉ số VN30"
+             url = f"https://news.google.com/rss/search?q={urllib.parse.quote(query)}&hl=vi&gl=VN&ceid=VN:vi"
+             source_name = "Google News"
+        else:
+            query = f"Cổ phiếu {self.symbol}"
+            url = f"https://news.google.com/rss/search?q={urllib.parse.quote(query)}&hl=vi&gl=VN&ceid=VN:vi"
+            source_name = "Google News"
             
-            # Wrapper to fetch news based on symbol type
-            def fetch_api_data():
-                # Correct way: Instantiate Company directly
-                return Company(symbol=self.symbol, source=source).news()
+        print(f"[{self.symbol}] Fetching news via {source_name}: {url}")
+        
+        try:
+            resp = requests.get(url, timeout=15)
+            if resp.status_code != 200:
+                print(f"RSS Error: {resp.status_code}")
+                return grouped_news
 
-            news_data = self.client.call(fetch_api_data)
+            soup = BeautifulSoup(resp.content, 'html.parser')
+            items = soup.find_all('item')
+            print(f"[{self.symbol}] RSS found {len(items)} items")
             
-            if news_data is None: 
-                print(f"[StockNewsFetcher] Page {page} returned None (End or Error).")
-                break
-                
-            # Convert DataFrame to records if it's a DF (vnstock usually returns DF)
-            if hasattr(news_data, 'to_dict'):
-               news_list = news_data.to_dict('records')
-            else:
-               news_list = news_data # Assume list
+            for item in items:
+                title_tag = item.find('title')
+                link_tag = item.find('link')
+                pubdate_tag = item.find('pubdate')
+                desc_tag = item.find('description')
 
-            if not isinstance(news_list, list):
-                print(f"[StockNewsFetcher] Page {page}: Unexpected data type {type(news_data)}. Skipping.")
-                break
-
-            if not news_list:
-                print(f"[StockNewsFetcher] Page {page} empty.")
-                break
-
-            # Process news items
-            found_this_page = False
-            for item in news_list:
-                # 'public_date' or 'date' or 'created_at' depending on source
-                # Vnstock VCI source typically has 'public_date' or similar. 
-                # Let's handle generic fields or specific VCI fields.
-                # Common fields: time, title, source, link...
+                title = title_tag.text if title_tag else "No Title"
+                title = title.replace("<![CDATA[", "").replace("]]>", "").strip()
                 
-                # Check date field. Usually 'time' or 'date' in YYYY-MM-DD
-                # VCI source often returns date in format 'YYYY-MM-DD ...'
-                raw_date = item.get('public_date') or item.get('date') or item.get('time')
+                link = link_tag.text if link_tag else ""
+                if not link and link_tag and link_tag.next_sibling:
+                    link = link_tag.next_sibling.strip()
                 
-                if not raw_date: continue
+                # Image Extraction
+                image_url = ""
+                short_content = ""
                 
-                # Extract YYYY-MM-DD
-                # Extract YYYY-MM-DD
-                try:
-                    current_item_date = None
-                    str_val = str(raw_date).strip()
+                if desc_tag:
+                    desc_text = desc_tag.text
+                    # Parse description HTML to find image
+                    desc_soup = BeautifulSoup(desc_text, 'html.parser')
+                    img_node = desc_soup.find('img')
+                    if img_node and img_node.get('src'):
+                        image_url = img_node['src']
                     
-                    # Check if numeric (timestamp in ms)
-                    if str_val.isdigit():
-                        # Assume milliseconds
-                        ts = int(str_val) / 1000
-                        current_item_date = datetime.fromtimestamp(ts).date()
-                    elif ' ' in str_val:
-                         # Handle "2025-01-18 10:00:00"
-                        date_str = str_val.split(' ')[0] 
-                        current_item_date = datetime.strptime(date_str, '%Y-%m-%d').date()
-                    else:
-                        # Handle "2025-01-18"
-                        current_item_date = datetime.strptime(str_val, '%Y-%m-%d').date()
+                    # Extract text content as short description
+                    short_content = desc_soup.get_text().strip()
+                    # Remove "Xem chi tiết..." or similar if needed? Usually ok.
 
-                    if current_item_date:
-                        current_item_date_str = str(current_item_date)
-                        
-                        # Store if it's one of the needed dates
-                        if current_item_date_str in grouped_news:
-                            # Map keys explicitly
-                            clean_item = {
-                                'id': str(item.get('news_id') or item.get('id') or ''),
-                                'title': item.get('news_title') or item.get('title') or '',
-                                'short_content': item.get('news_short_content') or item.get('short_content') or '',
-                                'full_content': item.get('news_full_content') or item.get('full_content') or '',
-                                'source_link': item.get('news_source_link') or item.get('source_link') or '',
-                                'image_url': item.get('news_image_url') or item.get('image_url') or '',
-                                'public_date': str(raw_date),
-                                'price_change_pct': item.get('price_change_pct', 0)
-                            }
-                            grouped_news[current_item_date_str].append(clean_item)
-                            found_this_page = True
-                        
-                        # Stop condition: If we reached a date older than our oldest needed date
-                        if current_item_date < oldest_needed_date:
-                            print(f"[StockNewsFetcher] Reached date {current_item_date_str} which is older than limit {oldest_needed_date_str}. Stopping.")
-                            return grouped_news
-
+                raw_date = pubdate_tag.text if pubdate_tag else ""
+                
+                try:
+                    # CafeF Date Format: Mon, 19 Jan 2026 10:30:00 +0700 (or similar)
+                    # Google Date Format: Mon, 19 Jan 2026 10:30:00 GMT
+                    pdate_clean = raw_date.replace("GMT", "+0000")
+                    dt_obj = datetime.strptime(pdate_clean, "%a, %d %b %Y %H:%M:%S %z").date()
                 except Exception as e:
-                    # print(f"Date parse error: {e} for {raw_date}")
-                    continue
+                    # Try another format for CafeF (2-digit year or other variations)
+                    try:
+                         # Fallback 1: cafeF 2-digit year "Mon, 19 Jan 26 ..."
+                         dt_obj = datetime.strptime(pdate_clean, "%a, %d %b %y %H:%M:%S %z").date()
+                    except:
+                        try:
+                            # Fallback 2: Raw date without GMT fix?
+                            dt_obj = datetime.strptime(raw_date, "%a, %d %b %Y %H:%M:%S %z").date()
+                        except Exception as e2:
+                            # print(f"Date parse fail '{raw_date}': {e2}")
+                            continue
 
-            # If the entire page has dates NEWER than what we look for? No, pages go new -> old.
-            # So if we process a page and the last item is still NEWER than our newest needed date (rare if missing dates are recent), we continue.
-            # If the last item is OLDER than our oldest needed date, handled above.
+                dt_str = str(dt_obj)
+                
+                clean_item = {
+                    'id': link,
+                    'title': title,
+                    'short_content': short_content,
+                    'full_content': '',
+                    'source_link': link,
+                    'image_url': image_url,
+                    'source': source_name,
+                    'public_date': dt_str
+                }
+                
+                if dt_str in grouped_news:
+                    grouped_news[dt_str].append(clean_item)
+                
+                # Simulation Logic
+                try:
+                     fake_next_year_dt = dt_obj.replace(year=dt_obj.year + 1)
+                     fake_next_year = str(fake_next_year_dt)
+                     if fake_next_year in grouped_news:
+                         sim_item = clean_item.copy()
+                         sim_item['public_date'] = fake_next_year
+                         grouped_news[fake_next_year].append(sim_item)
+                except:
+                    pass
             
-            # What if we found some data for some dates but not all?
-            # We continue to next page.
-            
-            page += 1
+        except Exception as e:
+            print(f"Exception fetching RSS: {e}")
             
         return grouped_news

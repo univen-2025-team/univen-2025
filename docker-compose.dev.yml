@@ -55,6 +55,8 @@ services:
     container_name: univen-server-dev
     restart: unless-stopped
 
+    environment:
+      - TZ=Asia/Ho_Chi_Minh
     ports:
       - "4000:4000"
     volumes:
@@ -79,6 +81,7 @@ services:
       CRONJOB_ENABLED: "false"
       PYTHONUNBUFFERED: 1
       PYTHONDONTWRITEBYTECODE: 1
+      TZ: Asia/Ho_Chi_Minh
     command: python -u src/watcher.py
     volumes:
       - ./vnstock-api:/app

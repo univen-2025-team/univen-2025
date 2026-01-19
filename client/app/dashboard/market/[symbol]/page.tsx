@@ -8,7 +8,12 @@ import {
   DollarSign, Maximize2, Minimize2, ShoppingCart, X, History, Wallet, Newspaper
 } from 'lucide-react';
 import Image from 'next/image';
+import { io } from 'socket.io-client';
 import LoadingSpinner from '@/components/dashboard/LoadingSpinner';
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+// Fix: Ensure SOCKET_URL is just the origin, stripping any API path suffix like /v1/api or /api
+const SOCKET_URL = API_URL.replace(/\/v1\/api|\/api\/v1|\/api$/, '') || 'http://localhost:4000'; // Connect to root for socket namespaces
 import ErrorMessage from '@/components/common/ErrorMessage';
 import CandlestickChart from '@/components/market/charts/CandlestickChart';
 import NewsFeed from '@/components/market/NewsFeed';
@@ -23,7 +28,7 @@ const StockDetailPage = () => {
   const params = useParams();
   const router = useRouter();
   const symbol = (params.symbol as string).toUpperCase();
-  const { user } = useAppSelector(state => state.auth);
+  const { user, accessToken } = useAppSelector(state => state.auth);
   const { showToast } = useToast();
 
   const [loading, setLoading] = useState(true);
@@ -110,6 +115,101 @@ const StockDetailPage = () => {
     fetchChartData({ refresh: true });
   }, [fetchChartData]);
 
+  // API URL Env
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+
+  // Socket Connection
+  useEffect(() => {
+    if (!symbol) return;
+
+    // Must provide auth token if server requires it
+    const socket = io(`${SOCKET_URL}/market`, {
+      transports: ['websocket'],
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000,
+      auth: {
+        token: accessToken // Send token for middleware
+      }
+    });
+
+    socket.on('connect', () => {
+      console.log('Connected to Market Socket');
+      socket.emit('subscribe:stock', { symbol });
+    });
+
+    socket.on('connect_error', (err) => {
+      console.error('Socket Connection Error:', err.message);
+    });
+
+    socket.on('stock:update', (data: any) => {
+      // data matches StockDetailUpdate interface from backend
+      // { symbol, price, change, changePercent, volume, high, low, timestamp }
+
+      setChartData((prevData: any[]) => {
+        if (!prevData || prevData.length === 0) return prevData;
+
+        const lastCandle = prevData[prevData.length - 1];
+        // Identify if update belongs to current candle or new one
+        // Simulation: Timestamp is "Now".
+        // Charts usually group by minute.
+        const now = new Date();
+        const currentMinuteStr = now.toISOString().slice(0, 16); // "YYYY-MM-DDTHH:mm"
+
+        // Simplified: Always update "latest" candle if time diff is small, or append if new minute
+        // But since this is simulation, let's just Append/Update last
+
+        // Check if last candle time matches current minute
+        const lastTime = lastCandle.date ? `${lastCandle.date} ${lastCandle.time}` : lastCandle.time;
+        // Parse lastTime to compare minutes might be complex due to formats.
+
+        // APPROACH: Just REPLACE/UPDATE the last candle with new price for animation effect
+        // OR if new minute -> append.
+
+        // For smoother demo, let's assume we update the last candle's Close/High/Low/Vol
+        const updatedLast = {
+          ...lastCandle,
+          close: data.price,
+          high: Math.max(lastCandle.high, data.price),
+          low: Math.min(lastCandle.low, data.price),
+          volume: data.volume, // Accumulate or Replace? Backend sends TOTAL volume usually.
+          // If backend sends Accumulated Volume for the day, we replace.
+          // Simulation backend sends Volume of that specific bar (1m).
+        };
+
+        // If time has jumped significantly (new candle needed), we would push new.
+        // But getting exact sync of "When to push new" vs "Update existing" without simplified params is hard.
+        // Let's stick to updating the very last candle to show "Live" movement.
+
+        const newData = [...prevData];
+        newData[newData.length - 1] = updatedLast;
+        return newData;
+      });
+
+      // Update Header Data as well
+      setStockData(prev => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          marketData: {
+            ...prev.marketData,
+            price: data.price,
+            change: data.change,
+            changePercent: data.changePercent,
+            high: data.high,
+            low: data.low,
+            volume: data.volume
+          }
+        }
+      });
+    });
+
+    return () => {
+      socket.off('stock:update');
+      socket.emit('unsubscribe:stock', { symbol });
+      socket.disconnect();
+    };
+  }, [symbol]);
+
   // Fetch User Transactions for this symbol
   useEffect(() => {
     const fetchTransactions = async () => {
@@ -130,7 +230,6 @@ const StockDetailPage = () => {
     };
 
     fetchTransactions();
-    fetchTransactions();
   }, [symbol, user?._id]);
 
   // Handle Load More (Mocking older data)
@@ -142,7 +241,7 @@ const StockDetailPage = () => {
     // Mock delay
     await new Promise(resolve => setTimeout(resolve, 800));
 
-    setChartData(prev => {
+    setChartData((prev: any[]) => {
       if (!prev.length) return prev;
 
       // Generate 50 dummy candles before the first one
@@ -205,12 +304,52 @@ const StockDetailPage = () => {
     }, 0);
   }, [transactions]);
 
+  // Calculate change based on visible chart data (User Request: Start to End of chart)
+  const calculatedChange = useMemo(() => {
+    if (!candlestickData.length) return { change: 0, percent: 0, price: 0 };
+    const first = candlestickData[0];
+    const last = candlestickData[candlestickData.length - 1]; // Use last candle
+
+    // Ensure we handle potentially missing data gracefully
+    if (!first || !last) return { change: 0, percent: 0, price: 0 };
+
+    const startPrice = first.open;
+    const currentPrice = last.close;
+    const change = currentPrice - startPrice;
+    const percent = startPrice > 0 ? ((change / startPrice) * 100) : 0;
+
+    return { change, percent, price: currentPrice };
+  }, [candlestickData]);
+
+  // Flash Animation State
+  const [priceFlash, setPriceFlash] = useState<'green' | 'red' | null>(null);
+  const prevPriceRef = useRef<number>(0);
+
+  useEffect(() => {
+    if (calculatedChange.price !== prevPriceRef.current) {
+      if (prevPriceRef.current > 0) {
+        setPriceFlash(calculatedChange.price > prevPriceRef.current ? 'green' : 'red');
+        setTimeout(() => setPriceFlash(null), 1000); // Reset after 1s
+      }
+      prevPriceRef.current = calculatedChange.price;
+    }
+  }, [calculatedChange.price]);
+
   if (loading) return <LoadingSpinner />;
   if (error) return <ErrorMessage message={error} />;
   if (!stockData) return <ErrorMessage message="Stock not found" />;
 
   const { profile, info, marketData } = stockData;
-  const isPositive = marketData?.change >= 0;
+
+
+  // Use calculated data over socket data for critical stats to ensure consistency with chart
+  const displayData = {
+    price: calculatedChange.price || marketData?.price || 0,
+    change: calculatedChange.change,
+    changePercent: calculatedChange.percent
+  };
+
+  const isPositive = displayData.change >= 0;
 
   // Shared Card Styles
   const cardClassName = "bg-white/95 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300";
@@ -249,14 +388,16 @@ const StockDetailPage = () => {
             </div>
           </div>
           <div className="hidden md:flex flex-col items-start px-4 border-l border-gray-200">
-            <div className="text-2xl font-bold flex items-center text-gray-900 leading-none">
-              {marketData?.price ? (marketData.price * 1000).toLocaleString('vi-VN') : '---'}
-              <span className="text-xs font-medium text-gray-500 ml-1">VND</span>
+            <div className={`transition-all duration-500 rounded px-2 ${priceFlash === 'green' ? 'bg-emerald-100' : priceFlash === 'red' ? 'bg-red-100' : ''}`}>
+              <div className={`text-2xl font-bold flex items-center leading-none ${priceFlash === 'green' ? 'text-emerald-700' : priceFlash === 'red' ? 'text-red-700' : 'text-gray-900'}`}>
+                {(displayData.price * 1000).toLocaleString('vi-VN', { maximumFractionDigits: 0 })}
+                <span className="text-xs font-medium text-gray-500 ml-1">VND</span>
+              </div>
             </div>
             <div className={`flex items-center text-sm font-semibold mt-1 ${isPositive ? 'text-emerald-600' : 'text-red-500'}`}>
               {isPositive ? <TrendingUp className="w-3 h-3 mr-1" /> : <TrendingDown className="w-3 h-3 mr-1" />}
-              <span>{marketData?.change > 0 ? '+' : ''}{marketData?.change * 1000}</span>
-              <span className="ml-1 opacity-90">({marketData?.changePercent}%)</span>
+              <span>{isPositive ? '+' : ''}{(displayData.change * 1000).toLocaleString('vi-VN', { maximumFractionDigits: 0 })}</span>
+              <span className="ml-1 opacity-90">({displayData.changePercent.toFixed(2)}%)</span>
             </div>
           </div>
         </div>
@@ -292,7 +433,7 @@ const StockDetailPage = () => {
         </div>
         <div className={`flex items-center font-bold px-3 py-1 rounded-lg ${isPositive ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-500'}`}>
           {isPositive ? <TrendingUp className="w-4 h-4 mr-1" /> : <TrendingDown className="w-4 h-4 mr-1" />}
-          <span>{marketData?.changePercent}%</span>
+          <span>{marketData?.changePercent?.toFixed(2)}%</span>
         </div>
       </div>
 
@@ -361,7 +502,7 @@ const StockDetailPage = () => {
                 <div className={`flex items-center font-semibold px-2 py-0.5 rounded ${isPositive ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-500'}`}>
                   {marketData?.price ? (marketData.price * 1000).toLocaleString('vi-VN') : '---'}
                   <span className="text-xs ml-1">VND</span>
-                  <span className="text-xs ml-2 opacity-80">({marketData?.changePercent}%)</span>
+                  <span className="text-xs ml-2 opacity-80">({marketData?.changePercent?.toFixed(2)}%)</span>
                 </div>
               </div>
               <div className="flex items-center gap-3">
