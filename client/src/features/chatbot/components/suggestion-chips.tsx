@@ -1,47 +1,45 @@
-'use client'
+'use client';
 
-import { Button } from '@/components/ui/button'
-import { SuggestionMessage } from './types'
+import { Button } from '@/components/ui/button';
+import { SuggestionMessage } from './types';
 
 type SuggestionChipsProps = {
-  suggestions?: string[] | SuggestionMessage[]
-  onClick?: (value: string) => void
-}
+    suggestions?: string[] | SuggestionMessage[];
+    onClick?: (value: string) => void;
+};
 
 const DEFAULT_SUGGESTIONS: SuggestionMessage[] = [
-  { text: 'Show market news', icon: '📰' },
-  { text: 'Buy HPG', icon: '💹' },
-  { text: 'Explain P/E ratio', icon: '📊' },
-  { text: 'Top gainers today', icon: '📈' },
-]
+    { text: 'Show market news', icon: '📰' },
+    { text: 'Buy HPG', icon: '💹' },
+    { text: 'Explain P/E ratio', icon: '📊' },
+    { text: 'Top gainers today', icon: '📈' }
+];
 
 export function SuggestionChips({ suggestions, onClick }: SuggestionChipsProps) {
-  // Convert string[] to SuggestionMessage[] nếu cần
-  const chips: SuggestionMessage[] = suggestions
-    ? suggestions.map((s) =>
-      typeof s === 'string'
-        ? { text: s }
-        : s
-    )
-    : DEFAULT_SUGGESTIONS
+    // Convert string[] to SuggestionMessage[] nếu cần
+    const chips: SuggestionMessage[] = suggestions
+        ? suggestions.map((s) => (typeof s === 'string' ? { text: s } : s))
+        : DEFAULT_SUGGESTIONS;
 
-  return (
-    <div className="mb-3 space-y-2">
-      <p className="text-xs text-muted-foreground">Quick actions:</p>
-      <div className="flex flex-wrap gap-2">
-        {chips.map((chip, index) => (
-          <Button
-            key={chip.text || index}
-            variant="outline"
-            size="sm"
-            className="text-xs hover:text-primary"
-            onClick={() => onClick?.(chip.text)}
-          >
-            {chip.icon && <span className="mr-1">{chip.icon}</span>}
-            {chip.text}
-          </Button>
-        ))}
-      </div>
-    </div>
-  )
+    return (
+        <div className="mb-3 space-y-2">
+            <p className="text-xs text-white/60 font-medium tracking-wide pl-1">Quick actions:</p>
+            <div className="flex flex-wrap gap-2">
+                {chips.map((chip, index) => (
+                    <Button
+                        key={chip.text || index}
+                        variant={undefined}
+                        size="sm"
+                        className="text-xs font-semibold text-white bg-[#23243a]/70 hover:bg-violet-800/80 hover:text-fuchsia-300 border border-white/10 shadow-md backdrop-blur-md rounded-xl px-3 py-1.5 transition-all duration-200"
+                        onClick={() => onClick?.(chip.text)}
+                    >
+                        {chip.icon && (
+                            <span className="mr-1 text-lg align-middle">{chip.icon}</span>
+                        )}
+                        {chip.text}
+                    </Button>
+                ))}
+            </div>
+        </div>
+    );
 }

@@ -51,7 +51,7 @@ export function Sidebar() {
             {/* Mobile Toggle Button */}
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className="lg:hidden fixed top-4 left-4 z-50 p-2 rounded-lg bg-white shadow-lg"
+                className="lg:hidden fixed top-4 left-4 z-50 p-2 rounded-lg bg-[#0F111A]/80 backdrop-blur-xl border border-white/10 shadow-lg text-white"
                 aria-label="Mở menu"
             >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -76,19 +76,34 @@ export function Sidebar() {
             {/* Overlay for mobile */}
             {isOpen && (
                 <div
-                    className="lg:hidden fixed inset-0 bg-black bg-opacity-50 z-30"
+                    className="lg:hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-30"
                     onClick={() => setIsOpen(false)}
                 />
             )}
 
             <aside
-                className={`fixed lg:static inset-y-0 left-0 z-40 ${isCollapsed ? 'w-20' : 'w-64'
-                    } bg-white/95 backdrop-blur-sm border-r border-gray-200 shadow-xl transform transition-all duration-300 ease-in-out ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
-                    }`}
+                className={`fixed lg:static inset-y-0 left-0 z-40 ${
+                    isCollapsed ? 'w-20' : 'w-64'
+                } transform transition-all duration-300 ease-in-out ${
+                    isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+                }`}
             >
-                <div className="h-full flex flex-col">
+                {/* Gradient glow effect */}
+
+                {/* <div className="absolute inset-0 bg-[#050505] rounded-r-3xl blur-xl pointer-events-none"></div> */}
+                <div className="fixed inset-0 overflow-hidden pointer-events-none bg-[#050505]">
+                    {/* Top Left - Pink/Red Glow */}
+                    <div className="absolute top-[-10%] left-[-10%] w-[600px] h-[600px] bg-pink-600/20 rounded-full blur-[120px] mix-blend-screen animate-pulse"></div>
+                    {/* Top Right - Violet/Blue Glow */}
+                    <div className="absolute top-[10%] right-[-10%] w-[500px] h-[500px] bg-violet-600/20 rounded-full blur-[120px] mix-blend-screen"></div>
+                    {/* Bottom Left - Blue Glow */}
+                    <div className="absolute bottom-[-10%] left-[20%] w-[600px] h-[600px] bg-blue-600/10 rounded-full blur-[100px] mix-blend-screen"></div>
+                    {/* Center - Subtle Violet Glow */}
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-violet-600/5 rounded-full blur-[150px] mix-blend-screen"></div>
+                </div>
+                <div className="relative h-full border-r border-white/20 shadow-xl ring-1 ring-white/10 flex flex-col">
                     {/* Header */}
-                    <div className="p-4 border-b border-gray-200 flex items-center justify-between gap-2">
+                    <div className="p-4 border-b border-white/10 flex items-center justify-between gap-2">
                         <Link href="/" className="flex items-center gap-3">
                             <Image
                                 src="/stockie-logo.png"
@@ -103,7 +118,7 @@ export function Sidebar() {
                         {/* Collapse Toggle (desktop) */}
                         <button
                             onClick={() => setIsCollapsed(!isCollapsed)}
-                            className="hidden lg:inline-flex p-2 rounded-md hover:bg-gray-100 text-gray-600 hover:text-gray-900 transition-colors"
+                            className="hidden lg:inline-flex p-2 rounded-xl hover:bg-white/10 text-slate-400 hover:text-white transition-all border border-transparent hover:border-violet-500/20"
                             title={isCollapsed ? 'Mở rộng' : 'Thu gọn'}
                         >
                             <svg
@@ -140,19 +155,23 @@ export function Sidebar() {
                                         key={route.path}
                                         href={route.path}
                                         onClick={() => setIsOpen(false)}
-                                        className={`group flex items-center gap-3 p-3 rounded-md relative transition-colors ${active
-                                            ? 'bg-primary text-white shadow'
-                                            : 'text-gray-700 hover:bg-gray-100'
-                                            } ${isCollapsed ? 'justify-center' : ''}`}
+                                        className={`group flex items-center gap-3 p-3 rounded-xl relative transition-all duration-300 ${
+                                            active
+                                                ? 'shadow-lg shadow-violet-500/30 ring-1 ring-violet-400/20 border border-violet-500/30 bg-[#0F111A]/80 backdrop-blur-xl text-gradient-to-r from-violet-400 via-fuchsia-400 to-blue-400'
+                                                : 'text-gray-400 hover:bg-white/5 hover:text-white'
+                                        } ${isCollapsed ? 'justify-center' : ''}`}
                                     >
-                                        {/* Active indicator */}
+                                        {/* Active indicator
                                         {active && !isCollapsed && (
-                                            <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-primary/50 rounded-r-full" />
-                                        )}
+                                            <div className="" />
+                                        )} */}
 
                                         <div
-                                            className={`flex-shrink-0 ${active ? 'text-white' : 'text-gray-600'
-                                                }`}
+                                            className={`flex-shrink-0 ${
+                                                active
+                                                    ? 'text-gradient-to-r from-violet-400 via-fuchsia-400 to-blue-400'
+                                                    : 'text-gray-400'
+                                            }`}
                                         >
                                             {route.icon}
                                         </div>
@@ -164,14 +183,15 @@ export function Sidebar() {
                                                 </span>
                                                 {badgeCount && (
                                                     <span
-                                                        className={`ml-2 px-2 py-0.5 rounded-full text-xs font-semibold ${isBadgesRoute
-                                                            ? active
-                                                                ? 'bg-white text-red-500'
-                                                                : 'bg-red-500 text-white'
-                                                            : active
-                                                                ? 'bg-white text-primary'
-                                                                : 'bg-primary text-white'
-                                                            }`}
+                                                        className={`ml-2 px-2 py-0.5 rounded-full text-xs font-semibold ${
+                                                            isBadgesRoute
+                                                                ? active
+                                                                    ? 'bg-white text-red-500'
+                                                                    : 'bg-red-500 text-white'
+                                                                : active
+                                                                  ? 'bg-white text-primary'
+                                                                  : 'bg-primary text-white'
+                                                        }`}
                                                     >
                                                         {badgeCount}
                                                     </span>
@@ -181,7 +201,7 @@ export function Sidebar() {
 
                                         {/* Tooltip when collapsed */}
                                         {isCollapsed && (
-                                            <div className="absolute left-full ml-2 px-3 py-2 bg-white shadow rounded-md text-sm text-gray-800 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50">
+                                            <div className="absolute left-full ml-2 px-3 py-2 bg-[#0F111A]/90 backdrop-blur-xl border border-white/10 shadow-xl rounded-lg text-sm text-white opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50">
                                                 {route.name}
                                             </div>
                                         )}
@@ -192,11 +212,12 @@ export function Sidebar() {
                     </nav>
 
                     {/* Footer / Profile */}
-                    <div className="p-4 border-t border-gray-200 relative" ref={profileMenuRef}>
+                    <div className="p-4 border-t border-white/10 relative" ref={profileMenuRef}>
                         <button
                             onClick={() => setShowProfileMenu(!showProfileMenu)}
-                            className={`w-full flex items-center gap-3 ${isCollapsed ? 'justify-center' : ''
-                                } hover:bg-gray-50 rounded-lg p-2 transition-colors`}
+                            className={`w-full flex items-center gap-3 ${
+                                isCollapsed ? 'justify-center' : ''
+                            } hover:bg-white/5 rounded-xl p-2 transition-all duration-300`}
                         >
                             {(() => {
                                 const avatarUrl = getMediaUrl(user?.user_avatar);
@@ -214,18 +235,19 @@ export function Sidebar() {
                             })()}
                             {!isCollapsed && (
                                 <div className="min-w-0 flex-1 text-left">
-                                    <p className="text-sm font-semibold text-gray-900 truncate">
+                                    <p className="text-sm font-semibold text-white truncate">
                                         {user?.user_fullName || 'User'}
                                     </p>
-                                    <p className="text-xs text-gray-500 truncate">
+                                    <p className="text-xs text-gray-400 truncate">
                                         {user?.email || 'user@example.com'}
                                     </p>
                                 </div>
                             )}
                             {!isCollapsed && (
                                 <svg
-                                    className={`w-4 h-4 text-gray-400 transition-transform ${showProfileMenu ? 'rotate-180' : ''
-                                        }`}
+                                    className={`w-4 h-4 text-gray-400 transition-transform ${
+                                        showProfileMenu ? 'rotate-180' : ''
+                                    }`}
                                     fill="none"
                                     stroke="currentColor"
                                     viewBox="0 0 24 24"
@@ -242,11 +264,11 @@ export function Sidebar() {
 
                         {/* Profile Dropdown Menu */}
                         {showProfileMenu && !isCollapsed && (
-                            <div className="absolute bottom-full left-0 right-0 mb-2 mx-4 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
+                            <div className="absolute bottom-full left-0 right-0 mb-2 mx-4 bg-[#0F111A]/90 backdrop-blur-xl rounded-xl shadow-2xl border border-white/10 py-2 z-50">
                                 <Link
                                     href="/dashboard/profile"
                                     onClick={() => setShowProfileMenu(false)}
-                                    className="flex items-center gap-3 px-4 py-2 hover:bg-gray-50 transition-colors text-gray-700"
+                                    className="flex items-center gap-3 px-4 py-2 hover:bg-white/5 transition-colors text-gray-300 hover:text-white rounded-lg mx-2"
                                 >
                                     <svg
                                         className="w-5 h-5"
@@ -264,11 +286,11 @@ export function Sidebar() {
                                     <span className="text-sm font-medium">Thông tin cá nhân</span>
                                 </Link>
 
-                                <div className="border-t border-gray-200 my-2"></div>
+                                <div className="border-t border-white/10 my-2"></div>
 
                                 <button
                                     onClick={handleLogout}
-                                    className="w-full flex items-center gap-3 px-4 py-2 hover:bg-error-light transition-colors text-error"
+                                    className="w-full flex items-center gap-3 px-4 py-2 hover:bg-red-500/10 transition-colors text-red-400 hover:text-red-300 rounded-lg mx-2"
                                 >
                                     <svg
                                         className="w-5 h-5"
@@ -290,11 +312,11 @@ export function Sidebar() {
 
                         {/* Tooltip for collapsed sidebar */}
                         {isCollapsed && showProfileMenu && (
-                            <div className="absolute bottom-full left-full ml-2 mb-2 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50 w-48">
+                            <div className="absolute bottom-full left-full ml-2 mb-2 bg-[#0F111A]/90 backdrop-blur-xl rounded-xl shadow-2xl border border-white/10 py-2 z-50 w-48">
                                 <Link
                                     href="/dashboard/profile"
                                     onClick={() => setShowProfileMenu(false)}
-                                    className="flex items-center gap-3 px-4 py-2 hover:bg-gray-50 transition-colors text-gray-700"
+                                    className="flex items-center gap-3 px-4 py-2 hover:bg-white/5 transition-colors text-gray-300 hover:text-white rounded-lg mx-2"
                                 >
                                     <svg
                                         className="w-5 h-5"
@@ -312,11 +334,11 @@ export function Sidebar() {
                                     <span className="text-sm font-medium">Thông tin cá nhân</span>
                                 </Link>
 
-                                <div className="border-t border-gray-200 my-2"></div>
+                                <div className="border-t border-white/10 my-2"></div>
 
                                 <button
                                     onClick={handleLogout}
-                                    className="w-full flex items-center gap-3 px-4 py-2 hover:bg-error-light transition-colors text-error"
+                                    className="w-full flex items-center gap-3 px-4 py-2 hover:bg-red-500/10 transition-colors text-red-400 hover:text-red-300 rounded-lg mx-2"
                                 >
                                     <svg
                                         className="w-5 h-5"

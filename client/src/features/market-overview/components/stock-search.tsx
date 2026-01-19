@@ -101,25 +101,25 @@ export function StockSearch({
 
             {/* Autocomplete Dropdown */}
             {showResults && results.length > 0 && (
-                <div className="absolute z-50 w-full mt-2 bg-white dark:bg-gray-900 border border-border rounded-lg shadow-lg max-h-80 overflow-y-auto">
+                <div className="absolute z-50 w-full mt-2 bg-[#0F111A] border border-white/10 rounded-lg shadow-lg max-h-80 overflow-y-auto">
                     {results.map((stock) => (
                         <button
                             key={stock.symbol}
                             onClick={() => handleSelect(stock)}
-                            className="w-full px-4 py-3 hover:bg-muted/50 transition-colors flex items-center justify-between group text-left"
+                            className="w-full px-4 py-3 hover:bg-white/10 transition-colors flex items-center justify-between group text-left"
                         >
                             <div className="flex-1">
-                                <div className="font-semibold text-foreground group-hover:text-primary">
+                                <div className="font-semibold text-white group-hover:text-violet-400">
                                     {stock.symbol}
                                 </div>
                                 {stock.companyName && (
-                                    <div className="text-sm text-muted-foreground truncate">
+                                    <div className="text-sm text-gray-400 truncate">
                                         {stock.companyName}
                                     </div>
                                 )}
                             </div>
                             <div className="text-right ml-4">
-                                <div className="font-medium text-foreground">
+                                <div className="font-medium text-white">
                                     {stock.price.toLocaleString('vi-VN')} VND
                                 </div>
                                 <div
@@ -138,8 +138,8 @@ export function StockSearch({
 
             {/* No Results */}
             {showResults && searchTerm && results.length === 0 && (
-                <div className="absolute z-50 w-full mt-2 bg-white dark:bg-gray-900 border border-border rounded-lg shadow-lg p-4">
-                    <p className="text-sm text-muted-foreground text-center">
+                <div className="absolute z-50 w-full mt-2 bg-[#0F111A] border border-white/10 rounded-lg shadow-lg p-4">
+                    <p className="text-sm text-gray-400 text-center">
                         Không tìm thấy kết quả cho "{searchTerm}"
                     </p>
                 </div>

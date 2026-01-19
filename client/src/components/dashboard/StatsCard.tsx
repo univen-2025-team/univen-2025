@@ -20,9 +20,9 @@ export default function StatsCard({
     iconBgColor
 }: StatsCardProps) {
     const changeColorMap = {
-        positive: 'text-success',
-        negative: 'text-error',
-        neutral: 'text-gray-600'
+        positive: 'text-green-400',
+        negative: 'text-red-400',
+        neutral: 'text-gray-400'
     };
 
     const changeIcon =
@@ -56,23 +56,29 @@ export default function StatsCard({
         );
 
     return (
-        <div
-            className={`bg-white/95 backdrop-blur-sm rounded-2xl shadow-lg p-6 border-l-4 ${borderColor} hover:shadow-2xl hover:scale-[1.02] transition-all duration-300 animate-scale-in`}
-        >
-            <div className="flex items-center justify-between">
-                <div>
-                    <p className="text-gray-600 text-sm font-medium">{title}</p>
-                    <h3 className="text-2xl font-bold text-gray-900 mt-2">{value}</h3>
-                    {change && (
-                        <p
-                            className={`${changeColorMap[changeType]} text-sm mt-2 flex items-center`}
-                        >
-                            {changeIcon}
-                            {change}
-                        </p>
-                    )}
+        <div className="relative group">
+            {/* Gradient glow effect */}
+            <div
+                className={`absolute -inset-0.5 bg-gradient-to-r ${borderColor === 'border-l-violet-500' ? 'from-violet-500 to-pink-500' : borderColor === 'border-l-emerald-500' ? 'from-emerald-500 to-cyan-500' : borderColor === 'border-l-amber-500' ? 'from-amber-500 to-orange-500' : 'from-blue-500 to-indigo-500'} rounded-2xl blur opacity-20 group-hover:opacity-40 transition duration-500`}
+            ></div>
+            <div className="relative bg-[#0F111A]/80 backdrop-blur-2xl rounded-2xl shadow-2xl p-6 border border-white/10 ring-1 ring-white/5 hover:shadow-violet-500/10 transition-all duration-300">
+                <div className="flex items-center justify-between">
+                    <div>
+                        <p className="text-slate-400 text-sm font-medium">{title}</p>
+                        <h3 className="text-2xl font-bold text-white mt-2 drop-shadow-md">
+                            {value}
+                        </h3>
+                        {change && (
+                            <p
+                                className={`${changeColorMap[changeType]} text-sm mt-2 flex items-center`}
+                            >
+                                {changeIcon}
+                                {change}
+                            </p>
+                        )}
+                    </div>
+                    <div className={iconBgColor}>{icon}</div>
                 </div>
-                <div className={iconBgColor}>{icon}</div>
             </div>
         </div>
     );

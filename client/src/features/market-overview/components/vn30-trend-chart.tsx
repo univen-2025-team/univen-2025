@@ -84,18 +84,18 @@ export function VN30TrendChart({
     // Dynamic colors based on trend
     const trendColor = isUp ? '#10b981' : '#ef4444'; // Green for up, Red for down
     const gradientId = isUp ? 'greenGradient' : 'redGradient';
-    const bgGradient = isUp ? 'from-emerald-50 to-white' : 'from-red-50 to-white';
+    const bgGradient = isUp ? 'from-emerald-500/10 to-[#0F111A]' : 'from-red-500/10 to-[#0F111A]';
 
     if (!data || data.length === 0) {
         return (
             <div
-                className={`bg-gradient-to-b ${bgGradient} rounded-xl shadow-lg p-6 border border-gray-100`}
+                className={`bg-gradient-to-b ${bgGradient} rounded-xl shadow-lg p-6 border border-white/10`}
             >
                 <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                        <div className="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center">
                             <svg
-                                className="w-6 h-6 text-blue-600"
+                                className="w-6 h-6 text-blue-400"
                                 fill="none"
                                 stroke="currentColor"
                                 viewBox="0 0 24 24"
@@ -108,7 +108,7 @@ export function VN30TrendChart({
                                 />
                             </svg>
                         </div>
-                        <h3 className="text-lg font-bold text-gray-900">Biểu đồ xu hướng VN30</h3>
+                        <h3 className="text-lg font-bold text-white">Biểu đồ xu hướng VN30</h3>
                     </div>
                     <div className="w-[120px]">
                         <Select value={selectedRange} onValueChange={onRangeChange}>
@@ -129,10 +129,10 @@ export function VN30TrendChart({
                         </Select>
                     </div>
                 </div>
-                <div className="h-80 flex items-center justify-center text-gray-500">
+                <div className="h-80 flex items-center justify-center text-gray-400">
                     <div className="text-center">
                         <svg
-                            className="w-16 h-16 mx-auto mb-4 text-gray-300"
+                            className="w-16 h-16 mx-auto mb-4 text-gray-600"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -144,8 +144,8 @@ export function VN30TrendChart({
                                 d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
                             />
                         </svg>
-                        <p className="text-lg font-medium">Chưa có dữ liệu</p>
-                        <p className="text-sm text-gray-400 mt-1">
+                        <p className="text-lg font-medium text-gray-300">Chưa có dữ liệu</p>
+                        <p className="text-sm text-gray-500 mt-1">
                             Dữ liệu sẽ được cập nhật khi có giao dịch
                         </p>
                     </div>
@@ -156,7 +156,7 @@ export function VN30TrendChart({
 
     return (
         <div
-            className={`bg-gradient-to-b ${bgGradient} rounded-xl shadow-lg p-6 border border-gray-100`}
+            className={`bg-gradient-to-b ${bgGradient} rounded-xl shadow-lg p-6 border border-white/10`}
         >
             {/* Header */}
             <div className="flex items-center justify-between mb-6">

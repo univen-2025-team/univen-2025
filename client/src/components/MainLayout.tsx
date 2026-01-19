@@ -4,18 +4,21 @@ import { Sidebar } from './Sidebar';
 
 export function MainLayout({ children }: { children: React.ReactNode }) {
     return (
-        <div className="flex h-screen overflow-hidden bg-background relative">
-            {/* Animated Background Blobs */}
-            <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                <div className="absolute top-20 left-1/4 w-72 h-72 bg-primary/10 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
-                <div className="absolute top-40 right-1/4 w-72 h-72 bg-accent/10 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
-                <div className="absolute bottom-20 left-1/2 w-72 h-72 bg-secondary/20 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-4000"></div>
+        <div className="flex h-screen overflow-hidden bg-[#050505] text-white relative">
+            {/* --- ZENOX STYLE BACKGROUND BLOBS --- */}
+            <div className="fixed inset-0 overflow-hidden pointer-events-none">
+                {/* Top Left - Pink/Red Glow */}
+                <div className="absolute top-[-10%] left-[-10%] w-[600px] h-[600px] bg-pink-600/20 rounded-full blur-[120px] mix-blend-screen animate-pulse"></div>
+                {/* Top Right - Violet/Blue Glow */}
+                <div className="absolute top-[10%] right-[-10%] w-[500px] h-[500px] bg-violet-600/20 rounded-full blur-[120px] mix-blend-screen"></div>
+                {/* Bottom Left - Blue Glow */}
+                <div className="absolute bottom-[-10%] left-[20%] w-[600px] h-[600px] bg-blue-600/10 rounded-full blur-[100px] mix-blend-screen"></div>
+                {/* Center - Subtle Violet Glow */}
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-violet-600/5 rounded-full blur-[150px] mix-blend-screen"></div>
             </div>
 
             <Sidebar />
-            <main className="flex-1 overflow-y-auto text-gray-900 p-4 md:p-6 relative z-10">
-                {children}
-            </main>
+            <main className="flex-1 overflow-y-auto p-4 md:p-6 relative z-10">{children}</main>
         </div>
     );
 }

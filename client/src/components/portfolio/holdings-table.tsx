@@ -196,8 +196,8 @@ export function HoldingsTable({ holdings, onRefresh }: HoldingsTableProps) {
                                         <p
                                             className={`font-bold ${
                                                 holding.profit_loss >= 0
-                                                    ? 'text-green-600'
-                                                    : 'text-red-600'
+                                                    ? 'text-emerald-400'
+                                                    : 'text-red-400'
                                             }`}
                                         >
                                             {holding.profit_loss >= 0 ? '+' : ''}
@@ -206,8 +206,8 @@ export function HoldingsTable({ holdings, onRefresh }: HoldingsTableProps) {
                                         <p
                                             className={`text-sm ${
                                                 holding.profit_loss >= 0
-                                                    ? 'text-green-600'
-                                                    : 'text-red-600'
+                                                    ? 'text-emerald-400'
+                                                    : 'text-red-400'
                                             }`}
                                         >
                                             {holding.profit_loss >= 0 ? '+' : ''}
