@@ -6,9 +6,10 @@ class StockNewsFetcher:
     def __init__(self, symbol):
         self.symbol = symbol
         self.original_symbol = symbol
-        # Map MARKET to E1VFVN30 (ETF VN30) because 'VNINDEX' is not a stock and doesn't support company.news()
+        # Map MARKET to SSI (Securities Proxy) because 'VNINDEX' is not a stock.
+        # SSI news often covers market updates.
         if self.symbol == 'MARKET':
-             self.symbol = 'E1VFVN30' 
+             self.symbol = 'SSI' 
         
         self.client = VnstockClient.get_instance()
 
@@ -33,7 +34,7 @@ class StockNewsFetcher:
         # stock = self.client.stock(symbol=self.symbol, source=source) # Incorrect usage causing AttributeError
         
         page = 0
-        MAX_PAGES = 1 
+        MAX_PAGES = 5 # Increase page depth to find older news 
         
         print(f"[StockNewsFetcher] Starting smart fetch for {self.symbol}. Missing: {len(needed_dates)} days. Oldest: {oldest_needed_date_str}")
 

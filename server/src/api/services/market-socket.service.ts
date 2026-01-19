@@ -86,7 +86,7 @@ export default class MarketSocketService {
                 LoggerService.getInstance().info(`Client ${socket.id} subscribed to market updates`);
                 await this.sendMarketUpdate();
                 if (!this.updateIntervals.has('market')) {
-                    this.startMarketBroadcast();
+                    this.startMarketBroadcast(60000); // 1 minute interval aligned with candles
                 }
             });
 
@@ -272,18 +272,94 @@ export default class MarketSocketService {
     }
 
     private startMarketBroadcast(interval: number = 5000): void {
-        const updateInterval = setInterval(async () => {
-            await this.sendSimulationMarketUpdate();
-        }, interval);
-        this.updateIntervals.set('market', updateInterval);
+        const key = 'market';
+        import('cron').then(({ CronJob }) => {
+            // If interval is ~1 minute, align to 00s like stocks
+            if (interval === 60000) {
+                const job = new CronJob('0 * * * * *', async () => {
+                    const { isMarketOpen } = await import('@/utils/simulation.util.js');
+                    if (isMarketOpen()) {
+                        await this.sendSimulationMarketUpdate();
+                    }
+                });
+                job.start();
+                this.updateIntervals.set(key, job as any);
+            } else {
+                const updateInterval = setInterval(async () => {
+                    await this.sendSimulationMarketUpdate();
+                }, interval);
+                this.updateIntervals.set(key, updateInterval);
+            }
+        });
         LoggerService.getInstance().info(`Market broadcast started with interval ${interval}ms`);
     }
 
     // Rename old sendMarketUpdate to simulation version or creating new one
     private async sendSimulationMarketUpdate(): Promise<void> {
-        // For now, simplify market update in simulation to just be empty or basic params
-        // Implementing full market simulation is complex (all stocks). 
-        // Let's just keep it alive.
+        const io = SocketIOService.getInstance().getSocketIO();
+        if (!io) return;
+
+        try {
+            const { getSimulationTargetDate } = await import('@/utils/simulation.util.js');
+            const { format } = await import('date-fns');
+            const MarketCacheService = (await import('./market-cache.service')).default;
+
+            const targetDate = getSimulationTargetDate();
+            const targetDateStr = format(targetDate, 'yyyy-MM-dd');
+
+            // Get Current HH:mm in Vietnam Time (UTC+7)
+            const now = new Date();
+            const currentHM = new Intl.DateTimeFormat('en-GB', {
+                timeZone: 'Asia/Ho_Chi_Minh',
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: false
+            }).format(now);
+
+            // Fetch simulation price for VN30 (Using 'VNINDEX' or 'VN30' as symbol - verify with DB content)
+            // Assuming 'VN30' is stored in stock_history
+            const vn30Bar = await MarketCacheService.getPriceAtTime('VN30', currentHM, targetDateStr);
+
+            let finalVN30 = null;
+
+            if (vn30Bar) {
+                const change = vn30Bar.close - vn30Bar.open;
+                const changePercent = vn30Bar.open > 0 ? (change / vn30Bar.open) * 100 : 0;
+                finalVN30 = {
+                    index: vn30Bar.close,
+                    change: change,
+                    changePercent: changePercent
+                };
+            } else {
+                console.warn(`[MarketSocket] VN30 getPriceAtTime(${currentHM}) returned null. Trying fallback...`);
+                // Fallback: Get valid latest data (Daily Close)
+                const latest = await MarketCacheService.getLatestStockData('VN30');
+                if (latest) {
+                    finalVN30 = {
+                        index: latest.price,
+                        change: latest.change,
+                        changePercent: latest.changePercent
+                    };
+                }
+            }
+
+            if (finalVN30) {
+                const marketUpdate: MarketUpdate = {
+                    vn30Index: finalVN30,
+                    stocks: [], // Populate if needed
+                    topGainers: [],
+                    topLosers: [],
+                    timestamp: new Date().toISOString()
+                };
+
+                io.of('/market').emit('market:update', marketUpdate);
+            } else {
+                console.error(`[MarketSocket] Failed to get ANY VN30 data for update.`);
+            }
+
+        } catch (error) {
+            LoggerService.getInstance().error('Error sending simulation market update', error as any);
+        }
     }
 
     // Restore method signature for compatibility or remove calls
@@ -312,7 +388,10 @@ export default class MarketSocketService {
             if (interval === 60000) {
                 const job = new CronJob('0 * * * * *', async () => {
                     const { isMarketOpen } = await import('@/utils/simulation.util.js');
-                    if (isMarketOpen()) {
+                    const isOpen = isMarketOpen();
+                    console.log(`[Simulation] Tick for ${symbol} @ ${new Date().toISOString()} | Market Open: ${isOpen}`);
+
+                    if (isOpen) {
                         await this.sendSimulationStockUpdate(symbol);
                     }
                 });
@@ -345,9 +424,14 @@ export default class MarketSocketService {
             const targetDate = getSimulationTargetDate();
             const targetDateStr = format(targetDate, 'yyyy-MM-dd');
 
-            // Get Current HH:mm
+            // Get Current HH:mm in Vietnam Time (UTC+7)
             const now = new Date();
-            const currentHM = now.toTimeString().slice(0, 5);
+            const currentHM = new Intl.DateTimeFormat('en-GB', {
+                timeZone: 'Asia/Ho_Chi_Minh',
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: false
+            }).format(now);
 
             // Fetch simulation price
             const priceBar = await MarketCacheService.getPriceAtTime(symbol, currentHM, targetDateStr);

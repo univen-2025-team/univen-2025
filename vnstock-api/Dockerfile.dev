@@ -2,8 +2,8 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# Install system dependencies and mongodump
-RUN apt-get update && apt-get install -y wget && \
+# Install system dependencies, mongodump, and tzdata
+RUN apt-get update && apt-get install -y wget tzdata && \
     wget -q https://fastdl.mongodb.org/tools/db/mongodb-database-tools-debian12-x86_64-100.9.3.tgz && \
     tar -xzf mongodb-database-tools-debian12-x86_64-100.9.3.tgz && \
     mv mongodb-database-tools-debian12-x86_64-100.9.3/bin/mongodump /usr/local/bin/ && \
