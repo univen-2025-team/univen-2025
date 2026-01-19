@@ -16,18 +16,18 @@ export function TradingChatPanel({
     hasComponentLoaded
 }: TradingChatPanelProps) {
     return (
-        <Card className="flex h-full flex-col gap-0 pt-0 pb-0 bg-linear-to-br from-card to-card/95 border border-border/50 shadow-lg backdrop-blur-sm">
-            <CardHeader className="border-b border-border/30 py-3 flex items-center">
-                <CardTitle className="flex items-center gap-2 text-lg">
-                    <MessageCircle className="h-5 w-5" />
+        <div className="flex h-full flex-col gap-0 bg-background">
+            <div className="border-b border-border/30 py-3 px-4 flex items-center bg-gray-50/50">
+                <div className="flex items-center gap-2 text-lg font-semibold text-foreground">
+                    <MessageCircle className="h-5 w-5 text-primary" />
                     AI Advisor
-                </CardTitle>
-            </CardHeader>
+                </div>
+            </div>
 
-            <CardContent className="flex flex-1 flex-col overflow-hidden p-4 pb-3">
-                <ChatMessageList 
-                    messages={messages} 
-                    isLoading={isLoading} 
+            <div className="flex flex-1 flex-col overflow-hidden p-4 pb-3">
+                <ChatMessageList
+                    messages={messages}
+                    isLoading={isLoading}
                     hasComponentLoaded={hasComponentLoaded}
                 />
 
@@ -36,7 +36,7 @@ export function TradingChatPanel({
                 )}
 
                 <ChatInput onSend={onSendMessage} isLoading={isLoading} />
-            </CardContent>
-        </Card>
+            </div>
+        </div>
     );
 }
