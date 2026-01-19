@@ -54,7 +54,8 @@ services:
       dockerfile: Dockerfile.dev
     container_name: univen-server-dev
     restart: unless-stopped
-
+    env_file:
+      - ./server/.env.development
     ports:
       - "4000:4000"
     volumes:

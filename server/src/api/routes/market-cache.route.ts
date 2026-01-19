@@ -29,6 +29,9 @@ router.get('/details/:symbol', MarketCacheController.getStockDetails);
 // GET /api/cached/stock/:symbol/intraday - Get stock intraday data
 router.get('/stock/:symbol/intraday', MarketCacheController.getStockIntraday);
 
+// GET /api/market/news/:symbol/date/:date - Get stock news by specific date (must be before /news/:symbol)
+router.get('/news/:symbol/date/:date', MarketCacheController.getStockNewsByDate);
+
 // GET /api/market/news/:symbol - Get stock news
 router.get('/news/:symbol', MarketCacheController.getStockNews);
 

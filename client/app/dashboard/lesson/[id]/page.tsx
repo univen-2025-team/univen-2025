@@ -2,11 +2,12 @@
 
 import { useParams, useRouter } from "next/navigation"
 import Link from "next/link"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { ArrowLeft } from "lucide-react"
-import { mockLessons } from "@/lib/mock-data"
+import { ArrowLeft, Loader2 } from "lucide-react"
+import { getLessonById, LearnProductLesson } from "@/src/lib/api/market-cache"
 import ReactMarkdown from "react-markdown"
 
 export default function LessonPage() {
@@ -14,9 +15,33 @@ export default function LessonPage() {
   const router = useRouter()
   const lessonId = params.id as string
 
-  const lesson = mockLessons.find((l) => l.id === lessonId)
+  const [lesson, setLesson] = useState<LearnProductLesson | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-  if (!lesson) {
+  useEffect(() => {
+    async function fetchLesson() {
+      if (!lessonId) return
+      
+      setLoading(true)
+      setError(null)
+      
+      try {
+        const data = await getLessonById(lessonId)
+        setLesson(data)
+      } catch (err) {
+        setError('Failed to load lesson')
+        console.error('Error fetching lesson:', err)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchLesson()
+  }, [lessonId])
+
+  // Loading state
+  if (loading) {
     return (
       <main className="min-h-screen bg-gradient-to-br from-background to-secondary">
         <div className="container mx-auto px-4 py-8">
@@ -29,12 +54,40 @@ export default function LessonPage() {
             Back
           </Button>
           <Card className="p-8 text-center">
-            <p className="text-muted-foreground text-lg">Lesson not found</p>
+            <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-primary" />
+            <p className="text-muted-foreground text-lg">Loading lesson...</p>
           </Card>
         </div>
       </main>
     )
   }
+
+  // Error or not found state
+  if (error || !lesson) {
+    return (
+      <main className="min-h-screen bg-gradient-to-br from-background to-secondary">
+        <div className="container mx-auto px-4 py-8">
+          <Button
+            variant="ghost"
+            onClick={() => router.back()}
+            className="mb-8 text-muted-foreground hover:text-foreground"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back
+          </Button>
+          <Card className="p-8 text-center">
+            <p className="text-muted-foreground text-lg">{error || 'Lesson not found'}</p>
+          </Card>
+        </div>
+      </main>
+    )
+  }
+
+  // Determine volatility type based on priceChangePercent
+  const volatilityType = lesson.priceChangePercent > 0 ? 'up' : 'down'
+  const volatilityLabel = Math.abs(lesson.priceChangePercent) >= 5 
+    ? (lesson.priceChangePercent > 0 ? '📈 Strong Up' : '📉 Strong Down')
+    : (lesson.priceChangePercent > 0 ? '📈 Up' : '📉 Down')
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-background to-secondary">
@@ -55,34 +108,32 @@ export default function LessonPage() {
               {/* Header */}
               <div className="mb-6">
                 <div className="flex items-center gap-3 mb-4 flex-wrap">
-                  <h1 className="text-3xl font-bold text-foreground">{lesson.lesson_title}</h1>
+                  <h1 className="text-3xl font-bold text-foreground">{lesson.lessonTitle}</h1>
                   <Badge
                     variant="outline"
                     className={`text-sm ${
-                      lesson.volatility_type.includes("up")
+                      volatilityType === 'up'
                         ? "border-chart-up text-chart-up"
                         : "border-chart-down text-chart-down"
                     }`}
                   >
-                    {lesson.volatility_type === "strong_up"
-                      ? "📈 Strong Up"
-                      : lesson.volatility_type === "strong_down"
-                        ? "📉 Strong Down"
-                        : lesson.volatility_type}
+                    {volatilityLabel} ({lesson.priceChangePercent > 0 ? '+' : ''}{lesson.priceChangePercent.toFixed(2)}%)
                   </Badge>
                 </div>
 
                 <div className="flex flex-wrap gap-4 text-sm text-muted-foreground mb-6">
-                  <span>📅 {new Date(lesson.event_date).toLocaleDateString()}</span>
+                  <span>📅 {new Date(lesson.eventDate).toLocaleDateString('vi-VN')}</span>
                   <span>💼 {lesson.symbol}</span>
-                  <span>📊 {lesson.difficulty_level}</span>
-                  <span>✅ {(lesson.confidence_score * 100).toFixed(0)}% confidence</span>
+                  <span>📊 {lesson.difficultyLevel}</span>
+                  <span>✅ {((lesson.confidenceScore || 0.8) * 100).toFixed(0)}% confidence</span>
                 </div>
 
-                <div className="border-b border-border pb-6">
-                  <h3 className="text-sm font-semibold text-muted-foreground mb-2">Event Summary</h3>
-                  <p className="text-foreground">{lesson.news_summary}</p>
-                </div>
+                {lesson.newsSummary && (
+                  <div className="border-b border-border pb-6">
+                    <h3 className="text-sm font-semibold text-muted-foreground mb-2">Event Summary</h3>
+                    <p className="text-foreground">{lesson.newsSummary}</p>
+                  </div>
+                )}
               </div>
 
               {/* Content */}
@@ -108,7 +159,7 @@ export default function LessonPage() {
                       ),
                     }}
                   >
-                    {lesson.lesson_content}
+                    {lesson.lessonContent}
                   </ReactMarkdown>
                 </div>
               </div>
@@ -120,7 +171,7 @@ export default function LessonPage() {
             <Card className="p-6 bg-card border-border">
               <h3 className="font-semibold text-foreground mb-4">Key Takeaways</h3>
               <ul className="space-y-3">
-                {lesson.key_takeaways.map((takeaway, idx) => (
+                {(lesson.keyTakeaways || []).map((takeaway, idx) => (
                   <li key={idx} className="flex gap-3">
                     <span className="text-primary font-bold flex-shrink-0">{idx + 1}.</span>
                     <span className="text-sm text-foreground">{takeaway}</span>
@@ -139,9 +190,9 @@ export default function LessonPage() {
 
             <Card className="p-6 bg-card border-border">
               <h3 className="font-semibold text-foreground mb-3">Navigation</h3>
-              <Link href="/">
+              <Link href="/dashboard/stock-analysis">
                 <Button variant="outline" className="w-full border-border hover:bg-secondary bg-transparent">
-                  Back to Dashboard
+                  Back to Stock Analysis
                 </Button>
               </Link>
             </Card>

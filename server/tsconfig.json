@@ -111,6 +111,9 @@
             ],
             "@/app/*": [
                 "./src/app/*"
+            ],
+            "@/repositories/*": [
+                "./src/api/repositories/*"
             ]
         }
     }
