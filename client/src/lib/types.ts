@@ -9,6 +9,7 @@ export interface Lesson {
   key_takeaways: string[]
   difficulty_level: "beginner" | "intermediate" | "advanced"
   confidence_score: number
+  image_url?: string | null
 }
 
 export interface CandleData {
