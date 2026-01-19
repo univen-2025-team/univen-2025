@@ -112,6 +112,207 @@ class SyncRequest(BaseModel):
 def health_check():
     return {"status": "ok", "service": "vnstock-api"}
 
+@app.get("/news/{symbol}")
+def get_stock_news(symbol: str, limit: int = 20):
+    """
+    Get news for a stock symbol.
+    Returns latest news articles related to the stock.
+    """
+    try:
+        symbol = symbol.upper()
+        print(f"Fetching news for {symbol}")
+        
+        from vnstock import Vnstock
+        stock = Vnstock().stock(symbol=symbol, source='VCI')
+        news_df = stock.company.news()
+        
+        if news_df is None or news_df.empty:
+            return {"status": "success", "data": [], "symbol": symbol}
+        
+        # Convert to list of dicts and limit results
+        news_list = news_df.head(limit).to_dict('records')
+        
+        # Transform data to cleaner format
+        result = []
+        for item in news_list:
+            # Convert timestamp (milliseconds) to readable format
+            pub_date = item.get('public_date')
+            if pub_date:
+                from datetime import datetime
+                pub_datetime = datetime.fromtimestamp(pub_date / 1000)
+                formatted_date = pub_datetime.strftime('%Y-%m-%d %H:%M')
+            else:
+                formatted_date = None
+                
+            result.append({
+                'id': item.get('id') or item.get('news_id'),
+                'title': item.get('news_title', ''),
+                'shortContent': item.get('news_short_content', ''),
+                'fullContent': item.get('news_full_content', ''),
+                'imageUrl': item.get('news_image_url', ''),
+                'sourceLink': item.get('news_source_link', ''),
+                'publishedAt': formatted_date,
+                'publishedTimestamp': pub_date,
+                'closePrice': item.get('close_price'),
+                'refPrice': item.get('ref_price'),
+                'priceChangePct': item.get('price_change_pct'),
+            })
+        
+        return {"status": "success", "data": result, "symbol": symbol, "total": len(result)}
+        
+    except Exception as e:
+        print(f"Error fetching news for {symbol}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/history/{symbol}")
+def get_stock_history(symbol: str, start: str = None, end: str = None, interval: str = "1D"):
+    """
+    Get historical price data for a stock symbol.
+    Args:
+        symbol: Stock symbol (e.g., VNM, FPT)
+        start: Start date (YYYY-MM-DD), defaults to 1 year ago
+        end: End date (YYYY-MM-DD), defaults to today
+        interval: Data interval (1D for daily)
+    """
+    try:
+        from datetime import datetime, timedelta
+        from vnstock import Vnstock
+        
+        symbol = symbol.upper()
+        print(f"Fetching history for {symbol}, interval={interval}")
+        
+        # Default date range: 1 year
+        if not end:
+            end = datetime.now().strftime('%Y-%m-%d')
+        if not start:
+            start = (datetime.now() - timedelta(days=365)).strftime('%Y-%m-%d')
+        
+        stock = Vnstock().stock(symbol=symbol, source='VCI')
+        
+        # Fetch daily OHLCV data
+        df = stock.quote.history(start=start, end=end, interval=interval)
+        
+        if df is None or df.empty:
+            return {"status": "success", "data": [], "symbol": symbol}
+        
+        # Convert DataFrame to list of dicts
+        df = df.reset_index()
+        records = []
+        
+        for _, row in df.iterrows():
+            # Handle date/time column
+            date_val = row.get('time') or row.get('date') or row.get('index')
+            if hasattr(date_val, 'strftime'):
+                date_str = date_val.strftime('%Y-%m-%d')
+            else:
+                date_str = str(date_val)[:10]
+            
+            records.append({
+                'date': date_str,
+                'open': float(row.get('open', 0)),
+                'high': float(row.get('high', 0)),
+                'low': float(row.get('low', 0)),
+                'close': float(row.get('close', 0)),
+                'volume': int(row.get('volume', 0))
+            })
+        
+        return {
+            "status": "success",
+            "data": records,
+            "symbol": symbol,
+            "total": len(records),
+            "start": start,
+            "end": end,
+            "interval": interval
+        }
+        
+    except Exception as e:
+        print(f"Error fetching history for {symbol}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/news/{symbol}/date/{date}")
+def get_stock_news_by_date(symbol: str, date: str, window_days: int = 2):
+    """
+    Get news for a stock symbol around a specific date.
+    Args:
+        symbol: Stock symbol (e.g., VNM, FPT)
+        date: Target date (YYYY-MM-DD)
+        window_days: Number of days before and after the date to search (default: 2)
+    Returns news articles within the date window.
+    """
+    try:
+        from datetime import datetime, timedelta
+        from vnstock import Vnstock
+        
+        symbol = symbol.upper()
+        target_date = datetime.strptime(date, '%Y-%m-%d')
+        start_date = target_date - timedelta(days=window_days)
+        end_date = target_date + timedelta(days=window_days)
+        
+        print(f"Fetching news for {symbol} around {date} (window: ±{window_days} days)")
+        
+        stock = Vnstock().stock(symbol=symbol, source='VCI')
+        news_df = stock.company.news()
+        
+        if news_df is None or news_df.empty:
+            return {
+                "status": "success",
+                "data": [],
+                "symbol": symbol,
+                "targetDate": date,
+                "total": 0
+            }
+        
+        # Filter news by date window
+        result = []
+        for _, row in news_df.iterrows():
+            pub_date = row.get('public_date')
+            if pub_date:
+                try:
+                    # Handle both timestamp (ms) and datetime
+                    if isinstance(pub_date, (int, float)):
+                        pub_datetime = datetime.fromtimestamp(pub_date / 1000)
+                    else:
+                        pub_datetime = pub_date
+                    
+                    # Check if within window
+                    if start_date <= pub_datetime <= end_date:
+                        formatted_date = pub_datetime.strftime('%Y-%m-%d %H:%M')
+                        result.append({
+                            'id': row.get('id') or row.get('news_id'),
+                            'title': row.get('news_title', ''),
+                            'shortContent': row.get('news_short_content', ''),
+                            'fullContent': row.get('news_full_content', ''),
+                            'imageUrl': row.get('news_image_url', ''),
+                            'sourceLink': row.get('news_source_link', ''),
+                            'publishedAt': formatted_date,
+                            'publishedTimestamp': pub_date if isinstance(pub_date, (int, float)) else int(pub_datetime.timestamp() * 1000),
+                            'closePrice': row.get('close_price'),
+                            'refPrice': row.get('ref_price'),
+                            'priceChangePct': row.get('price_change_pct'),
+                        })
+                except Exception as e:
+                    print(f"Error parsing date for news item: {e}")
+                    continue
+        
+        # Sort by published date (most recent first)
+        result.sort(key=lambda x: x.get('publishedTimestamp', 0), reverse=True)
+        
+        return {
+            "status": "success",
+            "data": result,
+            "symbol": symbol,
+            "targetDate": date,
+            "windowDays": window_days,
+            "total": len(result)
+        }
+        
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=f"Invalid date format. Use YYYY-MM-DD. Error: {e}")
+    except Exception as e:
+        print(f"Error fetching news for {symbol} on {date}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 @app.get("/sync-stock")
 def sync_stock(symbol: str):
     """

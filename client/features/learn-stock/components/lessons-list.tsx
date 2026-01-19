@@ -102,38 +102,30 @@ export default function LessonsList({ lessons }: LessonsListProps) {
                                 </p>
                             </div>
 
-                            <div className="grid gap-4">
-                                {groupedLessons[date].map((lesson) => (
-                                    <Link
-                                        key={lesson.id}
-                                        href={`/lesson/${lesson.id}`}
-                                        className="block group"
-                                    >
-                                        <Card className="p-5 bg-white/5 hover:bg-white/10 border-white/10 ring-1 ring-white/5 transition-all duration-300 cursor-pointer hover:ring-violet-500/20 hover:border-violet-500/30 rounded-xl">
-                                            <div className="flex items-start justify-between gap-4">
-                                                <div className="flex-1 min-w-0">
-                                                    <div className="flex items-center gap-2 mb-2 flex-wrap">
-                                                        <h4 className="font-semibold text-white group-hover:text-violet-400 transition-colors">
-                                                            {lesson.lesson_title}
-                                                        </h4>
-                                                        <Badge
-                                                            variant="outline"
-                                                            className={`text-xs whitespace-nowrap ${
-                                                                lesson.volatility_type.includes(
-                                                                    'up'
-                                                                )
-                                                                    ? 'border-emerald-500/50 text-emerald-400 bg-emerald-500/10'
-                                                                    : 'border-red-500/50 text-red-400 bg-red-500/10'
-                                                            }`}
-                                                        >
-                                                            {lesson.volatility_type === 'strong_up'
-                                                                ? '📈 Strong Up'
-                                                                : lesson.volatility_type ===
-                                                                    'strong_down'
-                                                                  ? '📉 Strong Down'
-                                                                  : lesson.volatility_type}
-                                                        </Badge>
-                                                    </div>
+              <div className="grid gap-4">
+                {groupedLessons[date].map((lesson) => (
+                  <Link key={lesson.id} href={`/dashboard/lesson/${lesson.id}`} className="block group">
+                    <Card className="p-5 bg-secondary hover:bg-secondary/80 border-border transition-all duration-200 cursor-pointer">
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-2 flex-wrap">
+                            <h4 className="font-semibold text-foreground group-hover:text-primary transition-colors">
+                              {lesson.lesson_title}
+                            </h4>
+                            <Badge
+                              variant="outline"
+                              className={`text-xs whitespace-nowrap ${lesson.volatility_type.includes("up")
+                                  ? "border-chart-up text-chart-up"
+                                  : "border-chart-down text-chart-down"
+                                }`}
+                            >
+                              {lesson.volatility_type === "strong_up"
+                                ? "📈 Strong Up"
+                                : lesson.volatility_type === "strong_down"
+                                  ? "📉 Strong Down"
+                                  : lesson.volatility_type}
+                            </Badge>
+                          </div>
 
                                                     <p className="text-sm text-slate-400 line-clamp-2">
                                                         {lesson.news_summary}

@@ -40,7 +40,9 @@
         "typescript": "^5.9.3"
     },
     "dependencies": {
+        "@anthropic-ai/sdk": "^0.71.2",
         "@coinpaprika/api-nodejs-client": "^2.0.0",
+        "@google/generative-ai": "^0.24.1",
         "@types/bcrypt": "^6.0.0",
         "@types/express-handlebars": "^6.0.2",
         "@types/handlebars": "^4.1.0",

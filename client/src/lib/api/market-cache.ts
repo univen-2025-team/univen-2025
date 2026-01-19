@@ -346,3 +346,259 @@ export async function getVN30History(
         return [];
     }
 }
+
+/**
+ * Stock News Item interface
+ */
+export interface StockNewsItem {
+    id: string;
+    title: string;
+    shortContent: string;
+    fullContent: string;
+    imageUrl: string;
+    sourceLink: string;
+    publishedAt: string;
+    publishedTimestamp: number;
+    closePrice: number;
+    refPrice: number;
+    priceChangePct: number;
+}
+
+/**
+ * Get stock news by symbol
+ */
+export async function getStockNews(
+    symbol: string,
+    limit: number = 20
+): Promise<{ symbol: string; items: StockNewsItem[]; total: number }> {
+    try {
+        const response = await fetch(
+            `${API_BASE_URL}/market/news/${symbol.toUpperCase()}?limit=${limit}`,
+            {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            }
+        );
+
+        if (!response.ok) {
+            console.error('Failed to fetch stock news:', response.statusText);
+            return { symbol: symbol.toUpperCase(), items: [], total: 0 };
+        }
+
+        const result = await response.json();
+        return result.metadata || { symbol: symbol.toUpperCase(), items: [], total: 0 };
+    } catch (error) {
+        console.error('Error fetching stock news:', error);
+        return { symbol: symbol.toUpperCase(), items: [], total: 0 };
+    }
+}
+
+/**
+ * Get stock news by symbol and specific date
+ * Returns news articles within a date window around the target date
+ */
+export async function getStockNewsByDate(
+    symbol: string,
+    date: string,
+    windowDays: number = 2
+): Promise<{
+    symbol: string;
+    targetDate: string;
+    windowDays: number;
+    items: StockNewsItem[];
+    total: number;
+}> {
+    try {
+        const response = await fetch(
+            `${API_BASE_URL}/market/news/${symbol.toUpperCase()}/date/${date}?windowDays=${windowDays}`,
+            {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            }
+        );
+
+        if (!response.ok) {
+            console.error('Failed to fetch stock news by date:', response.statusText);
+            return { 
+                symbol: symbol.toUpperCase(), 
+                targetDate: date,
+                windowDays,
+                items: [], 
+                total: 0 
+            };
+        }
+
+        const result = await response.json();
+        return result.metadata || { 
+            symbol: symbol.toUpperCase(), 
+            targetDate: date,
+            windowDays,
+            items: [], 
+            total: 0 
+        };
+    } catch (error) {
+        console.error('Error fetching stock news by date:', error);
+        return { 
+            symbol: symbol.toUpperCase(), 
+            targetDate: date,
+            windowDays,
+            items: [], 
+            total: 0 
+        };
+    }
+}
+
+/**
+ * Learn Product Lesson Interface
+ */
+export interface LearnProductLesson {
+    _id: string;
+    symbol: string;
+    eventDate: string;
+    priceChangePercent: number;
+    lessonTitle: string;
+    lessonContent: string;
+    newsSummary: string | null;
+    keyTakeaways: string[];
+    difficultyLevel: 'beginner' | 'intermediate' | 'advanced';
+    confidenceScore: number;
+    userAgeGroup?: string;
+    createdAt: string;
+    updatedAt: string;
+}
+
+export interface LearnProductResponse {
+    symbol: string;
+    lessons: LearnProductLesson[];
+    total: number;
+    generated: number;
+    cached: number;
+}
+
+/**
+ * Generate or get lessons for a stock symbol
+ * Analyzes price history (1 year), detects volatility events (>5%), 
+ * fetches related news, and generates learning lessons via Gemini
+ */
+export async function generateStockLessons(
+    symbol: string,
+    userAge: number,
+    options?: {
+        threshold?: number;      // Default: 5 (%)
+        lookbackDays?: number;   // Default: 365
+        limit?: number;          // Default: 10
+    }
+): Promise<LearnProductResponse> {
+    try {
+        const params = new URLSearchParams({
+            symbol: symbol.toUpperCase(),
+            userAge: String(userAge),
+        });
+        
+        if (options?.threshold) params.append('threshold', String(options.threshold));
+        if (options?.lookbackDays) params.append('lookbackDays', String(options.lookbackDays));
+        if (options?.limit) params.append('limit', String(options.limit));
+
+        const response = await fetch(
+            `${API_BASE_URL}/learn/product?${params.toString()}`,
+            {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            }
+        );
+
+        if (!response.ok) {
+            console.error('Failed to generate lessons:', response.statusText);
+            return { 
+                symbol: symbol.toUpperCase(), 
+                lessons: [], 
+                total: 0, 
+                generated: 0, 
+                cached: 0 
+            };
+        }
+
+        const result = await response.json();
+        return result.metadata || { 
+            symbol: symbol.toUpperCase(), 
+            lessons: [], 
+            total: 0, 
+            generated: 0, 
+            cached: 0 
+        };
+    } catch (error) {
+        console.error('Error generating lessons:', error);
+        return { 
+            symbol: symbol.toUpperCase(), 
+            lessons: [], 
+            total: 0, 
+            generated: 0, 
+            cached: 0 
+        };
+    }
+}
+
+/**
+ * Get existing lessons for a symbol (no generation)
+ */
+export async function getStockLessons(
+    symbol: string,
+    limit: number = 20
+): Promise<LearnProductLesson[]> {
+    try {
+        const response = await fetch(
+            `${API_BASE_URL}/learn/product/${symbol.toUpperCase()}?limit=${limit}`,
+            {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            }
+        );
+
+        if (!response.ok) {
+            console.error('Failed to fetch lessons:', response.statusText);
+            return [];
+        }
+
+        const result = await response.json();
+        return result.metadata?.lessons || [];
+    } catch (error) {
+        console.error('Error fetching lessons:', error);
+        return [];
+    }
+}
+
+/**
+ * Get a specific lesson by ID
+ */
+export async function getLessonById(id: string): Promise<LearnProductLesson | null> {
+    try {
+        const response = await fetch(
+            `${API_BASE_URL}/learn/lesson/${id}`,
+            {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            }
+        );
+
+        if (!response.ok) {
+            console.error('Failed to fetch lesson:', response.statusText);
+            return null;
+        }
+
+        const result = await response.json();
+        return result.metadata || null;
+    } catch (error) {
+        console.error('Error fetching lesson:', error);
+        return null;
+    }
+}
