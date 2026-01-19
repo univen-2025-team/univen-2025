@@ -4,14 +4,18 @@
 import React, { useEffect, useState } from 'react';
 import api from '@/lib/axios';
 import { ExternalLink, Newspaper, Calendar } from 'lucide-react';
+import NewsDetailModal from './NewsDetailModal';
 
 interface NewsItem {
     id?: string;
     title: string;
     short_content?: string;
+    full_content?: string;
     source_link?: string;
     image_url?: string;
     public_date?: string;
+    source?: string;
+    images?: string[];
 }
 
 interface DailyNews {
@@ -29,6 +33,7 @@ interface NewsFeedProps {
 const NewsFeed: React.FC<NewsFeedProps> = ({ symbol, className = '', filterRange, onClearFilter }) => {
     const [newsData, setNewsData] = useState<DailyNews[]>([]);
     const [loading, setLoading] = useState(true);
+    const [selectedNews, setSelectedNews] = useState<NewsItem | null>(null);
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
@@ -78,6 +83,28 @@ const NewsFeed: React.FC<NewsFeedProps> = ({ symbol, className = '', filterRange
         }).filter(Boolean) as DailyNews[]; // remove nulls
 
     }, [newsData, filterRange]);
+
+    // Helper to extract source
+    const getSource = (item: NewsItem) => {
+        // If source exists and is not generic Google News, use it
+        if (item.source && item.source !== 'Google News') return item.source;
+
+        // Try parsing title "Title - Source"
+        if (item.title && item.title.includes(' - ')) {
+            const parts = item.title.split(' - ');
+            const candidate = parts[parts.length - 1].trim();
+            // Basic validation: shouldn't be too long
+            if (candidate.length < 30) return candidate;
+        }
+
+        // Fallback to hostname
+        if (item.source_link) {
+            try {
+                return new URL(item.source_link).hostname.replace('www.', '');
+            } catch (e) { return 'Nguồn tin'; }
+        }
+        return 'Nguồn tin';
+    };
 
     if (loading) {
         return (
@@ -139,20 +166,24 @@ const NewsFeed: React.FC<NewsFeedProps> = ({ symbol, className = '', filterRange
 
                     <div className="space-y-3">
                         {day.news.map((item, idx) => (
-                            <a
+                            <div
                                 key={idx}
-                                href={item.source_link || '#'}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="group block bg-white p-4 rounded-lg border border-gray-100 shadow-sm hover:shadow-md hover:border-blue-100 transition-all duration-200"
+                                onClick={() => setSelectedNews(item)}
+                                className="group block bg-white p-4 rounded-lg border border-gray-100 shadow-sm hover:shadow-md hover:border-blue-100 transition-all duration-200 cursor-pointer"
                             >
                                 <div className="flex justify-between items-start gap-3">
                                     <h5 className="text-sm font-semibold text-gray-900 group-hover:text-blue-600 line-clamp-2 leading-snug">
                                         {item.title}
                                     </h5>
-                                    {item.image_url && (
-                                        <img src={item.image_url} alt="" className="w-16 h-16 object-cover rounded-md flex-shrink-0 bg-gray-50" />
-                                    )}
+                                    <div className="flex-shrink-0">
+                                        {item.image_url ? (
+                                            <img src={item.image_url} alt="" className="w-16 h-16 object-cover rounded-md bg-gray-50" />
+                                        ) : (
+                                            <div className="w-16 h-16 bg-gray-100 rounded-md flex items-center justify-center text-gray-400">
+                                                <Newspaper className="w-8 h-8 opacity-50" />
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
                                 {item.short_content && (
                                     <p className="text-xs text-gray-500 mt-2 line-clamp-2">
@@ -160,16 +191,22 @@ const NewsFeed: React.FC<NewsFeedProps> = ({ symbol, className = '', filterRange
                                     </p>
                                 )}
                                 <div className="mt-2 flex items-center justify-between">
-                                    <span className="text-[10px] uppercase font-bold text-gray-400 bg-gray-50 px-2 py-0.5 rounded">
-                                        {item.source_link ? new URL(item.source_link).hostname.replace('www.', '') : 'Nguồn tin'}
+                                    <span className="text-[10px] uppercase font-bold text-gray-500 bg-gray-100 px-2 py-0.5 rounded">
+                                        {getSource(item)}
                                     </span>
                                     <ExternalLink className="w-3 h-3 text-gray-300 group-hover:text-blue-400" />
                                 </div>
-                            </a>
+                            </div>
                         ))}
                     </div>
                 </div>
             ))}
+
+            <NewsDetailModal
+                isOpen={!!selectedNews}
+                newsItem={selectedNews}
+                onClose={() => setSelectedNews(null)}
+            />
         </div>
     );
 };

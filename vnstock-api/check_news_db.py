@@ -14,9 +14,18 @@ if __name__ == "__main__":
     print(f"MARKET News Count: {market_count}")
     
     # Print sample with news
-    sample = collection.find_one({'symbol': 'SSI', 'has_news': True})
-    if sample:
-        print("Sample WITH news:", sample)
+    with_news = collection.find_one({'symbol': 'SSI', 'has_news': True})
+    if with_news:
+        print(f"Sample WITH news: {with_news}")
+        for n in with_news.get('news', [])[:3]:
+            print(f" - Title: {n.get('title')}")
+            print(f" - Source: {n.get('source')}")
+            print(f" - Full Content Len: {len(n.get('full_content', ''))}")
+            if n.get('images'):
+                 print(f" - Images Count: {len(n.get('images'))}")
+                 print(f" - First Image: {n.get('images')[0]}")
+            if n.get('full_content'):
+                print(f" - Content Snippet: {n.get('full_content')[:100]}...")
     else:
         print("NO records have news!")
         
