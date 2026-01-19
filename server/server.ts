@@ -38,38 +38,22 @@ import RBACService from '@/services/rbac.service';
 //         console.log(`Server is running at ${BASE_URL}`);
 //     });
 
-const server = app.listen(Number(PORT), () => {
-    console.log(`Server is running at ${BASE_URL}`);
-});
+try {
+    const server = app.listen(Number(PORT), () => {
+        console.log(`Server is running at ${BASE_URL}`);
+    });
 
-/* ---------------------------------------------------------- */
-/*                       Socket.IO Setup                     */
-/* ---------------------------------------------------------- */
-// Initialize Socket.IO service
-SocketIOService.getInstance().initialize(server);
-console.log('CICD Test 2');
+    /* ---------------------------------------------------------- */
+    /*                       Socket.IO Setup                     */
+    /* ---------------------------------------------------------- */
+    // Initialize Socket.IO service
+    SocketIOService.getInstance().initialize(server);
+    console.log('CICD Test 2');
 
-// Initialize Market Socket service for real-time stock data
-MarketSocketService.getInstance().initialize();
+    // Initialize Market Socket service for real-time stock data
+    MarketSocketService.getInstance().initialize();
 
-server.on('close', () => {
-    // Close database connection
-    MongoDB.getInstance().disconnect();
-
-    // Logging
-    loggerService.getInstance().info('Server closed');
-
-    process.exit(0);
-});
-
-process.on('SIGINT', async () => {
-    // Close database connection
-    MongoDB.getInstance().disconnect();
-
-    console.log('Server closing...');
-
-    // Close server
-    server.close(() => {
+    server.on('close', () => {
         // Close database connection
         MongoDB.getInstance().disconnect();
 
@@ -78,9 +62,32 @@ process.on('SIGINT', async () => {
 
         process.exit(0);
     });
-});
 
-/* ---------------------------------------------------------- */
-/*                        Initial data                        */
-/* ---------------------------------------------------------- */
-await RBACService.getInstance().initRBAC()
+    process.on('SIGINT', async () => {
+        // Close database connection
+        MongoDB.getInstance().disconnect();
+
+        console.log('Server closing...');
+
+        // Close server
+        server.close(() => {
+            // Close database connection
+            MongoDB.getInstance().disconnect();
+
+            // Logging
+            loggerService.getInstance().info('Server closed');
+
+            process.exit(0);
+        });
+    });
+
+    /* ---------------------------------------------------------- */
+    /*                        Initial data                        */
+    /* ---------------------------------------------------------- */
+    await RBACService.getInstance().initRBAC();
+
+} catch (error) {
+    console.error('SERVER STARTUP ERROR:', error);
+    loggerService.getInstance().error('Server failed to start', error as any);
+    process.exit(1);
+}

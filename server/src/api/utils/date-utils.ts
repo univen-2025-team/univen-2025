@@ -24,8 +24,11 @@ export function getLatestTradingDate(referenceDate?: Date): string {
     } else if (dayOfWeek === 6) {
         // Saturday -> Friday (1 day back)
         targetDate = subDays(ref, 1);
+    } else if (dayOfWeek === 1) {
+        // Monday -> Friday (3 days back) - Avoids returning Sunday
+        targetDate = subDays(ref, 3);
     } else {
-        // Monday-Friday -> previous day
+        // Tuesday-Friday -> previous day
         targetDate = subDays(ref, 1);
     }
 

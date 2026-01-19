@@ -1,9 +1,12 @@
 import time
+import redis
+import json
 from datetime import datetime
 from src.services.fetchers.company_profile import CompanyProfileFetcher
 from src.services.syncers.company_profile import CompanyProfileSyncer
 from src.services.fetchers.stock_symbol import StockSymbolFetcher
 from src.services.syncers.stock_symbol import StockSymbolSyncer
+from src.services.queue_utils import is_symbol_in_queue
 from vnstock import Listing
 from src.database.mongodb import db
 
@@ -52,33 +55,8 @@ def sync_stock_symbols():
 
 def sync_company_profiles():
     """
-    Syncs company profiles using controlled concurrency.
-    Uses semaphore to limit concurrent jobs.
+    Syncs company profiles via Redis Queue.
     """
-    import threading
-    
-    # Limit concurrent jobs to avoid OOM and rate limiting
-    MAX_CONCURRENT_JOBS = 6  # 1 per API key roughly
-    JOB_INTERVAL = 1.0  # seconds between job starts
-    
-    semaphore = threading.Semaphore(MAX_CONCURRENT_JOBS)
-    
-    def process_symbol(ticker, syncer, sem):
-        """Process a single symbol with semaphore control."""
-        try:
-            fetcher = CompanyProfileFetcher(symbol=ticker)
-            data = fetcher.fetch()
-            
-            if data:
-                syncer.sync(data)
-                print(f"[Sync] ✓ Done: {ticker}")
-            else:
-                print(f"[Sync] ✗ No data: {ticker}")
-        except Exception as e:
-            print(f"[Sync] ✗ Error {ticker}: {e}")
-        finally:
-            sem.release()  # Release slot for next job
-    
     try:
         print("Fetching list of companies...")
         
@@ -117,20 +95,34 @@ def sync_company_profiles():
             print("All symbols already synced today.")
             return
         
-        # Controlled concurrency with semaphore
-        for ticker in remaining:
-            semaphore.acquire()  # Wait for a slot
-            print(f"[Sync] Starting: {ticker}")
-            threading.Thread(
-                target=process_symbol, 
-                args=(ticker, syncer, semaphore),
-                daemon=True,
-                name=f"Sync-{ticker}"
-            ).start()
-            
-            time.sleep(JOB_INTERVAL)
+        try:
+             r = redis.Redis(host='redis', port=6379, decode_responses=True)
+        except Exception as e:
+             print(f"Redis error: {e}")
+             return
+
+        # Enqueue jobs
+        skipped_queue = 0
+        enqueued = 0
         
-        print(f"[Sync] All {len(remaining)} jobs started.")
+        for ticker in remaining:
+            # Check 2: Check if already in queue
+            if is_symbol_in_queue(r, 'vnstock_profile_queue', ticker, 'company_profile'):
+                 skipped_queue += 1
+                 continue
+                 
+            job_data = json.dumps({
+                'symbol': ticker,
+                'type': 'company_profile',
+                'source': 'startup_sync',
+                'timestamp': time.time()
+            })
+            r.lpush('vnstock_profile_queue', job_data)
+            enqueued += 1
+        
+        print(f"[Sync] Enqueued {enqueued} assignments. Skipped (already in queue): {skipped_queue}")
+        
+        print(f"[Sync] Enqueued {len(remaining)} assignments.")
                 
     except Exception as e:
         print(f"Error in sync_company_profiles: {e}")

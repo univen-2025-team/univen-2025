@@ -1,7 +1,9 @@
 from src.services.fetchers.base import BaseFetcher
+from src.core.vnstock_client import VnstockClient, RateLimitError
 from vnstock import Vnstock
 from typing import Optional, List, Dict, Any
 from datetime import datetime, timedelta
+import pandas as pd
 
 class StockHistoryFetcher(BaseFetcher):
     """
@@ -17,40 +19,55 @@ class StockHistoryFetcher(BaseFetcher):
         
         Args:
             symbol: Stock ticker symbol (e.g., 'VNM', 'ACB')
-            interval: Time interval for price bars. Options:
-                     1m (1 minute), 5m, 15m, 30m, 1H (1 hour)
+            interval: Time interval for price bars.
         """
         self.symbol = symbol.upper()
         self.interval = interval
+        self.client = VnstockClient.get_instance()
     
     def fetch(self, date: str = None) -> Optional[Dict[str, Any]]:
         """
         Fetch historical price data for a specific date.
-        
-        Args:
-            date: Date in 'YYYY-MM-DD' format. Defaults to today.
-            
-        Returns:
-            Dictionary with { symbol, date, interval, prices: [...] } or None if no data.
         """
         try:
             if not date:
                 date = datetime.now().strftime('%Y-%m-%d')
             
-            # Initialize vnstock
-            stock = Vnstock().stock(symbol=self.symbol, source='VCI')
+            # Fetch using wrapped client
+            def fetch_history():
+                 stock = Vnstock().stock(symbol=self.symbol, source='VCI')
+                 return stock.quote.history(start=date, end=date, interval=self.interval)
+
+            df = self.client.call(fetch_history)
             
-            # Fetch history for the date
-            df = stock.quote.history(
-                start=date,
-                end=date,
-                interval=self.interval
-            )
             
-            if df is None or df.empty:
-                print(f"No data for {self.symbol} on {date} ({self.interval}) - likely weekend/holiday")
+            if df is None:
+                 print(f"No data for {self.symbol} on {date} (Result is None)")
+                 return None
+
+            if not isinstance(df, pd.DataFrame):
+                print(f"Invalid data type for {self.symbol}: Expected DataFrame, got {type(df)}")
                 return None
             
+            if df.empty:
+                print(f"No data for {self.symbol} on {date} ({self.interval}) - DataFrame is empty")
+                return None
+            
+            # Validate columns
+            required_cols = ['time', 'open', 'high', 'low', 'close', 'volume']
+            missing_cols = [col for col in required_cols if col not in df.columns]
+            if missing_cols:
+                print(f"Missing columns in history data for {self.symbol}: {missing_cols}")
+                return None
+
+            # Ensure 'time' is datetime
+            if not pd.api.types.is_datetime64_any_dtype(df['time']):
+                try:
+                    df['time'] = pd.to_datetime(df['time'])
+                except Exception as e:
+                    print(f"Error converting 'time' column to datetime: {e}")
+                    return None
+
             # IMPORTANT: vnstock may return data spanning multiple days
             # Filter to only include data from the target date
             df['date_str'] = df['time'].dt.strftime('%Y-%m-%d')
@@ -63,7 +80,7 @@ class StockHistoryFetcher(BaseFetcher):
             # Convert DataFrame to price bars array
             prices = []
             for _, row in df.iterrows():
-                time_str = row['time'].strftime('%H:%M:%S') if hasattr(row['time'], 'strftime') else str(row['time'])[-8:]
+                time_str = row['time'].strftime('%H:%M:%S')
                 
                 price_bar = {
                     'time': time_str,
@@ -92,7 +109,9 @@ class StockHistoryFetcher(BaseFetcher):
             
             print(f"Fetched {len(prices)} price bars for {self.symbol} on {date} ({self.interval})")
             return result
-            
+
+        except RateLimitError:
+            raise # Re-raise to let Worker handle re-queue
         except Exception as e:
             print(f"Error fetching history for {self.symbol}: {e}")
             return None

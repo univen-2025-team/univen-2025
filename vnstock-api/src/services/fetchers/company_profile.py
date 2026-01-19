@@ -2,7 +2,7 @@ import pandas as pd
 import requests
 from typing import Optional, Dict, Any
 from vnstock import Company
-from src.core.vnstock_client import VnstockClient
+from src.core.vnstock_client import VnstockClient, RateLimitError
 
 class CompanyProfileFetcher:
     def __init__(self, symbol: str):
@@ -33,12 +33,25 @@ class CompanyProfileFetcher:
             # Define variable to capture result
             df = self.client.call(lambda: Company(source="VCI", symbol=self.symbol, show_log=False).overview())
             
-            if df is None or df.empty:
-                print(f"No overview data found for {self.symbol}")
+            if df is None:
+                print(f"No overview data found for {self.symbol} (Result is None)")
+                return None
+                
+            if not isinstance(df, pd.DataFrame):
+                print(f"Invalid data type for {self.symbol}: Expected DataFrame, got {type(df)}")
+                return None
+
+            if df.empty:
+                print(f"No overview data found for {self.symbol} (Empty DataFrame)")
                 return None
                 
             # Convert DataFrame to dictionary (first record)
-            data = df.to_dict(orient='records')[0]
+            records = df.to_dict(orient='records')
+            if not records:
+                 print(f"No records extracted from DataFrame for {self.symbol}")
+                 return None
+                 
+            data = records[0]
             
             # Normalize data: Ensure 'ticker' key exists (map from 'symbol')
             if 'symbol' in data:
@@ -127,10 +140,9 @@ class CompanyProfileFetcher:
                                     # Check if this is higher priority than any we might find later
                                     # For now, just take first valid
                                     valid_logo = url
-                            else:
-                                print(f"[LogoCheck] ✗ Invalid: {url}")
                         except Exception as e:
-                            print(f"[LogoCheck] ✗ Error for {url}: {e}")
+                            # print(f"[LogoCheck] ✗ Error for {url}: {e}")
+                            pass
                     
                     # Note: executor.__exit__ will wait for all threads to finish
                     # This is the source of the pause. Cannot avoid without significant refactor.
@@ -144,6 +156,8 @@ class CompanyProfileFetcher:
                 
             return data
             
+        except RateLimitError:
+            raise # Re-raise to let Worker handle re-queue
         except Exception as e:
             print(f"Error fetching company profile for {self.symbol}: {e}")
             return None

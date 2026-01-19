@@ -1,6 +1,6 @@
-
 from datetime import datetime, timedelta
 from src.core.vnstock_client import VnstockClient
+from vnstock import Company
 
 class StockNewsFetcher:
     def __init__(self, symbol):
@@ -30,7 +30,7 @@ class StockNewsFetcher:
         source = 'VCI'
         print(f"[StockNewsFetcher] Setup: Symbol={self.symbol} (Orig={self.original_symbol}), Source={source}")
 
-        stock = self.client.stock(symbol=self.symbol, source=source)
+        # stock = self.client.stock(symbol=self.symbol, source=source) # Incorrect usage causing AttributeError
         
         page = 0
         MAX_PAGES = 1 
@@ -42,7 +42,8 @@ class StockNewsFetcher:
             
             # Wrapper to fetch news based on symbol type
             def fetch_api_data():
-                return stock.company.news()
+                # Correct way: Instantiate Company directly
+                return Company(symbol=self.symbol, source=source).news()
 
             news_data = self.client.call(fetch_api_data)
             
@@ -55,6 +56,10 @@ class StockNewsFetcher:
                news_list = news_data.to_dict('records')
             else:
                news_list = news_data # Assume list
+
+            if not isinstance(news_list, list):
+                print(f"[StockNewsFetcher] Page {page}: Unexpected data type {type(news_data)}. Skipping.")
+                break
 
             if not news_list:
                 print(f"[StockNewsFetcher] Page {page} empty.")
