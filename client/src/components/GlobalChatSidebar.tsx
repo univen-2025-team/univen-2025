@@ -67,32 +67,38 @@ export function GlobalChatSidebar() {
     return (
         <div
             ref={sidebarRef}
-            className={`h-full bg-white border-l border-gray-200 flex flex-col transition-all duration-300 ease-in-out shrink-0 overflow-hidden relative shadow-xl ${isOpen ? 'opacity-100' : 'opacity-0'
+            className={`fixed top-0 right-0 h-full bg-white shadow-2xl z-[100] border-l border-gray-200 flex flex-col transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : 'translate-x-full'
                 }`}
             style={{
-                width: isOpen ? chatWidth : 0,
-                minWidth: isOpen ? MIN_CHAT_WIDTH : 0
+                width: chatWidth,
+                maxWidth: '100vw'
             }}
         >
             {/* Resize Handle */}
             <div
-                className="absolute top-0 bottom-0 left-0 w-1.5 cursor-col-resize hover:bg-primary/20 flex items-center justify-center z-50"
+                className="absolute top-0 bottom-0 left-0 w-1.5 cursor-col-resize hover:bg-primary/20 flex items-center justify-center z-50 h-full"
                 onMouseDown={() => setIsResizing(true)}
             >
                 <div className="h-8 w-1 bg-gray-300 rounded-full" />
             </div>
 
-            {/* Close Button Overlay */}
-            <button
-                onClick={() => setIsChatOpen(false)}
-                className="absolute top-3 right-3 z-50 p-1.5 hover:bg-gray-200 rounded-full transition-colors text-gray-500"
-                title="Đóng"
-            >
-                <X className="w-5 h-5" />
-            </button>
+            {/* Unique Header */}
+            <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 bg-gray-50/50 shrink-0">
+                <div className="flex items-center gap-2 select-none">
+                    <MessageCircle className="w-5 h-5 text-primary" />
+                    <span className="font-bold text-gray-900">AI Advisor</span>
+                </div>
+                <button
+                    onClick={() => setIsChatOpen(false)}
+                    className="p-1.5 hover:bg-gray-200 rounded-lg transition-colors text-gray-500"
+                    title="Đóng (Close)"
+                >
+                    <X className="w-5 h-5" />
+                </button>
+            </div>
 
             {/* Content */}
-            <div className="flex-1 overflow-hidden relative">
+            <div className="flex-1 overflow-hidden relative bg-white">
                 <ChatInterface onUiEffects={(effects) => console.log('UI Effects:', effects)} />
             </div>
         </div>
