@@ -211,9 +211,24 @@ export const fetchStockNews = async (symbol: string): Promise<any> => {
         const result = await response.json();
 
         if (result.statusCode === 200 && result.metadata) {
+            const newsList = result.metadata.news || [];
+
+            // Flatten the grouped news into a single array
+            const flatNews = newsList.flatMap((day: any) =>
+                (day.news || []).map((item: any) => ({
+                    id: item.id || `news-${Math.random().toString(36).substr(2, 9)}`,
+                    title: item.title,
+                    link: item.source_link || '#',
+                    publishDate: item.public_date || day.date,
+                    source: 'Tin tức tổng hợp',
+                    description: item.short_content || '',
+                    image_url: item.image_url
+                }))
+            );
+
             return {
                 success: true,
-                data: result.metadata
+                data: flatNews
             };
         }
         return { success: false, error: result.message };
