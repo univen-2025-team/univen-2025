@@ -549,6 +549,12 @@ export default class MarketCacheService {
             let startDateVal: string;
             let endDateVal: string;
 
+            // SIMULATION OVERRIDE:
+            // For 1D/Default, we must fetch the Simulation Target Date, NOT the real "Today".
+            const { getSimulationTargetDate } = await import('@/utils/simulation.util.js');
+            const simulationTargetDate = getSimulationTargetDate();
+            const targetDateStr = format(simulationTargetDate, 'yyyy-MM-dd');
+
             // Determine date range
             if (start && end) {
                 // Explicit date range provided
@@ -556,16 +562,18 @@ export default class MarketCacheService {
                 const endDateObj = new Date(end);
                 startDateVal = !isNaN(startDateObj.getTime()) ? format(startDateObj, 'yyyy-MM-dd') : start;
                 endDateVal = !isNaN(endDateObj.getTime()) ? format(endDateObj, 'yyyy-MM-dd') : end;
-            } else if (filter) {
-                // Use filter-based date range with new trading date logic
+            } else if (filter && filter !== '1D') {
+                // Use filter-based date range for > 1D
                 const dateRange = getDateRangeForFilter(filter);
                 startDateVal = dateRange.start;
                 endDateVal = dateRange.end;
                 this.logger.info(`StockIntraday: Filter ${filter} => ${startDateVal} to ${endDateVal}`);
             } else {
-                // Default: single day using new trading date logic
-                endDateVal = getLatestTradingDate();
-                startDateVal = endDateVal;
+                // Default or 1D: Use Simulation Target Date
+                // This ensures we fetch the historical data (e.g., Friday) that we want to replay as "Today"
+                startDateVal = targetDateStr;
+                endDateVal = targetDateStr;
+                this.logger.info(`StockIntraday: Simulation 1D Override => ${targetDateStr}`);
             }
 
             // FORCE REFRESH LOGIC
@@ -583,6 +591,15 @@ export default class MarketCacheService {
             }
 
             query.date = { $gte: startDateVal, $lte: endDateVal };
+
+            console.log('DEBUG_STOCK_QUERY:', {
+                symbol,
+                filter,
+                startDateVal,
+                endDateVal,
+                query,
+                targetDateStr: typeof targetDateStr === 'string' ? targetDateStr : 'N/A'
+            });
 
             // docLimit based on date range span
             const startDate = new Date(startDateVal);
@@ -633,12 +650,44 @@ export default class MarketCacheService {
                 return [];
             }
 
-            // Aggregate prices with date injection
+            // SIMULATION MODE LOGIC (Already imported above)
+            // const { getSimulationTargetDate } = await import('@/utils/simulation.util');
+            // const simulationTargetDate = getSimulationTargetDate();
+            // const targetDateStr = format(simulationTargetDate, 'yyyy-MM-dd');
+
+            // Get current time string HH:mm
+            // Get current time string HH:mm in Vietnam Time (UTC+7)
+            const now = new Date();
+            const currentHM = new Intl.DateTimeFormat('en-GB', {
+                timeZone: 'Asia/Ho_Chi_Minh',
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: false
+            }).format(now);
+
+            // Aggregate prices with date injection AND simulation filter
             let aggregatedPrices: IPriceBar[] = [];
+
             for (let i = historyDocs.length - 1; i >= 0; i--) {
                 const doc = historyDocs[i] as any;
+
+                // 1. Skip if date is in the future relative to Simulation Target
+                if (doc.date > targetDateStr) continue;
+
                 if (doc.prices) {
-                    const datedPrices = doc.prices.map((p: any) => ({
+                    let eligiblePrices = doc.prices;
+
+                    // 2. If date IS the Target Date, filter by current time
+                    if (doc.date === targetDateStr) {
+                        eligiblePrices = doc.prices.filter((p: any) => {
+                            // Compare HH:mm strings
+                            const pTime = p.time.includes(' ') ? p.time.split(' ')[1].slice(0, 5) : p.time.slice(0, 5);
+                            return pTime <= currentHM;
+                        });
+                        console.log(`Simulation Filter (${targetDateStr}): ${currentHM} -> ${eligiblePrices.length}/${doc.prices.length} candles`);
+                    }
+
+                    const datedPrices = eligiblePrices.map((p: any) => ({
                         ...p,
                         date: doc.date
                     }));
