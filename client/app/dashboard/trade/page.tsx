@@ -1,50 +1,50 @@
-"use client";
+'use client';
 
-import { useEffect, useMemo, useState } from "react";
-import { useFormik } from "formik";
-import * as Yup from "yup";
-import { Card, CardContent } from "@/components/ui/card";
-import LoadingSpinner from "@/components/common/LoadingSpinner";
-import { userApi, type UserProfile } from "@/lib/api/user.api";
-import { transactionApi } from "@/lib/api/transaction.api";
-import { useAppSelector } from "@/lib/store/hooks";
-import { selectUser } from "@/lib/store/authSlice";
+import { useEffect, useMemo, useState } from 'react';
+import { useFormik } from 'formik';
+import * as Yup from 'yup';
+import { Card, CardContent } from '@/components/ui/card';
+import LoadingSpinner from '@/components/common/LoadingSpinner';
+import { userApi, type UserProfile } from '@/lib/api/user.api';
+import { transactionApi } from '@/lib/api/transaction.api';
+import { useAppSelector } from '@/lib/store/hooks';
+import { selectUser } from '@/lib/store/authSlice';
 import PageHeader from '@/components/dashboard/PageHeader';
 import type {
     BuyStockFormValues,
     TransactionMetadata,
-    TransactionType,
-} from "@/lib/types/transactions";
-import { BuyOrderForm } from "@/components/trade/BuyOrderForm";
-import { TransactionSummaryCard } from "@/components/trade/TransactionSummaryCard";
+    TransactionType
+} from '@/lib/types/transactions';
+import { BuyOrderForm } from '@/components/trade/BuyOrderForm';
+import { TransactionSummaryCard } from '@/components/trade/TransactionSummaryCard';
 
 const INITIAL_FORM_VALUES: BuyStockFormValues = {
-    stock_code: "",
-    stock_name: "",
+    stock_code: '',
+    stock_name: '',
     quantity: 0,
     price_per_unit: 0,
-    transaction_type: "BUY",
-    notes: "",
+    transaction_type: 'BUY',
+    notes: ''
 };
 
 const validationSchema = Yup.object({
     stock_code: Yup.string()
         .trim()
-        .min(1, "Mã cổ phiếu không hợp lệ")
-        .max(10, "Tối đa 10 ký tự")
-        .required("Vui lòng nhập mã cổ phiếu"),
-    stock_name: Yup.string().trim().min(2, "Tên quá ngắn").required("Vui lòng nhập tên cổ phiếu"),
+        .min(1, 'Mã cổ phiếu không hợp lệ')
+        .max(10, 'Tối đa 10 ký tự')
+        .required('Vui lòng nhập mã cổ phiếu'),
+    stock_name: Yup.string().trim().min(2, 'Tên quá ngắn').required('Vui lòng nhập tên cổ phiếu'),
     quantity: Yup.number()
-        .typeError("Số lượng phải là số")
-        .integer("Số lượng phải là số nguyên")
-        .min(1, "Ít nhất 1 cổ phiếu")
-        .required("Vui lòng nhập số lượng"),
+        .typeError('Số lượng phải là số')
+        .integer('Số lượng phải là số nguyên')
+        .min(1, 'Ít nhất 1 cổ phiếu')
+        .required('Vui lòng nhập số lượng'),
     price_per_unit: Yup.number()
-        .typeError("Giá phải là số")
-        .min(0, "Giá không được âm")
-        .required("Vui lòng nhập giá"),
-    transaction_type: Yup.mixed<TransactionType>().oneOf(["BUY", "SELL"]).required(),
-    notes: Yup.string().max(300, "Tối đa 300 ký tự"),
+        .typeError('Giá phải là số')
+        .min(0, 'Giá không được âm')
+        .required('Vui lòng nhập giá'),
+    transaction_type: Yup.mixed<TransactionType>().oneOf(['BUY', 'SELL']).required(),
+    notes: Yup.string().max(300, 'Tối đa 300 ký tự')
 });
 
 export default function TradePage() {
@@ -64,7 +64,8 @@ export default function TradePage() {
                 setProfile(data);
                 setProfileError(null);
             } catch (error) {
-                const message = error instanceof Error ? error.message : "Không thể tải thông tin người dùng.";
+                const message =
+                    error instanceof Error ? error.message : 'Không thể tải thông tin người dùng.';
                 setProfileError(message);
             } finally {
                 setLoadingProfile(false);
@@ -81,7 +82,7 @@ export default function TradePage() {
         validationSchema,
         onSubmit: async (values, helpers) => {
             if (!userId) {
-                setSubmitError("Vui lòng đăng nhập để giao dịch.");
+                setSubmitError('Vui lòng đăng nhập để giao dịch.');
                 return;
             }
 
@@ -90,7 +91,7 @@ export default function TradePage() {
                 setSuccessMessage(null);
                 const payload = {
                     ...values,
-                    userId,
+                    userId
                 };
 
                 const response = await transactionApi.createTransaction(payload);
@@ -100,7 +101,7 @@ export default function TradePage() {
                 if (profile) {
                     setProfile({
                         ...profile,
-                        balance: response.transaction.balance_after,
+                        balance: response.transaction.balance_after
                     });
                 }
 
@@ -108,26 +109,26 @@ export default function TradePage() {
                     values: {
                         ...values,
                         quantity: 0,
-                        notes: "",
-                    },
+                        notes: ''
+                    }
                 });
             } catch (error) {
-                const message = error instanceof Error ? error.message : "Không thể tạo giao dịch.";
+                const message = error instanceof Error ? error.message : 'Không thể tạo giao dịch.';
                 setSubmitError(message);
             }
-        },
+        }
     });
 
     const { quantity, price_per_unit, transaction_type } = formik.values;
     const availableBalance = profile?.balance;
     const totalCost = quantity > 0 && price_per_unit > 0 ? quantity * price_per_unit : 0;
     const isBalanceInsufficient =
-        transaction_type === "BUY" &&
-        typeof availableBalance === "number" &&
+        transaction_type === 'BUY' &&
+        typeof availableBalance === 'number' &&
         totalCost > availableBalance;
 
     const maxBuyQuantity = useMemo(() => {
-        if (transaction_type !== "BUY" || !profile?.balance) return undefined;
+        if (transaction_type !== 'BUY' || !profile?.balance) return undefined;
         if (price_per_unit <= 0) return 0;
         return Math.max(Math.floor(profile.balance / price_per_unit), 0);
     }, [transaction_type, profile?.balance, price_per_unit]);
@@ -141,16 +142,13 @@ export default function TradePage() {
     }
 
     const formattedBalance =
-        typeof profile?.balance === "number"
-            ? profile.balance.toLocaleString("vi-VN", { maximumFractionDigits: 0 })
-            : "--";
+        typeof profile?.balance === 'number'
+            ? profile.balance.toLocaleString('vi-VN', { maximumFractionDigits: 0 })
+            : '--';
 
     return (
-        <div className="space-y-6 pb-8">
-            <PageHeader
-                title="Giao dịch cổ phiếu"
-                description="Đặt lệnh mua / bán cổ phiếu"
-            />
+        <div className="space-y-6">
+            <PageHeader title="Giao dịch cổ phiếu" description="Đặt lệnh mua / bán cổ phiếu" />
 
             {profileError && (
                 <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
@@ -179,7 +177,7 @@ export default function TradePage() {
                                 maxBuyQuantity={maxBuyQuantity}
                                 onUseMaxQuantity={() => {
                                     if (maxBuyQuantity !== undefined) {
-                                        formik.setFieldValue("quantity", maxBuyQuantity);
+                                        formik.setFieldValue('quantity', maxBuyQuantity);
                                     }
                                 }}
                                 availableBalance={availableBalance}
@@ -203,4 +201,3 @@ export default function TradePage() {
         </div>
     );
 }
-

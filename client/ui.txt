@@ -1,0 +1,744 @@
+================================================================================
+                    UI STYLES SUMMARY - UNIVEN STOCK TRADING APP
+================================================================================
+Generated: January 18, 2026
+Project: Univen Stock Trading Application (Client)
+Location: c:\DiskD\Univen\univen-2025\client
+
+================================================================================
+                           1. STYLING FRAMEWORK
+================================================================================
+
+Primary Framework: Tailwind CSS v4 (with @tailwindcss/postcss)
+PostCSS Configuration: postcss.config.mjs
+CSS Methodology: Utility-first with CSS variables for theming
+Main Stylesheet: app/globals.css (414 lines)
+
+================================================================================
+                      2. GLOBAL THEME & COLOR SYSTEM
+================================================================================
+
+Theme System: Navy Blue Theme (3 Levels)
+Color Format: OKLCH (Modern CSS color space)
+Dark Mode: Supported via .dark class
+
+--- COLOR PALETTE ---
+
+PRIMARY COLORS:
+  • Dark Navy:   oklch(0.42 0.15 260) - #1e3a8a equivalent
+  • Medium Navy: oklch(0.62 0.18 255) - #3b82f6 equivalent
+  • Light Navy:  oklch(0.8 0.08 250)  - #93c5fd equivalent
+
+SEMANTIC COLORS:
+  • Background:           oklch(0.99 0.002 240) [Light] / oklch(0.2 0.08 255) [Dark]
+  • Foreground:           oklch(0.3 0.1 250) [Light] / oklch(0.95 0.01 240) [Dark]
+  • Primary:              oklch(0.42 0.15 260) [Light] / oklch(0.62 0.18 255) [Dark]
+  • Secondary:            oklch(0.8 0.08 250) [Light] / oklch(0.35 0.1 255) [Dark]
+  • Accent:               oklch(0.62 0.18 255) [Light] / oklch(0.8 0.08 250) [Dark]
+  • Muted:                oklch(0.96 0.01 250) [Light] / oklch(0.28 0.09 258) [Dark]
+  • Success (Positive):   oklch(0.62 0.18 255) - Medium Navy for gains
+  • Error (Negative):     oklch(0.56 0.22 25) - Red for losses
+  • Warning:              oklch(0.8 0.08 250) - Light Navy
+  • Card:                 oklch(1 0 0) [Light] / oklch(0.25 0.09 258) [Dark]
+  • Border:               oklch(0.88 0.01 250) [Light] / oklch(0.35 0.1 255) [Dark]
+  • Input:                oklch(0.96 0.01 250) [Light] / oklch(0.28 0.09 258) [Dark]
+
+CHART COLORS:
+  • Chart 1: oklch(0.42 0.15 260) - Dark Navy
+  • Chart 2: oklch(0.62 0.18 255) - Medium Navy
+  • Chart 3: oklch(0.8 0.08 250) - Light Navy
+  • Chart 4: oklch(0.55 0.08 250)
+  • Chart 5: oklch(0.35 0.12 258)
+
+SIDEBAR COLORS:
+  Light Mode:
+    • Background: oklch(0.99 0.002 240) - Very light
+    • Foreground: oklch(0.42 0.15 260) - Dark Navy
+    • Primary:    oklch(0.42 0.15 260)
+    • Accent:     oklch(0.96 0.01 250)
+    • Border:     oklch(0.88 0.01 250)
+  
+  Dark Mode:
+    • Background: oklch(0.22 0.08 256) - Deep navy
+    • Foreground: oklch(0.92 0.01 240) - Light text
+    • Primary:    oklch(0.62 0.18 255)
+    • Accent:     oklch(0.28 0.09 258)
+
+BORDER RADIUS:
+  • --radius:    0.625rem (10px)
+  • --radius-sm: calc(var(--radius) - 4px) = 6px
+  • --radius-md: calc(var(--radius) - 2px) = 8px
+  • --radius-lg: var(--radius) = 10px
+  • --radius-xl: calc(var(--radius) + 4px) = 14px
+
+================================================================================
+                       3. CUSTOM UTILITY CLASSES
+================================================================================
+
+--- PRIMARY COLOR UTILITIES ---
+.bg-primary-solid         → background-color: oklch(var(--primary))
+.text-primary-solid       → color: oklch(var(--primary))
+.border-primary-solid     → border-color: oklch(var(--primary))
+.hover\:bg-primary-solid  → hover: background-color: oklch(var(--primary) / 0.9)
+.bg-primary-light         → background-color: oklch(var(--primary) / 0.1)
+
+--- ACCENT COLOR UTILITIES ---
+.bg-accent-solid          → background-color: oklch(var(--accent))
+.text-accent-solid        → color: oklch(var(--accent))
+.border-accent-solid      → border-color: oklch(var(--accent))
+.hover\:bg-accent-solid   → hover: background-color: oklch(var(--accent) / 0.9)
+
+--- SEMANTIC COLOR UTILITIES ---
+
+Success (Green/Positive):
+  .text-success           → color: oklch(var(--success))
+  .bg-success             → background-color: oklch(var(--success))
+  .bg-success-light       → background-color: oklch(var(--success) / 0.1)
+  .border-success         → border-color: oklch(var(--success) / 0.3)
+
+Error (Red/Negative):
+  .text-error             → color: oklch(var(--error))
+  .bg-error               → background-color: oklch(var(--error))
+  .bg-error-light         → background-color: oklch(var(--error) / 0.1)
+  .border-error           → border-color: oklch(var(--error) / 0.3)
+
+Warning (Yellow/Neutral):
+  .text-warning           → color: oklch(var(--warning))
+  .bg-warning             → background-color: oklch(var(--warning))
+  .bg-warning-light       → background-color: oklch(var(--warning) / 0.1)
+  .border-warning         → border-color: oklch(var(--warning) / 0.3)
+
+--- BUTTON UTILITIES ---
+.btn-primary              → bg: oklch(var(--primary)), color: oklch(var(--primary-foreground))
+.btn-primary:hover        → bg: oklch(var(--primary) / 0.9)
+
+--- SPINNER UTILITIES ---
+.spinner-primary          → border-color: oklch(var(--primary) / 0.2)
+                            border-top-color: oklch(var(--primary))
+
+================================================================================
+                          4. GLOBAL ANIMATIONS
+================================================================================
+
+@keyframes blob
+  • Duration: 7s infinite
+  • Effect: Smooth floating/morphing effect
+  • Transform: translate + scale variations
+  • Usage: Background decorative elements
+
+@keyframes fade-in-down
+  • Duration: 0.6s ease-out
+  • Effect: Fade in from top (-20px) to original position
+  • Opacity: 0 → 1
+
+@keyframes scale-in
+  • Duration: 0.5s ease-out
+  • Effect: Scale up from 0.9 to 1
+  • Opacity: 0 → 1
+  • Usage: Modal/card entrances
+
+@keyframes slide-in
+  • Duration: 0.4s ease-out
+  • Effect: Slide in from right (20px) to original position
+  • Opacity: 0 → 1
+
+@keyframes fade-in
+  • Duration: 0.8s ease-out
+  • Effect: Simple fade in
+  • Opacity: 0 → 1
+
+--- ANIMATION UTILITY CLASSES ---
+.animate-blob             → animation: blob 7s infinite
+.animation-delay-2000     → animation-delay: 2s
+.animation-delay-4000     → animation-delay: 4s
+.animate-fade-in-down     → animation: fade-in-down 0.6s ease-out
+.animate-scale-in         → animation: scale-in 0.5s ease-out
+.animate-slide-in         → animation: slide-in 0.4s ease-out
+.animate-fade-in          → animation: fade-in 0.8s ease-out
+
+================================================================================
+                    5. LAYOUT COMPONENTS STYLING
+================================================================================
+
+--- MAIN LAYOUT (components/MainLayout.tsx) ---
+Container:
+  • className: "flex h-screen overflow-hidden bg-gray-50"
+  • Layout: Flexbox horizontal (sidebar + main content)
+  • Height: Full screen (h-screen)
+  • Background: Light gray (#F9FAFB)
+
+Main Content:
+  • className: "flex-1 overflow-y-auto text-gray-900"
+  • Padding: p-1 md:p-3 (responsive)
+  • Inner padding: p-3
+  • Text color: Dark gray
+
+--- SIDEBAR (components/Sidebar.tsx) ---
+Sidebar Container:
+  • Width: w-64 (256px) when expanded / w-20 (80px) when collapsed
+  • Background: bg-white
+  • Border: border-r border-gray-200
+  • Position: Fixed (mobile) / Static (desktop)
+  • z-index: z-40
+  • Transition: transition-all duration-300 ease-in-out
+  • Mobile: Transform translate-x-full/-translate-x-0
+
+Mobile Toggle Button:
+  • Position: fixed top-4 left-4
+  • z-index: z-50
+  • Background: bg-white shadow-lg
+  • Padding: p-2
+  • Border radius: rounded-lg
+
+Mobile Overlay:
+  • className: "lg:hidden fixed inset-0 bg-black bg-opacity-50 z-30"
+  • Backdrop for mobile sidebar
+
+Header Section:
+  • Padding: p-4
+  • Border: border-b border-gray-200
+  • Logo/Brand: 
+    - Size: h-10 w-10 rounded-md
+    - Background: bg-primary
+    - Text: text-white text-sm font-bold
+  • Text: text-lg font-bold text-gray-900
+
+Navigation Links:
+  • Active state styling (determined by route)
+  • Hover effects: hover:bg-gray-100
+  • Transition: transition-colors
+
+================================================================================
+                      6. PAGE-SPECIFIC STYLES
+================================================================================
+
+--- DASHBOARD PAGE (app/dashboard/dashboard/page.tsx) ---
+Container:
+  • className: "space-y-6"
+  • Vertical spacing between sections
+
+Components Used:
+  • WelcomeHeader - User greeting section
+  • StatsGrid - Statistics cards grid
+  • QuickActions - Action buttons
+  • RecentActivity - Activity list
+
+--- MARKET PAGE (app/dashboard/market/page.tsx) ---
+Components:
+  • MarketHeader - Page header
+  • MarketStats - Market statistics overview
+  • VN30IndexCard - VN30 index information card
+  • VN30TrendChart - Chart showing VN30 trends
+  • TopStocksChart - Top performing stocks chart
+  • TopGainersLosers - Lists of top movers
+  • StockTableWithTabs - Tabbed stock listing
+  • MarketHeatmap - Visual heatmap of market
+  • StockDetailModal - Modal for stock details
+  • BuyStockFeature - Buy stock dialog
+
+--- TRADE PAGE (app/dashboard/trade/page.tsx) ---
+Components:
+  • PageHeader - Section header
+  • Card/CardContent - UI card wrapper (from ui/card.tsx)
+  • BuyOrderForm - Form for buying stocks
+  • TransactionSummaryCard - Transaction summary display
+  • LoadingSpinner - Loading state indicator
+
+Card Styling (from ui/card.tsx):
+  • Base: "bg-card text-card-foreground rounded-xl border shadow-sm"
+  • Padding: py-6
+  • Gap: gap-6
+  • Content padding: px-6
+
+--- HISTORY PAGE (app/dashboard/history/page.tsx) ---
+Components:
+  • PageHeader - Section header
+  • HistoryBalanceCards - Balance information cards
+  • HistoryFilters - Filter controls
+  • HistoryTable - Transaction history table
+  • HistoryPagination - Pagination controls
+
+Container:
+  • Uses PAGE_SIZE constant for pagination (10 items)
+  • Filter state management for transaction type and status
+
+--- LOGIN PAGE (app/auth/login/page.tsx) ---
+Form Container:
+  • className: "space-y-5"
+  • Vertical spacing between form elements
+
+Error Messages:
+  • className: "bg-error-light border border-error text-error px-4 py-3 rounded-lg flex items-start"
+  • Icon: w-5 h-5 mr-2 flex-shrink-0 mt-0.5
+
+Input Fields:
+  • Container: relative
+  • Icon container: absolute inset-y-0 left-0 pl-3
+  • Input: 
+    - Base: "block w-full pl-10 pr-3 py-3 border rounded-lg"
+    - Focus: "focus:outline-none focus:ring-2 focus:border-transparent"
+    - Normal: "border-gray-300 focus:ring-ring"
+    - Error: "border-error focus:ring-error"
+    - Text: "text-gray-900 placeholder-gray-400"
+    - Transition: "transition-all"
+
+Labels:
+  • className: "block text-sm font-semibold text-gray-700 mb-2"
+
+Field Errors:
+  • className: "mt-2 text-sm text-error flex items-center"
+  • Icon: w-4 h-4 mr-1
+
+================================================================================
+                     7. COMPONENT-SPECIFIC STYLES
+================================================================================
+
+--- STATS CARD (components/dashboard/StatsCard.tsx) ---
+Card Container:
+  • className: "bg-white rounded-xl shadow-lg p-6 border-l-4 hover:shadow-xl transition-shadow"
+  • Border color: Dynamic via props (borderColor)
+  • Hover effect: Shadow enhancement
+
+Content Layout:
+  • Flex: "flex items-center justify-between"
+  • Title: "text-gray-600 text-sm font-medium"
+  • Value: "text-2xl font-bold text-gray-900 mt-2"
+
+Change Indicator:
+  • Positive: "text-success" (green)
+  • Negative: "text-error" (red)
+  • Neutral: "text-gray-600"
+  • Icon: w-4 h-4 mr-1
+
+Icon Container:
+  • Dynamic background via props (iconBgColor)
+  • Size: h-12 w-12
+  • Border radius: rounded-lg
+  • Flex: flex items-center justify-center
+  • Icon color: text-white
+
+--- STOCK TABLE (components/market/StockTable.tsx) ---
+Container:
+  • className: "bg-white rounded-xl shadow-lg p-6"
+
+Header Controls:
+  • Flex: "flex flex-wrap items-center gap-4 mb-4"
+  • Title: "text-xl font-bold text-gray-900"
+  • Select inputs: "border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+
+Refresh Button:
+  • className: "bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors text-sm font-medium"
+
+Table:
+  • className: "min-w-full"
+  • Header: "border-b border-gray-200"
+  • Header cells: "px-4 py-3 text-left/text-right text-sm font-semibold text-gray-900"
+  • Body rows: "border-b border-gray-100 hover:bg-primary/5 transition-colors cursor-pointer"
+  • Symbol: "font-bold text-primary hover:text-primary/90"
+
+Price/Change Colors:
+  • Positive: text-success (green)
+  • Negative: text-error (red)
+  • Neutral: text-gray-700
+
+--- PORTFOLIO SUMMARY (components/portfolio/portfolio-summary.tsx) ---
+Grid Layout:
+  • className: "grid grid-cols-1 md:grid-cols-4 gap-4"
+  • Responsive: 1 column mobile, 4 columns desktop
+
+Card:
+  • Style attributes: 
+    - backgroundColor: var(--card)
+    - border: 1px solid var(--border)
+  • className: "rounded-xl p-6 shadow-sm"
+  • Label color: var(--muted-foreground)
+  • Value: "text-2xl font-bold" with var(--foreground)
+
+Profit/Loss Indicator:
+  • Positive: text-green-600
+  • Negative: text-red-600
+  • Icons: TrendingUp / TrendingDown (w-4 h-4)
+  • Change percentage: text-sm mt-1
+
+--- PROFILE HEADER CARD (components/profile/ProfileHeaderCard.tsx) ---
+Container:
+  • className: "bg-primary rounded-xl p-8 text-white"
+  • Full-width primary color background
+
+Avatar:
+  • Size: w-30 h-30 (120x120px)
+  • Border radius: rounded-full
+  • Border: border-4 border-white
+  • Shadow: shadow-lg
+  • Fallback: "bg-white/20 backdrop-blur-sm" with initials
+
+Info Section:
+  • Title: "text-3xl font-bold mb-2"
+  • Meta info: "flex items-center gap-4 text-white/90"
+  • Icons: w-5 h-5
+  • Balance: "text-2xl font-bold"
+
+Status Badge:
+  • Position: "absolute bottom-2 right-2"
+
+================================================================================
+                    8. COMMON COMPONENT PATTERNS
+================================================================================
+
+--- LOADING SPINNERS ---
+Pattern: Circular spinner with border animation
+  • Border: border-t-transparent
+  • Size: Varies (w-6 h-6 to w-12 h-12)
+  • Animation: animate-spin
+  • Color: Usually .spinner-primary utility or border-primary
+
+--- ERROR MESSAGES ---
+Pattern: Alert box with icon
+  • Background: bg-error-light
+  • Border: border border-error
+  • Text: text-error
+  • Padding: px-4 py-3
+  • Border radius: rounded-lg
+  • Icon: w-5 h-5
+
+--- SUCCESS MESSAGES ---
+Pattern: Alert box with icon (similar to error)
+  • Background: bg-success-light
+  • Border: border border-success
+  • Text: text-success
+
+--- BUTTONS ---
+Primary Button:
+  • Base: "bg-primary text-white px-4 py-2 rounded-lg"
+  • Hover: "hover:bg-primary/90"
+  • Transition: "transition-colors"
+  • Font: "text-sm font-medium"
+
+Secondary Button:
+  • Base: "bg-secondary text-secondary-foreground px-4 py-2 rounded-lg"
+  • Hover: "hover:bg-secondary/80"
+
+Outline Button:
+  • Base: "border border-primary text-primary px-4 py-2 rounded-lg"
+  • Hover: "hover:bg-primary/10"
+
+--- FORM INPUTS ---
+Standard Input:
+  • Base: "block w-full px-3 py-3 border border-gray-300 rounded-lg"
+  • Focus: "focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
+  • Error state: "border-error focus:ring-error"
+  • Text: "text-gray-900 placeholder-gray-400"
+  • Transition: "transition-all"
+
+Input with Icon:
+  • Container: relative
+  • Icon: "absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
+  • Input: pl-10 (to account for icon)
+
+--- CARDS ---
+Standard Card (Tailwind):
+  • Base: "bg-white rounded-xl shadow-lg p-6"
+  • Hover: "hover:shadow-xl transition-shadow"
+
+UI Card Component:
+  • Base: "bg-card text-card-foreground rounded-xl border shadow-sm"
+  • Padding: py-6, px-6 (for content)
+  • Gap: gap-6
+
+--- BADGES ---
+Pattern: Small rounded pill
+  • Base: "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+  • Success: "bg-success-light text-success"
+  • Error: "bg-error-light text-error"
+  • Warning: "bg-warning-light text-warning"
+
+--- MODALS/DIALOGS ---
+Pattern: Fixed overlay with centered content
+  • Overlay: "fixed inset-0 bg-black bg-opacity-50 z-40"
+  • Container: "fixed inset-0 flex items-center justify-center z-50"
+  • Content: "bg-white rounded-xl shadow-2xl max-w-2xl w-full p-6"
+
+================================================================================
+                       9. RESPONSIVE BREAKPOINTS
+================================================================================
+
+Tailwind Default Breakpoints:
+  • sm:  640px  - Small devices (landscape phones)
+  • md:  768px  - Medium devices (tablets)
+  • lg:  1024px - Large devices (desktops)
+  • xl:  1280px - Extra large devices
+  • 2xl: 1536px - 2X Extra large devices
+
+Common Usage Patterns:
+  • Mobile-first approach
+  • Sidebar: Hidden on mobile, visible on lg+
+  • Grid columns: 1 column mobile → 2-4 columns on md/lg
+  • Padding: Smaller on mobile (p-1), larger on desktop (md:p-3)
+  • Text sizes: Responsive text scaling with breakpoints
+
+================================================================================
+                    10. STOCK-SPECIFIC STYLING
+================================================================================
+
+--- PRICE CHANGE COLORS ---
+Function: getChangeColor(change: number)
+  • Positive (> 0): "text-success" or "text-green-600"
+  • Negative (< 0): "text-error" or "text-red-600"
+  • Neutral (= 0):  "text-gray-600"
+
+Applied to:
+  • Stock price displays
+  • Change amount
+  • Change percentage
+  • Portfolio profit/loss
+
+--- CHART STYLING ---
+Used in:
+  • VN30TrendChart
+  • TopStocksChart
+  • MarketHeatmap
+
+Colors: Use --chart-1 through --chart-5 variables
+  • Chart 1: Dark Navy
+  • Chart 2: Medium Navy
+  • Chart 3: Light Navy
+  • Chart 4: Muted Navy
+  • Chart 5: Deep Navy
+
+================================================================================
+                        11. UTILITY HELPER FILES
+================================================================================
+
+--- lib/theme-colors.ts ---
+Function: getThemeColor(colorName: string): string
+  • Reads CSS variable values at runtime
+  • Returns computed color value from document root
+  • Server-safe (returns empty string on server)
+
+Usage:
+  getThemeColor('primary') → oklch(0.42 0.15 260)
+
+--- lib/utils.ts ---
+Function: cn(...inputs: ClassValue[]): string
+  • Class name utility (likely using clsx/tailwind-merge)
+  • Merges and deduplicates Tailwind classes
+  • Handles conditional classes
+
+--- components/market/utils.ts ---
+Functions:
+  • formatNumber(value: number): string - Number formatting
+  • formatPrice(value: number): string - Price formatting
+  • getChangeColor(change: number): string - Color for change values
+
+================================================================================
+                      12. ICON SYSTEM
+================================================================================
+
+Primary Icon Source: Inline SVG (Heroicons style)
+  • Stroke-based icons
+  • Typical size: w-5 h-5 or w-6 h-6
+  • Stroke width: strokeWidth={2}
+  • Colors: currentColor (inherits from parent text color)
+
+Common Icons:
+  • Menu/Hamburger - Mobile menu toggle
+  • User/Profile - User account
+  • Shield - Security/role
+  • Trending Up/Down - Stock changes (from lucide-react)
+  • Arrow Up/Down - Directional indicators
+  • X/Close - Close buttons
+  • Chevron - Dropdowns, accordions
+
+External Icon Library:
+  • lucide-react - Used for TrendingUp, TrendingDown icons
+
+================================================================================
+                    13. TYPOGRAPHY SYSTEM
+================================================================================
+
+Font Families:
+  • Sans: var(--font-geist-sans) - Primary font
+  • Mono: var(--font-geist-mono) - Code/monospace
+
+Heading Scales:
+  • H1: text-3xl font-bold (48px)
+  • H2: text-2xl font-bold (24px) 
+  • H3: text-xl font-bold (20px)
+  • H4: text-lg font-bold (18px)
+
+Body Text:
+  • Base: text-base (16px)
+  • Small: text-sm (14px)
+  • Extra small: text-xs (12px)
+
+Font Weights:
+  • Regular: font-normal (400)
+  • Medium: font-medium (500)
+  • Semibold: font-semibold (600)
+  • Bold: font-bold (700)
+
+Text Colors:
+  • Primary text: text-gray-900 (dark mode: text-white)
+  • Secondary text: text-gray-600
+  • Muted text: text-gray-500 or var(--muted-foreground)
+  • Link text: text-primary
+  • White text: text-white (on colored backgrounds)
+
+================================================================================
+                    14. SHADOW SYSTEM
+================================================================================
+
+Tailwind Shadow Classes:
+  • shadow-sm - Subtle shadow
+  • shadow - Default shadow
+  • shadow-md - Medium shadow
+  • shadow-lg - Large shadow (cards, buttons)
+  • shadow-xl - Extra large shadow
+  • shadow-2xl - Largest shadow (modals)
+
+Hover Effects:
+  • hover:shadow-xl - Card hover enhancement
+  • transition-shadow - Smooth shadow transitions
+
+================================================================================
+                    15. SPACING SYSTEM
+================================================================================
+
+Common Spacing Patterns:
+  • Page container: p-1 md:p-3 (responsive)
+  • Card padding: p-6 (24px)
+  • Card padding large: p-8 (32px)
+  • Section gaps: space-y-6 (24px vertical)
+  • Component gaps: gap-4 (16px)
+  • Small gaps: gap-2 (8px)
+  • Form fields: space-y-5 (20px vertical)
+
+Margin/Padding Scale:
+  • 1 = 0.25rem (4px)
+  • 2 = 0.5rem (8px)
+  • 3 = 0.75rem (12px)
+  • 4 = 1rem (16px)
+  • 5 = 1.25rem (20px)
+  • 6 = 1.5rem (24px)
+  • 8 = 2rem (32px)
+
+================================================================================
+                    16. BORDER SYSTEM
+================================================================================
+
+Border Widths:
+  • border - 1px (default)
+  • border-2 - 2px
+  • border-4 - 4px
+  • border-l-4 - Left border 4px (accent on cards)
+
+Border Colors:
+  • border-gray-200 - Light borders (light mode)
+  • border-gray-300 - Input borders
+  • border-primary - Primary color borders
+  • border-error - Error state borders
+  • border-success - Success state borders
+  • var(--border) - Theme-aware border color
+
+Border Radius:
+  • rounded - 0.25rem (4px)
+  • rounded-md - 0.375rem (6px)
+  • rounded-lg - 0.5rem (8px)
+  • rounded-xl - 0.75rem (12px)
+  • rounded-full - 9999px (circular)
+
+================================================================================
+                    17. Z-INDEX LAYERS
+================================================================================
+
+Z-Index Scale:
+  • z-30 - Mobile sidebar overlay
+  • z-40 - Sidebar (mobile)
+  • z-50 - Mobile menu toggle button, Modals
+  • Default - Static elements (z-index: auto)
+
+================================================================================
+                    18. TRANSITION SYSTEM
+================================================================================
+
+Common Transitions:
+  • transition-colors - Color transitions (buttons, links)
+  • transition-shadow - Shadow transitions (cards)
+  • transition-all - All properties (comprehensive)
+  • transition-transform - Transform transitions
+
+Durations:
+  • duration-300 - 300ms (sidebar, most animations)
+  • Defaults to theme timing functions
+
+Easing:
+  • ease-in-out - Default easing
+  • ease-out - Animation endings
+  • Linear timing for spinners
+
+================================================================================
+                    19. FLEX & GRID PATTERNS
+================================================================================
+
+Common Flex Patterns:
+  • flex items-center justify-between - Space between with vertical centering
+  • flex items-center gap-4 - Horizontal layout with gap
+  • flex flex-col - Vertical stacking
+  • flex-1 - Flex grow to fill space
+
+Common Grid Patterns:
+  • grid grid-cols-1 md:grid-cols-2 - Responsive 2-column grid
+  • grid grid-cols-1 md:grid-cols-4 - 4-column stats grid
+  • gap-4 / gap-6 - Grid gaps
+
+================================================================================
+                    20. BEST PRACTICES & CONVENTIONS
+================================================================================
+
+1. Color Usage:
+   - Always use CSS variables for colors (var(--primary))
+   - Use semantic color utilities (.text-success, .text-error)
+   - Never hardcode color values in components
+
+2. Responsive Design:
+   - Mobile-first approach
+   - Use responsive classes (md:, lg:)
+   - Test on mobile, tablet, desktop breakpoints
+
+3. Component Structure:
+   - Consistent card styling (bg-white rounded-xl shadow-lg p-6)
+   - Reusable component patterns
+   - Props for customization (borderColor, iconBgColor)
+
+4. Accessibility:
+   - Color contrast compliance
+   - Focus states (focus:ring-2)
+   - Screen reader labels (aria-label)
+   - Keyboard navigation support
+
+5. Performance:
+   - Use utility classes over inline styles
+   - Minimize custom CSS
+   - Leverage Tailwind's purging
+
+6. Naming Conventions:
+   - Descriptive component names (StatsCard, PortfolioSummary)
+   - Clear prop names (changeType, borderColor)
+   - Consistent file naming (kebab-case for files, PascalCase for components)
+
+================================================================================
+                            END OF SUMMARY
+================================================================================
+
+This summary covers the comprehensive UI styling approach used throughout the
+Univen Stock Trading Application. The application uses a modern, consistent
+design system built on Tailwind CSS with a navy blue theme, OKLCH color space,
+and utility-first methodology.
+
+For specific implementation details, refer to:
+  - app/globals.css - Global styles and theme
+  - Individual component files - Component-specific styling
+  - lib/utils.ts - Utility functions
+  - components/ui/ - Reusable UI components
+
+Last Updated: January 18, 2026

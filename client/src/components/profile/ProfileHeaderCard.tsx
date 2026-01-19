@@ -81,7 +81,7 @@ export default function ProfileHeaderCard({ profile, onAvatarChange }: ProfileHe
 
     return (
         <>
-            <div className="bg-primary rounded-xl p-8 text-white">
+            <div className="bg-gradient-to-r from-violet-600 to-fuchsia-600 rounded-xl p-8 text-white shadow-xl shadow-violet-500/20">
                 <div className="flex items-center gap-6">
                     {/* Avatar with hover upload */}
                     <div
@@ -216,14 +216,14 @@ export default function ProfileHeaderCard({ profile, onAvatarChange }: ProfileHe
                             <button
                                 onClick={handleCancel}
                                 disabled={isUploading}
-                                className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50"
+                                className="px-6 py-2 border border-white/10 rounded-lg text-gray-300 hover:bg-white/5 transition-colors disabled:opacity-50"
                             >
                                 Hủy
                             </button>
                             <button
                                 onClick={handleConfirm}
                                 disabled={isUploading}
-                                className="px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center gap-2"
+                                className="px-6 py-2 bg-violet-600 text-white rounded-lg hover:bg-violet-500 transition-colors disabled:opacity-50 flex items-center gap-2 shadow-lg shadow-violet-500/20"
                             >
                                 {isUploading ? (
                                     <>

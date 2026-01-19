@@ -24,9 +24,9 @@ export function TradingChatPanel({
                     hasComponentLoaded={hasComponentLoaded}
                 />
 
-                {!isLoading && (
-                    <SuggestionChips suggestions={suggestions} onClick={onSuggestionClick} />
-                )}
+                    {!isLoading && (
+                        <SuggestionChips suggestions={suggestions} onClick={onSuggestionClick} />
+                    )}
 
                 <ChatInput onSend={onSendMessage} isLoading={isLoading} />
             </div>

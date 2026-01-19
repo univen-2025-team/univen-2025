@@ -29,7 +29,7 @@ export default function RootLayout({
 }>) {
     return (
         <html lang={appConfig.settings.defaultLanguage} suppressHydrationWarning>
-            <body className="antialiased">
+            <body className="bg-background text-foreground antialiased selection:bg-pink-500/30 selection:text-white">
                 <ReduxProvider>
                     <ToastProvider>{children}</ToastProvider>
                 </ReduxProvider>

@@ -75,10 +75,10 @@ function ToastContainer({
 
 function ToastItem({ toast, onClose }: { toast: Toast; onClose: () => void }) {
     const styles = {
-        success: 'bg-green-50 border-green-500 text-green-900',
-        error: 'bg-red-50 border-red-500 text-red-900',
-        warning: 'bg-yellow-50 border-yellow-500 text-yellow-900',
-        info: 'bg-blue-50 border-blue-500 text-blue-900'
+        success: 'bg-emerald-900/80 border-emerald-500 text-emerald-100 backdrop-blur-xl',
+        error: 'bg-red-900/80 border-red-500 text-red-100 backdrop-blur-xl',
+        warning: 'bg-amber-900/80 border-amber-500 text-amber-100 backdrop-blur-xl',
+        info: 'bg-blue-900/80 border-blue-500 text-blue-100 backdrop-blur-xl'
     };
 
     const icons = {
@@ -90,7 +90,7 @@ function ToastItem({ toast, onClose }: { toast: Toast; onClose: () => void }) {
 
     return (
         <div
-            className={`flex items-start gap-3 p-4 rounded-lg border-l-4 shadow-lg animate-in slide-in-from-right ${
+            className={`flex items-start gap-3 p-4 rounded-xl border-l-4 shadow-2xl animate-in slide-in-from-right ${
                 styles[toast.type]
             }`}
         >

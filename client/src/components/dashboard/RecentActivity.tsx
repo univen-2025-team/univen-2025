@@ -108,41 +108,44 @@ const getAmountColor = (type: ActivityItem['type']) => {
 
 export default function RecentActivity() {
     return (
-        <div className="lg:col-span-2 bg-white/95 backdrop-blur-sm rounded-2xl shadow-lg hover:shadow-2xl p-6 transition-all duration-300 animate-scale-in">
-            <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-bold text-gray-900">Hoạt động gần đây</h2>
-                <button className="text-primary hover:text-primary text-sm font-semibold">
-                    Xem tất cả →
-                </button>
-            </div>
-            <div className="space-y-4">
-                {activities.map((activity) => (
-                    <div
-                        key={activity.id}
-                        className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
-                    >
-                        <div className={`${activity.iconBgColor} rounded-full p-3`}>
-                            <svg
-                                className={`w-6 h-6 ${activity.iconColor}`}
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                            >
-                                {getIcon(activity.type)}
-                            </svg>
+        <div className="lg:col-span-2 relative group/activity">
+            <div className="absolute -inset-0.5 bg-gradient-to-r from-violet-500/30 to-blue-500/30 rounded-3xl blur opacity-20 group-hover/activity:opacity-30 transition duration-500"></div>
+            <div className="relative bg-[#0F111A]/80 backdrop-blur-2xl rounded-3xl shadow-2xl border border-white/10 ring-1 ring-white/5 p-6 animate-scale-in">
+                <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-xl font-bold text-white">Hoạt động gần đây</h2>
+                    <button className="text-violet-400 hover:text-violet-300 text-sm font-semibold transition-colors">
+                        Xem tất cả →
+                    </button>
+                </div>
+                <div className="space-y-4">
+                    {activities.map((activity) => (
+                        <div
+                            key={activity.id}
+                            className="flex items-center gap-4 p-4 bg-white/5 rounded-xl hover:bg-white/10 transition-colors border border-white/5 hover:border-violet-500/30"
+                        >
+                            <div className={`${activity.iconBgColor} rounded-full p-3`}>
+                                <svg
+                                    className={`w-6 h-6 ${activity.iconColor}`}
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                >
+                                    {getIcon(activity.type)}
+                                </svg>
+                            </div>
+                            <div className="flex-1">
+                                <p className="font-semibold text-white">{activity.title}</p>
+                                <p className="text-sm text-slate-400">{activity.description}</p>
+                            </div>
+                            <div className="text-right">
+                                <p className={`font-bold ${getAmountColor(activity.type)}`}>
+                                    {activity.amount}
+                                </p>
+                                <p className="text-sm text-slate-400">{activity.price}</p>
+                            </div>
                         </div>
-                        <div className="flex-1">
-                            <p className="font-semibold text-gray-900">{activity.title}</p>
-                            <p className="text-sm text-gray-600">{activity.description}</p>
-                        </div>
-                        <div className="text-right">
-                            <p className={`font-bold ${getAmountColor(activity.type)}`}>
-                                {activity.amount}
-                            </p>
-                            <p className="text-sm text-gray-600">{activity.price}</p>
-                        </div>
-                    </div>
-                ))}
+                    ))}
+                </div>
             </div>
         </div>
     );

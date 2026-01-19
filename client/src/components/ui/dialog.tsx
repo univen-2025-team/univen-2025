@@ -95,7 +95,10 @@ export interface DialogContentProps extends React.HTMLAttributes<HTMLDivElement>
 export function DialogContent({ className, children, ...props }: DialogContentProps) {
     return (
         <div
-            className={cn('w-full max-w-4xl rounded-2xl bg-white shadow-2xl', className)}
+            className={cn(
+                'w-full max-w-4xl rounded-2xl bg-[#0F111A] border border-white/10 shadow-2xl',
+                className
+            )}
             onClick={(e) => e.stopPropagation()}
             {...props}
         >
@@ -115,7 +118,10 @@ export interface DialogTitleProps extends React.HTMLAttributes<HTMLHeadingElemen
 export function DialogTitle({ className, ...props }: DialogTitleProps) {
     return (
         <h3
-            className={cn('text-lg font-semibold leading-none tracking-tight', className)}
+            className={cn(
+                'text-lg font-semibold leading-none tracking-tight text-white',
+                className
+            )}
             {...props}
         />
     );

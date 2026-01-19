@@ -77,6 +77,14 @@ export function MarketStats({
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
             {stats.map((stat, index) => {
                 const Icon = stat.icon;
+                const gradients = [
+                    'from-violet-500 to-purple-500',
+                    'from-emerald-500 to-cyan-500',
+                    'from-red-500 to-orange-500',
+                    'from-amber-500 to-yellow-500',
+                    'from-violet-500 to-pink-500',
+                    'from-blue-500 to-indigo-500'
+                ];
                 return (
                     <div
                         key={index}

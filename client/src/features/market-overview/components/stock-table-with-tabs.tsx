@@ -47,9 +47,9 @@ export function StockTableWithTabs({
     const formatPrice = (price: number | undefined | null) => formatNumber(price) + ' VND';
 
     const getChangeColor = (value: number) => {
-        if (value > 0) return 'text-green-600';
-        if (value < 0) return 'text-red-600';
-        return 'text-yellow-600';
+        if (value > 0) return 'text-emerald-400';
+        if (value < 0) return 'text-red-400';
+        return 'text-yellow-400';
     };
 
     return (
