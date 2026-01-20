@@ -7,6 +7,24 @@ services:
   # Infrastructure Services
   # =============================================================================
 
+  puppeteer:
+    image: browserless/chrome:latest
+    container_name: univen-puppeteer
+    restart: unless-stopped
+    ports:
+      - "3001:3000"
+    environment:
+      # Use a token if needed, or leave empty for no auth. 
+      # Keeping it open for internal dev network.
+      - CONNECTION_TIMEOUT=60000
+    networks:
+      - univen-network
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:3000/" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
   mongodb-dev:
     image: mongo:7
     container_name: univen-mongodb-dev

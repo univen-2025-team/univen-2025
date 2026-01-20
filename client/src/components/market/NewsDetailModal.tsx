@@ -3,15 +3,18 @@
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { ExternalLink, Sparkles, X, Calendar, Newspaper } from 'lucide-react';
+import { ExternalLink, Sparkles, X, Calendar, Newspaper, ArrowRight } from 'lucide-react';
 
 interface NewsItem {
     id?: string;
     title: string;
     full_content?: string;
+    short_content?: string; // Added short_content
     source_link?: string;
     source?: string;
+    source_domain?: string; // Added source_domain
     public_date?: string;
+    image_url?: string; // Added image_url
     images?: string[];
 }
 
@@ -24,16 +27,18 @@ interface NewsDetailModalProps {
 const NewsDetailModal: React.FC<NewsDetailModalProps> = ({ isOpen, onClose, newsItem }) => {
     if (!newsItem) return null;
 
+    const sourceName = newsItem.source_domain || (newsItem.source && newsItem.source !== 'Google News' ? newsItem.source : 'Nguồn tin');
+
     return (
         <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
             <DialogContent className="max-w-3xl h-[85vh] flex flex-col p-0 gap-0 overflow-hidden bg-white/95 backdrop-blur-xl border-white/20 shadow-2xl">
                 {/* Header */}
-                <div className="flex items-start justify-between p-6 pb-2 shrink-0 border-b border-gray-100 bg-white/50">
-                    <div className="pr-8">
+                <div className="flex items-start justify-between p-6 pb-2 shrink-0 border-b border-gray-100 bg-white/50 z-10">
+                    <div className="pr-8 w-full">
                         <div className="flex items-center gap-2 mb-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
                             <span className="flex items-center text-blue-600 bg-blue-50 px-2 py-1 rounded-md">
                                 <Newspaper className="w-3 h-3 mr-1.5" />
-                                {newsItem.source || 'Tin tức'}
+                                {sourceName}
                             </span>
                             <span className="flex items-center text-gray-400">
                                 <Calendar className="w-3 h-3 mr-1.5" />
@@ -55,28 +60,62 @@ const NewsDetailModal: React.FC<NewsDetailModalProps> = ({ isOpen, onClose, news
                 </div>
 
                 {/* Scrollable Content */}
-                <div className="flex-1 overflow-y-auto p-6 md:p-8 custom-scrollbar">
-                    {newsItem.full_content ? (
-                        <div
-                            className="prose prose-blue prose-lg max-w-none 
-                                prose-headings:font-bold prose-headings:text-gray-800 
-                                prose-p:text-gray-600 prose-p:leading-relaxed 
-                                prose-a:text-blue-600 prose-a:no-underline hover:prose-a:underline
-                                prose-img:rounded-xl prose-img:shadow-md prose-img:w-full prose-img:object-cover
-                                [&>img]:max-h-[500px]"
-                            dangerouslySetInnerHTML={{ __html: newsItem.full_content }}
-                        />
-                    ) : (
-                        <div className="flex flex-col items-center justify-center h-full text-gray-400 space-y-4 py-20">
-                            <div className="bg-gray-50 p-6 rounded-full">
-                                <ExternalLink className="w-12 h-12 opacity-20" />
-                            </div>
-                            <p className="text-center max-w-md">
-                                Nội dung chi tiết chưa được tải hoặc không khả dụng cho tin này.
-                                <br />Vui lòng xem trực tiếp tại nguồn.
-                            </p>
+                <div className="flex-1 overflow-y-auto custom-scrollbar">
+                    {/* Hero Image */}
+                    {newsItem.image_url && (
+                        <div className="w-full h-64 md:h-80 relative">
+                            <img
+                                src={newsItem.image_url}
+                                alt={newsItem.title}
+                                className="w-full h-full object-cover"
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-white via-transparent to-transparent opacity-50"></div>
                         </div>
                     )}
+
+                    <div className="p-6 md:p-8 pt-4">
+                        {newsItem.full_content ? (
+                            <div
+                                className="prose prose-blue prose-lg max-w-none 
+                                    prose-headings:font-bold prose-headings:text-gray-800 
+                                    prose-p:text-gray-600 prose-p:leading-relaxed 
+                                    prose-a:text-blue-600 prose-a:no-underline hover:prose-a:underline
+                                    prose-img:rounded-xl prose-img:shadow-md prose-img:w-full prose-img:object-cover
+                                    [&>img]:max-h-[500px]"
+                                dangerouslySetInnerHTML={{ __html: newsItem.full_content }}
+                            />
+                        ) : newsItem.short_content ? (
+                            <div className="space-y-6">
+                                <p className="text-lg text-gray-700 leading-relaxed font-medium">
+                                    {newsItem.short_content}
+                                </p>
+                                <div className="p-4 bg-gray-50 rounded-lg border border-gray-100 flex flex-col items-center text-center gap-3">
+                                    <p className="text-sm text-gray-500">
+                                        Bài viết đầy đủ chưa được tải. Vui lòng xem tiếp tại nguồn gốc.
+                                    </p>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="gap-2 text-blue-600"
+                                        onClick={() => window.open(newsItem.source_link, '_blank')}
+                                    >
+                                        Đọc tiếp tại {sourceName}
+                                        <ArrowRight className="w-4 h-4" />
+                                    </Button>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="flex flex-col items-center justify-center h-full text-gray-400 space-y-4 py-10">
+                                <div className="bg-gray-50 p-6 rounded-full">
+                                    <ExternalLink className="w-12 h-12 opacity-20" />
+                                </div>
+                                <p className="text-center max-w-md">
+                                    Nội dung chi tiết chưa được tải hoặc không khả dụng cho tin này.
+                                    <br />Vui lòng xem trực tiếp tại nguồn.
+                                </p>
+                            </div>
+                        )}
+                    </div>
                 </div>
 
                 {/* Footer Actions */}

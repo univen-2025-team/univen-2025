@@ -15,6 +15,7 @@ interface NewsItem {
     image_url?: string;
     public_date?: string;
     source?: string;
+    source_domain?: string;
     images?: string[];
 }
 
@@ -86,8 +87,9 @@ const NewsFeed: React.FC<NewsFeedProps> = ({ symbol, className = '', filterRange
 
     // Helper to extract source
     const getSource = (item: NewsItem) => {
-        // If source exists and is not generic Google News, use it
-        if (item.source && item.source !== 'Google News') return item.source;
+        // Prefer source_domain or source field if available and not Google News
+        if (item.source_domain) return item.source_domain;
+        if (item.source && item.source !== 'Google News' && item.source !== 'Tin tức tổng hợp') return item.source;
 
         // Try parsing title "Title - Source"
         if (item.title && item.title.includes(' - ')) {

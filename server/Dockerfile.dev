@@ -7,10 +7,23 @@ WORKDIR /app
 COPY package.json package-lock.json* ./
 
 # Install dependencies (including devDependencies for tsx) and tzdata for timezone support
-RUN apk add --no-cache tzdata && npm install --legacy-peer-deps
+# Add Chromium and dependencies for Puppeteer
+RUN apk add --no-cache \
+    tzdata \
+    chromium \
+    nss \
+    freetype \
+    harfbuzz \
+    ca-certificates \
+    ttf-freefont \
+    && npm install --legacy-peer-deps
+
+# Puppeteer Environment Variables
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
 
 # Expose port
-EXPOSE 5000
+EXPOSE 4000
 
 # Start dev server with tsx watch mode (works without bun)
 CMD ["npx", "tsx", "watch", "server.ts"]

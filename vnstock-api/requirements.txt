@@ -10,3 +10,5 @@ redis==5.0.1
 minio==7.2.3
 googlenewsdecoder==0.1.7
 selectolax==0.4.6
+trafilatura==1.6.3
+pyppeteer==1.0.2

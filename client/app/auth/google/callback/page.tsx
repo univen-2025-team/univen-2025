@@ -36,9 +36,9 @@ export default function GoogleCallbackPage() {
         }
 
         // Save to Redux store (Redux Persist will save to localStorage)
-        dispatch(setTokens({ 
-          accessToken: token.accessToken, 
-          refreshToken: token.refreshToken 
+        dispatch(setTokens({
+          accessToken: token.accessToken,
+          refreshToken: token.refreshToken
         }));
         dispatch(setUser(user));
 
@@ -46,13 +46,13 @@ export default function GoogleCallbackPage() {
 
         // Redirect to dashboard
         setTimeout(() => {
-          router.push('/');
+          router.push('/dashboard');
         }, 1000);
       } catch (err) {
         console.error('Google OAuth callback error:', err);
         setError(err instanceof Error ? err.message : 'Authentication failed');
         setIsProcessing(false);
-        
+
         // Redirect to login after 3 seconds
         setTimeout(() => {
           router.push('/auth/login');
