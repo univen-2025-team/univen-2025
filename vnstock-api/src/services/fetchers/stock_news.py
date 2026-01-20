@@ -1,17 +1,257 @@
 
 from datetime import datetime
 import requests
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 import time
 from typing import Dict, List
 import urllib.parse
 from bs4 import BeautifulSoup
 from src.core.vnstock_client import VnstockClient
+import concurrent.futures
+from urllib.parse import urlparse
+from googlenewsdecoder import new_decoderv1
+import trafilatura
+import asyncio
+from pyppeteer import connect
+import logging
 
 class StockNewsFetcher:
     def __init__(self, symbol):
         self.symbol = symbol
         self.original_symbol = symbol
         self.client = VnstockClient.get_instance()
+        
+        # Initialize Session with Connection Pooling
+        self.session = requests.Session()
+        retry_strategy = Retry(
+            total=3,
+            backoff_factor=1,
+            status_forcelist=[429, 500, 502, 503, 504],
+        )
+        adapter = HTTPAdapter(pool_connections=20, pool_maxsize=20, max_retries=retry_strategy)
+        self.session.mount("https://", adapter)
+        self.session.mount("http://", adapter)
+        self.session.headers.update({
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+        })
+
+    async def resolve_via_puppeteer_async(self, url: str):
+        browser = None
+        page = None
+        try:
+            # Connect to browserless/chrome container
+            # Using 'ws://puppeteer:3000' as defined in docker-compose.dev.yml
+            browser = await connect(browserWSEndpoint='ws://puppeteer:3000', logLevel=logging.ERROR)
+            page = await browser.newPage()
+            
+            await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36')
+            
+            logging.info(f"[Puppeteer] Navigating to {url}")
+            # Relaxed wait condition for Google News which loads endlessly
+            await page.goto(url, {'waitUntil': 'domcontentloaded', 'timeout': 30000})
+            logging.info(f"[Puppeteer] Navigation done. URL: {page.url}")
+            
+            # Wait for redirect if needed (simple check)
+            try:
+                await page.waitForFunction(
+                    "() => !window.location.hostname.includes('news.google.com') && !window.location.hostname.includes('google.com')",
+                    {'timeout': 10000}
+                )
+            except Exception as e_wait:
+                logging.info(f"[Puppeteer] Wait for redirect timeout: {e_wait}")
+                pass
+
+            # Handle "Redirect Notice"
+            redirect_link = await page.evaluate('''() => {
+                const anchors = Array.from(document.querySelectorAll('a'));
+                const ignored = [
+                     'google.com/sorry',
+                     'support.google.com',
+                     'accounts.google.com',
+                     'gstatic.com',
+                     'policies.google.com',
+                     'consent.google.com',
+                     'myaccount.google.com',
+                     'google.com/search'
+                ];
+                const target = anchors.find(a => 
+                    a.href && !ignored.some(ignore => a.href.includes(ignore))
+                );
+                return target ? target.href : null;
+            }''')
+
+            if redirect_link:
+                print(f"[Puppeteer] Found redirect link: {redirect_link}")
+                try:
+                    await page.goto(redirect_link, {'waitUntil': 'domcontentloaded', 'timeout': 30000})
+                except Exception as e_nav:
+                     print(f"[Puppeteer] Redirect navigation failed: {e_nav}")
+                     pass
+            
+            # Wait a bit for render
+            await asyncio.sleep(2)
+            
+            final_url = page.url
+            
+            # Unwrap google redirect if needed
+            if 'google.com/url' in final_url and 'q=' in final_url:
+                 try:
+                     parsed = urllib.parse.urlparse(final_url)
+                     qs = urllib.parse.parse_qs(parsed.query)
+                     if 'q' in qs:
+                         final_url = qs['q'][0]
+                 except: pass
+
+            if 'google.com/sorry' in final_url:
+                print("[Puppeteer] Blocked by Google (CAPTACHA/Sorry page).")
+                # We can't do much here without residential proxy or solving captcha
+                return final_url, ""
+
+            # Check for block/redirect again after navigation attempt
+            content = await page.content()
+            
+            # Check for block/redirect again after navigation attempt
+            
+            # Helper to find redirect link if we are stuck on a notice
+
+            # Helper to find redirect link if we are stuck on a notice
+            if "Redirect Notice" in content or "invalid web address" in content or "previous" in content.lower() or "google" in page.url and "sorry" in page.url or "consent" in page.url or "c-wiz" in content:
+                 logging.warning("[Puppeteer] Detected Redirect/Warning/Consent page. Attempting to bypass...")
+                 
+                 
+                 # Debug: Check innerText and ShadowRoot (Commented out for production)
+                 # text_debug = await page.evaluate(...)
+
+
+                 bypass_link = await page.evaluate('''() => {
+                    const anchors = Array.from(document.querySelectorAll('a'));
+                    
+                    // Filter out system links
+                    const ignored = [
+                         'policies.google.com',
+                         'support.google.com',
+                         'accounts.google.com',
+                         'gstatic.com',
+                         'apis.google.com',
+                         'myaccount.google.com'
+                    ];
+                    
+                    const candidates = anchors.filter(a => 
+                        a.href && a.href.startsWith('http') && !ignored.some(ignore => a.href.includes(ignore))
+                    );
+
+                    if (candidates.length > 0) {
+                        return candidates[0].href;
+                    }
+                    return null;
+                 }''')
+                 
+                 # Strategy 2: Python-side Regex if JS fails
+                 if not bypass_link:
+                     logging.info("[Puppeteer] JS found no links. Trying Regex on content...")
+                     import re
+                     # Find http/https urls
+                     regex_links = re.findall(r'(https?://[^\s"\'<>]+)', content)
+                     
+                     ignored_domains = [
+                         'google.com', 'gstatic.com', 'w3.org', 'schema.org', 
+                         'googleapis.com', 'googletagmanager.com', 'facebook.com', 
+                         'twitter.com', 'linkedin.com', 'pinterest.com',
+                         'googleusercontent.com', 'bp.blogspot.com', 'blogger.com',
+                         'angular.dev'
+                     ]
+                     
+                     valid_links = []
+                     for link in regex_links:
+                         # Basic cleaning
+                         link = link.strip()
+                         # Skip if common file extension for assets
+                         if any(link.endswith(ext) for ext in ['.css', '.js', '.png', '.jpg', '.ico', '.svg']):
+                             continue
+                         # Skip ignored domains
+                         if any(ig in link for ig in ignored_domains):
+                             continue
+                         # Skip duplicate current url
+                         if link == page.url:
+                             continue
+                             
+                         valid_links.append(link)
+                     
+                     if valid_links:
+                         bypass_link = valid_links[0]
+                         logging.info(f"[Puppeteer] Regex found potential bypass link: {bypass_link}")
+
+                 if bypass_link:
+                     logging.info(f"[Puppeteer] Found bypass link: {bypass_link}")
+                     try:
+                         await page.goto(bypass_link, {'waitUntil': 'domcontentloaded', 'timeout': 30000})
+                         # Update final URL and content after bypass
+                         final_url = page.url
+                         content = await page.content()
+                     except Exception as e_bypass:
+                         logging.info(f"[Puppeteer] Bypass navigation failed: {e_bypass}")
+                 else:
+                     # Attempt to find ANY element with keywords
+                     logging.info("[Puppeteer] No link/button found. Searching text...")
+                     clicked_target = await page.evaluate('''() => {
+                         // Keywords to look for
+                         const keywords = ['accept', 'agree', 'continue', 'consent', 'tiếp tục', 'đồng ý', 'chấp nhận', 'tôi đồng ý', 'i agree', 'verify'];
+                         
+                         // Helper to find text node or element containing text
+                         // We iterate all elements? Expensive but necessary.
+                         const all = document.querySelectorAll('div, span, button, a, input, [role="button"]');
+                         for (let el of all) {
+                             // Check if this element is visible-ish
+                             if (el.offsetParent === null) continue;
+                             
+                             const text = (el.innerText || el.value || "").toLowerCase().trim();
+                             // exact match preferentially, or contains
+                             if (keywords.includes(text)) {
+                                 el.click();
+                                 return "Exact: " + text;
+                             }
+                         }
+                         
+                         // Second pass: contains
+                         for (let el of all) {
+                             if (el.offsetParent === null) continue;
+                             const text = (el.innerText || el.value || "").toLowerCase().trim();
+                             if (keywords.some(k => text.includes(k)) && text.length < 50) {
+                                 el.click();
+                                 return "Contains: " + text;
+                             }
+                         }
+                         return null;
+                     }''')
+                     
+                     if clicked_target:
+                         logging.info(f"[Puppeteer] Clicked text target: {clicked_target}")
+                         await asyncio.sleep(3) # Wait for click effect
+                         final_url = page.url
+                         content = await page.content()
+                     else:
+                         logging.info("[Puppeteer] Blocked: Could not find bypass link OR click target.")
+                         return final_url, ""
+            
+            # Final check - if we are still on a block page despite efforts
+            if "Redirect Notice" in content or "invalid web address" in content:
+                 return final_url, ""
+
+            return final_url, content
+
+        except Exception as e:
+            print(f"Puppeteer Async Error: {e}")
+            return "", ""
+        finally:
+            if page:
+                try:
+                    await page.close()
+                except: pass
+            if browser:
+                try:
+                    await browser.disconnect()
+                except: pass
 
     def fetch_smart(self, missing_dates: List[str]) -> Dict[str, List[Dict]]:
         """
@@ -21,9 +261,6 @@ class StockNewsFetcher:
             return {}
 
         needed_dates = set(missing_dates)
-        # Sort to find oldest
-        # But RSS is always latest. We can't really pagination back in history easily with RSS.
-        # But Google News RSS usually gives 100 items. That might cover 30 days.
         
         grouped_news = {d: [] for d in needed_dates}
         
@@ -31,10 +268,6 @@ class StockNewsFetcher:
             url = "https://cafef.vn/thi-truong-chung-khoan.rss"
             source_name = "CafeF"
         elif self.symbol == 'VN30':
-             # Try CafeF for VN30 if possible, otherwise fallback to Google
-             # CafeF doesn't have specific VN30 RSS, but market RSS covers it.
-             # Let's stick to Google for VN30 specific to be safe, or just use Market RSS?
-             # User probably wants Market News generally.
              query = "Chỉ số VN30"
              url = f"https://news.google.com/rss/search?q={urllib.parse.quote(query)}&hl=vi&gl=VN&ceid=VN:vi"
              source_name = "Google News"
@@ -46,7 +279,7 @@ class StockNewsFetcher:
         print(f"[{self.symbol}] Fetching news via {source_name}: {url}")
         
         try:
-            resp = requests.get(url, timeout=15)
+            resp = self.session.get(url, timeout=15)
             if resp.status_code != 200:
                 print(f"RSS Error: {resp.status_code}")
                 return grouped_news
@@ -65,15 +298,12 @@ class StockNewsFetcher:
                 title = title_tag.text if title_tag else "No Title"
                 title = title.replace("<![CDATA[", "").replace("]]>", "").strip()
 
-                # Parse Source from Title is backup. Source tag is primary.
                 real_source = source_name
                 
                 if source_tag:
-                     # Use the source tag text (e.g. "VnEconomy")
                      if source_tag.text:
                          real_source = source_tag.text.strip()
                 
-                # Fallback to Title parsing if source tag failed or is generic
                 if (real_source == "Google News" or not real_source) and " - " in title:
                     parts = title.rsplit(" - ", 1)
                     if len(parts) == 2:
@@ -84,7 +314,6 @@ class StockNewsFetcher:
                 if not link and link_tag and link_tag.next_sibling:
                     link = link_tag.next_sibling.strip()
                 
-                # Image & Source Extraction from Description
                 image_url = ""
                 short_content = ""
                 
@@ -92,28 +321,21 @@ class StockNewsFetcher:
                     desc_text = desc_tag.text
                     desc_soup = BeautifulSoup(desc_text, 'html.parser')
                     
-                    # 1. Try Image
                     img_node = desc_soup.find('img')
                     if img_node and img_node.get('src'):
                         image_url = img_node['src']
                     
-                    # 2. Try Source from <font> (Google News standard)
-                    # e.g. <font color="#6f6f6f">VnEconomy</font>
-                    # Sometimes it's a span/div depending on variation, but font is common in RSS.
                     font_node = desc_soup.find('font', color="#6f6f6f")
                     if font_node and font_node.text:
                          potential_source = font_node.text.strip()
                          if potential_source and real_source == "Google News":
                              real_source = potential_source
                     
-                    # Extract text content as short description
                     short_content = desc_soup.get_text().strip()
 
-                # Source Tag Parsing Fix (html.parser treats <source> as void)
                 if real_source == "Google News" and source_tag:
                      if source_tag.text.strip():
                          real_source = source_tag.text.strip()
-                     # If text is empty, it might be next sibling due to parser issue
                      elif source_tag.next_sibling and isinstance(source_tag.next_sibling, str):
                          text_sibling = source_tag.next_sibling.strip()
                          if text_sibling:
@@ -122,18 +344,13 @@ class StockNewsFetcher:
                 raw_date = pubdate_tag.text if pubdate_tag else ""
                 
                 try:
-                    # CafeF Date Format: Mon, 19 Jan 2026 10:30:00 +0700 (or similar)
-                    # Google Date Format: Mon, 19 Jan 2026 10:30:00 GMT
                     pdate_clean = raw_date.replace("GMT", "+0000")
                     dt_obj = datetime.strptime(pdate_clean, "%a, %d %b %Y %H:%M:%S %z").date()
                 except Exception as e:
-                    # Try another format for CafeF (2-digit year or other variations)
                     try:
-                         # Fallback 1: cafeF 2-digit year "Mon, 19 Jan 26 ..."
                          dt_obj = datetime.strptime(pdate_clean, "%a, %d %b %y %H:%M:%S %z").date()
                     except:
                         try:
-                            # Fallback 2: Raw date without GMT fix?
                             dt_obj = datetime.strptime(raw_date, "%a, %d %b %Y %H:%M:%S %z").date()
                         except Exception as e2:
                             print(f"Date parse fail '{raw_date}': {e2}")
@@ -145,7 +362,6 @@ class StockNewsFetcher:
                     'id': link,
                     'title': title,
                     'short_content': short_content,
-                    # Fallback Source Name from Title "Title - SourceName"
                     'source': real_source if real_source != "Google News" else (title.split(' - ')[-1] if ' - ' in title else "Google News"),
                     'full_content': '',
                     'source_link': link,
@@ -157,7 +373,7 @@ class StockNewsFetcher:
                 if dt_str in grouped_news:
                     grouped_news[dt_str].append(clean_item)
                 
-                # Simulation Logic (Shift +1 year)
+                # Simulation Logic
                 try:
                      fake_next_year_dt = dt_obj.replace(year=dt_obj.year + 1)
                      fake_next_year = str(fake_next_year_dt)
@@ -168,32 +384,19 @@ class StockNewsFetcher:
                 except:
                     pass
             
-            # --- Image & Source Resolution Stage ---
-            # Collect items that need resolution (Full Content, Image, Real Source)
-            # We want to resolve redirects/decode for Google News, and just fetch content for others.
-            import concurrent.futures
-            from urllib.parse import urlparse
-            from googlenewsdecoder import new_decoderv1
-            
+            # --- Resolution Stage ---
             items_to_resolve = []
-            # Iterate over ALL news items from this fetch session
             if grouped_news:
                 for date_key in grouped_news:
                     for item in grouped_news[date_key]:
-                        # Only resolve if content is missing?
-                        # Or checking if it's new? 
-                        # Since grouped_news contains new items (or filtered ones), we should process them.
                         items_to_resolve.append(item)
             
-            # Limit resolution if too many (to avoid timeouts) - but we want content for all.
-            # User request: Fetch ALL content regardless of number.
             MAX_RESOLVE = 10000
             if len(items_to_resolve) > MAX_RESOLVE:
                  items_to_resolve = items_to_resolve[:MAX_RESOLVE]
 
             if items_to_resolve:
-                # print(f"[{self.symbol}] Resolving details for {len(items_to_resolve)} items...")
-                
+                # Resolve using shared session
                 def resolve_item_details(item):
                     try:
                         url = item.get('source_link', '')
@@ -204,7 +407,6 @@ class StockNewsFetcher:
                         
                         # 1. Determine Final URL
                         if "news.google.com" in url:
-                             # Decode Google News URL
                             try:
                                 decoded = new_decoderv1(url)
                                 if decoded.get('status') and decoded.get('decoded_url'):
@@ -213,19 +415,14 @@ class StockNewsFetcher:
                             except:
                                 pass
                             
-                            # Fallback: Try to fetch and look for JS redirect
                             if not final_url:
                                 try:
-                                    # Google Link
-                                    r_check = requests.get(url, headers={'User-Agent': 'Mozilla/5.0...'}, timeout=5)
-                                    if r_check.status_code == 200:
-                                        # Parse with BS4 to find the main link
+                                    r_check = self.session.get(url, timeout=10, allow_redirects=True)
+                                    if r_check.history:
+                                        final_url = r_check.url
+                                    
+                                    if "news.google.com" in final_url or "google.com/url" in final_url:
                                         soup_check = BeautifulSoup(r_check.content, 'html.parser')
-                                        # Google redirect usually has a central link "Click here"
-                                        # Or simple <a href="...">
-                                        # Or in script window.location.replace
-                                        
-                                        # Method A: Find First A tag that doesn't contain google
                                         found_link = None
                                         for a in soup_check.find_all('a', href=True):
                                             href = a['href']
@@ -236,102 +433,173 @@ class StockNewsFetcher:
                                         if found_link:
                                             final_url = found_link
                                         else:
-                                            # Method B: Regex in scripts
                                             import re
                                             urls = re.findall(r'(https?://[^"\'>\s]+)', r_check.text)
-                                            # rigorous filter
                                             valid = [u for u in urls if 'google' not in u and 'w3.org' not in u and 'gstatic' not in u and 'googleusercontent' not in u and 'angular.dev' not in u]
                                             if valid:
                                                 final_url = valid[0]
                                                 
-                                        if final_url:
-                                            try:
-                                                domain = urlparse(final_url).netloc.replace('www.', '')
-                                            except: pass
+                                    if final_url:
+                                        try:
+                                            domain = urlparse(final_url).netloc.replace('www.', '')
+                                        except: pass
                                 except:
                                     pass
                         else:
-                            # Direct link (CafeF, etc)
                             final_url = url
                             try:
                                 domain = urlparse(final_url).netloc.replace('www.', '')
                             except: pass
                         
+                            final_url = url
+                            try:
+                                domain = urlparse(final_url).netloc.replace('www.', '')
+                            except: pass
+                        
+                        # 3. Puppeteer Service Fallback (Node.js API)
+                        # Used if we still don't have a resolved URL or if it's still a Google/CBM link
+                        # CBM links are 160+ chars usually or contain 'rss/articles'
+                        is_google_link = "news.google.com" in final_url or "google.com" in final_url
+                        if not final_url or is_google_link: 
+                            if not final_url: final_url = url
+                            
+                            # Only call API for likely complex links (CBM) to save resources
+                            if "rss/articles" in final_url or len(final_url) > 100:
+                                try:
+                                    # Use Pyppeteer directly via asyncio.run
+                                    # Since we are in a thread (ThreadPoolExecutor), asyncio.run creates a new loop for this thread.
+                                    # This is safe.
+                                    p_final_url, p_html = asyncio.run(self.resolve_via_puppeteer_async(final_url))
+                                    
+                                    if p_final_url and "google" not in p_final_url:
+                                        final_url = p_final_url
+                                        try:
+                                            domain = urlparse(final_url).netloc.replace('www.', '')
+                                        except: pass
+                                    
+                                    if p_html and len(p_html) > 1000:
+                                         full_content = trafilatura.extract(p_html, include_images=True, include_links=True, output_format="html")
+                                         
+                                         if full_content:
+                                              logging.info(f"[Puppeteer SUCCESS] Synced Content for {final_url}")
+                                              logging.info(f"[Puppeteer Content] Length: {len(full_content)}")
+                                              logging.info(f"[Puppeteer Content] Snippet: {full_content[:500]}...")
+                                         
+                                         if not img_url and p_html:
+                                             try:
+                                                 p_soup = BeautifulSoup(p_html, 'html.parser')
+                                                 og_p = p_soup.find('meta', property='og:image')
+                                                 if og_p and og_p.get('content'):
+                                                     img_url = og_p.get('content')
+                                             except: pass
+
+                                except Exception as e_p:
+                                    print(f"Puppeteer Service Error: {e_p}")
+                                    pass
+
                         if not final_url: 
-                            final_url = url # fallback
-                        
+                            final_url = url
 
-                        # 2. Fetch Content
-                        headers = {
-                            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-                        }
-                        r = requests.get(final_url, headers=headers, timeout=10)
-                        
+                        # 2. Fetch Content (Trafilatura)
                         full_content = ""
-                        if r.status_code == 200:
-                            s = BeautifulSoup(r.content, 'html.parser')
-                            
-                            # A. Extract Image common tags
-                            og = s.find('meta', property='og:image')
-                            if og and og.get('content'):
-                                img_url = og.get('content')
-                            
-                            # B. Extract Full Content (Heuristic)
-                            # Remove unwanted elements
-                            for unwanted in s(['script', 'style', 'nav', 'header', 'footer', 'iframe', 'noscript', 'aside']):
-                                unwanted.decompose()
-                                
-                            # Try common article containers
-                            article = None
-                            # Priority list of selectors
-                            selectors = [
-                                {'class_': ['content_detail', 'detail-content', 'content-detail', 'article-body', 'post-content']},
-                                {'id': ['mainContent', 'content']},
-                                'article'
-                            ]
-                            
-                            for sel in selectors:
-                                if isinstance(sel, dict):
-                                    # Search by class or id
-                                    for key, values in sel.items():
-                                        for val in values:
-                                            found = s.find('div', **{key: val}) or s.find('section', **{key: val})
-                                            if found:
-                                                article = found
-                                                break
-                                        if article: break
-                                elif isinstance(sel, str):
-                                    # Tag name
-                                    found = s.find(sel)
-                                    if found: article = found
-                                if article: break
-                            
-                            if article:
-                                # 1. Extract all images from the article content
-                                content_images = []
-                                for img in article.find_all('img'):
-                                    src = img.get('src') or img.get('data-src')
-                                    if src and src.startswith('http'):
-                                        content_images.append(src)
-                                
-                                # 2. Set fields
-                                if content_images:
-                                    img_url = content_images[0]
-                                    item['images'] = content_images
-                                
-                                full_content = str(article)
-                            else:
-                                pass # No article found
-                        else:
-                             pass # Fetch failed
+                        
+                        try:
+                            # Skip if still a Google link (bypass failed)
+                            if "google.com" in final_url or "news.google.com" in final_url:
+                                 raise Exception("Skipping Google Redirect fetch")
 
+                            # Trafilatura fetch_url uses its own requests logic usually, but we can pass explicit html? 
+                            # Or just use fetch_url. It is robust. 
+                            # To use our session with trafilatura is harder, but fetch_url is good.
+                            # However, to avoid pool issues, we might want to download with our session and pass to trafilatura.extract.
+                            
+                            # Download with our session
+                            r_content = self.session.get(final_url, timeout=10)
+                            if r_content.status_code == 200:
+                                downloaded = r_content.text
+                                
+                                # Extract metadata
+                                result_meta = trafilatura.extract(downloaded, include_images=True, output_format="xml", with_metadata=True)
+                                
+                                if result_meta:
+                                    from lxml import html as lxml_html
+                                    tree = lxml_html.fromstring(downloaded)
+                                    og_img = tree.xpath('//meta[@property="og:image"]/@content')
+                                    if og_img:
+                                        img_url = og_img[0]
+                                    
+                                    content_html = trafilatura.extract(downloaded, include_images=True, include_links=True, output_format="html")
+                                    if content_html:
+                                        # Filter out garbage content
+                                        clean_check = BeautifulSoup(content_html, 'html.parser').get_text(separator=' ', strip=True)
+                                        if clean_check in ["Google News", "Redirect Notice"] or len(clean_check) < 50:
+                                            full_content = ""
+                                        else:
+                                            full_content = content_html
+                                            c_soup = BeautifulSoup(content_html, 'html.parser')
+                                            for img in c_soup.find_all('img'):
+                                                src = img.get('src')
+                                                if src and src.startswith('http'):
+                                                    content_images.append(src)
+                                    
+                                    if not img_url and content_images:
+                                        img_url = content_images[0]
+                            else:
+                                raise Exception(f"Status {r_content.status_code}")
+
+                        except Exception as e:
+                            # Fallback Legacy
+                            # Use session here too
+                            r = self.session.get(final_url, timeout=10)
+                            if r.status_code == 200:
+                                s = BeautifulSoup(r.content, 'html.parser')
+                                og = s.find('meta', property='og:image')
+                                if og and og.get('content'):
+                                    img_url = og.get('content')
+                                
+                                for unwanted in s(['script', 'style', 'nav', 'header', 'footer', 'iframe', 'noscript', 'aside']):
+                                    unwanted.decompose()
+                                    
+                                article = None
+                                selectors = [
+                                    {'class_': ['content_detail', 'detail-content', 'content-detail', 'article-body', 'post-content']},
+                                    {'id': ['mainContent', 'content']},
+                                    'article'
+                                ]
+                                
+                                for sel in selectors:
+                                    if isinstance(sel, dict):
+                                        for key, values in sel.items():
+                                            for val in values:
+                                                found = s.find('div', **{key: val}) or s.find('section', **{key: val})
+                                                if found:
+                                                    article = found
+                                                    break
+                                            if article: break
+                                    elif isinstance(sel, str):
+                                        found = s.find(sel)
+                                        if found: article = found
+                                    if article: break
+                                
+                                if article:
+                                    content_images = []
+                                    for img in article.find_all('img'):
+                                        src = img.get('src') or img.get('data-src')
+                                        if src and src.startswith('http'):
+                                            content_images.append(src)
+                                    
+                                    if content_images and not img_url:
+                                        img_url = content_images[0]
+                                        
+                                    full_content = str(article)
+                        
                         return item, final_url, domain, img_url, full_content, content_images
                     except Exception as e:
-                        print(f"Resolve Error: {e}")
+                        print(f"Resolve Error for {item.get('id')}: {e}")
                         pass
                     return item, "", "", "", "", []
 
-                with concurrent.futures.ThreadPoolExecutor(max_workers=8) as executor:
+                with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
                     futures = [executor.submit(resolve_item_details, item) for item in items_to_resolve]
                     for future in concurrent.futures.as_completed(futures):
                         item, final_url, domain, img_url, full_content, content_images = future.result()
@@ -348,23 +616,21 @@ class StockNewsFetcher:
                              except: pass
 
                         if full_content:
-                            item['full_content'] = full_content
-                            # Update short_content if empty or too short
-                            if len(item.get('short_content', '')) < 50:
-                                clean = BeautifulSoup(full_content, 'html.parser').get_text(separator=' ', strip=True)
-                                item['short_content'] = clean[:200] + '...'
+                            # Filter out garbage content
+                            clean_check = BeautifulSoup(full_content, 'html.parser').get_text(separator=' ', strip=True)
+                            if clean_check in ["Google News", "Redirect Notice"] or len(clean_check) < 50:
+                                full_content = ""
+                            else:
+                                item['full_content'] = full_content
+                                item['short_content'] = clean_check[:200] + '...'
 
-                        # Source Logic
                         if domain and "google.com" not in domain:
                             if ' - ' in item.get('title', ''):
                                 pass 
                             else:
                                 item['source'] = domain
-                        
-                        # Update Image Logic
                         if img_url:
                              item['image_url'] = img_url
-                        
                         if content_images:
                               item['images'] = content_images
             

@@ -94,7 +94,8 @@ ScheduledService.startScheduledService();
 /*                           Routes                           */
 /* ---------------------------------------------------------- */
 // Append newest API version if not found
-app.use([`/${API_VERSION}/api`, '/'], rootRoute);
+// app.use([`/${API_VERSION}/api`, '/'], rootRoute);
+app.use('/', rootRoute);
 
 // Static files
 app.use('/static', express.static(path.join(__dirname, '../public')));

@@ -9,6 +9,9 @@ export interface INewsItem {
     image_url?: string;
     public_date?: string; // Stored as ISO string or YYYY-MM-DD
     price_change_pct?: number;
+    source?: string;
+    source_domain?: string;
+    images?: string[];
 }
 
 export interface IStockNews extends Document {
@@ -27,7 +30,10 @@ const NewsItemSchema = new Schema({
     source_link: { type: String },
     image_url: { type: String },
     public_date: { type: String },
-    price_change_pct: { type: Number }
+    price_change_pct: { type: Number },
+    source: { type: String },
+    source_domain: { type: String },
+    images: { type: [String], default: [] }
 }, { _id: false });
 
 const StockNewsSchema = new Schema({

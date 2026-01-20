@@ -12,6 +12,8 @@ import mediaRoute from './media/index.js';
 
 const rootRoute = Router();
 
+// Route child
+
 /* -------------------------- Auth -------------------------- */
 rootRoute.use('/auth', authRoute);
 
@@ -32,5 +34,10 @@ rootRoute.use('/market', marketCacheRoute);
 
 /* -------------------------- Media -------------------------- */
 rootRoute.use('/media', mediaRoute);
+
+/* -------------------------- Tools -------------------------- */
+import toolsRoute from './tools.route.js';
+rootRoute.use('/tools', toolsRoute);
+
 
 export default rootRoute;
