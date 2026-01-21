@@ -55,7 +55,7 @@ export function VN30IndexCard({
                         </div>
                         <div>
                             <div className="flex items-center gap-2">
-                                <h2 className="text-lg font-bold text-gray-900 tracking-tight">VN30 Index</h2>
+                                <h2 className="text-lg font-bold text-gray-900 tracking-tight">Chỉ số VN30</h2>
                                 {isConnected && realtimeEnabled && (
                                     <span className="relative flex h-2 w-2">
                                         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
@@ -104,7 +104,7 @@ export function VN30IndexCard({
                                 }`}
                         >
                             <Zap className={`w-3.5 h-3.5 ${realtimeEnabled ? 'fill-indigo-600 text-indigo-600' : ''}`} />
-                            {realtimeEnabled ? 'LIVE' : 'OFF'}
+                            {realtimeEnabled ? 'BẬT' : 'TẮT'}
                         </button>
                     </div>
                 </div>
@@ -114,7 +114,7 @@ export function VN30IndexCard({
                     <div className="mt-5 flex items-center justify-between pt-3 border-t border-gray-100">
                         <div className="flex items-center gap-1.5 text-[10px] sm:text-xs font-medium text-gray-400">
                             <Clock className="w-3 h-3" />
-                            <span>Updated: {lastUpdate}</span>
+                            <span>Cập nhật: {lastUpdate}</span>
                         </div>
                     </div>
                 )}

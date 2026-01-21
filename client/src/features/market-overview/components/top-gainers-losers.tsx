@@ -99,7 +99,7 @@ export function TopGainersLosers({ gainers, losers, onStockClick, onBuyClick }: 
                             <TrendingDown className="w-4 h-4" />
                         </div>
                     )}
-                    Top Movers
+                    Top Biến Động
                 </h3>
                 <div className="flex bg-gray-100 p-1 rounded-lg">
                     <button
@@ -109,7 +109,7 @@ export function TopGainersLosers({ gainers, losers, onStockClick, onBuyClick }: 
                             : 'text-gray-500 hover:text-gray-900'
                             }`}
                     >
-                        Gainers
+                        Tăng giá
                     </button>
                     <button
                         onClick={() => setActiveTab('losers')}
@@ -118,7 +118,7 @@ export function TopGainersLosers({ gainers, losers, onStockClick, onBuyClick }: 
                             : 'text-gray-500 hover:text-gray-900'
                             }`}
                     >
-                        Losers
+                        Giảm giá
                     </button>
                 </div>
             </div>
@@ -131,7 +131,7 @@ export function TopGainersLosers({ gainers, losers, onStockClick, onBuyClick }: 
                         <div className="w-12 h-12 bg-gray-50 rounded-full flex items-center justify-center mb-2">
                             <Activity className="w-6 h-6 text-gray-300" />
                         </div>
-                        <p className="text-sm font-medium">No market data</p>
+                        <p className="text-sm font-medium">Không có dữ liệu</p>
                     </div>
                 )}
             </div>

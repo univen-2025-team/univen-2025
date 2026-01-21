@@ -72,6 +72,34 @@ export default class MarketCacheService {
                 }
             }
 
+            // ENRICHMENT: Fetch full stock list for this date (includes Company Name & Logo)
+            if (result && result.date) {
+                const allStocks = await this.getAllStocksByDate(result.date);
+                (result as any).stocks = allStocks;
+
+                // Create Map for O(1) enrichment of topGainers/topLosers
+                const stockMap = new Map();
+                allStocks.forEach((s: any) => {
+                    stockMap.set(s.symbol, { companyName: s.companyName, logo: s.logo });
+                });
+
+                // Enrich Top Gainers
+                if (result.topGainers) {
+                    result.topGainers = result.topGainers.map((g: any) => {
+                        const info = stockMap.get(g.symbol);
+                        return { ...g, companyName: info?.companyName || g.companyName, logo: info?.logo || null };
+                    });
+                }
+
+                // Enrich Top Losers
+                if (result.topLosers) {
+                    result.topLosers = result.topLosers.map((l: any) => {
+                        const info = stockMap.get(l.symbol);
+                        return { ...l, companyName: info?.companyName || l.companyName, logo: info?.logo || null };
+                    });
+                }
+            }
+
             return result as MarketDataLean | null;
         } catch (error) {
             this.logger.error('Error getting latest market data', error as any);

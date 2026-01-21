@@ -109,11 +109,11 @@ export function MarketHeatmap({ stocks }: MarketHeatmapProps) {
 
                     <div className="space-y-1 bg-gray-50 p-2 rounded-lg">
                         <div className="flex justify-between text-xs">
-                            <span className="text-gray-500">Price</span>
+                            <span className="text-gray-500">Giá</span>
                             <span className="font-mono font-bold text-gray-900">{data.price.toLocaleString('vi-VN')}</span>
                         </div>
                         <div className="flex justify-between text-xs">
-                            <span className="text-gray-500">Volume</span>
+                            <span className="text-gray-500">Khối lượng</span>
                             <span className="font-mono font-medium text-gray-700">{data.value.toLocaleString('vi-VN')}</span>
                         </div>
                     </div>
@@ -131,7 +131,7 @@ export function MarketHeatmap({ stocks }: MarketHeatmapProps) {
                     Market Heatmap
                 </h3>
                 <div className="h-64 flex items-center justify-center text-gray-400 bg-gray-50 rounded-xl border border-dashed border-gray-200">
-                    No data available
+                    Không có dữ liệu
                 </div>
             </div>
         );
@@ -143,16 +143,16 @@ export function MarketHeatmap({ stocks }: MarketHeatmapProps) {
                 <div className="flex items-center justify-between mb-2">
                     <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
                         <span className="w-1.5 h-6 bg-indigo-600 rounded-full"></span>
-                        Top Volume Heatmap
+                        Top 10 Khối Lượng
                     </h3>
                 </div>
 
                 {/* Modern Gradient Legend */}
                 <div className="w-full">
                     <div className="flex justify-between text-[10px] font-bold text-gray-400 mb-1 px-1">
-                        <span>Down</span>
-                        <span>Unchanged</span>
-                        <span>Up</span>
+                        <span>Giảm</span>
+                        <span>Tham chiếu</span>
+                        <span>Tăng</span>
                     </div>
                     <div className="h-2 w-full rounded-full bg-gradient-to-r from-red-600 via-amber-400 to-indigo-600 opacity-80" />
                 </div>

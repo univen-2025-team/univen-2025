@@ -104,7 +104,7 @@ export function VN30TrendChart({
                 <div className="flex-1 flex items-center justify-center text-gray-400">
                     <div className="text-center">
                         <Activity className="w-16 h-16 mx-auto mb-4 text-gray-200" />
-                        <p className="text-lg font-medium text-gray-500">Coming Soon</p>
+                        <p className="text-lg font-medium text-gray-500">Sắp ra mắt</p>
                         <p className="text-sm text-gray-400 mt-1">Dữ liệu sẽ được cập nhật khi có giao dịch</p>
                     </div>
                 </div>
@@ -127,20 +127,20 @@ export function VN30TrendChart({
                                 <span className="opacity-80">({isUp ? '+' : ''}{changePercent.toFixed(2)}%)</span>
                             </span>
                         </div>
-                        <p className="text-xs font-medium text-gray-400 mt-0.5">VN30 Index • Realtime</p>
+                        <p className="text-xs font-medium text-gray-400 mt-0.5">VN30 Class • Trực tuyến</p>
                     </div>
                 </div>
                 <div className="flex items-center gap-4">
                     {/* Stats - Hidden on mobile */}
                     <div className="hidden sm:flex items-center gap-6 text-xs sm:text-sm mr-2">
                         <div className="text-right">
-                            <p className="text-gray-400 text-[10px] uppercase font-bold tracking-wider">Low</p>
+                            <p className="text-gray-400 text-[10px] uppercase font-bold tracking-wider">Thấp</p>
                             <p className="font-bold text-gray-700 font-mono">
                                 {minValue.toLocaleString('vi-VN', { maximumFractionDigits: 2 })}
                             </p>
                         </div>
                         <div className="text-right">
-                            <p className="text-gray-400 text-[10px] uppercase font-bold tracking-wider">High</p>
+                            <p className="text-gray-400 text-[10px] uppercase font-bold tracking-wider">Cao</p>
                             <p className="font-bold text-gray-700 font-mono">
                                 {maxValue.toLocaleString('vi-VN', { maximumFractionDigits: 2 })}
                             </p>
@@ -232,7 +232,7 @@ export function VN30TrendChart({
                                 return label;
                             }}
                         />
-                        <ReferenceLine y={firstValue} stroke="#cbd5e1" strokeDasharray="3 3" strokeWidth={1} label={{ value: 'Open', position: 'insideLeft', fill: '#94a3b8', fontSize: 10 }} />
+                        <ReferenceLine y={firstValue} stroke="#cbd5e1" strokeDasharray="3 3" strokeWidth={1} label={{ value: 'Mở cửa', position: 'insideLeft', fill: '#94a3b8', fontSize: 10 }} />
                         <Area
                             type="monotone"
                             dataKey="index"
