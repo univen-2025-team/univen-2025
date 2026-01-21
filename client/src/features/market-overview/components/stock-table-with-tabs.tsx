@@ -1,36 +1,49 @@
-'use client';
-
-import { QuickTradeButton } from './quick-trade-button';
-import { WatchlistButton } from './watchlist-button';
-
-interface StockData {
-    symbol: string;
-    companyName?: string;
-    price: number;
-    change: number;
-    changePercent: number;
-    volume: number;
-    high: number;
-    low: number;
-    open: number;
-    close: number;
-    previousClose?: number;
-}
-
-import MarketNews from '@/components/market/MarketNews';
-import { Newspaper } from 'lucide-react';
+import { useState } from 'react';
+import { Search, Eye, EyeOff, Layers, ArrowUpDown, ArrowUp, ArrowDown, Filter } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { MarketNews } from './market-news';
 
 interface StockTableWithTabsProps {
-    stocks: StockData[];
-    viewMode: 'all' | 'watchlist' | 'news';
+    stocks: any[];
+    viewMode: 'watchlist' | 'all' | 'news';
     watchlist: string[];
     searchTerm: string;
-    onViewModeChange: (mode: 'all' | 'watchlist' | 'news') => void;
-    onStockClick: (stock: StockData) => void;
-    onBuyClick: (stock: StockData) => void;
+    onViewModeChange: (mode: 'watchlist' | 'all' | 'news') => void;
+    onStockClick: (stock: any) => void;
+    onBuyClick: (stock: any) => void;
     isInWatchlist: (symbol: string) => boolean;
     toggleWatchlist: (symbol: string) => void;
+    onSearchChange: (term: string) => void;
 }
+
+const StockLogo = ({ symbol, isUp, isDown }: { symbol: string, isUp: boolean, isDown: boolean }) => {
+    const [imageError, setImageError] = useState(false);
+
+    if (imageError) {
+        return (
+            <div className={cn(
+                "w-12 h-12 rounded-xl flex items-center justify-center text-lg font-bold shrink-0 transition-colors",
+                isUp ? "bg-indigo-50 text-indigo-600" :
+                    isDown ? "bg-red-50 text-red-600" :
+                        "bg-amber-50 text-amber-600"
+            )}>
+                {symbol.substring(0, 1)}
+            </div>
+        );
+    }
+
+    return (
+        <div className="w-12 h-12 rounded-xl overflow-hidden shrink-0 border border-gray-100 bg-white relative">
+            <img
+                src={`https://static.fireant.vn/symbols/${symbol}.jpg`}
+                alt={symbol}
+                className="w-full h-full object-contain p-1"
+                onError={() => setImageError(true)}
+                loading="lazy"
+            />
+        </div>
+    );
+};
 
 export function StockTableWithTabs({
     stocks,
@@ -41,199 +54,241 @@ export function StockTableWithTabs({
     onStockClick,
     onBuyClick,
     isInWatchlist,
-    toggleWatchlist
+    toggleWatchlist,
+    onSearchChange
 }: StockTableWithTabsProps) {
-    const formatNumber = (num: number) => num.toLocaleString('vi-VN');
-    const formatPrice = (price: number) => formatNumber(price) + ' VND';
+    const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null);
+    const [statusFilter, setStatusFilter] = useState<'up' | 'down' | 'ref' | null>(null);
 
-    const getChangeColor = (value: number) => {
-        if (value > 0) return 'text-green-600';
-        if (value < 0) return 'text-red-600';
-        return 'text-yellow-600';
+    // Sorting Logic
+    const handleSort = (key: string) => {
+        let direction: 'asc' | 'desc' = 'desc';
+        if (sortConfig && sortConfig.key === key && sortConfig.direction === 'desc') {
+            direction = 'asc';
+        }
+        setSortConfig({ key, direction });
+    };
+
+    // Derived State: filtered -> sorted
+    const displayStocks = [...(stocks || [])].filter(s => {
+        if (!statusFilter) return true;
+        if (statusFilter === 'up') return s.change > 0;
+        if (statusFilter === 'down') return s.change < 0;
+        if (statusFilter === 'ref') return s.change === 0;
+        return true;
+    }).sort((a, b) => {
+        if (!sortConfig) return 0;
+        const { key, direction } = sortConfig;
+
+        let valA = a[key];
+        let valB = b[key];
+
+        // Specific handling for 'volume' or numeric fields if needed, 
+        // but Typescript might complain if keys are not consistent.
+        // Assuming passed stocks are proper objects.
+
+        if (typeof valA === 'string') {
+            valA = valA.toLowerCase();
+            valB = valB.toLowerCase();
+        }
+
+        if (valA < valB) return direction === 'asc' ? -1 : 1;
+        if (valA > valB) return direction === 'asc' ? 1 : -1;
+        return 0;
+    });
+
+    const SortIcon = ({ colKey }: { colKey: string }) => {
+        if (sortConfig?.key !== colKey) return <ArrowUpDown className="w-3 h-3 text-gray-300" />;
+        return sortConfig.direction === 'asc'
+            ? <ArrowUp className="w-3 h-3 text-indigo-600" />
+            : <ArrowDown className="w-3 h-3 text-indigo-600" />;
+    };
+
+    const formatNumber = (num: number) => {
+        return new Intl.NumberFormat('vi-VN', { maximumFractionDigits: 2 }).format(num);
+    };
+
+    const formatVolume = (vol: number) => {
+        if (vol >= 1000000) return `${(vol / 1000000).toFixed(2)}M`;
+        if (vol >= 1000) return `${(vol / 1000).toFixed(2)}K`;
+        return vol.toString();
     };
 
     return (
-        <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 p-6">
-            {/* Filter Tabs */}
-            <div className="flex items-center justify-between mb-6">
-                <div className="flex gap-2">
-                    <button
-                        onClick={() => onViewModeChange('all')}
-                        className={`px-4 py-2 rounded-lg font-semibold transition-colors ${viewMode === 'all'
-                                ? 'bg-blue-600 text-white'
-                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                            }`}
-                    >
-                        Tất cả ({stocks?.length || 0})
-                    </button>
-                    <button
-                        onClick={() => onViewModeChange('watchlist')}
-                        className={`px-4 py-2 rounded-lg font-semibold transition-colors flex items-center gap-2 ${viewMode === 'watchlist'
-                                ? 'bg-yellow-500 text-white'
-                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                            }`}
-                    >
-                        <span>Danh sách theo dõi</span>
-                        {watchlist.length > 0 && (
-                            <span className="bg-white text-yellow-600 px-2 py-0.5 rounded-full text-xs font-bold">
-                                {watchlist.length}
-                            </span>
-                        )}
-                    </button>
-                    <button
-                        onClick={() => onViewModeChange('news')}
-                        className={`px-4 py-2 rounded-lg font-semibold transition-colors flex items-center gap-2 ${viewMode === 'news'
-                                ? 'bg-orange-500 text-white'
-                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                            }`}
-                    >
-                        <Newspaper className="w-4 h-4" />
-                        <span>Tin tức</span>
-                    </button>
+        <div className="h-full flex flex-col bg-white">
+            {/* New Modern Header */}
+            <div className="px-6 py-4 flex flex-col gap-4 border-b border-gray-100">
+                <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                    <Layers className="w-5 h-5 text-indigo-600" /> Market Data
+                </h3>
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div className="flex bg-gray-100/50 p-1 rounded-xl">
+                        {(['all', 'watchlist', 'news'] as const).map((mode) => (
+                            <button
+                                key={mode}
+                                onClick={() => onViewModeChange(mode)}
+                                className={cn(
+                                    "px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200",
+                                    viewMode === mode
+                                        ? "bg-white text-indigo-700 shadow-sm"
+                                        : "text-gray-500 hover:text-gray-900 hover:bg-gray-200/50"
+                                )}
+                            >
+                                {mode === 'all' && `All Stocks (${stocks?.length || 0})`}
+                                {mode === 'watchlist' && `Watchlist (${watchlist?.length || 0})`}
+                                {mode === 'news' && 'Market News'}
+                            </button>
+                        ))}
+                    </div>
+
                 </div>
-                {searchTerm && viewMode !== 'news' && (
-                    <div className="text-sm text-gray-600">
-                        Tìm thấy {stocks?.length || 0} kết quả
+
+                {/* Search Input & Legend */}
+                {viewMode !== 'news' && (
+                    <div className="flex flex-col sm:flex-row items-end sm:items-center gap-3 w-full sm:w-auto">
+                        {/* Search Input */}
+                        <div className="relative group w-full sm:w-48">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-indigo-500 transition-colors" />
+                            <input
+                                type="text"
+                                placeholder="Search stock..."
+                                value={searchTerm}
+                                onChange={(e) => onSearchChange(e.target.value)}
+                                className="w-full pl-9 pr-4 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+                            />
+                        </div>
+
+                        {/* Filter Legend */}
+                        <div className="flex items-center gap-2 text-xs font-medium text-gray-400 bg-gray-50 p-1.5 rounded-lg border border-gray-100">
+                            <Filter className="w-3 h-3 text-gray-400 mr-1" />
+                            <button onClick={() => setStatusFilter(prev => prev === 'up' ? null : 'up')} className={cn("flex items-center gap-1 px-2 py-0.5 rounded transition-all", statusFilter === 'up' ? "bg-white shadow-sm text-indigo-700 ring-1 ring-indigo-500/20" : "hover:text-indigo-600")}>
+                                <div className="w-1.5 h-1.5 rounded-full bg-indigo-500"></div> Up
+                            </button>
+                            <button onClick={() => setStatusFilter(prev => prev === 'down' ? null : 'down')} className={cn("flex items-center gap-1 px-2 py-0.5 rounded transition-all", statusFilter === 'down' ? "bg-white shadow-sm text-red-700 ring-1 ring-red-500/20" : "hover:text-red-600")}>
+                                <div className="w-1.5 h-1.5 rounded-full bg-red-500"></div> Down
+                            </button>
+                            <button onClick={() => setStatusFilter(prev => prev === 'ref' ? null : 'ref')} className={cn("flex items-center gap-1 px-2 py-0.5 rounded transition-all", statusFilter === 'ref' ? "bg-white shadow-sm text-amber-700 ring-1 ring-amber-500/20" : "hover:text-amber-600")}>
+                                <div className="w-1.5 h-1.5 rounded-full bg-amber-500"></div> Ref
+                            </button>
+                        </div>
                     </div>
                 )}
             </div>
 
+            {/* Header Columns for Sorting */}
+            {
+                viewMode !== 'news' && (
+                    <div className="px-6 py-2 bg-gray-50/50 border-b border-gray-100 flex items-center text-xs font-semibold text-gray-500">
+                        <div className="flex-1 cursor-pointer hover:text-indigo-600 flex items-center gap-2" onClick={() => handleSort('symbol')}>Symbol <SortIcon colKey="symbol" /></div>
+                        <div className="hidden sm:block w-24 text-right cursor-pointer hover:text-indigo-600 flex justify-end gap-2" onClick={() => handleSort('price')}>Price <SortIcon colKey="price" /></div>
+                        <div className="min-w-[80px] text-right cursor-pointer hover:text-indigo-600 flex justify-end gap-2" onClick={() => handleSort('changePercent')}>24h % <SortIcon colKey="changePercent" /></div>
+                        <div className="hidden md:block w-24 text-right cursor-pointer hover:text-indigo-600 flex justify-end gap-2" onClick={() => handleSort('volume')}>Vol <SortIcon colKey="volume" /></div>
+                        <div className="w-10"></div>{/* Watchlist action placeholder */}
+                    </div>
+                )
+            }
+
+
             {/* Content Area */}
-            {viewMode === 'news' ? (
-                <MarketNews />
-            ) : (
-                /* Stock Table */
-                <div className="overflow-x-auto">
-                    <table className="min-w-full">
-                        <thead>
-                            <tr className="border-b border-gray-200 bg-gray-50">
-                                <th className="px-2 py-3 text-center text-sm font-semibold text-gray-900"></th>
-                                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">
-                                    Mã CK
-                                </th>
-                                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">
-                                    Công ty
-                                </th>
-                                <th className="px-4 py-3 text-right text-sm font-semibold text-gray-900">
-                                    Giá
-                                </th>
-                                <th className="px-4 py-3 text-right text-sm font-semibold text-gray-900">
-                                    Thay đổi
-                                </th>
-                                <th className="px-4 py-3 text-right text-sm font-semibold text-gray-900">
-                                    % Thay đổi
-                                </th>
-                                <th className="px-4 py-3 text-right text-sm font-semibold text-gray-900">
-                                    Giá TC
-                                </th>
-                                <th className="px-4 py-3 text-right text-sm font-semibold text-gray-900">
-                                    Biên độ
-                                </th>
-                                <th className="px-4 py-3 text-right text-sm font-semibold text-gray-900">
-                                    Khối lượng
-                                </th>
-                                <th className="px-4 py-3 text-center text-sm font-semibold text-gray-900">
-                                    Hành động
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {stocks?.map((stock) => {
-                                const dayRange =
-                                    stock.high && stock.low
-                                        ? `${formatPrice(stock.low)} - ${formatPrice(stock.high)}`
-                                        : '-';
+            <div className="flex-1 overflow-hidden bg-gray-50/30">
+                {viewMode === 'news' ? (
+                    <div className="h-full overflow-auto p-4 custom-scrollbar">
+                        <MarketNews />
+                    </div>
+                ) : (
+                    <div className="h-full overflow-auto custom-scrollbar p-2 space-y-2">
+                        {displayStocks.length === 0 ? (
+                            <div className="flex flex-col items-center justify-center h-64 text-gray-400">
+                                <Search className="w-12 h-12 mb-4 opacity-20" />
+                                <p>No stocks found matching "{searchTerm}"</p>
+                            </div>
+                        ) : (
+                            displayStocks.map((stock) => {
+                                const isUp = stock.change > 0;
+                                const isDown = stock.change < 0;
+                                const isRef = stock.change === 0;
 
                                 return (
-                                    <tr
+                                    <div
                                         key={stock.symbol}
-                                        className="border-b border-gray-100 hover:bg-blue-50 transition-colors cursor-pointer"
                                         onClick={() => onStockClick(stock)}
+                                        className="group bg-white rounded-xl p-4 border border-gray-100 hover:border-indigo-100 hover:shadow-md transition-all cursor-pointer flex items-center justify-between"
                                     >
-                                        <td
-                                            className="px-2 py-3 text-center"
-                                            onClick={(e) => e.stopPropagation()}
-                                        >
-                                            <WatchlistButton
-                                                symbol={stock.symbol}
-                                                isInWatchlist={isInWatchlist(stock.symbol)}
-                                                onToggle={() => toggleWatchlist(stock.symbol)}
-                                                size="sm"
-                                            />
-                                        </td>
-                                        <td className="px-4 py-3">
-                                            <span className="font-bold text-blue-600 hover:text-blue-800">
-                                                {stock.symbol}
-                                            </span>
-                                        </td>
-                                        <td className="px-4 py-3 text-left">
-                                            <span
-                                                className="text-sm text-gray-700 line-clamp-1"
-                                                title={stock.companyName}
-                                            >
-                                                {stock.companyName || '-'}
-                                            </span>
-                                        </td>
-                                        <td
-                                            className={`px-4 py-3 text-right font-bold text-lg ${getChangeColor(
-                                                stock.change
-                                            )}`}
-                                        >
-                                            {formatPrice(stock.price)}
-                                        </td>
-                                        <td
-                                            className={`px-4 py-3 text-right font-semibold ${getChangeColor(
-                                                stock.change
-                                            )}`}
-                                        >
-                                            {stock.change > 0 ? '+' : ''}
-                                            {formatNumber(stock.change)}
-                                        </td>
-                                        <td
-                                            className={`px-4 py-3 text-right font-semibold ${getChangeColor(
-                                                stock.changePercent
-                                            )}`}
-                                        >
-                                            {stock.changePercent > 0 ? '+' : ''}
-                                            {stock.changePercent}%
-                                        </td>
-                                        <td className="px-4 py-3 text-right text-gray-600 text-sm">
-                                            {stock.previousClose
-                                                ? formatPrice(stock.previousClose)
-                                                : '-'}
-                                        </td>
-                                        <td className="px-4 py-3 text-right text-gray-600 text-sm">
-                                            {dayRange}
-                                        </td>
-                                        <td className="px-4 py-3 text-right text-gray-700">
-                                            {formatNumber(stock.volume)}
-                                        </td>
-                                        <td
-                                            className="px-4 py-3 text-center"
-                                            onClick={(e) => e.stopPropagation()}
-                                        >
-                                            <QuickTradeButton
-                                                symbol={stock.symbol}
-                                                price={stock.price}
-                                                onClick={() => onBuyClick(stock)}
-                                                variant="buy"
-                                            />
-                                        </td>
-                                    </tr>
-                                );
-                            })}
-                        </tbody>
-                    </table>
+                                        <div className="flex items-center gap-4">
+                                            {/* Symbol Avatar/Logo */}
+                                            <StockLogo symbol={stock.symbol} isUp={isUp} isDown={isDown} />
 
-                    {(!stocks || stocks.length === 0) && (
-                        <div className="text-center py-8 text-gray-500">
-                            {viewMode === 'watchlist' && watchlist.length === 0
-                                ? 'Chưa có cổ phiếu nào trong danh sách theo dõi'
-                                : 'Không tìm thấy cổ phiếu nào phù hợp'}
-                        </div>
-                    )}
-                </div>
-            )}
-        </div>
+                                            <div>
+                                                <div className="flex items-center gap-2">
+                                                    <h4 className="font-bold text-gray-900 text-lg">{stock.symbol}</h4>
+                                                    <span className="text-xs text-gray-400 font-medium px-2 py-0.5 bg-gray-100 rounded-full">
+                                                        HOSE
+                                                    </span>
+                                                </div>
+                                                <p className="text-sm text-gray-500 truncate max-w-[120px] sm:max-w-[200px]">
+                                                    {stock.companyName || 'Unknown Company'}
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        {/* Right Side Stats */}
+                                        <div className="flex items-center gap-6 md:gap-12">
+                                            {/* Price Block */}
+                                            <div className="text-right hidden sm:block">
+                                                <p className="text-xs text-gray-400 font-medium uppercase tracking-wider mb-0.5">Price</p>
+                                                <p className="font-mono font-bold text-gray-900 text-base">
+                                                    {formatNumber(stock.price)}
+                                                </p>
+                                            </div>
+
+                                            {/* Change Block */}
+                                            <div className="text-right min-w-[80px]">
+                                                <p className="text-xs text-gray-400 font-medium uppercase tracking-wider mb-0.5 text-right">24h</p>
+                                                <div className={cn(
+                                                    "inline-flex items-center justify-end gap-1 font-bold text-base px-2 py-0.5 rounded-lg",
+                                                    isUp ? "bg-indigo-50 text-indigo-600" :
+                                                        isDown ? "bg-red-50 text-red-600" :
+                                                            "bg-amber-50 text-amber-600"
+                                                )}>
+                                                    {isUp && '+'}
+                                                    {stock.changePercent}%
+                                                </div>
+                                            </div>
+
+                                            {/* Volume Block */}
+                                            <div className="text-right hidden md:block w-24">
+                                                <p className="text-xs text-gray-400 font-medium uppercase tracking-wider mb-0.5">Vol</p>
+                                                <p className="font-mono text-gray-700 text-sm">
+                                                    {formatVolume(stock.volume)}
+                                                </p>
+                                            </div>
+
+                                            {/* Watchlist Action */}
+                                            <div onClick={(e) => {
+                                                e.stopPropagation();
+                                                toggleWatchlist(stock.symbol);
+                                            }}>
+                                                <div className={cn(
+                                                    "p-2 rounded-lg transition-colors cursor-pointer",
+                                                    isInWatchlist(stock.symbol)
+                                                        ? "text-indigo-600 bg-indigo-50"
+                                                        : "text-gray-300 hover:text-gray-500 hover:bg-gray-100"
+                                                )}>
+                                                    {isInWatchlist(stock.symbol) ? (
+                                                        <Eye className="w-5 h-5" />
+                                                    ) : (
+                                                        <EyeOff className="w-5 h-5" />
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                );
+                            })
+                        )}
+                    </div>
+                )}
+            </div>
+        </div >
     );
 }

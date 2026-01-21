@@ -25,7 +25,7 @@ class BaseWorker:
         self.thread = None
         self.vnstock_client = VnstockClient.get_instance()
         self.semaphore = threading.Semaphore(5)  # Limit concurrency
-        self.job_delay = 1.0
+        self.job_delay = 2.0  # 2 second delay between jobs to avoid rate limits
 
     def connect(self):
         try:

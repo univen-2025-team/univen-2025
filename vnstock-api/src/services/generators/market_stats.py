@@ -100,8 +100,8 @@ class MarketStatsGenerator:
             # Sort by changePercent desc
             stock_stats.sort(key=lambda x: x['changePercent'], reverse=True)
             
-            top_gainers = stock_stats[:5]
-            top_losers = sorted(stock_stats, key=lambda x: x['changePercent'])[:5]
+            top_gainers = stock_stats[:100]
+            top_losers = sorted(stock_stats, key=lambda x: x['changePercent'])[:100]
             
             # 4. Construct Market Data Document
             # If VN30 is missing from history, we can't report it properly, but we save what we have.

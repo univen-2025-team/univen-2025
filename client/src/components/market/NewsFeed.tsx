@@ -3,19 +3,27 @@
 
 import React, { useEffect, useState } from 'react';
 import api from '@/lib/axios';
-import { ExternalLink, Newspaper, Calendar } from 'lucide-react';
+import { ExternalLink, Newspaper, Calendar, Globe, Tag, User, TrendingUp } from 'lucide-react';
 import NewsDetailModal from './NewsDetailModal';
 
 interface NewsItem {
     id?: string;
     title: string;
     short_content?: string;
+    summary?: string;
     full_content?: string;
     source_link?: string;
+    link?: string;
     image_url?: string;
+    thumbnail?: string;
     public_date?: string;
+    pub_date?: string;
     source?: string;
     source_domain?: string;
+    domain?: string;
+    author?: string;
+    category?: string;
+    matched_symbols?: string[];
     images?: string[];
 }
 
@@ -51,8 +59,6 @@ const NewsFeed: React.FC<NewsFeedProps> = ({ symbol, className = '', filterRange
                 }
             } catch (err: any) {
                 console.error('Failed to fetch news:', err);
-                // Don't show error explicitly to user for news, just empty or log
-                // setError('Không thể tải tin tức'); 
             } finally {
                 setLoading(false);
             }
@@ -70,58 +76,74 @@ const NewsFeed: React.FC<NewsFeedProps> = ({ symbol, className = '', filterRange
         const end = new Date(filterRange.end);
         end.setHours(23, 59, 59, 999);
 
-        // Filter valid days
         return newsData.map(day => {
-            // Check if day matches
-            // day.date is YYYY-MM-DD string
             const dayDate = new Date(day.date);
-            dayDate.setHours(12, 0, 0, 0); // safe middle of day
+            dayDate.setHours(12, 0, 0, 0);
 
             if (dayDate >= start && dayDate <= end) {
                 return day;
             }
             return null;
-        }).filter(Boolean) as DailyNews[]; // remove nulls
+        }).filter(Boolean) as DailyNews[];
 
     }, [newsData, filterRange]);
 
-    // Helper to extract source
-    const getSource = (item: NewsItem) => {
-        // Prefer source_domain or source field if available and not Google News
+    // Helper to get image URL
+    const getImageUrl = (item: NewsItem) => item.image_url || item.thumbnail;
+
+    // Helper to get description
+    const getDescription = (item: NewsItem) => item.short_content || item.summary || '';
+
+    // Helper to get domain
+    const getDomain = (item: NewsItem) => {
+        if (item.domain) return item.domain;
         if (item.source_domain) return item.source_domain;
-        if (item.source && item.source !== 'Google News' && item.source !== 'Tin tức tổng hợp') return item.source;
+        if (item.source && item.source !== 'Google News') return item.source;
 
-        // Try parsing title "Title - Source"
-        if (item.title && item.title.includes(' - ')) {
-            const parts = item.title.split(' - ');
-            const candidate = parts[parts.length - 1].trim();
-            // Basic validation: shouldn't be too long
-            if (candidate.length < 30) return candidate;
-        }
-
-        // Fallback to hostname
-        if (item.source_link) {
+        const link = item.source_link || item.link;
+        if (link) {
             try {
-                return new URL(item.source_link).hostname.replace('www.', '');
+                return new URL(link).hostname.replace('www.', '');
             } catch (e) { return 'Nguồn tin'; }
         }
         return 'Nguồn tin';
     };
 
+    // Helper to get category label
+    const getCategoryLabel = (category?: string) => {
+        switch (category) {
+            case 'stock': return 'Chứng khoán';
+            case 'finance': return 'Tài chính';
+            case 'business': return 'Kinh doanh';
+            case 'realestate': return 'Bất động sản';
+            default: return category || '';
+        }
+    };
+
+    // Helper to get category color
+    const getCategoryColor = (category?: string) => {
+        switch (category) {
+            case 'stock': return 'bg-blue-50 text-blue-600 border-blue-200';
+            case 'finance': return 'bg-emerald-50 text-emerald-600 border-emerald-200';
+            case 'business': return 'bg-purple-50 text-purple-600 border-purple-200';
+            case 'realestate': return 'bg-orange-50 text-orange-600 border-orange-200';
+            default: return 'bg-gray-50 text-gray-600 border-gray-200';
+        }
+    };
+
     if (loading) {
         return (
             <div className={`flex items-center justify-center p-8 bg-white/50 rounded-xl ${className}`}>
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
             </div>
         );
     }
 
-    // Filter out days with no news effectively
     const daysWithNews = (filteredContent || newsData).filter(day => day.news && day.news.length > 0);
 
     if (daysWithNews.length === 0) {
         return (
-            <div className={`flex flex-col items-center justify-center p-8 text-gray-500 bg-white/50 rounded-xl border border-dashed border-gray-200 ${className}`}>
+            <div className={`flex flex-col items-center justify-center p-12 text-gray-500 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl border border-dashed border-gray-200 ${className}`}>
                 {filterRange && (
                     <div className="mb-4 text-center">
                         <p className="text-sm font-medium text-blue-600 mb-2">
@@ -135,8 +157,9 @@ const NewsFeed: React.FC<NewsFeedProps> = ({ symbol, className = '', filterRange
                         </button>
                     </div>
                 )}
-                <Newspaper className="w-10 h-10 mb-2 opacity-50" />
-                <p className="text-sm">Chưa có tin tức nào {filterRange ? 'trong khoảng thời gian này' : 'gần đây'}</p>
+                <Newspaper className="w-12 h-12 mb-3 opacity-40" />
+                <p className="text-sm font-medium">Chưa có tin tức nào {filterRange ? 'trong khoảng thời gian này' : 'gần đây'}</p>
+                <p className="text-xs text-gray-400 mt-1">Tin tức sẽ được cập nhật tự động</p>
             </div>
         );
     }
@@ -158,45 +181,102 @@ const NewsFeed: React.FC<NewsFeedProps> = ({ symbol, className = '', filterRange
             )}
 
             {daysWithNews.map((day) => (
-                <div key={day.date} className="relative pl-4 border-l-2 border-gray-100 last:border-0 pb-0">
+                <div key={day.date} className="relative">
                     {/* Date Header */}
-                    <div className="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-blue-50 border-2 border-blue-500 box-content"></div>
-                    <h4 className="text-sm font-bold text-gray-800 mb-3 flex items-center pt-0.5 transform -translate-y-1">
-                        <Calendar className="w-3.5 h-3.5 mr-2 text-blue-500" />
-                        {new Date(day.date).toLocaleDateString('vi-VN', { weekday: 'long', year: 'numeric', month: '2-digit', day: '2-digit' })}
-                    </h4>
+                    <div className="flex items-center gap-3 mb-4">
+                        <div className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-3 py-1.5 rounded-full shadow-sm">
+                            <Calendar className="w-3.5 h-3.5" />
+                            <span className="text-xs font-bold">
+                                {new Date(day.date).toLocaleDateString('vi-VN', { weekday: 'short', day: '2-digit', month: '2-digit' })}
+                            </span>
+                        </div>
+                        <div className="h-px flex-1 bg-gradient-to-r from-gray-200 to-transparent"></div>
+                        <span className="text-xs text-gray-400">{day.news.length} tin</span>
+                    </div>
 
-                    <div className="space-y-3">
+                    <div className="grid gap-3">
                         {day.news.map((item, idx) => (
                             <div
-                                key={idx}
+                                key={item.id || idx}
                                 onClick={() => setSelectedNews(item)}
-                                className="group block bg-white p-4 rounded-lg border border-gray-100 shadow-sm hover:shadow-md hover:border-blue-100 transition-all duration-200 cursor-pointer"
+                                className="group flex gap-4 bg-white p-4 rounded-xl border border-gray-100 shadow-sm hover:shadow-lg hover:border-blue-200 transition-all duration-300 cursor-pointer"
                             >
-                                <div className="flex justify-between items-start gap-3">
-                                    <h5 className="text-sm font-semibold text-gray-900 group-hover:text-blue-600 line-clamp-2 leading-snug">
-                                        {item.title}
-                                    </h5>
-                                    <div className="flex-shrink-0">
-                                        {item.image_url ? (
-                                            <img src={item.image_url} alt="" className="w-16 h-16 object-cover rounded-md bg-gray-50" />
-                                        ) : (
-                                            <div className="w-16 h-16 bg-gray-100 rounded-md flex items-center justify-center text-gray-400">
-                                                <Newspaper className="w-8 h-8 opacity-50" />
-                                            </div>
+                                {/* Thumbnail */}
+                                <div className="flex-shrink-0 w-24 h-20 rounded-lg overflow-hidden bg-gray-100">
+                                    {getImageUrl(item) ? (
+                                        <img
+                                            src={getImageUrl(item)}
+                                            alt=""
+                                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                                        />
+                                    ) : (
+                                        <div className="w-full h-full flex items-center justify-center text-gray-300">
+                                            <Newspaper className="w-8 h-8" />
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Content */}
+                                <div className="flex-1 min-w-0 flex flex-col justify-between">
+                                    <div>
+                                        {/* Meta Tags */}
+                                        <div className="flex items-center gap-2 mb-2 flex-wrap">
+                                            {/* Domain */}
+                                            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-gray-600 bg-gray-100 px-2 py-0.5 rounded-full">
+                                                <Globe className="w-2.5 h-2.5" />
+                                                {getDomain(item)}
+                                            </span>
+
+                                            {/* Category */}
+                                            {item.category && (
+                                                <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full border ${getCategoryColor(item.category)}`}>
+                                                    {getCategoryLabel(item.category)}
+                                                </span>
+                                            )}
+
+                                            {/* Author */}
+                                            {item.author && (
+                                                <span className="inline-flex items-center gap-1 text-[10px] text-gray-400">
+                                                    <User className="w-2.5 h-2.5" />
+                                                    {item.author}
+                                                </span>
+                                            )}
+                                        </div>
+
+                                        {/* Title */}
+                                        <h5 className="text-sm font-bold text-gray-900 group-hover:text-blue-600 line-clamp-2 leading-snug transition-colors">
+                                            {item.title}
+                                        </h5>
+
+                                        {/* Description */}
+                                        {getDescription(item) && (
+                                            <p className="text-xs text-gray-500 mt-1.5 line-clamp-1">
+                                                {getDescription(item)}
+                                            </p>
                                         )}
                                     </div>
-                                </div>
-                                {item.short_content && (
-                                    <p className="text-xs text-gray-500 mt-2 line-clamp-2">
-                                        {item.short_content}
-                                    </p>
-                                )}
-                                <div className="mt-2 flex items-center justify-between">
-                                    <span className="text-[10px] uppercase font-bold text-gray-500 bg-gray-100 px-2 py-0.5 rounded">
-                                        {getSource(item)}
-                                    </span>
-                                    <ExternalLink className="w-3 h-3 text-gray-300 group-hover:text-blue-400" />
+
+                                    {/* Bottom Row */}
+                                    <div className="flex items-center justify-between mt-2">
+                                        {/* Matched Symbols */}
+                                        {item.matched_symbols && item.matched_symbols.length > 0 ? (
+                                            <div className="flex items-center gap-1">
+                                                <TrendingUp className="w-3 h-3 text-emerald-500" />
+                                                {item.matched_symbols.slice(0, 3).map(sym => (
+                                                    <span key={sym} className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded">
+                                                        {sym}
+                                                    </span>
+                                                ))}
+                                                {item.matched_symbols.length > 3 && (
+                                                    <span className="text-[10px] text-gray-400">+{item.matched_symbols.length - 3}</span>
+                                                )}
+                                            </div>
+                                        ) : (
+                                            <div></div>
+                                        )}
+
+                                        <ExternalLink className="w-3.5 h-3.5 text-gray-300 group-hover:text-blue-500 transition-colors" />
+                                    </div>
                                 </div>
                             </div>
                         ))}

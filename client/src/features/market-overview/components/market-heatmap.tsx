@@ -27,32 +27,37 @@ export function MarketHeatmap({ stocks }: MarketHeatmapProps) {
         })) || [];
 
     const getColor = (changePercent: number) => {
-        if (changePercent > 3) return '#059669'; // green-600
-        if (changePercent > 1) return '#10b981'; // green-500
-        if (changePercent > 0) return '#34d399'; // green-400
-        if (changePercent === 0) return '#fbbf24'; // yellow-400
+        if (changePercent > 6) return '#4338ca'; // indigo-700
+        if (changePercent > 3) return '#4f46e5'; // indigo-600
+        if (changePercent > 1) return '#6366f1'; // indigo-500
+        if (changePercent > 0) return '#818cf8'; // indigo-400
+        if (changePercent === 0) return '#f59e0b'; // amber-500
         if (changePercent > -1) return '#f87171'; // red-400
         if (changePercent > -3) return '#ef4444'; // red-500
-        return '#dc2626'; // red-600
+        if (changePercent > -6) return '#dc2626'; // red-600
+        return '#b91c1c'; // red-700
     };
 
     const CustomizedContent = (props: any) => {
         const { x, y, width, height, name, changePercent } = props;
 
         // Only show label if rect is big enough
-        const showLabel = width > 60 && height > 40;
+        const showLabel = width > 40 && height > 30;
+        const isSmall = width < 60;
 
         return (
             <g>
                 <rect
                     x={x}
                     y={y}
+                    rx={6}
+                    ry={6}
                     width={width}
                     height={height}
                     style={{
                         fill: getColor(changePercent),
-                        stroke: '#fff',
-                        strokeWidth: 2,
+                        stroke: '#ffffff',
+                        strokeWidth: 3,
                         strokeOpacity: 1
                     }}
                 />
@@ -60,20 +65,23 @@ export function MarketHeatmap({ stocks }: MarketHeatmapProps) {
                     <>
                         <text
                             x={x + width / 2}
-                            y={y + height / 2 - 8}
+                            y={y + height / 2 - 6}
                             textAnchor="middle"
                             fill="#fff"
-                            fontSize={14}
-                            fontWeight="bold"
+                            fontSize={isSmall ? 10 : 14}
+                            fontWeight="900"
+                            style={{ pointerEvents: 'none', textShadow: '0 1px 2px rgba(0,0,0,0.1)' }}
                         >
                             {name}
                         </text>
                         <text
                             x={x + width / 2}
-                            y={y + height / 2 + 10}
+                            y={y + height / 2 + 8}
                             textAnchor="middle"
-                            fill="#fff"
-                            fontSize={12}
+                            fill="rgba(255,255,255,0.95)"
+                            fontSize={isSmall ? 8 : 11}
+                            fontWeight="600"
+                            style={{ pointerEvents: 'none' }}
                         >
                             {changePercent > 0 ? '+' : ''}
                             {changePercent}%
@@ -88,21 +96,25 @@ export function MarketHeatmap({ stocks }: MarketHeatmapProps) {
         if (active && payload && payload.length) {
             const data = payload[0].payload;
             return (
-                <div className="bg-white p-3 rounded-lg shadow-lg border border-gray-200">
-                    <div className="font-bold text-gray-900">{data.name}</div>
-                    {data.companyName && (
-                        <div className="text-xs text-gray-600 mb-2">{data.companyName}</div>
-                    )}
-                    <div className="text-sm">
-                        <div>Giá: {data.price.toLocaleString('vi-VN')} VND</div>
-                        <div
-                            className={data.changePercent >= 0 ? 'text-green-600' : 'text-red-600'}
-                        >
-                            Thay đổi: {data.changePercent > 0 ? '+' : ''}
-                            {data.changePercent}%
+                <div className="bg-white p-3 rounded-xl shadow-xl border border-gray-100 z-50 min-w-[150px]">
+                    <div className="flex justify-between items-start mb-2">
+                        <div>
+                            <div className="font-black text-gray-900 text-lg">{data.name}</div>
+                            <div className="text-[10px] text-gray-500 font-medium uppercase tracking-wider">{data.companyName?.substring(0, 20)}...</div>
                         </div>
-                        <div className="text-gray-600">
-                            KL: {data.value.toLocaleString('vi-VN')}
+                        <div className={`px-2 py-0.5 rounded text-xs font-bold ${data.changePercent >= 0 ? 'bg-indigo-50 text-indigo-600' : 'bg-red-50 text-red-600'}`}>
+                            {data.changePercent > 0 ? '+' : ''}{data.changePercent}%
+                        </div>
+                    </div>
+
+                    <div className="space-y-1 bg-gray-50 p-2 rounded-lg">
+                        <div className="flex justify-between text-xs">
+                            <span className="text-gray-500">Price</span>
+                            <span className="font-mono font-bold text-gray-900">{data.price.toLocaleString('vi-VN')}</span>
+                        </div>
+                        <div className="flex justify-between text-xs">
+                            <span className="text-gray-500">Volume</span>
+                            <span className="font-mono font-medium text-gray-700">{data.value.toLocaleString('vi-VN')}</span>
                         </div>
                     </div>
                 </div>
@@ -113,88 +125,54 @@ export function MarketHeatmap({ stocks }: MarketHeatmapProps) {
 
     if (!stocks || stocks.length === 0) {
         return (
-            <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 p-6">
-                <h3 className="text-lg font-bold text-gray-900 mb-4">Bản đồ nhiệt thị trường</h3>
-                <div className="h-96 flex items-center justify-center text-gray-500">
-                    Chưa có dữ liệu
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                    <span className="w-1 h-6 bg-indigo-500 rounded-full"></span>
+                    Market Heatmap
+                </h3>
+                <div className="h-64 flex items-center justify-center text-gray-400 bg-gray-50 rounded-xl border border-dashed border-gray-200">
+                    No data available
                 </div>
             </div>
         );
     }
 
     return (
-        <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 p-6">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 h-full flex flex-col">
             <div className="mb-4">
-                <h3 className="text-lg font-bold text-gray-900 mb-2">Bản đồ nhiệt thị trường</h3>
-                <p className="text-sm text-gray-600 mb-3">
-                    Kích thước: Khối lượng giao dịch | Màu sắc: % Thay đổi
-                </p>
+                <div className="flex items-center justify-between mb-2">
+                    <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                        <span className="w-1.5 h-6 bg-indigo-600 rounded-full"></span>
+                        Top Volume Heatmap
+                    </h3>
+                </div>
 
-                {/* Legend */}
-                <div className="flex items-center gap-4 text-xs flex-wrap">
-                    <div className="flex items-center gap-1">
-                        <div
-                            className="w-4 h-4 rounded"
-                            style={{ backgroundColor: '#059669' }}
-                        ></div>
-                        <span>&gt;3%</span>
+                {/* Modern Gradient Legend */}
+                <div className="w-full">
+                    <div className="flex justify-between text-[10px] font-bold text-gray-400 mb-1 px-1">
+                        <span>Down</span>
+                        <span>Unchanged</span>
+                        <span>Up</span>
                     </div>
-                    <div className="flex items-center gap-1">
-                        <div
-                            className="w-4 h-4 rounded"
-                            style={{ backgroundColor: '#10b981' }}
-                        ></div>
-                        <span>1-3%</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                        <div
-                            className="w-4 h-4 rounded"
-                            style={{ backgroundColor: '#34d399' }}
-                        ></div>
-                        <span>0-1%</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                        <div
-                            className="w-4 h-4 rounded"
-                            style={{ backgroundColor: '#fbbf24' }}
-                        ></div>
-                        <span>0%</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                        <div
-                            className="w-4 h-4 rounded"
-                            style={{ backgroundColor: '#f87171' }}
-                        ></div>
-                        <span>0-(-1)%</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                        <div
-                            className="w-4 h-4 rounded"
-                            style={{ backgroundColor: '#ef4444' }}
-                        ></div>
-                        <span>(-1)-(-3)%</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                        <div
-                            className="w-4 h-4 rounded"
-                            style={{ backgroundColor: '#dc2626' }}
-                        ></div>
-                        <span>&lt;-3%</span>
-                    </div>
+                    <div className="h-2 w-full rounded-full bg-gradient-to-r from-red-600 via-amber-400 to-indigo-600 opacity-80" />
                 </div>
             </div>
 
-            <ResponsiveContainer width="100%" height={500} debounce={200}>
-                <Treemap
-                    data={treemapData}
-                    dataKey="value"
-                    stroke="#fff"
-                    fill="#8884d8"
-                    content={<CustomizedContent />}
-                >
-                    <Tooltip content={<CustomTooltip />} />
-                </Treemap>
-            </ResponsiveContainer>
+            <div className="flex-1 min-h-[300px] -mx-1">
+                <ResponsiveContainer width="100%" height="100%" debounce={200}>
+                    <Treemap
+                        data={treemapData}
+                        dataKey="value"
+                        stroke="#fff"
+                        fill="#6366f1"
+                        content={<CustomizedContent />}
+                        animationDuration={1000}
+                        isAnimationActive={true}
+                    >
+                        <Tooltip content={<CustomTooltip />} />
+                    </Treemap>
+                </ResponsiveContainer>
+            </div>
         </div>
     );
 }

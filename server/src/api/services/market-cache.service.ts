@@ -265,14 +265,35 @@ export default class MarketCacheService {
         try {
             const results = await StockHistoryModel.find({ date, interval }).lean().exec();
 
+            // Enrichment: Get Company Profiles for these stocks
+            const symbols = results.map((r: any) => r.symbol);
+            const profiles = await CompanyProfileModel.find({ ticker: { $in: symbols } })
+                .select('ticker companyName logo')
+                .lean()
+                .exec();
+
+            // Create Map for O(1) lookup
+            const profileMap = new Map();
+            profiles.forEach((p: any) => {
+                profileMap.set(p.ticker, {
+                    companyName: p.companyName,
+                    logo: p.logo
+                });
+            });
+
             // Transform raw history to summary format expected by frontend
             return results.map((doc: any) => {
+                const profile = profileMap.get(doc.symbol);
+                const companyName = profile?.companyName || doc.symbol;
+                const logo = profile?.logo || null;
+
                 const prices = doc.prices || [];
                 if (prices.length === 0) {
                     return {
                         symbol: doc.symbol,
                         date: doc.date,
-                        companyName: doc.symbol,
+                        companyName,
+                        logo,
                         price: 0,
                         change: 0,
                         changePercent: 0,
@@ -307,7 +328,8 @@ export default class MarketCacheService {
                 return {
                     symbol: doc.symbol,
                     date: doc.date,
-                    companyName: doc.symbol, // Detailed info requires profile join, skipping for performance
+                    companyName,
+                    logo,
                     price: close, // Current price is last close
                     change: parseFloat(change.toFixed(2)),
                     changePercent: parseFloat(changePercent.toFixed(2)),
