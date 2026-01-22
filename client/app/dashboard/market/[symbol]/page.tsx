@@ -186,7 +186,7 @@ const StockDetailPage = () => {
       });
 
       // Update Header Data as well
-      setStockData((prev: any) => {
+      setStockData(prev => {
         if (!prev) return prev;
         return {
           ...prev,
@@ -470,7 +470,7 @@ const StockDetailPage = () => {
         </div>
         <div className="flex-1 w-full min-h-0 relative">
           {chartLoading ? (
-            <div className="flex items-center justify-center h-full text-gray-500">
+            <div className="absolute inset-0 flex items-center justify-center text-gray-500 bg-white/80">
               <LoadingSpinner />
             </div>
           ) : candlestickData.length > 0 ? (
@@ -524,8 +524,12 @@ const StockDetailPage = () => {
               </div>
             </div>
             {/* Chart Body */}
-            <div className="flex-1 min-h-0">
-              {chartLoading ? (<LoadingSpinner />) : (
+            <div className="flex-1 min-h-0 relative">
+              {chartLoading ? (
+                <div className="absolute inset-0 flex items-center justify-center text-gray-500 bg-white/80">
+                  <LoadingSpinner />
+                </div>
+              ) : (
                 <CandlestickChart
                   key="fullscreen"
                   data={candlestickData}

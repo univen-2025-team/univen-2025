@@ -13,6 +13,8 @@ import learnRoute from './learn/index.js';
 
 const rootRoute = Router();
 
+// Route child
+
 /* -------------------------- Health Check -------------------------- */
 rootRoute.get('/health', (req, res) => {
     res.status(200).json({ 
@@ -42,6 +44,11 @@ rootRoute.use('/market', marketCacheRoute);
 
 /* -------------------------- Media -------------------------- */
 rootRoute.use('/media', mediaRoute);
+
+/* -------------------------- Tools -------------------------- */
+import toolsRoute from './tools.route.js';
+rootRoute.use('/tools', toolsRoute);
+
 
 /* -------------------------- Learn -------------------------- */
 rootRoute.use('/learn', learnRoute);

@@ -5,21 +5,27 @@ import { fetchStockNews } from '@/lib/services/marketService';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Newspaper, ExternalLink, RefreshCcw, TrendingUp, Clock, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Newspaper, ExternalLink, RefreshCcw, TrendingUp, Clock, ChevronLeft, ChevronRight, Globe } from 'lucide-react';
 import NewsDetailModal from '@/components/market/NewsDetailModal';
 
 interface NewsItem {
     id?: string;
     title: string;
     description?: string;
+    short_content?: string;
     link?: string;
-    image_url?: string;
-    publishDate?: string;
-    source?: string;
-
-    // Add other fields as needed for the modal compatibility
-    full_content?: string;
     source_link?: string;
+    image_url?: string;
+    thumbnail?: string;
+    publishDate?: string;
+    public_date?: string;
+    source?: string;
+    source_domain?: string;
+    full_content?: string;
+    author?: string;
+    images?: string[];
+    matched_symbols?: string[];
+    category?: string;
 }
 
 export default function NewsPage() {
@@ -33,7 +39,7 @@ export default function NewsPage() {
     const loadNews = async () => {
         try {
             setLoading(true);
-            // Fetch general market news
+            // Fetch general market news from Multi-RSS
             const result = await fetchStockNews('MARKET');
             if (result.success && result.data && Array.isArray(result.data)) {
                 setNews(result.data);
@@ -53,10 +59,20 @@ export default function NewsPage() {
     const handleRefresh = () => {
         setRefreshing(true);
         loadNews();
-        setCurrentPage(1); // Reset to page 1 on refresh
+        setCurrentPage(1);
     };
 
-    // ... (Loading state check remains same)
+    // Get image URL (support both old and new format)
+    const getImageUrl = (item: NewsItem) => item.image_url || item.thumbnail;
+
+    // Get description (support both old and new format)
+    const getDescription = (item: NewsItem) => item.description || item.short_content || '';
+
+    // Get publish date (support both old and new format)
+    const getPublishDate = (item: NewsItem) => item.publishDate || item.public_date;
+
+    // Get link (support both old and new format)
+    const getLink = (item: NewsItem) => item.link || item.source_link;
 
     // Featured news (first item)
     const featuredNews = news[0];
@@ -70,11 +86,17 @@ export default function NewsPage() {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center min-h-[400px]">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            </div>
+        );
+    }
+
     return (
         <div className="space-y-8 pb-10 animate-fade-in relative">
             {/* Header */}
-            {/* ... (Header remains same) */}
-
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                     <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
@@ -110,9 +132,9 @@ export default function NewsPage() {
                                 className="group block relative overflow-hidden rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300 cursor-pointer"
                             >
                                 <div className="aspect-video relative bg-gray-100">
-                                    {featuredNews.image_url ? (
+                                    {getImageUrl(featuredNews) ? (
                                         <img
-                                            src={featuredNews.image_url}
+                                            src={getImageUrl(featuredNews)}
                                             alt={featuredNews.title}
                                             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                                         />
@@ -121,30 +143,58 @@ export default function NewsPage() {
                                             <TrendingUp className="w-16 h-16 text-blue-200" />
                                         </div>
                                     )}
-                                    <div className="absolute top-4 left-4">
+                                    <div className="absolute top-4 left-4 flex gap-2">
                                         <Badge className="bg-blue-600 hover:bg-blue-700 text-white border-0 shadow-lg">
                                             Tin nổi bật
                                         </Badge>
+                                        {featuredNews.category && (
+                                            <Badge variant="secondary" className="bg-white/90 text-gray-700">
+                                                {featuredNews.category === 'stock' ? 'Chứng khoán' :
+                                                    featuredNews.category === 'finance' ? 'Tài chính' :
+                                                        featuredNews.category === 'business' ? 'Kinh doanh' : featuredNews.category}
+                                            </Badge>
+                                        )}
                                     </div>
                                 </div>
                                 <div className="p-6 bg-white relative">
-                                    <div className="flex items-center gap-2 text-sm text-gray-500 mb-3">
-                                        <Badge variant="outline" className="text-blue-600 bg-blue-50 border-blue-100">
-                                            {featuredNews.source || 'VNStock'}
+                                    <div className="flex items-center gap-2 text-sm text-gray-500 mb-3 flex-wrap">
+                                        <Badge variant="outline" className="text-blue-600 bg-blue-50 border-blue-100 flex items-center gap-1">
+                                            <Globe className="w-3 h-3" />
+                                            {featuredNews.source || featuredNews.source_domain || 'VNStock'}
                                         </Badge>
-                                        <span className="flex items-center gap-1">
-                                            <Clock className="w-3 h-3" />
-                                            {new Date(featuredNews.publishDate!).toLocaleDateString('vi-VN', {
-                                                year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
-                                            })}
-                                        </span>
+                                        {featuredNews.author && (
+                                            <span className="text-gray-400">• {featuredNews.author}</span>
+                                        )}
+                                        {getPublishDate(featuredNews) && (
+                                            <span className="flex items-center gap-1">
+                                                <Clock className="w-3 h-3" />
+                                                {new Date(getPublishDate(featuredNews)!).toLocaleDateString('vi-VN', {
+                                                    year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
+                                                })}
+                                            </span>
+                                        )}
                                     </div>
                                     <h2 className="text-2xl font-bold text-gray-900 mb-3 group-hover:text-blue-700 transition-colors leading-tight">
                                         {featuredNews.title}
                                     </h2>
                                     <p className="text-gray-600 line-clamp-3 mb-4">
-                                        {featuredNews.description || 'Xem chi tiết tin tức này trên trang nguồn...'}
+                                        {getDescription(featuredNews) || 'Xem chi tiết tin tức này...'}
                                     </p>
+                                    {/* Matched symbols */}
+                                    {featuredNews.matched_symbols && featuredNews.matched_symbols.length > 0 && (
+                                        <div className="flex flex-wrap gap-1 mb-4">
+                                            {featuredNews.matched_symbols.slice(0, 5).map(symbol => (
+                                                <Badge key={symbol} variant="outline" className="text-xs text-emerald-600 bg-emerald-50 border-emerald-200">
+                                                    {symbol}
+                                                </Badge>
+                                            ))}
+                                            {featuredNews.matched_symbols.length > 5 && (
+                                                <Badge variant="outline" className="text-xs">
+                                                    +{featuredNews.matched_symbols.length - 5}
+                                                </Badge>
+                                            )}
+                                        </div>
+                                    )}
                                     <div className="flex items-center text-blue-600 font-medium group-hover:underline">
                                         Đọc tiếp <ExternalLink className="w-4 h-4 ml-1" />
                                     </div>
@@ -166,9 +216,9 @@ export default function NewsPage() {
                                         className="flex flex-col sm:flex-row gap-4 p-4 bg-white rounded-xl border border-gray-100 hover:border-blue-200 hover:shadow-md transition-all duration-200 group cursor-pointer"
                                     >
                                         <div className="w-full sm:w-48 h-32 bg-gray-100 rounded-lg overflow-hidden shrink-0">
-                                            {item.image_url ? (
+                                            {getImageUrl(item) ? (
                                                 <img
-                                                    src={item.image_url}
+                                                    src={getImageUrl(item)}
                                                     alt={item.title}
                                                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                                                 />
@@ -180,21 +230,42 @@ export default function NewsPage() {
                                         </div>
                                         <div className="flex-1 min-w-0 flex flex-col justify-between py-1">
                                             <div>
-                                                <div className="flex items-center gap-2 mb-2">
-                                                    <Badge variant="secondary" className="text-xs font-normal">
-                                                        {item.source}
+                                                <div className="flex items-center gap-2 mb-2 flex-wrap">
+                                                    <Badge variant="secondary" className="text-xs font-normal flex items-center gap-1">
+                                                        <Globe className="w-3 h-3" />
+                                                        {item.source || item.source_domain}
                                                     </Badge>
+                                                    {item.category && (
+                                                        <Badge variant="outline" className="text-xs">
+                                                            {item.category === 'stock' ? 'CK' :
+                                                                item.category === 'finance' ? 'TC' :
+                                                                    item.category === 'business' ? 'KD' : item.category}
+                                                        </Badge>
+                                                    )}
                                                     <span className="text-xs text-gray-400">
-                                                        {item.publishDate ? new Date(item.publishDate).toLocaleDateString('vi-VN') : ''}
+                                                        {getPublishDate(item) ? new Date(getPublishDate(item)!).toLocaleDateString('vi-VN') : ''}
                                                     </span>
                                                 </div>
                                                 <h4 className="font-bold text-gray-900 group-hover:text-blue-600 transition-colors line-clamp-2 mb-2">
                                                     {item.title}
                                                 </h4>
                                                 <p className="text-sm text-gray-500 line-clamp-2">
-                                                    {item.description}
+                                                    {getDescription(item)}
                                                 </p>
                                             </div>
+                                            {/* Matched symbols */}
+                                            {item.matched_symbols && item.matched_symbols.length > 0 && (
+                                                <div className="flex flex-wrap gap-1 mt-2">
+                                                    {item.matched_symbols.slice(0, 3).map(symbol => (
+                                                        <Badge key={symbol} variant="outline" className="text-xs text-emerald-600 bg-emerald-50 border-emerald-200">
+                                                            {symbol}
+                                                        </Badge>
+                                                    ))}
+                                                    {item.matched_symbols.length > 3 && (
+                                                        <span className="text-xs text-gray-400">+{item.matched_symbols.length - 3}</span>
+                                                    )}
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                 ))}
@@ -227,17 +298,32 @@ export default function NewsPage() {
                         </div>
                     </div>
 
-                    {/* Right Column: Trending / Categories */}
+                    {/* Right Column: Stats */}
                     <div className="space-y-6">
                         <Card>
                             <CardHeader>
                                 <CardTitle className="text-lg flex items-center gap-2">
                                     <TrendingUp className="w-5 h-5 text-emerald-500" />
-                                    Xu Hướng
+                                    Thống kê tin tức
                                 </CardTitle>
                             </CardHeader>
                             <CardContent className="space-y-4">
-                                <p className="text-sm text-gray-500 italic">Tính năng đang phát triển...</p>
+                                <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                                    <span className="text-gray-600">Tổng số tin</span>
+                                    <span className="font-bold text-blue-600">{news.length}</span>
+                                </div>
+                                <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                                    <span className="text-gray-600">Nguồn tin</span>
+                                    <span className="font-bold text-emerald-600">
+                                        {new Set(news.map(n => n.source || n.source_domain)).size}
+                                    </span>
+                                </div>
+                                <div className="flex justify-between items-center py-2">
+                                    <span className="text-gray-600">Có mã liên quan</span>
+                                    <span className="font-bold text-purple-600">
+                                        {news.filter(n => n.matched_symbols && n.matched_symbols.length > 0).length}
+                                    </span>
+                                </div>
                             </CardContent>
                         </Card>
 

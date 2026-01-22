@@ -68,9 +68,29 @@ def startup_vn30_sync():
     print(f"\n=== Startup Sync Enqueued ===")
 
 
-def sync_vn30_daily(date: str = None):
+def get_all_symbols():
+    """
+    Get all active stock symbols from company_profiles collection.
+    Fallback to VN30 if DB is empty.
+    """
+    try:
+        collection = db.get_database()["company_profiles"]
+        # Get distinct symbols
+        symbols = collection.distinct("ticker")
+        if symbols:
+            # Filter valid symbols (length 3, usually)
+            valid_symbols = [s for s in symbols if len(s) == 3]
+            print(f"Found {len(valid_symbols)} symbols in DB.")
+            return valid_symbols
+    except Exception as e:
+        print(f"Error fetching symbols from DB: {e}")
+    
+    return VN30_SYMBOLS
+
+def sync_all_stocks_daily(date: str = None):
     """
     Daily sync: Check if data exists for date, if not, enqueue job.
+    Syncs ALL stocks, prioritizing VN30.
     """
     if not date:
         now = datetime.now()
@@ -84,11 +104,11 @@ def sync_vn30_daily(date: str = None):
         elif wd == 0: # Monday
             target_date = now - timedelta(days=3)
         else:
-            target_date = now
+            target_date = now - timedelta(days=1) # Default to prev day for safety/policy
             
         date = target_date.strftime('%Y-%m-%d')
     
-    print(f"=== VN30 Daily Sync for {date} ===")
+    print(f"=== Market Daily Sync for {date} ===")
     
     db.connect()
     syncer = StockHistorySyncer()
@@ -99,14 +119,26 @@ def sync_vn30_daily(date: str = None):
         print(f"Redis connect error: {e}")
         return
     
+    # Get all symbols
+    all_symbols = get_all_symbols()
+    
+    # Prioritize VN30
+    vn30_set = set(VN30_SYMBOLS)
+    other_symbols = [s for s in all_symbols if s not in vn30_set and s != 'VN30']
+    
+    # Final list: VN30 first, then others
+    sync_list = VN30_SYMBOLS + sorted(other_symbols)
+    
+    print(f"Total symbols to check: {len(sync_list)}")
+    
     enqueued = 0
     skipped = 0
     
-    for i, symbol in enumerate(VN30_SYMBOLS):
+    for i, symbol in enumerate(sync_list):
         try:
             # Check if we already have data for this date
             if syncer.has_data_for_date(symbol, date, '1m'):
-                print(f"[{i+1}/{len(VN30_SYMBOLS)}] {symbol}: Data exists, skipping")
+                # print(f"[{i+1}/{len(sync_list)}] {symbol}: Data exists, skipping")
                 skipped += 1
                 continue
             
@@ -118,7 +150,9 @@ def sync_vn30_daily(date: str = None):
                 'timestamp': time.time()
             })
             r.lpush('vnstock_sync_queue', job_data)
-            print(f"[{i+1}/{len(VN30_SYMBOLS)}] {symbol}: Enqueued job")
+            # Log only every 50 enqueues to reduce spam
+            if enqueued % 50 == 0:
+                print(f"[{i+1}/{len(sync_list)}] {symbol}: Enqueued job (Total Enqueued: {enqueued})")
             enqueued += 1
                 
         except Exception as e:
@@ -171,6 +205,6 @@ if __name__ == "__main__":
     
     if len(sys.argv) > 1 and sys.argv[1] == 'daily':
         date = sys.argv[2] if len(sys.argv) > 2 else None
-        sync_vn30_daily(date)
+        sync_all_stocks_daily(date)
     else:
         startup_vn30_sync()

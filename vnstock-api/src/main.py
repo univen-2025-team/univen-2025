@@ -17,8 +17,8 @@ from src.config.app_config import AppConfig
 from src.jobs.scheduler import Scheduler
 from src.jobs.daily_sync import check_startup_sync
 from src.jobs.vn30_history_sync import startup_vn30_sync
-from src.jobs.news_sync import check_and_enqueue_news_sync
 from src.jobs.market_stats_gen import generate_daily_market_stats
+from src.jobs.rss_news_sync import sync_priority_news
 from src.services.fetchers.stock_history import StockHistoryFetcher
 from src.services.syncers.stock_history import StockHistorySyncer
 from src.worker import StockSyncWorker
@@ -68,13 +68,13 @@ async def startup_event():
             except Exception as e:
                 print(f"[Background] VN30 sync error: {e}")
         
-        def run_news_sync():
+        def run_rss_news_sync():
             try:
-                print("[Background] Starting News sync check...")
-                check_and_enqueue_news_sync()
-                print("[Background] News sync check completed.")
+                print("[Background] Starting Multi-RSS News sync...")
+                sync_priority_news()
+                print("[Background] Multi-RSS News sync completed.")
             except Exception as e:
-                print(f"[Background] News sync error: {e}")
+                print(f"[Background] RSS News sync error: {e}")
 
         def run_market_stats_gen():
             try:
@@ -89,7 +89,7 @@ async def startup_event():
         # Start all syncs in parallel background threads
         threading.Thread(target=run_startup_sync, daemon=True, name="StartupSync").start()
         threading.Thread(target=run_vn30_sync, daemon=True, name="VN30Sync").start()
-        threading.Thread(target=run_news_sync, daemon=True, name="NewsSync").start()
+        threading.Thread(target=run_rss_news_sync, daemon=True, name="RSSNewsSync").start()
         threading.Thread(target=run_market_stats_gen, daemon=True, name="MarketStatsGen").start()
         
         print("All startup sync tasks launched in background threads.")

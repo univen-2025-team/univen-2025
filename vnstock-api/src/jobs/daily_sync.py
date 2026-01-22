@@ -1,14 +1,41 @@
 import time
 import redis
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 from src.services.fetchers.company_profile import CompanyProfileFetcher
 from src.services.syncers.company_profile import CompanyProfileSyncer
 from src.services.fetchers.stock_symbol import StockSymbolFetcher
 from src.services.syncers.stock_symbol import StockSymbolSyncer
 from src.services.queue_utils import is_symbol_in_queue
 from vnstock import Listing
+from src.services.queue_utils import is_symbol_in_queue
+from vnstock import Listing
 from src.database.mongodb import db
+from src.jobs.vn30_history_sync import sync_all_stocks_daily, startup_vn30_sync
+
+def get_latest_completed_trading_date():
+    """
+    Returns the latest COMPLETED trading date.
+    Policy:
+    - If Today is Sat (5) -> Fri (Today - 1)
+    - If Today is Sun (6) -> Fri (Today - 2)
+    - If Today is Mon (0) -> Fri (Today - 3) (User Request: T2 lấy T6)
+    - If Today is Tue-Fri (1-4) -> Previous Day (Today - 1)
+    """
+    now = datetime.now()
+    wd = now.weekday()
+    
+    if wd == 5: # Sat -> Fri
+        delta = 1
+    elif wd == 6: # Sun -> Fri
+        delta = 2
+    elif wd == 0: # Mon -> Fri
+        delta = 3
+    else: # Tue-Fri -> Prev Day
+        delta = 1
+        
+    target = now - timedelta(days=delta)
+    return target.strftime('%Y-%m-%d')
 
 def check_startup_sync():
     """
@@ -37,6 +64,12 @@ def check_startup_sync():
              daily_sync_job()
         else:
              print("Startup Check: Data appears complete for today.")
+             
+        # Also run startup sync for VN30 history (checking availability for TODAY)
+        # Also run startup sync for VN30 history (checking availability for LATEST COMPLETED DATE)
+        target_date = get_latest_completed_trading_date()
+        print(f"Startup Check: Using target date {target_date} for Market sync.")
+        sync_all_stocks_daily(target_date)
             
     except Exception as e:
         print(f"Error checking startup sync: {e}")
@@ -139,5 +172,11 @@ def daily_sync_job():
 
     # 2. Sync Company Profiles
     sync_company_profiles()
+
+    # 3. Sync VN30 History (Market Page Data)
+    # 3. Sync Market History (Market Page Data)
+    # Use calculated target date to ensure we sync the 'completed' day
+    target_date = get_latest_completed_trading_date()
+    sync_all_stocks_daily(target_date)
     
     print(f"[{datetime.now()}] Daily Sync Job Completed.")

@@ -16,11 +16,18 @@ export function TopStocksChart({
     stocks,
     title = 'Top 10 cổ phiếu theo giá'
 }: TopStocksChartProps) {
+    // Filter out index symbols (VNINDEX, VN30, etc.) - they are indices, not stocks
+    // Indices are measured in points, while stock prices are in VND
+    const indexSymbols = ['VNINDEX', 'VN30', 'HNX', 'HNXINDEX', 'UPCOM'];
+
     const chartData =
-        stocks?.slice(0, 10).map((stock) => ({
-            symbol: stock.symbol,
-            price: stock.price
-        })) || [];
+        stocks
+            ?.filter((stock) => !indexSymbols.includes(stock.symbol.toUpperCase()))
+            .slice(0, 10)
+            .map((stock) => ({
+                symbol: stock.symbol,
+                price: stock.price
+            })) || [];
 
     if (chartData.length === 0) {
         return (

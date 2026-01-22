@@ -1,10 +1,11 @@
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
+from apscheduler.triggers.interval import IntervalTrigger
 from src.jobs.daily_sync import daily_sync_job
-from src.jobs.vn30_history_sync import sync_vn30_daily
-from src.jobs.news_sync import check_and_enqueue_news_sync
 from src.jobs.backup_mongodb import perform_backup
-import time
+from src.jobs.rss_news_sync import sync_all_news
+from src.jobs.content_scrape_worker import process_scrape_queue, scrape_unscraped_items
+from src.jobs.market_stats_gen import generate_daily_market_stats
 
 class Scheduler:
     def __init__(self):
@@ -20,15 +21,6 @@ class Scheduler:
             replace_existing=True
         )
 
-        # Add Daily News Sync Check (VN30 + MARKET) at 1:30 AM
-        self.scheduler.add_job(
-            check_and_enqueue_news_sync,
-            trigger=CronTrigger(hour=1, minute=30),
-            id='daily_news_sync_job',
-            name='Daily News Sync Check',
-            replace_existing=True
-        )
-
         # Add Daily MongoDB Backup at 2:00 AM
         self.scheduler.add_job(
             perform_backup,
@@ -38,23 +30,56 @@ class Scheduler:
             replace_existing=True
         )
         
-        # Add VN30 1-minute history sync job to run everyday at 6:00 PM (after market close)
-        # VN30 job migrated to Node.js Queue
-        # self.scheduler.add_job(
-        #     sync_vn30_daily,
-        #     trigger=CronTrigger(hour=18, minute=0),
-        #     id='vn30_history_sync_job',
-        #     name='VN30 Daily History Sync',
-        #     replace_existing=True
-        # )
+        # ═══════════════════════════════════════════════════════════════════
+        # Multi-RSS News Jobs
+        # ═══════════════════════════════════════════════════════════════════
+        
+        # Fetch RSS from all sources every 10 minutes
+        self.scheduler.add_job(
+            sync_all_news,
+            trigger=IntervalTrigger(minutes=10),
+            id='rss_news_sync_job',
+            name='Multi-RSS News Sync (All Sources)',
+            replace_existing=True
+        )
+        
+        # Process content scrape queue every 5 minutes
+        self.scheduler.add_job(
+            lambda: process_scrape_queue(max_items=20),
+            trigger=IntervalTrigger(minutes=5),
+            id='content_scrape_worker_job',
+            name='Content Scrape Worker',
+            replace_existing=True
+        )
+        
+        # Scrape unscraped items directly (fallback) every 15 minutes
+        self.scheduler.add_job(
+            lambda: scrape_unscraped_items(max_items=30),
+            trigger=IntervalTrigger(minutes=15),
+            id='scrape_unscraped_job',
+            name='Scrape Unscraped Items (Fallback)',
+            replace_existing=True
+        )
+
+        # Generate Market Stats (Top Gainers/Losers) every 5 minutes
+        # This ensures stats are updated as new data syncs throughout the day
+        self.scheduler.add_job(
+            generate_daily_market_stats,
+            trigger=IntervalTrigger(minutes=5),
+            id='market_stats_gen_job',
+            name='Generate Market Stats',
+            replace_existing=True
+        )
         
         self.scheduler.start()
         print("Scheduler started.")
         print("  - Daily sync job scheduled for 01:00 AM")
-        print("  - Daily News sync scheduled for 01:30 AM")
         print("  - Daily Backup job scheduled for 02:00 AM")
+        print("  - Multi-RSS News sync scheduled every 10 minutes")
+        print("  - Content Scrape worker scheduled every 5 minutes")
+        print("  - Scrape Unscraped fallback scheduled every 15 minutes")
+        print("  - Market Stats generation scheduled every 5 minutes")
 
     def shutdown(self):
         self.scheduler.shutdown()
         print("Scheduler shut down.")
-

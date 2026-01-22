@@ -344,11 +344,46 @@ export default class MarketSocketService {
             }
 
             if (finalVN30) {
+                // Fetch stocks from MongoDB for complete market update
+                let stocks: StockData[] = [];
+                let topGainers: StockData[] = [];
+                let topLosers: StockData[] = [];
+
+                try {
+                    // Get latest market data from cache
+                    const marketData = await MarketCacheService.getLatestMarketData();
+                    if (marketData) {
+                        // Get all stocks for the date
+                        const allStocks = await MarketCacheService.getAllStocksByDate(marketData.date);
+                        if (allStocks && allStocks.length > 0) {
+                            stocks = allStocks.map((s: any) => ({
+                                symbol: s.symbol,
+                                price: s.price || s.close || 0,
+                                change: s.change || 0,
+                                changePercent: s.changePercent || 0,
+                                volume: s.volume || 0,
+                                high: s.high || 0,
+                                low: s.low || 0,
+                                open: s.open || 0,
+                                close: s.close || s.price || 0
+                            }));
+
+                            // Sort for top gainers/losers
+                            const sorted = [...stocks].sort((a, b) => b.changePercent - a.changePercent);
+                            topGainers = sorted.filter(s => s.changePercent > 0).slice(0, 10);
+                            topLosers = sorted.filter(s => s.changePercent < 0).slice(-10).reverse();
+                        }
+                    }
+                } catch (stockError) {
+                    console.warn('[MarketSocket] Could not fetch stocks for update:', stockError);
+                    // Continue with empty arrays - client will use its existing data
+                }
+
                 const marketUpdate: MarketUpdate = {
                     vn30Index: finalVN30,
-                    stocks: [], // Populate if needed
-                    topGainers: [],
-                    topLosers: [],
+                    stocks: stocks,
+                    topGainers: topGainers,
+                    topLosers: topLosers,
                     timestamp: new Date().toISOString()
                 };
 

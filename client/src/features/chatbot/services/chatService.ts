@@ -1065,6 +1065,8 @@ export const sendChatMessage = async (
   // ============================================
   const apiUrl = `${finalAgentUrl}/api/v1/chat`
 
+  const apiUrl = `${agentApiUrl}/api/v1/chat`
+
   // Log chi tiết để debug full context và meta
   console.log(`🔗 Calling ${isUsingHF ? 'HuggingFace' : 'AGENT_API'} via proxy:`, apiUrl)
   console.log('📋 Request meta (with user info):', request.meta)
@@ -1160,6 +1162,9 @@ export const sendChatMessage = async (
 
     // Fallback to Groq khi network error hoặc timeout
     console.warn(isTimeout ? '⏱️ AGENT_API timeout, falling back to Groq...' : '⚠️ AGENT_API network error, falling back to Groq...')
+
+    // Fallback to Groq khi network error
+    console.warn('⚠️ AGENT_API network error, falling back to Groq...')
     const groqResult = await callGroqAPI(request.messages)
     if (groqResult) {
       return {
@@ -1206,22 +1211,9 @@ export const createFallbackResponse = async (
             getStockDetails(symbol)
           ])
 
+          const stockData = await getStockData(symbol)
+
           if (stockData) {
-            // Ưu tiên lấy name từ stockDetails (stock-symbol.model.ts)
-            const companyName = stockDetails?.info?.organName || 
-                               stockDetails?.info?.enOrganName || 
-                               stockDetails?.info?.organShortName ||
-                               stockDetails?.info?.enOrganShortName ||
-                               stockData.companyName || 
-                               `${stockData.symbol} Corporation`
-
-            // Lấy description từ profile hoặc tạo mặc định
-            const organName = stockDetails?.info?.organName
-            const description = stockDetails?.profile?.description || 
-                               (organName ? 
-                               `Thông tin chi tiết về ${organName}` :
-                               `Thông tin chi tiết về ${stockData.symbol}`)
-
             enhancedEffects = [{
               type: 'OPEN_STOCK_DETAIL',
               payload: {
@@ -1234,12 +1226,6 @@ export const createFallbackResponse = async (
               },
             }]
             fallbackReply = `Đã tải thông tin về ${stockData.symbol}. Giá hiện tại: ${stockData.price.toLocaleString('vi-VN')} VNĐ (${stockData.changePercent > 0 ? '+' : ''}${stockData.changePercent.toFixed(2)}%).`
-            
-            console.log(`✅ Stock detail loaded with symbol info for ${symbol}:`, {
-              stockData,
-              stockDetails,
-              companyName
-            })
           } else {
             // Nếu không fetch được, dùng mock data
             console.warn(`⚠️ Could not fetch stock data for ${symbol}, using mock data`)

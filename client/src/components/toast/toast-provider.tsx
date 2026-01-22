@@ -30,7 +30,18 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
             const id = Math.random().toString(36).substring(7);
             const newToast: Toast = { id, type, message, duration };
 
-            setToasts((prev) => [...prev, newToast]);
+            // Replace existing toast with same message instead of stacking
+            setToasts((prev) => {
+                const existingIndex = prev.findIndex(t => t.message === message);
+                if (existingIndex >= 0) {
+                    const updated = [...prev];
+                    updated[existingIndex] = newToast;
+                    return updated;
+                }
+                // Limit to max 3 toasts to prevent overflow
+                const limited = prev.length >= 3 ? prev.slice(-2) : prev;
+                return [...limited, newToast];
+            });
 
             if (duration > 0) {
                 setTimeout(() => {
@@ -65,7 +76,7 @@ function ToastContainer({
     removeToast: (id: string) => void;
 }) {
     return (
-        <div className="fixed top-4 right-4 z-50 flex flex-col gap-2 max-w-sm">
+        <div className="fixed bottom-4 right-4 z-[9999] flex flex-col gap-2 max-w-sm">
             {toasts.map((toast) => (
                 <ToastItem key={toast.id} toast={toast} onClose={() => removeToast(toast.id)} />
             ))}
@@ -90,9 +101,8 @@ function ToastItem({ toast, onClose }: { toast: Toast; onClose: () => void }) {
 
     return (
         <div
-            className={`flex items-start gap-3 p-4 rounded-xl border-l-4 shadow-2xl animate-in slide-in-from-right ${
-                styles[toast.type]
-            }`}
+            className={`flex items-start gap-3 p-4 rounded-xl border-l-4 shadow-2xl animate-in slide-in-from-right ${styles[toast.type]
+                }`}
         >
             <span className="text-xl font-bold flex-shrink-0">{icons[toast.type]}</span>
             <p className="flex-1 text-sm font-medium">{toast.message}</p>

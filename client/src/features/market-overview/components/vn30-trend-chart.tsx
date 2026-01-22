@@ -11,6 +11,7 @@ import {
     ResponsiveContainer,
     ReferenceLine
 } from 'recharts';
+import { Activity } from 'lucide-react';
 
 interface IndexHistoryPoint {
     time: string;
@@ -82,72 +83,29 @@ export function VN30TrendChart({
         }, [data]);
 
     // Dynamic colors based on trend
-    const trendColor = isUp ? '#10b981' : '#ef4444'; // Green for up, Red for down
-    const gradientId = isUp ? 'greenGradient' : 'redGradient';
-    const bgGradient = isUp ? 'from-emerald-500/10 to-[#0F111A]' : 'from-red-500/10 to-[#0F111A]';
+    const trendColor = isUp ? '#4f46e5' : '#f43f5e'; // Indigo-600 or Rose-500
+    const gradientId = isUp ? 'blueGradient' : 'redGradient';
+
+    // Light mode gradients
+    const bgGradient = 'bg-white';
+    const borderColor = 'border-gray-100';
 
     if (!data || data.length === 0) {
         return (
-            <div
-                className={`bg-gradient-to-b ${bgGradient} rounded-xl shadow-lg p-6 border border-white/10`}
-            >
+            <div className={`h-full flex flex-col bg-white rounded-xl p-6 border border-gray-100`}>
                 <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center">
-                            <svg
-                                className="w-6 h-6 text-blue-400"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                            >
-                                <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"
-                                />
-                            </svg>
+                        <div className="w-10 h-10 bg-gray-50 rounded-lg flex items-center justify-center">
+                            <Activity className="w-6 h-6 text-gray-400" />
                         </div>
-                        <h3 className="text-lg font-bold text-white">Biểu đồ xu hướng VN30</h3>
-                    </div>
-                    <div className="w-[120px]">
-                        <Select value={selectedRange} onValueChange={onRangeChange}>
-                            <SelectTrigger className="h-9 text-sm bg-white">
-                                <SelectValue placeholder="Chọn thời gian" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {ranges.map((range) => (
-                                    <SelectItem
-                                        key={range.value}
-                                        value={range.value}
-                                        className="text-sm"
-                                    >
-                                        {range.label}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
+                        <h3 className="text-lg font-bold text-gray-900">Biểu đồ xu hướng VN30</h3>
                     </div>
                 </div>
-                <div className="h-80 flex items-center justify-center text-gray-400">
+                <div className="flex-1 flex items-center justify-center text-gray-400">
                     <div className="text-center">
-                        <svg
-                            className="w-16 h-16 mx-auto mb-4 text-gray-600"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                        >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={1.5}
-                                d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-                            />
-                        </svg>
-                        <p className="text-lg font-medium text-gray-300">Chưa có dữ liệu</p>
-                        <p className="text-sm text-gray-500 mt-1">
-                            Dữ liệu sẽ được cập nhật khi có giao dịch
-                        </p>
+                        <Activity className="w-16 h-16 mx-auto mb-4 text-gray-200" />
+                        <p className="text-lg font-medium text-gray-500">Sắp ra mắt</p>
+                        <p className="text-sm text-gray-400 mt-1">Dữ liệu sẽ được cập nhật khi có giao dịch</p>
                     </div>
                 </div>
             </div>
@@ -155,96 +113,51 @@ export function VN30TrendChart({
     }
 
     return (
-        <div
-            className={`bg-gradient-to-b ${bgGradient} rounded-xl shadow-lg p-6 border border-white/10`}
-        >
+        <div className="h-full flex flex-col bg-white rounded-xl">
             {/* Header */}
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center justify-between mb-4 px-1">
                 <div className="flex items-center gap-4">
-                    <div
-                        className={`w-12 h-12 rounded-xl flex items-center justify-center ${isUp ? 'bg-emerald-100' : 'bg-red-100'
-                            }`}
-                    >
-                        {isUp ? (
-                            <svg
-                                className="w-7 h-7 text-emerald-600"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                            >
-                                <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
-                                />
-                            </svg>
-                        ) : (
-                            <svg
-                                className="w-7 h-7 text-red-600"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                            >
-                                <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"
-                                />
-                            </svg>
-                        )}
-                    </div>
                     <div>
-                        <h3 className="text-lg font-bold text-gray-900">Biểu đồ xu hướng VN30</h3>
-                        <div className="flex items-center gap-3 mt-1">
-                            <span className="text-2xl font-bold text-gray-900">
-                                {lastValue.toLocaleString('vi-VN', { maximumFractionDigits: 2 })}{' '}
-                                điểm
+                        <div className="flex items-baseline gap-2">
+                            <span className="text-3xl font-bold text-gray-900 tracking-tight">
+                                {lastValue.toLocaleString('vi-VN', { maximumFractionDigits: 2 })}
                             </span>
-                            <span
-                                className={`text-sm font-semibold px-2 py-0.5 rounded-full ${isUp
-                                        ? 'bg-emerald-100 text-emerald-700'
-                                        : 'bg-red-100 text-red-700'
-                                    }`}
-                            >
-                                {isUp ? '+' : ''}
-                                {change.toFixed(2)} điểm ({isUp ? '+' : ''}
-                                {changePercent.toFixed(2)}%)
+                            <span className={`text-sm font-bold px-2 py-0.5 rounded-full flex items-center gap-1 ${isUp ? 'bg-indigo-50 text-indigo-600' : 'bg-red-50 text-red-600'}`}>
+                                {isUp ? '+' : ''}{change.toFixed(2)}
+                                <span className="opacity-80">({isUp ? '+' : ''}{changePercent.toFixed(2)}%)</span>
                             </span>
                         </div>
+                        <p className="text-xs font-medium text-gray-400 mt-0.5">VN30 Class • Trực tuyến</p>
                     </div>
                 </div>
-                <div className="flex items-center gap-3">
-                    {/* Stats */}
-                    <div className="hidden sm:flex items-center gap-4 text-sm mr-4">
-                        <div className="text-center">
-                            <p className="text-gray-500">Thấp nhất</p>
-                            <p className="font-semibold text-gray-900">
-                                {minValue.toLocaleString('vi-VN', { maximumFractionDigits: 2 })}{' '}
-                                điểm
+                <div className="flex items-center gap-4">
+                    {/* Stats - Hidden on mobile */}
+                    <div className="hidden sm:flex items-center gap-6 text-xs sm:text-sm mr-2">
+                        <div className="text-right">
+                            <p className="text-gray-400 text-[10px] uppercase font-bold tracking-wider">Thấp</p>
+                            <p className="font-bold text-gray-700 font-mono">
+                                {minValue.toLocaleString('vi-VN', { maximumFractionDigits: 2 })}
                             </p>
                         </div>
-                        <div className="text-center">
-                            <p className="text-gray-500">Cao nhất</p>
-                            <p className="font-semibold text-gray-900">
-                                {maxValue.toLocaleString('vi-VN', { maximumFractionDigits: 2 })}{' '}
-                                điểm
+                        <div className="text-right">
+                            <p className="text-gray-400 text-[10px] uppercase font-bold tracking-wider">Cao</p>
+                            <p className="font-bold text-gray-700 font-mono">
+                                {maxValue.toLocaleString('vi-VN', { maximumFractionDigits: 2 })}
                             </p>
                         </div>
                     </div>
                     {/* Time Range Selector */}
-                    <div className="w-[120px]">
+                    <div className="w-[100px]">
                         <Select value={selectedRange} onValueChange={onRangeChange}>
-                            <SelectTrigger className="h-9 text-sm bg-white shadow-sm">
-                                <SelectValue placeholder="Chọn thời gian" />
+                            <SelectTrigger className="h-8 text-xs bg-white border-gray-200 text-gray-600 hover:bg-gray-50 focus:ring-1 focus:ring-gray-200 shadow-sm font-semibold">
+                                <SelectValue placeholder="Period" />
                             </SelectTrigger>
-                            <SelectContent>
+                            <SelectContent className="bg-white border-gray-100 text-gray-700 shadow-lg">
                                 {ranges.map((range) => (
                                     <SelectItem
                                         key={range.value}
                                         value={range.value}
-                                        className="text-sm"
+                                        className="text-xs focus:bg-gray-50 focus:text-gray-900 cursor-pointer font-medium"
                                     >
                                         {range.label}
                                     </SelectItem>
@@ -256,104 +169,81 @@ export function VN30TrendChart({
             </div>
 
             {/* Chart */}
-            <ResponsiveContainer width="100%" height={400} debounce={200}>
-                <AreaChart data={data}>
-                    <defs>
-                        <linearGradient id="greenGradient" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%" stopColor="#10b981" stopOpacity={0.4} />
-                            <stop offset="50%" stopColor="#10b981" stopOpacity={0.15} />
-                            <stop offset="100%" stopColor="#10b981" stopOpacity={0} />
-                        </linearGradient>
-                        <linearGradient id="redGradient" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%" stopColor="#ef4444" stopOpacity={0.4} />
-                            <stop offset="50%" stopColor="#ef4444" stopOpacity={0.15} />
-                            <stop offset="100%" stopColor="#ef4444" stopOpacity={0} />
-                        </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />
-                    <XAxis
-                        dataKey="time"
-                        tick={{ fontSize: 11, fill: '#6b7280' }}
-                        tickLine={false}
-                        axisLine={{ stroke: '#e5e7eb' }}
-                        tickFormatter={(value) => {
-                            // For intraday data (YYYY-MM-DD HH:MM:SS), show only HH:MM
-                            if (value.includes(' ')) {
-                                const timePart = value.split(' ')[1];
-                                return timePart.substring(0, 5);
-                            }
-                            if (value.includes('/')) return value.split('/').slice(0, 2).join('/');
-                            return value;
-                        }}
-                    />
-                    <YAxis
-                        domain={['auto', 'auto']}
-                        tick={{ fontSize: 11, fill: '#6b7280' }}
-                        tickLine={false}
-                        axisLine={false}
-                        tickFormatter={(value) => value.toLocaleString('vi-VN')}
-                    />
-                    <Tooltip
-                        contentStyle={{
-                            backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                            border: 'none',
-                            borderRadius: '12px',
-                            boxShadow: '0 10px 40px rgba(0, 0, 0, 0.15)',
-                            padding: '12px 16px'
-                        }}
-                        labelStyle={{ color: '#6b7280', fontSize: '12px', marginBottom: '4px' }}
-                        formatter={(value: number) => [
-                            <span
-                                key="value"
-                                className="font-bold text-lg"
-                                style={{ color: trendColor }}
-                            >
-                                {value.toLocaleString('vi-VN', { maximumFractionDigits: 2 })}
-                            </span>,
-                            'VN30'
-                        ]}
-                        labelFormatter={(label) => {
-                            if (label.includes(' ')) {
-                                return `Thời gian: ${label.split(' ')[1].substring(0, 5)}`;
-                            }
-                            return `Ngày: ${label}`;
-                        }}
-                    />
-                    {/* Reference line at opening value */}
-                    <ReferenceLine
-                        y={firstValue}
-                        stroke="#9ca3af"
-                        strokeDasharray="4 4"
-                        strokeWidth={1}
-                    />
-                    <Area
-                        type="monotone"
-                        dataKey="index"
-                        stroke={trendColor}
-                        strokeWidth={2.5}
-                        fill={`url(#${gradientId})`}
-                        isAnimationActive={true}
-                        animationDuration={500}
-                    />
-                </AreaChart>
-            </ResponsiveContainer>
-
-            {/* Legend */}
-            <div className="flex items-center justify-center gap-6 mt-4 text-sm text-gray-500">
-                <div className="flex items-center gap-2">
-                    <div
-                        className="w-8 h-0.5 bg-gray-400"
-                        style={{ borderTop: '2px dashed #9ca3af' }}
-                    ></div>
-                    <span>
-                        Điểm mở phiên (
-                        {firstValue.toLocaleString('vi-VN', { maximumFractionDigits: 2 })} điểm)
-                    </span>
-                </div>
-                <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 rounded" style={{ backgroundColor: trendColor }}></div>
-                    <span>{isUp ? 'Xu hướng tăng' : 'Xu hướng giảm'}</span>
-                </div>
+            <div className="flex-1 min-h-0 -mx-2">
+                <ResponsiveContainer width="100%" height="100%" debounce={200}>
+                    <AreaChart data={data} margin={{ top: 5, right: 0, left: 0, bottom: 0 }}>
+                        <defs>
+                            <linearGradient id="blueGradient" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0%" stopColor="#4f46e5" stopOpacity={0.2} />
+                                <stop offset="100%" stopColor="#4f46e5" stopOpacity={0} />
+                            </linearGradient>
+                            <linearGradient id="redGradient" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0%" stopColor="#f43f5e" stopOpacity={0.2} />
+                                <stop offset="100%" stopColor="#f43f5e" stopOpacity={0} />
+                            </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
+                        <XAxis
+                            dataKey="time"
+                            tick={{ fontSize: 10, fill: '#94a3b8', fontWeight: 500 }}
+                            tickLine={false}
+                            axisLine={false}
+                            minTickGap={40}
+                            tickFormatter={(value) => {
+                                if (value.includes(' ')) {
+                                    const timePart = value.split(' ')[1];
+                                    return timePart.substring(0, 5);
+                                }
+                                if (value.includes('/')) return value.split('/').slice(0, 2).join('/');
+                                return value;
+                            }}
+                            dy={10}
+                        />
+                        <YAxis
+                            domain={['auto', 'auto']}
+                            tick={{ fontSize: 10, fill: '#94a3b8', fontWeight: 500 }}
+                            tickLine={false}
+                            axisLine={false}
+                            width={45}
+                            tickFormatter={(value) => value.toLocaleString('vi-VN')}
+                            dx={-10}
+                        />
+                        <Tooltip
+                            contentStyle={{
+                                backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                                border: '1px solid #e2e8f0',
+                                borderRadius: '12px',
+                                boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
+                                padding: '12px 16px',
+                                color: '#1e293b'
+                            }}
+                            cursor={{ stroke: '#cbd5e1', strokeWidth: 1, strokeDasharray: '4 4' }}
+                            labelStyle={{ color: '#64748b', fontSize: '11px', marginBottom: '4px', fontWeight: 600 }}
+                            formatter={(value: number) => [
+                                <span key="value" className="font-bold text-base font-mono" style={{ color: trendColor }}>
+                                    {value.toLocaleString('vi-VN', { maximumFractionDigits: 2 })}
+                                </span>,
+                                <span key="label" className="text-gray-500 text-xs ml-2 font-medium">VN30</span>
+                            ]}
+                            labelFormatter={(label) => {
+                                if (label.includes(' ')) {
+                                    return `${label.split(' ')[1].substring(0, 5)} • ${label.split(' ')[0]}`;
+                                }
+                                return label;
+                            }}
+                        />
+                        <ReferenceLine y={firstValue} stroke="#cbd5e1" strokeDasharray="3 3" strokeWidth={1} label={{ value: 'Mở cửa', position: 'insideLeft', fill: '#94a3b8', fontSize: 10 }} />
+                        <Area
+                            type="monotone"
+                            dataKey="index"
+                            stroke={trendColor}
+                            strokeWidth={2}
+                            fill={`url(#${gradientId})`}
+                            isAnimationActive={true}
+                            animationDuration={1000}
+                        />
+                    </AreaChart>
+                </ResponsiveContainer>
             </div>
         </div>
     );

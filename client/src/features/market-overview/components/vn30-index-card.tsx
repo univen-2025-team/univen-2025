@@ -81,8 +81,8 @@ export function VN30IndexCard({
                     {/* Actions */}
                     <div className="flex items-center gap-3">
                         <div className={`px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1.5 border backdrop-blur-sm shadow-sm transition-colors ${realtimeEnabled
-                                ? 'bg-emerald-50/80 text-emerald-700 border-emerald-200'
-                                : 'bg-gray-100 text-gray-500 border-gray-200'
+                            ? 'bg-emerald-50/80 text-emerald-700 border-emerald-200'
+                            : 'bg-gray-100 text-gray-500 border-gray-200'
                             }`}>
                             <Zap className={`w-3.5 h-3.5 ${realtimeEnabled ? 'fill-emerald-500 text-emerald-500' : ''}`} />
                             {realtimeEnabled ? 'LIVE DATA' : 'OFFLINE'}
@@ -91,8 +91,8 @@ export function VN30IndexCard({
                         <button
                             onClick={onToggleRealtime}
                             className={`p-2.5 rounded-xl transition-all active:scale-95 ${realtimeEnabled
-                                    ? 'bg-white text-emerald-600 shadow-sm border border-emerald-100 hover:bg-emerald-50'
-                                    : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                                ? 'bg-white text-emerald-600 shadow-sm border border-emerald-100 hover:bg-emerald-50'
+                                : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
                                 }`}
                             title="Toggle Real-time"
                         >
@@ -113,8 +113,8 @@ export function VN30IndexCard({
                     </div>
 
                     <div className={`flex items-center gap-3 px-4 py-2 rounded-xl backdrop-blur-sm border shadow-sm transition-colors ${isPositive ? 'bg-emerald-50/50 border-emerald-100' :
-                            isNegative ? 'bg-red-50/50 border-red-100' :
-                                'bg-amber-50/50 border-amber-100'
+                        isNegative ? 'bg-red-50/50 border-red-100' :
+                            'bg-amber-50/50 border-amber-100'
                         }`}>
                         <div className={`flex items-center gap-1 text-lg font-bold ${getTextColor()}`}>
                             {isPositive ? '+' : ''}{formatNumber(change)}

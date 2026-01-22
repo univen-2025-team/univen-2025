@@ -72,6 +72,34 @@ export default class MarketCacheService {
                 }
             }
 
+            // ENRICHMENT: Fetch full stock list for this date (includes Company Name & Logo)
+            if (result && result.date) {
+                const allStocks = await this.getAllStocksByDate(result.date);
+                (result as any).stocks = allStocks;
+
+                // Create Map for O(1) enrichment of topGainers/topLosers
+                const stockMap = new Map();
+                allStocks.forEach((s: any) => {
+                    stockMap.set(s.symbol, { companyName: s.companyName, logo: s.logo });
+                });
+
+                // Enrich Top Gainers
+                if (result.topGainers) {
+                    result.topGainers = result.topGainers.map((g: any) => {
+                        const info = stockMap.get(g.symbol);
+                        return { ...g, companyName: info?.companyName || g.companyName, logo: info?.logo || null };
+                    });
+                }
+
+                // Enrich Top Losers
+                if (result.topLosers) {
+                    result.topLosers = result.topLosers.map((l: any) => {
+                        const info = stockMap.get(l.symbol);
+                        return { ...l, companyName: info?.companyName || l.companyName, logo: info?.logo || null };
+                    });
+                }
+            }
+
             return result as MarketDataLean | null;
         } catch (error) {
             this.logger.error('Error getting latest market data', error as any);
@@ -265,14 +293,35 @@ export default class MarketCacheService {
         try {
             const results = await StockHistoryModel.find({ date, interval }).lean().exec();
 
+            // Enrichment: Get Company Profiles for these stocks
+            const symbols = results.map((r: any) => r.symbol);
+            const profiles = await CompanyProfileModel.find({ ticker: { $in: symbols } })
+                .select('ticker companyName logo')
+                .lean()
+                .exec();
+
+            // Create Map for O(1) lookup
+            const profileMap = new Map();
+            profiles.forEach((p: any) => {
+                profileMap.set(p.ticker, {
+                    companyName: p.companyName,
+                    logo: p.logo
+                });
+            });
+
             // Transform raw history to summary format expected by frontend
             return results.map((doc: any) => {
+                const profile = profileMap.get(doc.symbol);
+                const companyName = profile?.companyName || doc.symbol;
+                const logo = profile?.logo || null;
+
                 const prices = doc.prices || [];
                 if (prices.length === 0) {
                     return {
                         symbol: doc.symbol,
                         date: doc.date,
-                        companyName: doc.symbol,
+                        companyName,
+                        logo,
                         price: 0,
                         change: 0,
                         changePercent: 0,
@@ -307,7 +356,8 @@ export default class MarketCacheService {
                 return {
                     symbol: doc.symbol,
                     date: doc.date,
-                    companyName: doc.symbol, // Detailed info requires profile join, skipping for performance
+                    companyName,
+                    logo,
                     price: close, // Current price is last close
                     change: parseFloat(change.toFixed(2)),
                     changePercent: parseFloat(changePercent.toFixed(2)),
