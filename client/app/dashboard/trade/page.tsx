@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
-import { Card, CardContent } from '@/components/ui/card';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import { userApi, type UserProfile } from '@/lib/api/user.api';
 import { transactionApi } from '@/lib/api/transaction.api';
@@ -151,7 +150,7 @@ export default function TradePage() {
             <PageHeader title="Giao dịch cổ phiếu" description="Đặt lệnh mua / bán cổ phiếu" />
 
             {profileError && (
-                <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                <div className="rounded-lg border border-warning bg-warning-light px-4 py-3 text-sm text-warning-foreground">
                     {profileError}
                 </div>
             )}
@@ -170,21 +169,19 @@ export default function TradePage() {
 
             <form onSubmit={formik.handleSubmit}>
                 <div className="grid gap-6 lg:grid-cols-[2fr_1fr]">
-                    <Card className="border border-gray-100 shadow-sm">
-                        <CardContent className="p-6">
-                            <BuyOrderForm
-                                formik={formik}
-                                maxBuyQuantity={maxBuyQuantity}
-                                onUseMaxQuantity={() => {
-                                    if (maxBuyQuantity !== undefined) {
-                                        formik.setFieldValue('quantity', maxBuyQuantity);
-                                    }
-                                }}
-                                availableBalance={availableBalance}
-                                disableSubmit={formik.isSubmitting || isBalanceInsufficient}
-                            />
-                        </CardContent>
-                    </Card>
+                    <div className="min-w-0">
+                        <BuyOrderForm
+                            formik={formik}
+                            maxBuyQuantity={maxBuyQuantity}
+                            onUseMaxQuantity={() => {
+                                if (maxBuyQuantity !== undefined) {
+                                    formik.setFieldValue('quantity', maxBuyQuantity);
+                                }
+                            }}
+                            availableBalance={availableBalance}
+                            disableSubmit={formik.isSubmitting || isBalanceInsufficient}
+                        />
+                    </div>
 
                     <div className="space-y-6">
                         <TransactionSummaryCard

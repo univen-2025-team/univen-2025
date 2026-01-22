@@ -34,8 +34,12 @@ export function BuyOrderForm({
 }: BuyOrderFormProps) {
     const renderError = (field: keyof BuyStockFormValues) => {
         if (!formik.touched[field] || !formik.errors[field]) return null;
-        return <p className="text-sm text-red-400">{formik.errors[field]}</p>;
+        return <p className="text-sm text-destructive">{formik.errors[field]}</p>;
     };
+
+    const inputClass =
+        'bg-background border-input text-foreground placeholder:text-muted-foreground focus-visible:border-primary focus-visible:ring-primary/20';
+    const triggerClass = 'bg-background border-input text-foreground hover:bg-muted/50 [&_svg]:text-muted-foreground focus-visible:border-primary focus-visible:ring-primary/20';
 
     const isBuyTransaction = formik.values.transaction_type === 'BUY';
     const numericBalance = typeof availableBalance === 'number' ? availableBalance : undefined;
@@ -108,9 +112,8 @@ export function BuyOrderForm({
             : null;
 
     return (
-        <div className="relative group/form">
-            <div className="absolute -inset-0.5 bg-gradient-to-r from-violet-500/30 to-fuchsia-500/30 rounded-[34px] blur opacity-20 group-hover/form:opacity-30 transition duration-500"></div>
-            <div className="relative space-y-6 rounded-[32px] border border-white/10 bg-[#0F111A]/80 backdrop-blur-2xl p-6 shadow-2xl ring-1 ring-white/5">
+        <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+            <div className="space-y-6">
                 <section className="grid gap-4 sm:grid-cols-2">
                     <div className="space-y-2">
                         <Label htmlFor="stock_code">Mã cổ phiếu</Label>
@@ -122,6 +125,7 @@ export function BuyOrderForm({
                             onChange={formik.handleChange}
                             onBlur={formik.handleBlur}
                             autoComplete="off"
+                            className={inputClass}
                         />
                         {renderError('stock_code')}
                     </div>

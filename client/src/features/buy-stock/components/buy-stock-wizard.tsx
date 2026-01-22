@@ -211,7 +211,7 @@ export function BuyStockWizard({ data, onBack }: BuyStockWizardProps) {
           </div>
         </div>
 
-        <Card className="border border-gray-100 shadow-sm">
+        <Card className="bg-card border-border shadow-sm">
           <CardHeader>
             <div className="flex items-center justify-center py-4">
               {transactionResult.success ? (
@@ -300,7 +300,7 @@ export function BuyStockWizard({ data, onBack }: BuyStockWizardProps) {
       </div>
 
       {/* Card Bước */}
-      <Card className="border border-gray-100 shadow-sm">
+      <Card className="bg-card border-border shadow-sm">
         <CardHeader>
           <div className="space-y-2">
             <CardTitle>
@@ -345,7 +345,7 @@ export function BuyStockWizard({ data, onBack }: BuyStockWizardProps) {
                   </div>
                   
                   {insufficientBalance && quantity > 0 && (
-                    <div className="rounded-lg border border-error bg-error-light p-4 text-sm text-red-800">
+                    <div className="rounded-lg border border-error bg-error-light p-4 text-sm text-error">
                       ⚠️ Số dư không đủ! Cần {totalCost.toLocaleString('vi-VN')} VND nhưng chỉ có {availableBalance.toLocaleString('vi-VN')} VND
                     </div>
                   )}
@@ -385,7 +385,7 @@ export function BuyStockWizard({ data, onBack }: BuyStockWizardProps) {
               {/* Step 2: Confirmation */}
               {stepIndex === 2 && (
                 <div className="space-y-4">
-                  <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 space-y-3 text-sm">
+                  <div className="rounded-lg border border-border bg-muted/20 p-4 space-y-3 text-sm">
                     <h3 className="font-semibold text-base">📋 Tóm tắt lệnh</h3>
                     <div className="space-y-2">
                       <div className="flex justify-between">

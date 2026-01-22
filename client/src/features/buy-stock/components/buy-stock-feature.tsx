@@ -590,15 +590,15 @@ export function BuyStockFeature({ data, onBack }: BuyStockFeatureProps) {
                                         </div>
                                     </div>
 
-                                    <div className="rounded-lg border border-slate-200 bg-white p-4 text-sm">
+                                    <div className="rounded-lg border border-border bg-muted/20 p-4 text-sm">
                                         <div className="flex items-center justify-between mb-2">
-                                            <span className="text-slate-600">Số dư hiện tại</span>
-                                            <span className="font-semibold text-slate-900">
+                                            <span className="text-muted-foreground">Số dư hiện tại</span>
+                                            <span className="font-semibold text-foreground">
                                                 {availableBalance.toLocaleString('vi-VN')} VND
                                             </span>
                                         </div>
                                         <div className="flex items-center justify-between">
-                                            <span className="text-slate-600">
+                                            <span className="text-muted-foreground">
                                                 Số dư sau giao dịch
                                             </span>
                                             <span
@@ -615,8 +615,8 @@ export function BuyStockFeature({ data, onBack }: BuyStockFeatureProps) {
                                             </span>
                                         </div>
                                         {estimatedCost > availableBalance && (
-                                            <p className="mt-3 text-xs text-rose-600 flex items-start gap-2">
-                                                <AlertTriangle className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                                            <p className="mt-3 text-xs text-destructive flex items-start gap-2">
+                                                <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
                                                 <span>
                                                     Số dư không đủ! Vui lòng quay lại và giảm số
                                                     lượng hoặc nạp thêm tiền.
