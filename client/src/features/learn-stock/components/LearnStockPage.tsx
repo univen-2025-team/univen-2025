@@ -3,17 +3,18 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import CandlestickChart from './candlestick-chart';
+import CandlestickChart from '@/features/learn-stock/components/candlestick-chart';
 import LessonsList from './lessons-list';
 import StockPicker from './stock-picker';
 import { mockLessons } from '@/lib/mock-data';
-import { useLearnStockStore } from '../stores/useLearnStockStore';
+import { useLearnStockStore } from '@/features/learn-stock/stores/useLearnStockStore';
 import { getStockData, CachedStockData } from '@/lib/api/market-cache';
 
 export default function LearnStockPage() {
     const { selectedStock, setSelectedStock, isLoading, setIsLoading } = useLearnStockStore();
     const [stockData, setStockData] = useState<CachedStockData | null>(null);
     const [priceLoading, setPriceLoading] = useState(false);
+    const selectedSymbol = selectedStock ?? '';
 
     // Fetch stock data when selected stock changes
     useEffect(() => {
@@ -77,7 +78,7 @@ export default function LearnStockPage() {
                             Select Stock Symbol
                         </label>
                         <StockPicker
-                            value={selectedStock}
+                            value={selectedSymbol}
                             onChange={setSelectedStock}
                             disabled={isLoading}
                         />
@@ -100,7 +101,7 @@ export default function LearnStockPage() {
                         <h2 className="text-xl font-semibold text-foreground mb-4">
                             Price Movement Analysis
                         </h2>
-                        <CandlestickChart symbol={selectedStock} />
+                        <CandlestickChart symbol={selectedSymbol} />
                     </Card>
                 </div>
 

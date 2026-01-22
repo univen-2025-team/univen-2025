@@ -7,7 +7,12 @@ WORKDIR /app
 
 # Install dependencies
 COPY package.json package-lock.json* ./
-RUN npm ci --legacy-peer-deps
+# Use npm ci if lock file exists, otherwise use npm install
+RUN if [ -f package-lock.json ]; then \
+        npm ci --legacy-peer-deps; \
+    else \
+        npm install --legacy-peer-deps; \
+    fi
 
 # =============================================================================
 # Stage 2: Builder

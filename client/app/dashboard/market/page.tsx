@@ -1,13 +1,11 @@
 'use client';
 
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
-import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import axios from '@/lib/axios';
 import { useToast } from '@/components/toast/toast-provider';
 import { useWatchlist } from '@/lib/hooks/useWatchlist';
 import { useMarketSocket } from '@/lib/hooks/useMarketSocket';
-import { useDragSelect } from '@/lib/hooks/useDragSelect';
 import { useDragSelect } from '@/lib/hooks/useDragSelect';
 
 // Components
@@ -108,11 +106,7 @@ export default function MarketPage() {
 
     // Fetch market data
     const fetchMarketData = async (showFullScreenLoader = true) => {
-    const fetchMarketData = async (showFullScreenLoader = true) => {
         try {
-            if (showFullScreenLoader) {
-                setLoading(true);
-            }
             if (showFullScreenLoader) {
                 setLoading(true);
             }
@@ -158,7 +152,6 @@ export default function MarketPage() {
     };
 
     useEffect(() => {
-        fetchMarketData(true);
         fetchMarketData(true);
         fetchHistory(historyRange);
     }, []);
@@ -228,11 +221,6 @@ export default function MarketPage() {
         const avgChange =
             marketData.stocks.reduce((sum, s) => sum + (s.changePercent ?? 0), 0) /
             (marketData.stocks.length || 1);
-        const advancing = marketData.stocks.filter((s) => s.change > 0).length;
-        const declining = marketData.stocks.filter((s) => s.change < 0).length;
-        const unchanged = marketData.stocks.filter((s) => s.change === 0).length;
-        const totalVolume = marketData.stocks.reduce((sum, s) => sum + s.volume, 0);
-        const avgChange = marketData.stocks.reduce((sum, s) => sum + s.changePercent, 0) / marketData.stocks.length;
 
         return {
             totalStocks: marketData.stocks.length,

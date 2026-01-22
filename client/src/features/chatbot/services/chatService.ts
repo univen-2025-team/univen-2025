@@ -1065,8 +1065,6 @@ export const sendChatMessage = async (
   // ============================================
   const apiUrl = `${finalAgentUrl}/api/v1/chat`
 
-  const apiUrl = `${agentApiUrl}/api/v1/chat`
-
   // Log chi tiết để debug full context và meta
   console.log(`🔗 Calling ${isUsingHF ? 'HuggingFace' : 'AGENT_API'} via proxy:`, apiUrl)
   console.log('📋 Request meta (with user info):', request.meta)
@@ -1211,9 +1209,17 @@ export const createFallbackResponse = async (
             getStockDetails(symbol)
           ])
 
-          const stockData = await getStockData(symbol)
-
           if (stockData) {
+            const companyName =
+              stockDetails?.info?.enOrganShortName ||
+              stockDetails?.info?.organShortName ||
+              stockDetails?.info?.organName ||
+              stockData.symbol
+
+            const description =
+              stockDetails?.profile?.description ||
+              `Thông tin chi tiết về ${stockData.symbol}`
+
             enhancedEffects = [{
               type: 'OPEN_STOCK_DETAIL',
               payload: {
