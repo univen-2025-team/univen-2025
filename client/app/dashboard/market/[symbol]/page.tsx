@@ -23,6 +23,7 @@ import { useAppSelector } from '@/lib/store/hooks';
 import { transactionApi } from '@/lib/api/transaction.api';
 import { TransactionHistoryItem } from '@/lib/types/transactions';
 import { useToast } from '@/components/toast/toast-provider';
+import TradeModal from '@/components/trade/TradeModal';
 
 const StockDetailPage = () => {
   const params = useParams();
@@ -46,6 +47,10 @@ const StockDetailPage = () => {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [newsFilterRange, setNewsFilterRange] = useState<{ start: Date; end: Date } | null>(null);
   const newsSectionRef = useRef<HTMLDivElement>(null);
+
+  // Trade modal state
+  const [tradeModalOpen, setTradeModalOpen] = useState(false);
+  const [tradeAction, setTradeAction] = useState<'buy' | 'sell'>('buy');
 
   const handleNewsFilter = ({ start, end }: { start: string; end: string }) => {
     setNewsFilterRange({
@@ -407,14 +412,14 @@ const StockDetailPage = () => {
           {!isFullscreen && (
             <>
               <button
-                onClick={() => router.push(`/dashboard/trade?symbol=${symbol}&action=buy`)}
+                onClick={() => { setTradeAction('buy'); setTradeModalOpen(true); }}
                 className="flex items-center gap-2 px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg transition-colors shadow-sm"
               >
                 <ShoppingCart className="w-4 h-4" />
                 Mua
               </button>
               <button
-                onClick={() => router.push(`/dashboard/trade?symbol=${symbol}&action=sell`)}
+                onClick={() => { setTradeAction('sell'); setTradeModalOpen(true); }}
                 className="flex items-center gap-2 px-6 py-2.5 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-lg transition-colors shadow-sm"
               >
                 <DollarSign className="w-4 h-4" />
@@ -544,11 +549,11 @@ const StockDetailPage = () => {
             {/* Footer Actions */}
             <div className="px-6 py-3 border-t border-gray-100 bg-gray-50 flex justify-end gap-4">
               <button
-                onClick={() => router.push(`/dashboard/trade?symbol=${symbol}&action=buy`)}
+                onClick={() => { setIsFullscreen(false); setTradeAction('buy'); setTradeModalOpen(true); }}
                 className="px-8 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg shadow-sm"
               >Mua Ngay</button>
               <button
-                onClick={() => router.push(`/dashboard/trade?symbol=${symbol}&action=sell`)}
+                onClick={() => { setIsFullscreen(false); setTradeAction('sell'); setTradeModalOpen(true); }}
                 className="px-8 py-2 bg-red-500 hover:bg-red-600 text-white font-bold rounded-lg shadow-sm"
               >Bán Ngay</button>
             </div>
@@ -764,6 +769,16 @@ const StockDetailPage = () => {
         </div>
 
       </div>
+
+      {/* Trade Modal */}
+      <TradeModal
+        isOpen={tradeModalOpen}
+        onClose={() => setTradeModalOpen(false)}
+        symbol={symbol}
+        companyName={info?.organShortName || profile?.companyShortName}
+        currentPrice={displayData.price * 1000}
+        initialAction={tradeAction}
+      />
     </div>
   );
 };
