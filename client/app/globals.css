@@ -1,73 +1,208 @@
 @import 'tailwindcss';
 
-@theme {
-    /* --- ZENOX THEME: Deep Space & Neon Glass --- */
-    
-    /* Background: The "Void" - Not pitch black, but a deep, rich violet-black */
-    --color-background: oklch(15% 0.02 286);
-    --color-foreground: oklch(98% 0 0);
+:root {
+    /* Simple Navy Blue Theme - 3 Levels */
+    /* Dark Navy: #1e3a8a, Medium Navy: #3b82f6, Light Navy: #93c5fd */
 
-    /* Glass Cards: Semi-transparent bases */
-    --color-card: oklch(20% 0.04 286 / 0.4); 
-    --color-card-foreground: oklch(98% 0 0);
-    
-    --color-popover: oklch(18% 0.04 286 / 0.9);
-    --color-popover-foreground: oklch(98% 0 0);
+    --background: oklch(0.99 0.002 240);
+    --foreground: oklch(0.3 0.1 250);
+    --card: oklch(1 0 0);
+    --card-foreground: oklch(0.3 0.1 250);
+    --popover: oklch(1 0 0);
+    --popover-foreground: oklch(0.3 0.1 250);
 
-    /* Primary: Electric Violet (The main brand color) */
-    --color-primary: oklch(62% 0.25 290);
-    --color-primary-foreground: oklch(98% 0 0);
+    /* Primary: Dark Navy #1e3a8a */
+    --primary: oklch(0.42 0.15 260);
+    --primary-foreground: oklch(1 0 0);
 
-    /* Secondary: Hot Pink / Fuchsia (For gradients and highlights) */
-    --color-secondary: oklch(65% 0.25 340);
-    --color-secondary-foreground: oklch(98% 0 0);
+    /* Secondary: Light Navy #93c5fd */
+    --secondary: oklch(0.8 0.08 250);
+    --secondary-foreground: oklch(0.3 0.1 250);
 
-    /* Accent: Cyan / Electric Blue (For charts and positive indicators) */
-    --color-accent: oklch(70% 0.18 220);
-    --color-accent-foreground: oklch(15% 0.02 286);
+    /* Muted: Very light blue */
+    --muted: oklch(0.96 0.01 250);
+    --muted-foreground: oklch(0.55 0.08 250);
 
-    /* Muted: Slate Grey for secondary text */
-    --color-muted: oklch(30% 0.02 280);
-    --color-muted-foreground: oklch(70% 0.02 280);
+    /* Accent: Medium Navy #3b82f6 */
+    --accent: oklch(0.62 0.18 255);
+    --accent-foreground: oklch(1 0 0);
 
-    /* Destructive: Neon Red */
-    --color-destructive: oklch(60% 0.25 25);
-    --color-destructive-foreground: oklch(98% 0 0);
+    /* Destructive: Red for errors */
+    --destructive: oklch(0.56 0.22 25);
+    --destructive-foreground: oklch(1 0 0);
 
-    /* Borders: Subtle white opacity for glass edges */
-    --color-border: oklch(100% 0 0 / 0.1); 
-    --color-input: oklch(100% 0 0 / 0.1);
-    --color-ring: oklch(62% 0.25 290);
+    /* Borders & Inputs */
+    --border: oklch(0.88 0.01 250);
+    --input: oklch(0.96 0.01 250);
+    --ring: oklch(0.62 0.18 255);
 
-    /* Chart Colors: Neon Spectrum */
-    --color-chart-1: oklch(62% 0.25 290);
-    --color-chart-2: oklch(65% 0.25 340);
-    --color-chart-3: oklch(70% 0.18 220);
-    --color-chart-4: oklch(65% 0.20 160);
-    --color-chart-5: oklch(75% 0.15 60);
+    /* Charts: 3 Navy levels */
+    --chart-1: oklch(0.42 0.15 260);
+    --chart-2: oklch(0.62 0.18 255);
+    --chart-3: oklch(0.8 0.08 250);
+    --chart-4: oklch(0.55 0.08 250);
+    --chart-5: oklch(0.35 0.12 258);
 
-    --radius-sm: calc(1rem - 4px);
-    --radius-md: calc(1rem - 2px);
-    --radius-lg: 1rem;
-    --radius-xl: calc(1rem + 4px);
+    --radius: 0.625rem;
 
-    /* Sidebar: Blends with background but slightly lighter */
-    --color-sidebar: oklch(15% 0.02 286);
-    --color-sidebar-foreground: oklch(98% 0 0);
-    --color-sidebar-primary: oklch(62% 0.25 290);
-    --color-sidebar-primary-foreground: oklch(98% 0 0);
-    --color-sidebar-accent: oklch(100% 0 0 / 0.05);
-    --color-sidebar-accent-foreground: oklch(98% 0 0);
-    --color-sidebar-border: oklch(100% 0 0 / 0.05);
-    --color-sidebar-ring: oklch(62% 0.25 290);
+    /* Sidebar: Light background with navy accent */
+    --sidebar: oklch(0.99 0.002 240);
+    --sidebar-foreground: oklch(0.42 0.15 260);
+    --sidebar-primary: oklch(0.42 0.15 260);
+    --sidebar-primary-foreground: oklch(1 0 0);
+    --sidebar-accent: oklch(0.96 0.01 250);
+    --sidebar-accent-foreground: oklch(0.42 0.15 260);
+    --sidebar-border: oklch(0.88 0.01 250);
+    --sidebar-ring: oklch(0.62 0.18 255);
 
-    /* Semantic Status Colors */
-    --color-success: oklch(65% 0.20 150);
-    --color-success-foreground: oklch(98% 0 0);
-    --color-error: oklch(60% 0.25 25);
-    --color-error-foreground: oklch(98% 0 0);
-    --color-warning: oklch(85% 0.18 85);
-    --color-warning-foreground: oklch(20% 0.05 286);
+    /* Semantic colors - Using navy shades */
+    /* Success: Medium Navy (positive) */
+    --success: oklch(0.62 0.18 255);
+    --success-foreground: oklch(1 0 0);
+    /* Error: Red (negative) */
+    --error: oklch(0.56 0.22 25);
+    --error-foreground: oklch(1 0 0);
+    /* Warning: Light Navy */
+    --warning: oklch(0.8 0.08 250);
+    --warning-foreground: oklch(0.3 0.1 250);
+}
+
+.dark {
+    /* Dark Mode - Navy Blue Theme */
+    --background: oklch(0.2 0.08 255);
+    --foreground: oklch(0.95 0.01 240);
+    --card: oklch(0.25 0.09 258);
+    --card-foreground: oklch(0.95 0.01 240);
+    --popover: oklch(0.22 0.08 256);
+    --popover-foreground: oklch(0.95 0.01 240);
+
+    /* Primary: Medium Navy (lighter for dark mode) */
+    --primary: oklch(0.62 0.18 255);
+    --primary-foreground: oklch(0.98 0 0);
+
+    /* Secondary: Dark blue-gray */
+    --secondary: oklch(0.35 0.1 255);
+    --secondary-foreground: oklch(0.95 0.01 240);
+
+    /* Muted: Dark navy */
+    --muted: oklch(0.28 0.09 258);
+    --muted-foreground: oklch(0.7 0.05 250);
+
+    /* Accent: Light Navy */
+    --accent: oklch(0.8 0.08 250);
+    --accent-foreground: oklch(0.2 0.08 255);
+
+    /* Destructive: Red */
+    --destructive: oklch(0.58 0.24 25);
+    --destructive-foreground: oklch(0.98 0 0);
+
+    /* Borders & Inputs */
+    --border: oklch(0.35 0.1 255);
+    --input: oklch(0.28 0.09 258);
+    --ring: oklch(0.62 0.18 255);
+
+    /* Charts: 3 Navy levels */
+    --chart-1: oklch(0.62 0.18 255);
+    --chart-2: oklch(0.8 0.08 250);
+    --chart-3: oklch(0.42 0.15 260);
+    --chart-4: oklch(0.55 0.08 250);
+    --chart-5: oklch(0.7 0.12 253);
+
+    /* Sidebar: Deep navy background */
+    --sidebar: oklch(0.22 0.08 256);
+    --sidebar-foreground: oklch(0.92 0.01 240);
+    --sidebar-primary: oklch(0.62 0.18 255);
+    --sidebar-primary-foreground: oklch(0.98 0 0);
+    --sidebar-accent: oklch(0.28 0.09 258);
+    --sidebar-accent-foreground: oklch(0.88 0.01 240);
+    --sidebar-border: oklch(0.35 0.1 255);
+    --sidebar-ring: oklch(0.62 0.18 255);
+
+    /* Semantic colors - Navy shades */
+    /* Success: Medium Navy */
+    --success: oklch(0.62 0.18 255);
+    --success-foreground: oklch(0.98 0 0);
+    /* Error: Red */
+    --error: oklch(0.58 0.24 25);
+    --error-foreground: oklch(0.98 0 0);
+    /* Warning: Light Navy */
+    --warning: oklch(0.8 0.08 250);
+    --warning-foreground: oklch(0.2 0.08 255);
+}
+
+@theme inline {
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+    --font-sans: var(--font-geist-sans);
+    --font-mono: var(--font-geist-mono);
+
+    --color-card: var(--card);
+    --color-card-foreground: var(--card-foreground);
+    --color-popover: var(--popover);
+    --color-popover-foreground: var(--popover-foreground);
+    --color-primary: var(--primary);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-secondary: var(--secondary);
+    --color-secondary-foreground: var(--secondary-foreground);
+    --color-muted: var(--muted);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-accent: var(--accent);
+    --color-accent-foreground: var(--accent-foreground);
+    --color-destructive: var(--destructive);
+    --color-destructive-foreground: var(--destructive-foreground);
+    --color-border: var(--border);
+    --color-input: var(--input);
+    --color-ring: var(--ring);
+    --color-chart-1: var(--chart-1);
+    --color-chart-2: var(--chart-2);
+    --color-chart-3: var(--chart-3);
+    --color-chart-4: var(--chart-4);
+    --color-chart-5: var(--chart-5);
+    --radius-sm: calc(var(--radius) - 4px);
+    --radius-md: calc(var(--radius) - 2px);
+    --radius-lg: var(--radius);
+    --radius-xl: calc(var(--radius) + 4px);
+    --color-sidebar: var(--sidebar);
+    --color-sidebar-foreground: var(--sidebar-foreground);
+    --color-sidebar-primary: var(--sidebar-primary);
+    --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+    --color-sidebar-accent: var(--sidebar-accent);
+    --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+    --color-sidebar-border: var(--sidebar-border);
+    --color-sidebar-ring: var(--sidebar-ring);
+    --color-success: var(--success);
+    --color-success-foreground: var(--success-foreground);
+    --color-error: var(--error);
+    --color-error-foreground: var(--error-foreground);
+    --color-warning: var(--warning);
+    --color-warning-foreground: var(--warning-foreground);
+
+    /* Compatibility for TradeTutor AI components */
+    --color-brand-500: var(--primary);
+    --color-brand-400: var(--accent);
+    --color-brand-300: oklch(0.8 0.08 250);
+    --color-fintech-bg: var(--background); /* Or specific dark color if needed */
+    --color-fintech-border: var(--border);
+}
+
+:root {
+    /* Resolved color values for direct use (no var() needed) */
+    --chart1: oklch(0.38 0.13 251);
+    --chart2: oklch(0.6 0.12 184);
+    --chart3: oklch(0.48 0.25 264);
+    --border-color: oklch(0.92 0 0);
+    --card-bg: oklch(1 0 0);
+    --muted-text: oklch(0.56 0 0);
+}
+
+.dark {
+    /* Dark theme resolved values */
+    --chart1: oklch(0.68 0.2 264);
+    --chart2: oklch(0.72 0.18 184);
+    --chart3: oklch(0.65 0.22 264);
+    --border-color: oklch(0.269 0 0);
+    --card-bg: oklch(0.145 0 0);
+    --muted-text: oklch(0.708 0 0);
 }
 
 @layer base {
@@ -75,132 +210,204 @@
         @apply border-border outline-ring/50;
     }
     body {
-        @apply bg-background text-foreground antialiased selection:bg-pink-500/30 selection:text-white;
-        /* Subtle global gradient mesh for depth */
-        background-image: 
-            radial-gradient(circle at 15% 50%, rgba(124, 58, 237, 0.08), transparent 25%), 
-            radial-gradient(circle at 85% 30%, rgba(236, 72, 153, 0.08), transparent 25%);
-        background-attachment: fixed;
+        @apply bg-background text-foreground;
     }
 }
 
-@layer components {
-    /* THE ZENOX GLASS CARD */
-    .glass-card {
-        background: color-mix(in oklch, oklch(15% 0.04 286), transparent 40%);
-        backdrop-filter: blur(24px);
-        border: 1px solid color-mix(in oklch, white, transparent 90%);
-        box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25);
-        border-radius: 1.5rem;
-        position: relative;
-        overflow: hidden;
-    }
-    
-    .glass-card::before {
-        content: "";
-        position: absolute;
-        inset: 0;
-        background: linear-gradient(to bottom right, color-mix(in oklch, white, transparent 95%), transparent);
-        opacity: 0.5;
-        pointer-events: none;
-    }
-
-    /* Primary Gradient Button */
-    .btn-zenox {
-        background: linear-gradient(to right, oklch(62% 0.25 290), oklch(65% 0.20 220));
-        color: white;
-        border-radius: 0.75rem;
-        box-shadow: 0 10px 15px -3px color-mix(in oklch, oklch(62% 0.25 290), transparent 80%);
-        border: 1px solid color-mix(in oklch, white, transparent 90%);
-        transition: all 0.3s;
-    }
-    
-    .btn-zenox:hover {
-        box-shadow: 0 20px 25px -5px color-mix(in oklch, oklch(62% 0.25 290), transparent 60%);
-        transform: scale(1.02);
-    }
-    
-    .btn-zenox:active {
-        transform: scale(0.95);
-    }
-    
-    /* Text Gradient */
-    .text-gradient {
-        background: linear-gradient(to right, oklch(68% 0.20 290), oklch(70% 0.22 330), oklch(72% 0.18 220));
-        -webkit-background-clip: text;
-        background-clip: text;
-        color: transparent;
-        filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.5));
-    }
-}
-
+/* Galaxy theme utility classes - Use these instead of hard-coded colors */
 @layer utilities {
-    /* Glow Utilities */
-    .glow-primary {
-        box-shadow: 0 0 20px -5px oklch(62% 0.25 290 / 0.5);
+    /* Primary colors (Indigo/Purple) */
+    .bg-primary-solid {
+        background-color: oklch(var(--primary));
     }
-    .glow-secondary {
-        box-shadow: 0 0 20px -5px oklch(65% 0.25 340 / 0.5);
+    .text-primary-solid {
+        color: oklch(var(--primary));
     }
-    .glow-accent {
-        box-shadow: 0 0 20px -5px oklch(70% 0.18 220 / 0.5);
+    .border-primary-solid {
+        border-color: oklch(var(--primary));
     }
-    
-    /* Text Glows */
-    .text-glow {
-        text-shadow: 0 0 10px rgba(255,255,255,0.5);
+    .hover\:bg-primary-solid:hover {
+        background-color: oklch(var(--primary) / 0.9);
     }
-    .text-glow-primary {
-        text-shadow: 0 0 15px oklch(62% 0.25 290 / 0.6);
+    .hover\:text-primary-solid:hover {
+        color: oklch(var(--primary) / 0.9);
+    }
+
+    /* Accent colors (Purple) */
+    .bg-accent-solid {
+        background-color: oklch(var(--accent));
+    }
+    .text-accent-solid {
+        color: oklch(var(--accent));
+    }
+    .border-accent-solid {
+        border-color: oklch(var(--accent));
+    }
+    .hover\:bg-accent-solid:hover {
+        background-color: oklch(var(--accent) / 0.9);
+    }
+
+    /* Light variations */
+    .bg-primary-light {
+        background-color: oklch(var(--primary) / 0.1);
+    }
+    .text-primary-light {
+        color: oklch(var(--primary) / 0.7);
+    }
+    .hover\:bg-primary-light:hover {
+        background-color: oklch(var(--primary) / 0.15);
+    }
+
+    /* Button styles */
+    .btn-primary {
+        background-color: oklch(var(--primary));
+        color: oklch(var(--primary-foreground));
+    }
+    .btn-primary:hover {
+        background-color: oklch(var(--primary) / 0.9);
+    }
+
+    /* Loading spinner */
+    .spinner-primary {
+        border-color: oklch(var(--primary) / 0.2);
+        border-top-color: oklch(var(--primary));
+    }
+
+    /* Success colors (Stock increase, positive status) */
+    .text-success {
+        color: oklch(var(--success));
+    }
+    .bg-success {
+        background-color: oklch(var(--success));
+    }
+    .bg-success-light {
+        background-color: oklch(var(--success) / 0.1);
+    }
+    .border-success {
+        border-color: oklch(var(--success) / 0.3);
+    }
+    .hover\:bg-success:hover {
+        background-color: oklch(var(--success) / 0.9);
+    }
+
+    /* Error colors (Stock decrease, negative status) */
+    .text-error {
+        color: oklch(var(--error));
+    }
+    .bg-error {
+        background-color: oklch(var(--error));
+    }
+    .bg-error-light {
+        background-color: oklch(var(--error) / 0.1);
+    }
+    .border-error {
+        border-color: oklch(var(--error) / 0.3);
+    }
+    .hover\:bg-error:hover {
+        background-color: oklch(var(--error) / 0.9);
+    }
+
+    /* Warning colors (Neutral/pending status) */
+    .text-warning {
+        color: oklch(var(--warning));
+    }
+    .bg-warning {
+        background-color: oklch(var(--warning));
+    }
+    .bg-warning-light {
+        background-color: oklch(var(--warning) / 0.1);
+    }
+    .border-warning {
+        border-color: oklch(var(--warning) / 0.3);
+    }
+    .hover\:bg-warning:hover {
+        background-color: oklch(var(--warning) / 0.9);
     }
 }
 
-/* --- ANIMATIONS (Kept from your file but tuned for Ambient Space feel) --- */
-
+/* Global Animations */
 @keyframes blob {
-    0% { transform: translate(0px, 0px) scale(1); }
-    33% { transform: translate(30px, -50px) scale(1.1); }
-    66% { transform: translate(-20px, 20px) scale(0.9); }
-    100% { transform: translate(0px, 0px) scale(1); }
+    0% {
+        transform: translate(0px, 0px) scale(1);
+    }
+    33% {
+        transform: translate(30px, -50px) scale(1.1);
+    }
+    66% {
+        transform: translate(-20px, 20px) scale(0.9);
+    }
+    100% {
+        transform: translate(0px, 0px) scale(1);
+    }
 }
 
-@keyframes float {
-    0% { transform: translateY(0px); }
-    50% { transform: translateY(-10px); }
-    100% { transform: translateY(0px); }
-}
-
-@keyframes pulse-glow {
-    0%, 100% { opacity: 0.5; transform: scale(1); }
-    50% { opacity: 0.8; transform: scale(1.05); }
-}
-
-.animate-blob {
-    animation: blob 10s infinite alternate cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.animate-float {
-    animation: float 6s ease-in-out infinite;
-}
-
-.animate-pulse-slow {
-    animation: pulse-glow 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-
-.animation-delay-2000 { animation-delay: 2s; }
-.animation-delay-4000 { animation-delay: 4s; }
-
-/* Existing Animations */
 @keyframes fade-in-down {
-    0% { opacity: 0; transform: translateY(-20px); }
-    100% { opacity: 1; transform: translateY(0); }
+    0% {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
+@keyframes scale-in {
+    0% {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
 }
 
-.animate-fade-in-down { animation: fade-in-down 0.6s ease-out; }
-.animate-fadeIn { animation: fadeIn 0.8s ease-out forwards; }
-.delay-200 { animation-delay: 0.2s; }
+@keyframes slide-in {
+    0% {
+        opacity: 0;
+        transform: translateX(20px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes fade-in {
+    0% {
+        opacity: 0;
+    }
+    100% {
+        opacity: 1;
+    }
+}
+
+/* Animation utility classes */
+.animate-blob {
+    animation: blob 7s infinite;
+}
+
+.animation-delay-2000 {
+    animation-delay: 2s;
+}
+
+.animation-delay-4000 {
+    animation-delay: 4s;
+}
+
+.animate-fade-in-down {
+    animation: fade-in-down 0.6s ease-out;
+}
+
+.animate-scale-in {
+    animation: scale-in 0.5s ease-out;
+}
+
+.animate-slide-in {
+    animation: slide-in 0.4s ease-out;
+}
+
+.animate-fade-in {
+    animation: fade-in 0.8s ease-out;
+}
