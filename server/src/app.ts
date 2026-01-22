@@ -87,6 +87,14 @@ app.use(
 /* ------------------------------------------------------ */
 await MongoDB.getInstance().connect();
 
+// Initialize RBAC and Subscription plans
+import RBACService from './api/services/rbac.service.js';
+import { subscriptionService } from './api/services/subscription.service.js';
+
+await RBACService.getInstance().initRBAC();
+await subscriptionService.initSubscriptionPlans();
+console.log('[App] RBAC and Subscription plans initialized');
+
 // Start service
 ScheduledService.startScheduledService();
 
