@@ -375,6 +375,222 @@ export default function StockieHomepage() {
         </div>
       </section>
 
+      {/* Pricing Section */}
+      <section id="pricing" className="py-20 px-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-bold mb-4">
+              Bảng{' '}
+              <span className="text-primary">
+                giá
+              </span>
+            </h2>
+            <p className="text-xl text-gray-600">
+              Chọn gói phù hợp với nhu cầu đầu tư của bạn
+            </p>
+          </div>
+
+          {/* B2C Pricing */}
+          <div className="grid md:grid-cols-3 gap-8 mb-16">
+            {/* Freemium */}
+            <div className="bg-white rounded-3xl p-8 border border-gray-200 hover:border-primary/30 hover:shadow-xl transition-all duration-300">
+              <div className="text-sm font-medium text-gray-500 mb-2">Dành cho người mới</div>
+              <h3 className="text-2xl font-bold text-gray-900 mb-2">Freemium</h3>
+              <div className="mb-6">
+                <span className="text-4xl font-bold text-gray-900">0 ₫</span>
+                <span className="text-gray-500">/tháng</span>
+              </div>
+              <ul className="space-y-4 mb-8">
+                <li className="flex items-center gap-3">
+                  <Check className="w-5 h-5 text-success flex-shrink-0" />
+                  <span className="text-gray-700">Vốn ảo 10 triệu VND</span>
+                </li>
+                <li className="flex items-center gap-3">
+                  <Check className="w-5 h-5 text-success flex-shrink-0" />
+                  <span className="text-gray-700">1 danh mục đầu tư</span>
+                </li>
+                <li className="flex items-center gap-3">
+                  <Check className="w-5 h-5 text-success flex-shrink-0" />
+                  <span className="text-gray-700">Reset danh mục 1 lần/tháng</span>
+                </li>
+                <li className="flex items-center gap-3">
+                  <Check className="w-5 h-5 text-success flex-shrink-0" />
+                  <span className="text-gray-700">Thị trường cổ phiếu VN</span>
+                </li>
+                <li className="flex items-center gap-3">
+                  <Check className="w-5 h-5 text-success flex-shrink-0" />
+                  <span className="text-gray-700">AI Mentor cơ bản</span>
+                </li>
+                <li className="flex items-center gap-3">
+                  <Check className="w-5 h-5 text-success flex-shrink-0" />
+                  <span className="text-gray-700">Tham gia phòng công khai</span>
+                </li>
+                <li className="flex items-center gap-3 text-gray-400">
+                  <X className="w-5 h-5 flex-shrink-0" />
+                  <span>Không có chứng chỉ</span>
+                </li>
+              </ul>
+              <Link 
+                href="/auth/register?tier=freemium" 
+                className="block w-full py-3 text-center border-2 border-gray-200 rounded-full font-semibold hover:border-primary hover:text-primary transition-all"
+              >
+                Bắt đầu miễn phí
+              </Link>
+            </div>
+
+            {/* Standard - Popular */}
+            <div className="bg-white rounded-3xl p-8 border-2 border-primary shadow-xl relative transform scale-105">
+              <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1 bg-primary text-white text-sm font-semibold rounded-full">
+                Phổ biến nhất
+              </div>
+              <div className="text-sm font-medium text-primary mb-2">Dành cho sinh viên</div>
+              <h3 className="text-2xl font-bold text-gray-900 mb-2">Standard</h3>
+              <div className="mb-6">
+                <span className="text-4xl font-bold text-gray-900">99.000 ₫</span>
+                <span className="text-gray-500">/tháng</span>
+              </div>
+              <ul className="space-y-4 mb-8">
+                <li className="flex items-center gap-3">
+                  <Check className="w-5 h-5 text-success flex-shrink-0" />
+                  <span className="text-gray-700">Vốn ảo 100 triệu VND</span>
+                </li>
+                <li className="flex items-center gap-3">
+                  <Check className="w-5 h-5 text-success flex-shrink-0" />
+                  <span className="text-gray-700">3 danh mục đầu tư</span>
+                </li>
+                <li className="flex items-center gap-3">
+                  <Check className="w-5 h-5 text-success flex-shrink-0" />
+                  <span className="text-gray-700">Reset danh mục 3 lần/tháng</span>
+                </li>
+                <li className="flex items-center gap-3">
+                  <Check className="w-5 h-5 text-success flex-shrink-0" />
+                  <span className="text-gray-700">Thị trường cổ phiếu VN</span>
+                </li>
+                <li className="flex items-center gap-3">
+                  <Check className="w-5 h-5 text-success flex-shrink-0" />
+                  <span className="text-gray-700">AI Mentor nâng cao</span>
+                </li>
+                <li className="flex items-center gap-3">
+                  <Check className="w-5 h-5 text-success flex-shrink-0" />
+                  <span className="text-gray-700">Tạo phòng riêng (tối đa 10 người)</span>
+                </li>
+                <li className="flex items-center gap-3">
+                  <Check className="w-5 h-5 text-success flex-shrink-0" />
+                  <span className="text-gray-700">Chứng chỉ hoàn thành khóa học</span>
+                </li>
+              </ul>
+              <Link 
+                href="/auth/register?tier=standard" 
+                className="block w-full py-3 text-center bg-primary text-white rounded-full font-semibold hover:bg-primary/90 hover:shadow-lg transition-all"
+              >
+                Đăng ký ngay
+              </Link>
+            </div>
+
+            {/* Advanced */}
+            <div className="bg-white rounded-3xl p-8 border border-gray-200 hover:border-primary/30 hover:shadow-xl transition-all duration-300">
+              <div className="text-sm font-medium text-accent mb-2">Dành cho chuyên gia</div>
+              <h3 className="text-2xl font-bold text-gray-900 mb-2">Advanced</h3>
+              <div className="mb-6">
+                <span className="text-4xl font-bold text-gray-900">349.000 ₫</span>
+                <span className="text-gray-500">/tháng</span>
+              </div>
+              <ul className="space-y-4 mb-8">
+                <li className="flex items-center gap-3">
+                  <Check className="w-5 h-5 text-success flex-shrink-0" />
+                  <span className="text-gray-700">Vốn ảo không giới hạn</span>
+                </li>
+                <li className="flex items-center gap-3">
+                  <Check className="w-5 h-5 text-success flex-shrink-0" />
+                  <span className="text-gray-700">10+ danh mục đầu tư</span>
+                </li>
+                <li className="flex items-center gap-3">
+                  <Check className="w-5 h-5 text-success flex-shrink-0" />
+                  <span className="text-gray-700">Reset danh mục không giới hạn</span>
+                </li>
+                <li className="flex items-center gap-3">
+                  <Check className="w-5 h-5 text-success flex-shrink-0" />
+                  <span className="text-gray-700">VN + Crypto + US Stocks</span>
+                </li>
+                <li className="flex items-center gap-3">
+                  <Check className="w-5 h-5 text-success flex-shrink-0" />
+                  <span className="text-gray-700">AI Mentor cao cấp</span>
+                </li>
+                <li className="flex items-center gap-3">
+                  <Check className="w-5 h-5 text-success flex-shrink-0" />
+                  <span className="text-gray-700">Tổ chức cuộc thi lớn</span>
+                </li>
+                <li className="flex items-center gap-3">
+                  <Check className="w-5 h-5 text-success flex-shrink-0" />
+                  <span className="text-gray-700">Không quảng cáo + Huy hiệu kỹ năng</span>
+                </li>
+              </ul>
+              <Link 
+                href="/auth/register?tier=advanced" 
+                className="block w-full py-3 text-center border-2 border-gray-200 rounded-full font-semibold hover:border-primary hover:text-primary transition-all"
+              >
+                Nâng cấp Pro
+              </Link>
+            </div>
+          </div>
+
+          {/* B2B Academic License */}
+          <div className="bg-gray-50 rounded-3xl p-8 md:p-12 border border-gray-200">
+            <div className="grid md:grid-cols-2 gap-8 items-center">
+              <div>
+                <div className="inline-block px-4 py-2 bg-accent/10 border border-accent/20 rounded-full text-sm text-accent font-medium mb-4">
+                  🎓 Dành cho tổ chức giáo dục
+                </div>
+                <h3 className="text-3xl font-bold text-gray-900 mb-4">Academic License</h3>
+                <p className="text-xl text-gray-600 mb-6">
+                  Giải pháp đào tạo đầu tư cho trường đại học, cao đẳng và trung tâm đào tạo
+                </p>
+                <div className="mb-6">
+                  <span className="text-4xl font-bold text-gray-900">69.000 ₫</span>
+                  <span className="text-gray-500">/sinh viên/tháng</span>
+                </div>
+                <ul className="space-y-3 mb-6">
+                  <li className="flex items-center gap-3">
+                    <Users className="w-5 h-5 text-accent flex-shrink-0" />
+                    <span className="text-gray-700">Mua theo gói số lượng lớn</span>
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <Users className="w-5 h-5 text-accent flex-shrink-0" />
+                    <span className="text-gray-700">Quản lý sinh viên tập trung</span>
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <Users className="w-5 h-5 text-accent flex-shrink-0" />
+                    <span className="text-gray-700">Phòng thực hành ảo cho sinh viên</span>
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <Users className="w-5 h-5 text-accent flex-shrink-0" />
+                    <span className="text-gray-700">Báo cáo tiến độ học tập</span>
+                  </li>
+                </ul>
+                <button className="px-8 py-4 bg-accent text-white rounded-full font-semibold hover:bg-accent/90 hover:shadow-xl transition-all flex items-center gap-2">
+                  Liên hệ tư vấn
+                  <ChevronRight className="w-5 h-5" />
+                </button>
+              </div>
+              <div className="hidden md:block">
+                <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-lg">
+                  <div className="text-center mb-6">
+                    <div className="text-6xl mb-4">🏫</div>
+                    <h4 className="text-xl font-semibold text-gray-900">Đối tác của chúng tôi</h4>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4 text-center text-gray-600">
+                    <div className="p-4 bg-gray-50 rounded-lg">Đại học</div>
+                    <div className="p-4 bg-gray-50 rounded-lg">Cao đẳng</div>
+                    <div className="p-4 bg-gray-50 rounded-lg">THPT</div>
+                    <div className="p-4 bg-gray-50 rounded-lg">Trung tâm đào tạo</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* CTA Section */}
       <section className="py-20 px-6">
         <div className="max-w-4xl mx-auto text-center">

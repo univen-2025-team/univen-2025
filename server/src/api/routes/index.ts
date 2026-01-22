@@ -9,6 +9,7 @@ import chatRoute from './chats/index.js';
 import stockTransactionRoute from './stockTransaction/index.js';
 import marketCacheRoute from './market-cache.route.js';
 import mediaRoute from './media/index.js';
+import subscriptionRoute from './subscription/index.js';
 
 const rootRoute = Router();
 
@@ -35,9 +36,13 @@ rootRoute.use('/market', marketCacheRoute);
 /* -------------------------- Media -------------------------- */
 rootRoute.use('/media', mediaRoute);
 
+/* ----------------------- Subscription ----------------------- */
+rootRoute.use('/subscription', subscriptionRoute);
+
 /* -------------------------- Tools -------------------------- */
 import toolsRoute from './tools.route.js';
 rootRoute.use('/tools', toolsRoute);
 
 
 export default rootRoute;
+

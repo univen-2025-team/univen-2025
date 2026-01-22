@@ -1,6 +1,7 @@
 import type mongoose, { Document } from 'mongoose';
 import { joiTypes } from '../joi';
 import type { UserStatus } from '@/enums/user.enum.ts';
+import type { SubscriptionTier } from '@/enums/subscription.enum.ts';
 
 declare global {
     namespace model {
@@ -22,6 +23,10 @@ declare global {
 
                     user_role: mongoose.Types.ObjectId;
                     user_status?: UserStatus;
+
+                    // Subscription (optional - has default in model)
+                    subscription_tier?: SubscriptionTier;
+                    subscription_id?: mongoose.Types.ObjectId;
                 },
                 isModel,
                 isDoc,

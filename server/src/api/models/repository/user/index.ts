@@ -33,7 +33,8 @@ export const findUserById = async ({
         user_gender: user.user_gender,
         user_status: user.user_status,
         user_dayOfBirth: user.user_dayOfBirth,
-        balance: user.balance
+        balance: user.balance,
+        subscription_tier: user.subscription_tier
     });
 
     return user;
