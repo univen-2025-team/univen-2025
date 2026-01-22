@@ -1,8 +1,8 @@
 import { FeatureInstruction } from '@/features/types/features'
 import { ChatMessage, SuggestionMessage } from '../components/types'
 import { userApi, type UserProfile } from '@/lib/api/user.api'
-import { getLatestMarketData, getStockData } from '@/lib/api/market-cache'
-import { API_URL, NEXT_PUBLIC_AGENT_API } from '@/config/app'
+import { getLatestMarketData, getStockData, getStockDetails } from '@/lib/api/market-cache'
+import { API_URL, NEXT_PUBLIC_AGENT_API, NEXT_PUBLIC_AGENT_HF } from '@/config/app'
 
 // Không cần import Groq SDK nữa, dùng fetch trực tiếp
 
@@ -52,10 +52,25 @@ export type ChatRequest = {
 // ============================================
 
 /**
- * Lấy AGENT_API từ config - gọi trực tiếp đến server AI, không qua backend
+ * Lấy HuggingFace Agent URL từ config (ưu tiên cao nhất)
+ */
+export const getHuggingFaceUrl = (): string => {
+  return NEXT_PUBLIC_AGENT_HF || ''
+}
+
+/**
+ * Lấy AGENT_API từ config - KHÔNG CÒN FALLBACK đến render
+ * Chỉ dùng khi NEXT_PUBLIC_AGENT_API được set trong .env
  */
 export const getAgentApiUrl = (): string => {
-  return NEXT_PUBLIC_AGENT_API || 'https://adk-trading-chatbot.onrender.com' || ''
+  return NEXT_PUBLIC_AGENT_API || ''
+}
+
+/**
+ * Check if HuggingFace is configured
+ */
+export const isHuggingFaceConfigured = (): boolean => {
+  return !!NEXT_PUBLIC_AGENT_HF
 }
 
 /**
@@ -331,6 +346,7 @@ export const buildChatRequest = (
  * Groq API Models - với fallback khi hết token
  */
 const GROQ_MODELS = [
+  'groq/compound',
   'llama-3.1-8b-instant', // Fast, ít token
   'llama-3.3-70b-versatile', // Medium, nhiều token hơn
   'llama-3.1-70b-versatile', // Large, nhiều token nhất (fallback)
@@ -849,16 +865,208 @@ BẮT BUỘC trả về theo cấu trúc JSON hợp lệ (không có markdown, k
 }
 
 /**
- * Gửi message đến AGENT_API với fallback Groq
+ * Gọi HuggingFace API trực tiếp để lấy reply/uiEffects/suggestions
+ * Dùng cho BƯỚC 1 trong useChat (thay thế Groq khi HF được config)
+ */
+export const callHuggingFaceForIntent = async (
+  messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }>
+): Promise<{ reply: string; uiEffects: FeatureInstruction[]; suggestions: SuggestionMessage[] } | null> => {
+  const hfUrl = getHuggingFaceUrl()
+
+  if (!hfUrl) {
+    return null
+  }
+
+  console.log('🤗 Calling HuggingFace API for intent classification...')
+
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), 15000) // 15s timeout for cold start
+
+  try {
+    const response = await fetch('/api/huggingface', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        url: `${hfUrl}/api/v1/chat`,
+        messages,
+        meta: {
+          user_id: 'guest',
+          session_id: `session_${Date.now()}`,
+          locale: 'vi-VN',
+        },
+      }),
+      signal: controller.signal,
+    })
+
+    clearTimeout(timeoutId)
+
+    if (!response.ok) {
+      console.log('❌ HuggingFace API error:', response.status)
+      return null
+    }
+
+    const data = await response.json()
+    console.log('✅ HuggingFace API response:', {
+      hasReply: !!data.reply,
+      uiEffectsCount: data.ui_effects?.length || 0,
+      suggestionsCount: data.suggestion_messages?.length || 0,
+    })
+
+    return {
+      reply: data.reply || 'Xin lỗi, tôi không thể trả lời câu hỏi này.',
+      uiEffects: data.ui_effects || [{ type: 'SHOW_MARKET_OVERVIEW' }],
+      suggestions: data.suggestion_messages || [
+        { text: 'Xem tổng quan thị trường', icon: '🌐' },
+        { text: 'Tìm hiểu thêm', icon: '❓' },
+      ],
+    }
+  } catch (error: any) {
+    clearTimeout(timeoutId)
+    if (error.name === 'AbortError') {
+      console.warn('⏱️ HuggingFace API timeout for intent')
+    } else {
+      console.log('❌ HuggingFace API error:', error)
+    }
+    return null
+  }
+}
+
+/**
+ * Gọi API với priority order: HuggingFace > Groq
+ * Dùng cho BƯỚC 1 trong useChat (phân loại intent)
+ */
+export const callPrimaryAPI = async (
+  messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }>
+): Promise<{ reply: string; uiEffects: FeatureInstruction[]; suggestions: SuggestionMessage[] } | null> => {
+  const hfConfigured = isHuggingFaceConfigured()
+
+  console.log('🔧 Primary API Config:', {
+    huggingFaceConfigured: hfConfigured,
+    huggingFaceUrl: getHuggingFaceUrl() || '(not set)',
+  })
+
+  // Priority 1: HuggingFace (nếu được config)
+  if (hfConfigured) {
+    console.log('🚀 Priority 1: Trying HuggingFace API...')
+    const hfResult = await callHuggingFaceForIntent(messages)
+    if (hfResult) {
+      return hfResult
+    }
+    console.warn('⚠️ HuggingFace failed, falling back to Groq...')
+  } else {
+    console.log('⚠️ HuggingFace not configured, skipping to Groq...')
+  }
+
+  // Priority 2: Groq (fallback)
+  console.log('🤖 Priority 2: Trying Groq API...')
+  return callGroqAPI(messages)
+}
+
+/**
+ * Gọi HuggingFace API qua Next.js endpoint (để bảo mật token)
+ */
+export const callHuggingFaceAPI = async (
+  request: ChatRequest
+): Promise<{ data: ChatApiResponse | null; error: Error | null }> => {
+  const hfUrl = getHuggingFaceUrl()
+
+  if (!hfUrl) {
+    console.log('⚠️ HuggingFace URL not configured, skipping...')
+    return { data: null, error: new Error('HuggingFace URL not configured') }
+  }
+
+  console.log('🤗 Calling HuggingFace API via Next.js endpoint:', hfUrl)
+  console.log('📋 Request meta:', request.meta)
+
+  // Timeout 10 giây cho HuggingFace (có thể cold start)
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), 10000)
+
+  try {
+    const response = await fetch('/api/huggingface', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        url: `${hfUrl}/api/v1/chat`,
+        messages: request.messages,
+        meta: request.meta,
+      }),
+      signal: controller.signal,
+    })
+
+    clearTimeout(timeoutId)
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
+      console.log('❌ HuggingFace API error:', {
+        status: response.status,
+        error: errorData,
+      })
+      return {
+        data: null,
+        error: new Error(`HuggingFace error: ${response.status}`),
+      }
+    }
+
+    const responseData = await response.json()
+    console.log('✅ HuggingFace API response received:', {
+      hasReply: !!responseData.reply,
+      uiEffectsCount: responseData.ui_effects?.length || 0,
+      suggestionsCount: responseData.suggestion_messages?.length || 0,
+    })
+
+    return {
+      data: responseData as ChatApiResponse,
+      error: null,
+    }
+  } catch (error: any) {
+    clearTimeout(timeoutId)
+
+    if (error.name === 'AbortError') {
+      console.warn('⏱️ HuggingFace API timeout')
+      return { data: null, error: new Error('HuggingFace timeout') }
+    }
+
+    console.log('❌ HuggingFace API error:', error)
+    return {
+      data: null,
+      error: error instanceof Error ? error : new Error('HuggingFace network error'),
+    }
+  }
+}
+
+/**
+ * Gửi message đến Agent API với fallback Groq
+ * Ưu tiên: NEXT_PUBLIC_AGENT_HF > NEXT_PUBLIC_AGENT_API > Groq
  */
 export const sendChatMessage = async (
   request: ChatRequest,
   agentApiUrl: string
 ): Promise<{ data: ChatApiResponse | null; error: Error | null }> => {
-  const apiUrl = `${agentApiUrl}/api/v1/chat`
+  // ============================================
+  // Xác định URL Agent (ưu tiên HuggingFace)
+  // ============================================
+  const hfUrl = getHuggingFaceUrl()
+  const finalAgentUrl = hfUrl || agentApiUrl
+  const isUsingHF = !!hfUrl
+
+  console.log('🔧 Agent URL Config:', {
+    huggingFaceUrl: hfUrl || '(not set)',
+    agentApiUrl: agentApiUrl || '(not set)',
+    using: isUsingHF ? 'HuggingFace' : 'AGENT_API',
+  })
+
+  // ============================================
+  // Gọi Agent API qua proxy để tránh CORS
+  // ============================================
+  const apiUrl = `${finalAgentUrl}/api/v1/chat`
 
   // Log chi tiết để debug full context và meta
-  console.log('🔗 Calling AGENT_API directly:', apiUrl)
+  console.log(`🔗 Calling ${isUsingHF ? 'HuggingFace' : 'AGENT_API'} via proxy:`, apiUrl)
   console.log('📋 Request meta (with user info):', request.meta)
   console.log('💬 Full context being sent:', {
     totalMessages: request.messages.length,
@@ -870,48 +1078,31 @@ export const sendChatMessage = async (
     lastMessage: request.messages[request.messages.length - 1]?.content?.substring(0, 60),
   })
 
-  // Tạo timeout promise (5 giây)
-  const timeoutPromise = new Promise<{ data: null; error: Error }>((resolve) => {
-    setTimeout(() => {
-      resolve({
-        data: null,
-        error: new Error('AGENT_API timeout'),
-      })
-    }, 5000)
-  })
+  // Timeout 8 giây cho AGENT_API (có thể cold start)
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), 8000)
 
   try {
-    // Race giữa fetch và timeout
-    const response = await Promise.race([
-      fetch(apiUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(request),
-      }),
-      timeoutPromise.then(() => null),
-    ])
+    // Gọi qua Next.js API proxy để tránh CORS
+    // Dùng /api/huggingface nếu là HF (có token), /api/agent nếu là AGENT_API
+    const proxyEndpoint = isUsingHF ? '/api/huggingface' : '/api/agent'
 
-    // Nếu timeout hoặc không có response
-    if (!response) {
-      console.warn('⏱️ AGENT_API timeout, falling back to Groq...')
-      const groqResult = await callGroqAPI(request.messages)
-      if (groqResult) {
-        return {
-          data: {
-            reply: groqResult.reply,
-            ui_effects: groqResult.uiEffects,
-            suggestion_messages: groqResult.suggestions,
-          },
-          error: null,
-        }
-      }
-      return {
-        data: null,
-        error: new Error('AGENT_API timeout and Groq fallback failed'),
-      }
-    }
+    console.log(`📡 Using proxy endpoint: ${proxyEndpoint}`)
+
+    const response = await fetch(proxyEndpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        url: apiUrl,
+        messages: request.messages,
+        meta: request.meta,
+      }),
+      signal: controller.signal,
+    })
+
+    clearTimeout(timeoutId)
 
     if (!response.ok) {
       const errorText = await response.text()
@@ -954,17 +1145,21 @@ export const sendChatMessage = async (
       data: responseData as ChatApiResponse,
       error: null,
     }
-  } catch (fetchError) {
+  } catch (fetchError: any) {
+    clearTimeout(timeoutId)
+
     // Console log chi tiết cho developer
-    console.log('❌ AGENT_API Fetch Error:', {
+    const isTimeout = fetchError?.name === 'AbortError'
+    console.log('❌ AGENT_API Error:', {
       error: fetchError,
       url: apiUrl,
       userId: request.meta.user_id,
       message: fetchError instanceof Error ? fetchError.message : 'Unknown error',
+      isTimeout,
     })
 
-    // Fallback to Groq khi network error
-    console.warn('⚠️ AGENT_API network error, falling back to Groq...')
+    // Fallback to Groq khi network error hoặc timeout
+    console.warn(isTimeout ? '⏱️ AGENT_API timeout, falling back to Groq...' : '⚠️ AGENT_API network error, falling back to Groq...')
     const groqResult = await callGroqAPI(request.messages)
     if (groqResult) {
       return {
@@ -1005,21 +1200,46 @@ export const createFallbackResponse = async (
         console.log(`📊 Fetching stock data for ${symbol} from backend...`)
 
         try {
-          const stockData = await getStockData(symbol)
+          // Gọi cả getStockData và getStockDetails để lấy đầy đủ thông tin
+          const [stockData, stockDetails] = await Promise.all([
+            getStockData(symbol),
+            getStockDetails(symbol)
+          ])
 
           if (stockData) {
+            // Ưu tiên lấy name từ stockDetails (stock-symbol.model.ts)
+            const companyName = stockDetails?.info?.organName || 
+                               stockDetails?.info?.enOrganName || 
+                               stockDetails?.info?.organShortName ||
+                               stockDetails?.info?.enOrganShortName ||
+                               stockData.companyName || 
+                               `${stockData.symbol} Corporation`
+
+            // Lấy description từ profile hoặc tạo mặc định
+            const organName = stockDetails?.info?.organName
+            const description = stockDetails?.profile?.description || 
+                               (organName ? 
+                               `Thông tin chi tiết về ${organName}` :
+                               `Thông tin chi tiết về ${stockData.symbol}`)
+
             enhancedEffects = [{
               type: 'OPEN_STOCK_DETAIL',
               payload: {
                 symbol: stockData.symbol,
-                name: stockData.companyName || `${stockData.symbol} Corporation`,
-                description: `Thông tin chi tiết về ${stockData.symbol}`,
+                name: companyName,
+                description: description,
                 price: stockData.price,
                 changePercent: stockData.changePercent,
                 intradayChart: [], // Component sẽ tự fetch chart
               },
             }]
             fallbackReply = `Đã tải thông tin về ${stockData.symbol}. Giá hiện tại: ${stockData.price.toLocaleString('vi-VN')} VNĐ (${stockData.changePercent > 0 ? '+' : ''}${stockData.changePercent.toFixed(2)}%).`
+            
+            console.log(`✅ Stock detail loaded with symbol info for ${symbol}:`, {
+              stockData,
+              stockDetails,
+              companyName
+            })
           } else {
             // Nếu không fetch được, dùng mock data
             console.warn(`⚠️ Could not fetch stock data for ${symbol}, using mock data`)

@@ -167,6 +167,65 @@ export async function getStockData(symbol: string, date?: string): Promise<Cache
 }
 
 /**
+ * Get stock details including symbol info from stock-symbol.model.ts
+ * Returns aggregated data: profile, symbol info, and market data
+ */
+export async function getStockDetails(symbol: string): Promise<{
+    symbol: string;
+    profile: any | null;
+    info: {
+        symbol: string;
+        type: string;
+        exchange: string;
+        enOrganName?: string;
+        enOrganShortName?: string;
+        organShortName?: string;
+        organName?: string;
+        icbCode2?: string;
+        productGrpId?: string;
+    } | null;
+    marketData: CachedStockData | null;
+} | null> {
+    try {
+        const upperSymbol = symbol.toUpperCase().trim();
+        const url = `${API_BASE_URL}/market/details/${upperSymbol}`;
+
+        console.log(`📊 Fetching stock details from: ${url}`);
+
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            cache: 'no-store'
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error(`❌ Failed to fetch stock details for ${upperSymbol}:`, {
+                status: response.status,
+                statusText: response.statusText,
+                error: errorText
+            });
+            return null;
+        }
+
+        const result = await response.json();
+
+        if (result.statusCode === 200 && result.metadata) {
+            console.log(`✅ Stock details fetched for ${upperSymbol}:`, result.metadata);
+            return result.metadata;
+        } else {
+            console.warn(`⚠️ Unexpected response format for ${upperSymbol}:`, result);
+            return result.metadata || null;
+        }
+    } catch (error) {
+        console.error(`❌ Error fetching stock details for ${symbol}:`, error);
+        return null;
+    }
+}
+
+/**
  * Get all stocks for a specific date
  */
 export async function getAllStocksByDate(date: string): Promise<CachedStockData[]> {

@@ -1,6 +1,6 @@
 # Docker Compose cho Windows
 # Usage: docker compose -f docker-compose.windows.yml up
-# 
+#
 # Lưu ý: File này được tối ưu cho Windows với các fix:
 # - MongoDB healthcheck đơn giản hơn
 # - API URL dùng localhost cho browser access
@@ -121,6 +121,8 @@ services:
         # Build time args for Next.js (NEXT_PUBLIC_ vars must be set at build time)
         NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:4000/v1/api}
         NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-http://localhost:3000}
+        NEXT_PUBLIC_AGENT_API: ${NEXT_PUBLIC_AGENT_API:-}
+        NEXT_PUBLIC_AGENT_HF: ${NEXT_PUBLIC_AGENT_HF:-}
     container_name: univen-client
     restart: unless-stopped
     environment:
@@ -129,6 +131,10 @@ services:
       NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:4000/v1/api}
       NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-http://localhost:3000}
       NEXT_PUBLIC_AGENT_API: ${NEXT_PUBLIC_AGENT_API:-}
+      NEXT_PUBLIC_AGENT_HF: ${NEXT_PUBLIC_AGENT_HF:-}
+      # Server-side env (không cần NEXT_PUBLIC_ prefix)
+      HF_TOKEN: ${HF_TOKEN:-}
+      GROQ_API_KEY: ${GROQ_API_KEY:-}
     ports:
       - "${CUSTOMER_PORT:-3000}:3000"
     networks:

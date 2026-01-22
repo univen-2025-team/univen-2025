@@ -128,14 +128,21 @@ export function StockDetailFeature({ data, onBack, onBuyClick }: StockDetailFeat
     [fallbackHistory, fallbackDetail.price]
   )
 
-  // Không dùng fallback data làm initial state - chỉ fetch từ API
-  const [stockData, setStockData] = useState<FullStockDetailData | null>(null)
-  const [priceHistory, setPriceHistory] = useState<PriceHistoryPoint[]>([])
-  const [technicalIndicators, setTechnicalIndicators] = useState<TechnicalIndicator | null>(null)
+  // Dùng fallback data làm initial state để hiển thị ngay
+  const [stockData, setStockData] = useState<FullStockDetailData>(fallbackDetail)
+  const [priceHistory, setPriceHistory] = useState<PriceHistoryPoint[]>(fallbackHistory)
+  const [technicalIndicators, setTechnicalIndicators] = useState<TechnicalIndicator>(fallbackIndicators)
   const [timeRange, setTimeRange] = useState<TimeRange>('1D')
   const [realtimeEnabled, setRealtimeEnabled] = useState(false)
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false) // Không loading ban đầu vì đã có fallback
   const [error, setError] = useState<string | null>(null)
+
+  // Sync fallback data khi data prop thay đổi
+  useEffect(() => {
+    setStockData(fallbackDetail)
+    setPriceHistory(fallbackHistory)
+    setTechnicalIndicators(fallbackIndicators)
+  }, [fallbackDetail, fallbackHistory, fallbackIndicators])
 
   const {
     isConnected,
@@ -148,34 +155,28 @@ export function StockDetailFeature({ data, onBack, onBuyClick }: StockDetailFeat
     try {
       setLoading(true)
       setError(null)
-      
-      // Luôn fetch từ API để lấy giá thật
+
+      // Fetch từ backend API để lấy giá thật
       const result = await fetchStockDetail({ symbol, timeRange })
 
       if (result.success && result.data) {
+        console.log('✅ Stock data fetched from backend:', result.data.stock.symbol, result.data.stock.price)
         setStockData(result.data.stock)
         setPriceHistory(result.data.priceHistory)
         setTechnicalIndicators(result.data.technicalIndicators)
         setError(null)
       } else {
-        // Nếu API lỗi, dùng fallback data nhưng vẫn hiển thị warning
-        console.warn('⚠️ Failed to fetch stock data from API, using fallback:', result?.error || result?.message)
-        setStockData(fallbackDetail)
-        setPriceHistory(fallbackHistory)
-        setTechnicalIndicators(fallbackIndicators)
-        setError(null) // Không hiển thị error, dùng fallback
+        // Nếu API lỗi, giữ nguyên data hiện tại (fallback)
+        console.warn('⚠️ Failed to fetch stock data from API, keeping current data:', result?.error || result?.message)
+        // Không set lại fallback vì đã có data rồi
       }
     } catch (err) {
       console.error('Error fetching stock data:', err)
-      // Nếu network error, dùng fallback data
-      setStockData(fallbackDetail)
-      setPriceHistory(fallbackHistory)
-      setTechnicalIndicators(fallbackIndicators)
-      setError(null) // Không hiển thị error, dùng fallback
+      // Nếu network error, giữ nguyên data hiện tại
     } finally {
       setLoading(false)
     }
-  }, [symbol, timeRange, fallbackDetail, fallbackHistory, fallbackIndicators])
+  }, [symbol, timeRange])
 
   useEffect(() => {
     if (!symbol) return
@@ -250,18 +251,8 @@ export function StockDetailFeature({ data, onBack, onBuyClick }: StockDetailFeat
   const handleToggleRealtime = () => setRealtimeEnabled((prev) => !prev)
   const handleBack = onBack ?? (() => setError(null))
 
-  if (loading && !stockData) {
-    return <StockLoadingState symbol={symbol} />
-  }
-
-  if (error) {
-    return <StockErrorState error={error} onRetry={loadStockDetail} onBack={handleBack} />
-  }
-
-  if (!stockData) {
-    return <StockLoadingState symbol={symbol} />
-  }
-
+  // Luôn hiển thị component với data hiện tại (fallback hoặc từ API)
+  // Không hiển thị loading state vì đã có fallback data
   return (
     <div className="space-y-6 pb-8">
       <div className="flex items-center justify-between">

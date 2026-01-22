@@ -23,8 +23,8 @@ docker compose -f docker-compose.mac.yml up
 ```bash
 docker compose -f docker-compose.mac.yml up
 ```
-*   **Server URL**: `http://localhost:4000` (Avoids AirPlay port 5000 conflict)
-*   **Client URL**: `http://localhost:3000` (Running in Docker)
+*   **Server URL**: `http://localhost:4000` 
+*   **Client URL**: `http://localhost:3000` 
 
 ### Development Mode (Standard)
 ```bash

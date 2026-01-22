@@ -8,7 +8,7 @@ const groq = new Groq({
 
 export async function POST(req: NextRequest) {
   try {
-    const { messages, model = 'llama-3.1-8b-instant', temperature = 0.7, max_tokens = 1000, response_format } = await req.json()
+    const { messages, model = 'groq/compound', temperature = 0.7, max_tokens = 1000, response_format } = await req.json()
 
     if (!messages || !Array.isArray(messages)) {
       return NextResponse.json(
