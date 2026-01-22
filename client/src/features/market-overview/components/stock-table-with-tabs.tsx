@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
+import { useVirtualizer } from '@tanstack/react-virtual';
 import { Search, Eye, EyeOff, Layers, ArrowUpDown, ArrowUp, ArrowDown, Filter } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { MarketNews } from './market-news';
@@ -61,6 +62,9 @@ export function StockTableWithTabs({
     const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>({ key: 'price', direction: 'desc' });
     const [statusFilter, setStatusFilter] = useState<'up' | 'down' | 'ref' | null>(null);
 
+    // Virtual scrolling
+    const parentRef = useRef<HTMLDivElement>(null);
+
     // Sorting Logic
     const handleSort = (key: string) => {
         let direction: 'asc' | 'desc' = 'desc';
@@ -115,6 +119,14 @@ export function StockTableWithTabs({
         if (vol >= 1000) return `${(vol / 1000).toFixed(2)}K`;
         return vol.toString();
     };
+
+    // Virtual scrolling configuration
+    const rowVirtualizer = useVirtualizer({
+        count: displayStocks.length,
+        getScrollElement: () => parentRef.current,
+        estimateSize: () => 88, // Approximate row height in pixels
+        overscan: 5, // Render 5 extra rows above/below viewport
+    });
 
     return (
         <div className="h-full flex flex-col bg-white">
@@ -201,95 +213,93 @@ export function StockTableWithTabs({
                         <MarketNews />
                     </div>
                 ) : (
-                    <div className="h-full overflow-auto custom-scrollbar p-2 space-y-2">
+                    <div
+                        ref={parentRef}
+                        className="h-full overflow-auto custom-scrollbar"
+                    >
                         {displayStocks.length === 0 ? (
                             <div className="flex flex-col items-center justify-center h-64 text-gray-400">
                                 <Search className="w-12 h-12 mb-4 opacity-20" />
                                 <p>Không tìm thấy mã "{searchTerm}"</p>
                             </div>
                         ) : (
-                            displayStocks.map((stock) => {
-                                const isUp = stock.change > 0;
-                                const isDown = stock.change < 0;
-                                const isRef = stock.change === 0;
+                            <div
+                                style={{
+                                    height: `${rowVirtualizer.getTotalSize()}px`,
+                                    width: '100%',
+                                    position: 'relative',
+                                }}
+                            >
+                                {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+                                    const stock = displayStocks[virtualRow.index];
+                                    const isUp = stock.change > 0;
+                                    const isDown = stock.change < 0;
 
-                                return (
-                                    <div
-                                        key={stock.symbol}
-                                        onClick={() => onStockClick(stock)}
-                                        className="group bg-white rounded-xl p-4 border border-gray-100 hover:border-indigo-100 hover:shadow-md transition-all cursor-pointer flex items-center justify-between"
-                                    >
-                                        <div className="flex items-center gap-4">
-                                            {/* Symbol Avatar/Logo */}
-                                            <StockLogo symbol={stock.symbol} logoUrl={stock.logo} isUp={isUp} isDown={isDown} />
-
-                                            <div>
-                                                <div className="flex items-center gap-2">
-                                                    <h4 className="font-bold text-gray-900 text-lg">{stock.symbol}</h4>
-                                                    <span className="text-xs text-gray-400 font-medium px-2 py-0.5 bg-gray-100 rounded-full">
-                                                        HOSE
-                                                    </span>
+                                    return (
+                                        <div
+                                            key={stock.symbol}
+                                            style={{
+                                                position: 'absolute',
+                                                top: 0,
+                                                left: 0,
+                                                width: '100%',
+                                                height: `${virtualRow.size}px`,
+                                                transform: `translateY(${virtualRow.start}px)`,
+                                                padding: '4px 8px',
+                                            }}
+                                        >
+                                            <div
+                                                onClick={() => onStockClick(stock)}
+                                                className="group bg-white rounded-xl p-4 border border-gray-100 hover:border-indigo-100 hover:shadow-md transition-all cursor-pointer flex items-center justify-between h-full"
+                                            >
+                                                <div className="flex items-center gap-4">
+                                                    <StockLogo symbol={stock.symbol} logoUrl={stock.logo} isUp={isUp} isDown={isDown} />
+                                                    <div>
+                                                        <div className="flex items-center gap-2">
+                                                            <h4 className="font-bold text-gray-900 text-lg">{stock.symbol}</h4>
+                                                            <span className="text-xs text-gray-400 font-medium px-2 py-0.5 bg-gray-100 rounded-full">HOSE</span>
+                                                        </div>
+                                                        <p className="text-sm text-gray-500 truncate max-w-[120px] sm:max-w-[200px]">
+                                                            {stock.companyName || 'Không xác định'}
+                                                        </p>
+                                                    </div>
                                                 </div>
-                                                <p className="text-sm text-gray-500 truncate max-w-[120px] sm:max-w-[200px]">
-                                                    {stock.companyName || 'Không xác định'}
-                                                </p>
-                                            </div>
-                                        </div>
 
-                                        {/* Right Side Stats */}
-                                        <div className="flex items-center gap-6 md:gap-12">
-                                            {/* Price Block */}
-                                            <div className="text-right hidden sm:block w-24">
-                                                <p className="text-xs text-gray-400 font-medium uppercase tracking-wider mb-0.5">Giá</p>
-                                                <p className="font-mono font-bold text-gray-900 text-base">
-                                                    {formatNumber(stock.price)}
-                                                </p>
-                                            </div>
+                                                <div className="flex items-center gap-6 md:gap-12">
+                                                    <div className="text-right hidden sm:block w-24">
+                                                        <p className="text-xs text-gray-400 font-medium uppercase tracking-wider mb-0.5">Giá</p>
+                                                        <p className="font-mono font-bold text-gray-900 text-base">{formatNumber(stock.price)}</p>
+                                                    </div>
 
-                                            {/* Change Block */}
-                                            <div className="text-right min-w-[80px]">
-                                                <p className="text-xs text-gray-400 font-medium uppercase tracking-wider mb-0.5 text-right">%</p>
-                                                <div className={cn(
-                                                    "inline-flex items-center justify-end gap-1 font-bold text-base px-2 py-0.5 rounded-lg",
-                                                    isUp ? "bg-indigo-50 text-indigo-600" :
-                                                        isDown ? "bg-red-50 text-red-600" :
-                                                            "bg-amber-50 text-amber-600"
-                                                )}>
-                                                    {isUp && '+'}
-                                                    {stock.changePercent}%
-                                                </div>
-                                            </div>
+                                                    <div className="text-right min-w-[80px]">
+                                                        <p className="text-xs text-gray-400 font-medium uppercase tracking-wider mb-0.5 text-right">%</p>
+                                                        <div className={cn(
+                                                            "inline-flex items-center justify-end gap-1 font-bold text-base px-2 py-0.5 rounded-lg",
+                                                            isUp ? "bg-indigo-50 text-indigo-600" : isDown ? "bg-red-50 text-red-600" : "bg-amber-50 text-amber-600"
+                                                        )}>
+                                                            {isUp && '+'}{stock.changePercent}%
+                                                        </div>
+                                                    </div>
 
-                                            {/* Volume Block */}
-                                            <div className="text-right hidden md:block w-24">
-                                                <p className="text-xs text-gray-400 font-medium uppercase tracking-wider mb-0.5">KL</p>
-                                                <p className="font-mono text-gray-700 text-sm">
-                                                    {formatVolume(stock.volume)}
-                                                </p>
-                                            </div>
+                                                    <div className="text-right hidden md:block w-24">
+                                                        <p className="text-xs text-gray-400 font-medium uppercase tracking-wider mb-0.5">KL</p>
+                                                        <p className="font-mono text-gray-700 text-sm">{formatVolume(stock.volume)}</p>
+                                                    </div>
 
-                                            {/* Watchlist Action */}
-                                            <div onClick={(e) => {
-                                                e.stopPropagation();
-                                                toggleWatchlist(stock.symbol);
-                                            }}>
-                                                <div className={cn(
-                                                    "p-2 rounded-lg transition-colors cursor-pointer",
-                                                    isInWatchlist(stock.symbol)
-                                                        ? "text-indigo-600 bg-indigo-50"
-                                                        : "text-gray-300 hover:text-gray-500 hover:bg-gray-100"
-                                                )}>
-                                                    {isInWatchlist(stock.symbol) ? (
-                                                        <Eye className="w-5 h-5" />
-                                                    ) : (
-                                                        <EyeOff className="w-5 h-5" />
-                                                    )}
+                                                    <div onClick={(e) => { e.stopPropagation(); toggleWatchlist(stock.symbol); }}>
+                                                        <div className={cn(
+                                                            "p-2 rounded-lg transition-colors cursor-pointer",
+                                                            isInWatchlist(stock.symbol) ? "text-indigo-600 bg-indigo-50" : "text-gray-300 hover:text-gray-500 hover:bg-gray-100"
+                                                        )}>
+                                                            {isInWatchlist(stock.symbol) ? <Eye className="w-5 h-5" /> : <EyeOff className="w-5 h-5" />}
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
-                                    </div>
-                                );
-                            })
+                                    );
+                                })}
+                            </div>
                         )}
                     </div>
                 )}
