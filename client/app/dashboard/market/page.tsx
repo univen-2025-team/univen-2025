@@ -237,10 +237,10 @@ export default function MarketPage() {
 
     if (loading) {
         return (
-            <div className="flex items-center justify-center h-screen bg-gray-950">
+            <div className="flex items-center justify-center h-screen bg-gray-50">
                 <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-500 mx-auto mb-4"></div>
-                    <p className="text-gray-400">Loading Market Data...</p>
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
+                    <p className="text-gray-500 font-medium">Đang tải dữ liệu thị trường...</p>
                 </div>
             </div>
         );
@@ -248,10 +248,10 @@ export default function MarketPage() {
 
     if (error) {
         return (
-            <div className="flex items-center justify-center h-screen bg-gray-950">
+            <div className="flex items-center justify-center h-screen bg-gray-50">
                 <div className="text-center">
-                    <p className="text-red-500 mb-4">{error}</p>
-                    <button onClick={() => fetchMarketData(true)} className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">Retry</button>
+                    <p className="text-red-500 mb-4 font-medium">{error}</p>
+                    <button onClick={() => fetchMarketData(true)} className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium shadow-sm transition-colors">Thử lại</button>
                 </div>
             </div>
         );
@@ -259,10 +259,10 @@ export default function MarketPage() {
 
     if (!marketData) {
         return (
-            <div className="flex items-center justify-center h-screen bg-gray-950">
+            <div className="flex items-center justify-center h-screen bg-gray-50">
                 <div className="text-center">
-                    <p className="text-gray-400 mb-4">No Market Data Available</p>
-                    <button onClick={() => fetchMarketData(true)} className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">Refresh</button>
+                    <p className="text-gray-500 mb-4 font-medium">Không có dữ liệu thị trường</p>
+                    <button onClick={() => fetchMarketData(true)} className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium shadow-sm transition-colors">Làm mới</button>
                 </div>
             </div>
         );
@@ -303,20 +303,20 @@ export default function MarketPage() {
                                 steps: [
                                     {
                                         id: 'step-1',
-                                        title: 'Volume',
-                                        description: 'Enter quantity',
-                                        fields: [{ name: 'quantity', type: 'number', label: 'Quantity', placeholder: '100...' }]
+                                        title: 'Khối lượng',
+                                        description: 'Nhập khối lượng',
+                                        fields: [{ name: 'quantity', type: 'number', label: 'Khối lượng', placeholder: '100...' }]
                                     },
                                     {
                                         id: 'step-2',
-                                        title: 'Order Type',
-                                        description: 'Select type',
+                                        title: 'Lệnh',
+                                        description: 'Chọn loại lệnh',
                                         fields: [
-                                            { name: 'orderType', type: 'select', label: 'Type', options: ['Market Order', 'Limit Order'] },
-                                            { name: 'notes', type: 'text', label: 'Notes', placeholder: 'Optional...' }
+                                            { name: 'orderType', type: 'select', label: 'Loại', options: ['Lệnh thị trường (MP)', 'Lệnh giới hạn (LO)'] },
+                                            { name: 'notes', type: 'text', label: 'Ghi chú', placeholder: 'Tùy chọn...' }
                                         ]
                                     },
-                                    { id: 'step-3', title: 'Confirm', description: 'Review order', fields: [] }
+                                    { id: 'step-3', title: 'Xác nhận', description: 'Xem lại lệnh', fields: [] }
                                 ]
                             }}
                             onBack={() => setIsBuyModalOpen(false)}

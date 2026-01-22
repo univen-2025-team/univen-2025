@@ -235,7 +235,7 @@ export function MarketDashboardV2({
             <div className="grid grid-cols-12 gap-6">
                 <div className="col-span-12 xl:col-span-4 h-[500px]">
                     <MarketHeatmap
-                        stocks={marketData?.stocks ? [...marketData.stocks].filter(s => s.symbol !== 'VN30').sort((a, b) => b.volume - a.volume).slice(0, 10) : []}
+                        stocks={marketData?.stocks ? [...marketData.stocks].filter(s => s.symbol !== 'VN30').sort((a, b) => b.volume - a.volume) : []}
                     />
                 </div>
 

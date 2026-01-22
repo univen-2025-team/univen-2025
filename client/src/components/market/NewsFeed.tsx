@@ -44,6 +44,7 @@ const NewsFeed: React.FC<NewsFeedProps> = ({ symbol, className = '', filterRange
     const [loading, setLoading] = useState(true);
     const [selectedNews, setSelectedNews] = useState<NewsItem | null>(null);
     const [error, setError] = useState<string | null>(null);
+    const [displayLimit, setDisplayLimit] = useState(5);
 
     useEffect(() => {
         const fetchNews = async () => {
@@ -139,9 +140,14 @@ const NewsFeed: React.FC<NewsFeedProps> = ({ symbol, className = '', filterRange
         );
     }
 
-    const daysWithNews = (filteredContent || newsData).filter(day => day.news && day.news.length > 0);
+    const allNewsItems = (filteredContent || newsData)
+        .flatMap(day => day.news.map(item => ({ ...item, date: day.date })))
+        .sort((a, b) => new Date(b.public_date || b.pub_date || b.date).getTime() - new Date(a.public_date || a.pub_date || a.date).getTime());
 
-    if (daysWithNews.length === 0) {
+    const displayedNews = allNewsItems.slice(0, displayLimit);
+    const hasMore = allNewsItems.length > displayLimit;
+
+    if (allNewsItems.length === 0) {
         return (
             <div className={`flex flex-col items-center justify-center p-12 text-gray-500 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl border border-dashed border-gray-200 ${className}`}>
                 {filterRange && (
@@ -180,109 +186,78 @@ const NewsFeed: React.FC<NewsFeedProps> = ({ symbol, className = '', filterRange
                 </div>
             )}
 
-            {daysWithNews.map((day) => (
-                <div key={day.date} className="relative">
-                    {/* Date Header */}
-                    <div className="flex items-center gap-3 mb-4">
-                        <div className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-3 py-1.5 rounded-full shadow-sm">
-                            <Calendar className="w-3.5 h-3.5" />
-                            <span className="text-xs font-bold">
-                                {new Date(day.date).toLocaleDateString('vi-VN', { weekday: 'short', day: '2-digit', month: '2-digit' })}
-                            </span>
-                        </div>
-                        <div className="h-px flex-1 bg-gradient-to-r from-gray-200 to-transparent"></div>
-                        <span className="text-xs text-gray-400">{day.news.length} tin</span>
+            {displayedNews.map((item, idx) => (
+                <div
+                    key={item.id || idx}
+                    onClick={() => setSelectedNews(item)}
+                    className="group flex gap-4 bg-white p-4 rounded-xl border border-gray-100 shadow-sm hover:shadow-lg hover:border-blue-200 transition-all duration-300 cursor-pointer"
+                >
+                    {/* Thumbnail */}
+                    <div className="flex-shrink-0 w-24 h-20 rounded-lg overflow-hidden bg-gray-100">
+                        {getImageUrl(item) ? (
+                            <img
+                                src={getImageUrl(item)}
+                                alt=""
+                                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                            />
+                        ) : (
+                            <div className="w-full h-full flex items-center justify-center text-gray-300">
+                                <Newspaper className="w-8 h-8" />
+                            </div>
+                        )}
                     </div>
 
-                    <div className="grid gap-3">
-                        {day.news.map((item, idx) => (
-                            <div
-                                key={item.id || idx}
-                                onClick={() => setSelectedNews(item)}
-                                className="group flex gap-4 bg-white p-4 rounded-xl border border-gray-100 shadow-sm hover:shadow-lg hover:border-blue-200 transition-all duration-300 cursor-pointer"
-                            >
-                                {/* Thumbnail */}
-                                <div className="flex-shrink-0 w-24 h-20 rounded-lg overflow-hidden bg-gray-100">
-                                    {getImageUrl(item) ? (
-                                        <img
-                                            src={getImageUrl(item)}
-                                            alt=""
-                                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                                        />
-                                    ) : (
-                                        <div className="w-full h-full flex items-center justify-center text-gray-300">
-                                            <Newspaper className="w-8 h-8" />
-                                        </div>
-                                    )}
-                                </div>
+                    {/* Content */}
+                    <div className="flex-1 min-w-0 flex flex-col justify-between">
+                        <div>
+                            {/* Meta Tags */}
+                            <div className="flex items-center gap-2 mb-2 flex-wrap">
+                                {/* Domain */}
+                                <span className="inline-flex items-center gap-1 text-[10px] font-bold text-gray-600 bg-gray-100 px-2 py-0.5 rounded-full">
+                                    <Globe className="w-2.5 h-2.5" />
+                                    {getDomain(item)}
+                                </span>
 
-                                {/* Content */}
-                                <div className="flex-1 min-w-0 flex flex-col justify-between">
-                                    <div>
-                                        {/* Meta Tags */}
-                                        <div className="flex items-center gap-2 mb-2 flex-wrap">
-                                            {/* Domain */}
-                                            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-gray-600 bg-gray-100 px-2 py-0.5 rounded-full">
-                                                <Globe className="w-2.5 h-2.5" />
-                                                {getDomain(item)}
-                                            </span>
+                                {/* Date */}
+                                <span className="inline-flex items-center gap-1 text-[10px] text-gray-400">
+                                    <Calendar className="w-2.5 h-2.5" />
+                                    {new Date(item.public_date || item.pub_date || (item as any).date).toLocaleDateString('vi-VN')}
+                                </span>
 
-                                            {/* Category */}
-                                            {item.category && (
-                                                <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full border ${getCategoryColor(item.category)}`}>
-                                                    {getCategoryLabel(item.category)}
-                                                </span>
-                                            )}
-
-                                            {/* Author */}
-                                            {item.author && (
-                                                <span className="inline-flex items-center gap-1 text-[10px] text-gray-400">
-                                                    <User className="w-2.5 h-2.5" />
-                                                    {item.author}
-                                                </span>
-                                            )}
-                                        </div>
-
-                                        {/* Title */}
-                                        <h5 className="text-sm font-bold text-gray-900 group-hover:text-blue-600 line-clamp-2 leading-snug transition-colors">
-                                            {item.title}
-                                        </h5>
-
-                                        {/* Description */}
-                                        {getDescription(item) && (
-                                            <p className="text-xs text-gray-500 mt-1.5 line-clamp-1">
-                                                {getDescription(item)}
-                                            </p>
-                                        )}
-                                    </div>
-
-                                    {/* Bottom Row */}
-                                    <div className="flex items-center justify-between mt-2">
-                                        {/* Matched Symbols */}
-                                        {item.matched_symbols && item.matched_symbols.length > 0 ? (
-                                            <div className="flex items-center gap-1">
-                                                <TrendingUp className="w-3 h-3 text-emerald-500" />
-                                                {item.matched_symbols.slice(0, 3).map(sym => (
-                                                    <span key={sym} className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded">
-                                                        {sym}
-                                                    </span>
-                                                ))}
-                                                {item.matched_symbols.length > 3 && (
-                                                    <span className="text-[10px] text-gray-400">+{item.matched_symbols.length - 3}</span>
-                                                )}
-                                            </div>
-                                        ) : (
-                                            <div></div>
-                                        )}
-
-                                        <ExternalLink className="w-3.5 h-3.5 text-gray-300 group-hover:text-blue-500 transition-colors" />
-                                    </div>
-                                </div>
+                                {/* Category */}
+                                {item.category && (
+                                    <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full border ${getCategoryColor(item.category)}`}>
+                                        {getCategoryLabel(item.category)}
+                                    </span>
+                                )}
                             </div>
-                        ))}
+
+                            {/* Title */}
+                            <h5 className="text-sm font-bold text-gray-900 group-hover:text-blue-600 line-clamp-2 leading-snug transition-colors">
+                                {item.title}
+                            </h5>
+
+                            {/* Description */}
+                            {getDescription(item) && (
+                                <p className="text-xs text-gray-500 mt-1.5 line-clamp-1">
+                                    {getDescription(item)}
+                                </p>
+                            )}
+                        </div>
                     </div>
                 </div>
             ))}
+
+            {hasMore && (
+                <div className="text-center pt-2">
+                    <button
+                        onClick={() => setDisplayLimit(prev => prev + 5)}
+                        className="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline px-4 py-2 rounded-lg hover:bg-blue-50 transition-colors"
+                    >
+                        Xem thêm tin tức
+                    </button>
+                </div>
+            )}
 
             <NewsDetailModal
                 isOpen={!!selectedNews}

@@ -1,6 +1,9 @@
 'use client';
 
 import { Treemap, ResponsiveContainer, Tooltip } from 'recharts';
+import { useState, useMemo, useRef, useEffect } from 'react';
+import { Maximize2, Minimize2, ChevronDown } from 'lucide-react';
+import { createPortal } from 'react-dom';
 
 interface StockData {
     symbol: string;
@@ -16,15 +19,38 @@ interface MarketHeatmapProps {
 }
 
 export function MarketHeatmap({ stocks }: MarketHeatmapProps) {
+    const [topN, setTopN] = useState(10);
+    const [isFullscreen, setIsFullscreen] = useState(false);
+    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+    const dropdownRef = useRef<HTMLDivElement>(null);
+
+    // Close dropdown when clicking outside
+    useEffect(() => {
+        function handleClickOutside(event: MouseEvent) {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+                setIsDropdownOpen(false);
+            }
+        }
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, []);
+
     // Transform stocks data for treemap
-    const treemapData =
-        stocks?.map((stock) => ({
-            name: stock.symbol,
-            value: stock.volume, // Size by volume
-            changePercent: stock.changePercent,
-            price: stock.price,
-            companyName: stock.companyName
-        })) || [];
+    const treemapData = useMemo(() => {
+        if (!stocks) return [];
+        return [...stocks]
+            .sort((a, b) => b.volume - a.volume) // Ensure sorted by volume
+            .slice(0, topN) // Take Top N
+            .map((stock) => ({
+                name: stock.symbol,
+                value: stock.volume, // Size by volume
+                changePercent: stock.changePercent,
+                price: stock.price,
+                companyName: stock.companyName
+            }));
+    }, [stocks, topN]);
 
     const getColor = (changePercent: number) => {
         if (changePercent > 6) return '#4338ca'; // indigo-700
@@ -143,8 +169,44 @@ export function MarketHeatmap({ stocks }: MarketHeatmapProps) {
                 <div className="flex items-center justify-between mb-2">
                     <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
                         <span className="w-1.5 h-6 bg-indigo-600 rounded-full"></span>
-                        Top 10 Khối Lượng
+                        Top {topN} Khối Lượng
                     </h3>
+                    <div className="flex items-center gap-2">
+                        {/* Top N Dropdown */}
+                        <div className="relative" ref={dropdownRef}>
+                            <button
+                                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                                className={`flex items-center gap-1 text-xs font-bold px-2 py-1 bg-gray-100 hover:bg-gray-200 rounded text-gray-700 transition-colors ${isDropdownOpen ? 'bg-gray-200' : ''}`}
+                            >
+                                Top {topN} <ChevronDown className={`w-3 h-3 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
+                            </button>
+                            {isDropdownOpen && (
+                                <div className="absolute right-0 top-full mt-1 bg-white border border-gray-100 rounded-lg shadow-xl py-1 z-10 w-24 animate-in fade-in zoom-in-95 duration-100">
+                                    {[10, 20, 30].map(n => (
+                                        <button
+                                            key={n}
+                                            onClick={() => {
+                                                setTopN(n);
+                                                setIsDropdownOpen(false);
+                                            }}
+                                            className={`w-full text-left px-3 py-1.5 text-xs hover:bg-gray-50 ${topN === n ? 'font-bold text-indigo-600' : 'text-gray-600'}`}
+                                        >
+                                            Top {n}
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Zoom Button */}
+                        <button
+                            onClick={() => setIsFullscreen(true)}
+                            className="p-1.5 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded transition-colors"
+                            title="Toàn màn hình"
+                        >
+                            <Maximize2 className="w-4 h-4" />
+                        </button>
+                    </div>
                 </div>
 
                 {/* Modern Gradient Legend */}
@@ -173,6 +235,50 @@ export function MarketHeatmap({ stocks }: MarketHeatmapProps) {
                     </Treemap>
                 </ResponsiveContainer>
             </div>
+
+            {/* Fullscreen Portal */}
+            {isFullscreen && typeof document !== 'undefined' && createPortal(
+                <div className="fixed inset-0 z-[99999] bg-white flex flex-col p-6 animate-fade-in">
+                    <div className="flex items-center justify-between mb-6">
+                        <div className="flex items-center gap-4">
+                            <h2 className="text-2xl font-bold text-gray-900">Bản đồ nhiệt thị trường</h2>
+                            <div className="flex bg-gray-100 rounded-lg p-1">
+                                {[10, 20, 30, 50].map(n => (
+                                    <button
+                                        key={n}
+                                        onClick={() => setTopN(n)}
+                                        className={`px-3 py-1 rounded-md text-sm font-bold transition-all ${topN === n ? 'bg-white shadow-sm text-indigo-600' : 'text-gray-500 hover:text-gray-900'}`}
+                                    >
+                                        Top {n}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                        <button
+                            onClick={() => setIsFullscreen(false)}
+                            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                        >
+                            <Minimize2 className="w-6 h-6 text-gray-500" />
+                        </button>
+                    </div>
+                    <div className="flex-1 min-h-0 bg-gray-50 rounded-2xl p-4 border border-gray-100">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <Treemap
+                                data={treemapData}
+                                dataKey="value"
+                                stroke="#fff"
+                                fill="#6366f1"
+                                content={<CustomizedContent />}
+                                animationDuration={1000}
+                                isAnimationActive={true}
+                            >
+                                <Tooltip content={<CustomTooltip />} />
+                            </Treemap>
+                        </ResponsiveContainer>
+                    </div>
+                </div>,
+                document.body
+            )}
         </div>
     );
 }
