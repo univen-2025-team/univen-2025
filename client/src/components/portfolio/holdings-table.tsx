@@ -86,150 +86,115 @@ export function HoldingsTable({ holdings, onRefresh }: HoldingsTableProps) {
         <>
             <div className="overflow-x-auto">
                 <table className="min-w-full">
-                    <thead style={{ backgroundColor: 'var(--muted)' }}>
+                    <thead className="bg-muted">
                         <tr>
-                            <th
-                                className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider"
-                                style={{ color: 'var(--foreground)' }}
-                            >
+                            <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-foreground">
                                 Mã CK
                             </th>
-                            <th
-                                className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider"
-                                style={{ color: 'var(--foreground)' }}
-                            >
+                            <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-foreground">
                                 Tên
                             </th>
-                            <th
-                                className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider"
-                                style={{ color: 'var(--foreground)' }}
-                            >
+                            <th className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider text-foreground">
                                 Số lượng
                             </th>
-                            <th
-                                className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider"
-                                style={{ color: 'var(--foreground)' }}
-                            >
+                            <th className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider text-foreground">
                                 Giá TB
                             </th>
-                            <th
-                                className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider"
-                                style={{ color: 'var(--foreground)' }}
-                            >
+                            <th className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider text-foreground">
                                 Giá hiện tại
                             </th>
-                            <th
-                                className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider"
-                                style={{ color: 'var(--foreground)' }}
-                            >
+                            <th className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider text-foreground">
                                 Đã đầu tư
                             </th>
-                            <th
-                                className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider"
-                                style={{ color: 'var(--foreground)' }}
-                            >
+                            <th className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider text-foreground">
                                 Giá trị HT
                             </th>
-                            <th
-                                className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider"
-                                style={{ color: 'var(--foreground)' }}
-                            >
+                            <th className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider text-foreground">
                                 Lãi/Lỗ
                             </th>
-                            <th
-                                className="px-6 py-3 text-center text-xs font-semibold uppercase tracking-wider"
-                                style={{ color: 'var(--foreground)' }}
-                            >
+                            <th className="px-6 py-3 text-center text-xs font-semibold uppercase tracking-wider text-foreground">
                                 Thao tác
                             </th>
                         </tr>
                     </thead>
-                    <tbody style={{ backgroundColor: 'var(--card)' }}>
-                        {holdings.map((holding) => (
-                            <tr
-                                key={holding.stock_code}
-                                className="hover:opacity-80 transition-opacity cursor-pointer"
-                                style={{ borderBottom: '1px solid var(--border)' }}
-                                onClick={() => handleShowDetails(holding)}
-                            >
-                                <td className="px-6 py-4 whitespace-nowrap">
-                                    <div className="font-bold text-primary flex items-center gap-1">
-                                        {holding.stock_code}
-                                        <History className="h-3 w-3 opacity-50" />
-                                    </div>
-                                </td>
-                                <td className="px-6 py-4" style={{ color: 'var(--foreground)' }}>
-                                    {holding.stock_name}
-                                </td>
-                                <td
-                                    className="px-6 py-4 text-right font-semibold"
-                                    style={{ color: 'var(--foreground)' }}
+                    <tbody className="bg-card">
+                        {holdings.map((holding) => {
+                            const isProfit = holding.profit_loss >= 0;
+                            return (
+                                <tr
+                                    key={holding.stock_code}
+                                    className="cursor-pointer border-b border-border transition-colors duration-200 hover:bg-muted/50"
+                                    onClick={() => handleShowDetails(holding)}
+                                    role="button"
+                                    tabIndex={0}
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter' || e.key === ' ') {
+                                            e.preventDefault();
+                                            handleShowDetails(holding);
+                                        }
+                                    }}
                                 >
-                                    {holding.quantity.toLocaleString('vi-VN')}
-                                </td>
-                                <td
-                                    className="px-6 py-4 text-right"
-                                    style={{ color: 'var(--muted-foreground)' }}
-                                >
-                                    {formatCurrency(holding.avg_buy_price)}
-                                </td>
-                                <td
-                                    className="px-6 py-4 text-right font-semibold"
-                                    style={{ color: 'var(--foreground)' }}
-                                >
-                                    {formatCurrency(holding.current_price)}
-                                </td>
-                                <td
-                                    className="px-6 py-4 text-right"
-                                    style={{ color: 'var(--muted-foreground)' }}
-                                >
-                                    {formatCurrency(holding.total_invested)}
-                                </td>
-                                <td
-                                    className="px-6 py-4 text-right font-semibold"
-                                    style={{ color: 'var(--foreground)' }}
-                                >
-                                    {formatCurrency(holding.current_value)}
-                                </td>
-                                <td className="px-6 py-4 text-right">
-                                    <div>
-                                        <p
-                                            className={`font-bold ${
-                                                holding.profit_loss >= 0
-                                                    ? 'text-emerald-400'
-                                                    : 'text-red-400'
-                                            }`}
+                                    <td className="whitespace-nowrap px-6 py-4">
+                                        <div className="flex items-center gap-1 font-bold text-primary">
+                                            {holding.stock_code}
+                                            <History className="h-3 w-3 opacity-50" aria-hidden />
+                                        </div>
+                                    </td>
+                                    <td className="px-6 py-4 text-foreground">
+                                        {holding.stock_name}
+                                    </td>
+                                    <td className="px-6 py-4 text-right font-semibold text-foreground">
+                                        {holding.quantity.toLocaleString('vi-VN')}
+                                    </td>
+                                    <td className="px-6 py-4 text-right text-muted-foreground">
+                                        {formatCurrency(holding.avg_buy_price)}
+                                    </td>
+                                    <td className="px-6 py-4 text-right font-semibold text-foreground">
+                                        {formatCurrency(holding.current_price)}
+                                    </td>
+                                    <td className="px-6 py-4 text-right text-muted-foreground">
+                                        {formatCurrency(holding.total_invested)}
+                                    </td>
+                                    <td className="px-6 py-4 text-right font-semibold text-foreground">
+                                        {formatCurrency(holding.current_value)}
+                                    </td>
+                                    <td className="px-6 py-4 text-right">
+                                        <div>
+                                            <p
+                                                className={`font-bold ${
+                                                    isProfit ? 'text-success' : 'text-destructive'
+                                                }`}
+                                            >
+                                                {isProfit ? '+' : ''}
+                                                {formatCurrency(holding.profit_loss)}
+                                            </p>
+                                            <p
+                                                className={`text-sm ${
+                                                    isProfit ? 'text-success' : 'text-destructive'
+                                                }`}
+                                            >
+                                                {isProfit ? '+' : ''}
+                                                {holding.profit_loss_percent.toFixed(2)}%
+                                            </p>
+                                        </div>
+                                    </td>
+                                    <td className="px-6 py-4 text-center">
+                                        <Button
+                                            variant="destructive"
+                                            size="sm"
+                                            className="cursor-pointer transition-colors duration-200"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleSell(holding);
+                                            }}
                                         >
-                                            {holding.profit_loss >= 0 ? '+' : ''}
-                                            {formatCurrency(holding.profit_loss)}
-                                        </p>
-                                        <p
-                                            className={`text-sm ${
-                                                holding.profit_loss >= 0
-                                                    ? 'text-emerald-400'
-                                                    : 'text-red-400'
-                                            }`}
-                                        >
-                                            {holding.profit_loss >= 0 ? '+' : ''}
-                                            {holding.profit_loss_percent.toFixed(2)}%
-                                        </p>
-                                    </div>
-                                </td>
-                                <td className="px-6 py-4 text-center">
-                                    <Button
-                                        variant="destructive"
-                                        size="sm"
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            handleSell(holding);
-                                        }}
-                                    >
-                                        <TrendingDown className="h-4 w-4 mr-1" />
-                                        Bán
-                                    </Button>
-                                </td>
-                            </tr>
-                        ))}
+                                            <TrendingDown className="mr-1 h-4 w-4" aria-hidden />
+                                            Bán
+                                        </Button>
+                                    </td>
+                                </tr>
+                            );
+                        })}
                     </tbody>
                 </table>
             </div>
@@ -252,16 +217,20 @@ export function HoldingsTable({ holdings, onRefresh }: HoldingsTableProps) {
                 <DialogContent className="max-w-5xl h-[80vh] flex flex-col p-0 gap-0">
                     <DialogHeader className="p-6 pb-2">
                         <DialogTitle className="flex items-center gap-2 text-xl">
-                            <History className="h-6 w-6" />
+                            <History className="h-6 w-6" aria-hidden />
                             Lịch sử giao dịch - {selectedStock?.stock_code}
                         </DialogTitle>
                     </DialogHeader>
 
                     <div className="flex-1 overflow-hidden p-6 pt-2">
                         {loadingTransactions ? (
-                            <div className="h-full flex flex-col items-center justify-center">
-                                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary mx-auto"></div>
-                                <p className="mt-4 text-muted-foreground text-lg">
+                            <div className="flex h-full flex-col items-center justify-center">
+                                <div
+                                    className="mx-auto h-10 w-10 animate-spin rounded-full border-2 border-border border-t-primary"
+                                    role="status"
+                                    aria-label="Đang tải"
+                                />
+                                <p className="mt-4 text-lg text-muted-foreground">
                                     Đang tải dữ liệu...
                                 </p>
                             </div>
@@ -300,10 +269,10 @@ export function HoldingsTable({ holdings, onRefresh }: HoldingsTableProps) {
                                                     </td>
                                                     <td className="px-6 py-4 text-center">
                                                         <span
-                                                            className={`px-3 py-1 rounded-full text-xs font-bold ${
+                                                            className={`rounded-full border px-3 py-1 text-xs font-bold ${
                                                                 tx.transaction_type === 'BUY'
-                                                                    ? 'bg-green-100 text-green-700 border border-green-200'
-                                                                    : 'bg-red-100 text-red-700 border border-red-200'
+                                                                    ? 'border-success bg-success-light text-success'
+                                                                    : 'border-error bg-error-light text-error'
                                                             }`}
                                                         >
                                                             {tx.transaction_type === 'BUY'

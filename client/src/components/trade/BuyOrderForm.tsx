@@ -39,7 +39,8 @@ export function BuyOrderForm({
 
     const inputClass =
         'bg-background border-input text-foreground placeholder:text-muted-foreground focus-visible:border-primary focus-visible:ring-primary/20';
-    const triggerClass = 'bg-background border-input text-foreground hover:bg-muted/50 [&_svg]:text-muted-foreground focus-visible:border-primary focus-visible:ring-primary/20';
+    const triggerClass =
+        'w-full bg-background border-input text-foreground hover:bg-muted/50 [&_svg]:text-muted-foreground focus-visible:border-primary focus-visible:ring-primary/20';
 
     const isBuyTransaction = formik.values.transaction_type === 'BUY';
     const numericBalance = typeof availableBalance === 'number' ? availableBalance : undefined;
@@ -139,6 +140,7 @@ export function BuyOrderForm({
                             value={formik.values.stock_name}
                             onChange={formik.handleChange}
                             onBlur={formik.handleBlur}
+                            className={inputClass}
                         />
                         {renderError('stock_name')}
                     </div>
@@ -153,7 +155,7 @@ export function BuyOrderForm({
                                 formik.setFieldValue('transaction_type', value)
                             }
                         >
-                            <SelectTrigger id="transaction_type">
+                            <SelectTrigger id="transaction_type" className={triggerClass}>
                                 <SelectValue placeholder="Chọn loại lệnh" />
                             </SelectTrigger>
                             <SelectContent>
@@ -178,6 +180,7 @@ export function BuyOrderForm({
                                 value={getNumberValue(formik.values.quantity)}
                                 onChange={handleQuantityChange}
                                 onBlur={formik.handleBlur}
+                                className={inputClass}
                             />
                             {isBuyTransaction && resolvedMaxQuantity !== undefined && (
                                 <button
@@ -189,20 +192,20 @@ export function BuyOrderForm({
                                             formik.setFieldValue('quantity', resolvedMaxQuantity);
                                         }
                                     }}
-                                    className="rounded-md border border-white/10 bg-white/5 px-3 text-sm font-semibold text-white transition hover:bg-white/10"
+                                    className="rounded-md border border-input bg-muted px-3 text-sm font-semibold text-foreground transition hover:bg-muted/80"
                                 >
                                     MAX
                                 </button>
                             )}
                         </div>
                         {isBuyTransaction && resolvedMaxQuantity !== undefined && (
-                            <p className="text-xs text-gray-400">
+                            <p className="text-xs text-muted-foreground">
                                 Có thể mua tối đa {resolvedMaxQuantity.toLocaleString('vi-VN')} cổ
                                 phiếu
                             </p>
                         )}
                         {exceedsBalance && (
-                            <p className="text-xs text-red-400">
+                            <p className="text-xs text-destructive">
                                 Tổng giá trị lệnh ({formattedTotalCost} VND) lớn hơn số dư khả dụng
                                 của bạn.
                             </p>
@@ -220,6 +223,7 @@ export function BuyOrderForm({
                             value={getNumberValue(formik.values.price_per_unit)}
                             onChange={handlePriceChange}
                             onBlur={formik.handleBlur}
+                            className={inputClass}
                         />
                         {renderError('price_per_unit')}
                     </div>
@@ -232,7 +236,7 @@ export function BuyOrderForm({
                         name="notes"
                         rows={3}
                         placeholder="Ví dụ: Khớp lệnh theo báo cáo phân tích, cân nhắc giữ tối thiểu 3 tháng..."
-                        className="w-full rounded-md border border-white/10 bg-white/5 px-3 py-2 text-sm text-white placeholder-gray-500 focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-500/20"
+                        className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20"
                         value={formik.values.notes}
                         onChange={formik.handleChange}
                         onBlur={formik.handleBlur}
@@ -241,21 +245,21 @@ export function BuyOrderForm({
                 </section>
 
                 {formattedBalance && (
-                    <div className="rounded-2xl bg-white/5 border border-white/10 p-4 text-sm text-gray-400">
+                    <div className="rounded-xl border border-border bg-muted/20 p-4 text-sm">
                         <div className="flex items-center justify-between">
-                            <span>Số dư khả dụng</span>
-                            <span className="font-semibold text-white">{formattedBalance} VND</span>
+                            <span className="text-muted-foreground">Số dư khả dụng</span>
+                            <span className="font-semibold text-foreground">{formattedBalance} VND</span>
                         </div>
                         {isBuyTransaction && formattedTotalCost && (
                             <div className="mt-2 space-y-1">
-                                <div className="flex items-center justify-between text-amber-400">
+                                <div className="flex items-center justify-between text-muted-foreground">
                                     <span>Tổng giá trị dự kiến</span>
-                                    <span className="font-semibold">{formattedTotalCost} VND</span>
+                                    <span className="font-semibold text-foreground">{formattedTotalCost} VND</span>
                                 </div>
                                 {remainingBalance && (
-                                    <div className="flex items-center justify-between text-gray-400">
+                                    <div className="flex items-center justify-between text-muted-foreground">
                                         <span>Số dư còn lại sau lệnh</span>
-                                        <span className="font-semibold text-white">
+                                        <span className="font-semibold text-foreground">
                                             {remainingBalance} VND
                                         </span>
                                     </div>
@@ -263,7 +267,7 @@ export function BuyOrderForm({
                             </div>
                         )}
                         {isBuyTransaction && (exceedsBalance || disableSubmit) && (
-                            <p className="mt-2 text-xs text-red-400">
+                            <p className="mt-2 text-xs text-destructive">
                                 Số dư không đủ để đặt lệnh mua. Vui lòng giảm số lượng hoặc nạp thêm
                                 tiền.
                             </p>

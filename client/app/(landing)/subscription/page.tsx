@@ -118,7 +118,7 @@ export default function SubscriptionPage() {
     }
 
     return (
-        <div className="p-6 max-w-6xl mx-auto">
+        <div className="pt-24 pb-6 px-6 max-w-6xl mx-auto">
             <div className="text-center mb-12">
                 <h1 className="text-3xl font-bold mb-2">Nâng cấp gói của bạn</h1>
                 <p className="text-gray-600">

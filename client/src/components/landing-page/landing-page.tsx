@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import {
     TrendingUp,
     Target,
@@ -7,10 +7,9 @@ import {
     Shield,
     BarChart3,
     LineChart,
-    Menu,
-    X,
     ChevronRight,
     Check,
+    X,
     Zap,
     Users,
     RefreshCw
@@ -19,16 +18,6 @@ import Image from 'next/image';
 import Link from 'next/link';
 
 export default function StockieHomepage() {
-    const [isScrolled, setIsScrolled] = useState(false);
-    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-
-    useEffect(() => {
-        const handleScroll = () => {
-            setIsScrolled(window.scrollY > 50);
-        };
-        window.addEventListener('scroll', handleScroll);
-        return () => window.removeEventListener('scroll', handleScroll);
-    }, []);
 
     const features = [
         {
@@ -109,78 +98,6 @@ export default function StockieHomepage() {
                 {/* Bottom Left - Blue Glow */}
                 <div className="absolute bottom-[-10%] left-[20%] w-[600px] h-[600px] bg-blue-600/10 rounded-full blur-[100px] mix-blend-screen"></div>
             </div>
-
-            {/* Navigation */}
-            <nav
-                className={`fixed top-0 w-full z-50 transition-all duration-300 border-b ${isScrolled ? 'bg-[#050505]/70 backdrop-blur-xl border-white/5 shadow-lg shadow-violet-900/10' : 'bg-transparent border-transparent'}`}
-            >
-                <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                        {/* Logo Text with Neon Gradient */}
-                        <div className="flex items-center gap-2 font-bold text-2xl tracking-tighter cursor-pointer">
-                            <div className="relative">
-                                <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-violet-200 to-blue-200 drop-shadow-[0_0_10px_rgba(139,92,246,0.3)]">
-                                    Stockie
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Desktop Menu */}
-                    <div className="hidden md:flex items-center space-x-8">
-                        {['Tính năng', 'Huy hiệu', 'Bảng giá', 'Liên hệ'].map((item, i) => (
-                            <a
-                                key={i}
-                                href={`#${item === 'Huy hiệu' ? 'achievements' : item === 'Tính năng' ? 'features' : ''}`}
-                                className="text-sm font-medium text-slate-300 hover:text-white transition-colors hover:drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]"
-                            >
-                                {item}
-                            </a>
-                        ))}
-                        <Link
-                            href="/dashboard"
-                            className="px-6 py-2.5 bg-gradient-to-r from-violet-600 to-blue-600 text-white rounded-xl hover:shadow-[0_0_25px_-5px_rgba(124,58,237,0.6)] transition-all text-sm font-medium border border-white/10"
-                        >
-                            Bắt đầu
-                        </Link>
-                    </div>
-
-                    {/* Mobile Menu Button */}
-                    <button
-                        className="md:hidden text-slate-300 hover:text-white"
-                        onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                    >
-                        {mobileMenuOpen ? <X /> : <Menu />}
-                    </button>
-                </div>
-
-                {/* Mobile Menu */}
-                {mobileMenuOpen && (
-                    <div className="md:hidden absolute top-20 left-0 w-full bg-[#050505]/95 border-b border-white/10 p-6 space-y-4 animate-in slide-in-from-top-5 backdrop-blur-xl">
-                        <a href="#features" className="block text-slate-300 hover:text-violet-400">
-                            Tính năng
-                        </a>
-                        <a
-                            href="#achievements"
-                            className="block text-slate-300 hover:text-violet-400"
-                        >
-                            Huy hiệu
-                        </a>
-                        <a href="#pricing" className="block text-slate-300 hover:text-violet-400">
-                            Bảng giá
-                        </a>
-                        <a href="#contact" className="block text-slate-300 hover:text-violet-400">
-                            Liên hệ
-                        </a>
-                        <Link
-                            href="/dashboard"
-                            className="block w-full px-6 py-3 bg-gradient-to-r from-violet-600 to-blue-600 text-white rounded-xl text-center font-medium"
-                        >
-                            Bắt đầu
-                        </Link>
-                    </div>
-                )}
-            </nav>
 
             {/* Hero Section */}
             <section className="pt-32 pb-20 px-6 relative z-10">
@@ -781,54 +698,6 @@ export default function StockieHomepage() {
                     </div>
                 </div>
             </section>
-
-            {/* Footer */}
-            <footer className="py-16 px-6 border-t border-white/10 bg-[#020203]">
-                <div className="max-w-7xl mx-auto">
-                    <div className="grid md:grid-cols-4 gap-12 mb-12">
-                        <div className="space-y-4">
-                            <div className="flex items-center space-x-2 mb-4">
-                                <span className="text-2xl font-bold text-white tracking-tighter">
-                                    Stockie
-                                </span>
-                            </div>
-                            <p className="text-slate-400 text-sm leading-relaxed">
-                                Nền tảng đầu tư chứng khoán thông minh cho mọi người
-                            </p>
-                        </div>
-                        {['Sản phẩm', 'Công ty', 'Hỗ trợ'].map((col, idx) => (
-                            <div key={idx}>
-                                <h4 className="font-bold text-white mb-6">{col}</h4>
-                                <ul className="space-y-4 text-slate-400 text-sm">
-                                    {[1, 2, 3].map((i) => (
-                                        <li key={i}>
-                                            <a
-                                                href="#"
-                                                className="hover:text-violet-400 transition-colors"
-                                            >
-                                                {col === 'Sản phẩm'
-                                                    ? ['Tính năng', 'Bảng giá', 'API'][i - 1]
-                                                    : col === 'Công ty'
-                                                      ? ['Về chúng tôi', 'Blog', 'Tuyển dụng'][
-                                                            i - 1
-                                                        ]
-                                                      : [
-                                                            'Trung tâm trợ giúp',
-                                                            'Liên hệ',
-                                                            'Điều khoản'
-                                                        ][i - 1]}
-                                            </a>
-                                        </li>
-                                    ))}
-                                </ul>
-                            </div>
-                        ))}
-                    </div>
-                    <div className="pt-8 border-t border-white/10 text-center text-slate-500">
-                        <p>© 2025 Stockie. All rights reserved.</p>
-                    </div>
-                </div>
-            </footer>
 
             <style jsx>{`
                 @keyframes fadeIn {

@@ -8,71 +8,46 @@ interface PortfolioSummaryProps {
 }
 
 export function PortfolioSummary({ balance, stats }: PortfolioSummaryProps) {
+    const isProfit = stats.totalProfit >= 0;
     return (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div
-                className="rounded-xl p-6 shadow-sm"
-                style={{ backgroundColor: 'var(--card)', border: '1px solid var(--border)' }}
-            >
-                <p className="text-sm mb-2" style={{ color: 'var(--muted-foreground)' }}>
-                    Số dư khả dụng
-                </p>
-                <p className="text-2xl font-bold" style={{ color: 'var(--foreground)' }}>
-                    {formatCurrency(balance)}
-                </p>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="rounded-xl border border-border bg-card p-6 shadow-sm transition-colors duration-200">
+                <p className="mb-2 text-sm text-muted-foreground">Số dư khả dụng</p>
+                <p className="text-2xl font-bold text-foreground">{formatCurrency(balance)}</p>
             </div>
 
-            <div
-                className="rounded-xl p-6 shadow-sm"
-                style={{ backgroundColor: 'var(--card)', border: '1px solid var(--border)' }}
-            >
-                <p className="text-sm mb-2" style={{ color: 'var(--muted-foreground)' }}>
-                    Tổng đã đầu tư
-                </p>
-                <p className="text-2xl font-bold" style={{ color: 'var(--foreground)' }}>
+            <div className="rounded-xl border border-border bg-card p-6 shadow-sm transition-colors duration-200">
+                <p className="mb-2 text-sm text-muted-foreground">Tổng đã đầu tư</p>
+                <p className="text-2xl font-bold text-foreground">
                     {formatCurrency(stats.totalInvested)}
                 </p>
             </div>
 
-            <div
-                className="rounded-xl p-6 shadow-sm"
-                style={{ backgroundColor: 'var(--card)', border: '1px solid var(--border)' }}
-            >
-                <p className="text-sm mb-2" style={{ color: 'var(--muted-foreground)' }}>
-                    Giá trị hiện tại
-                </p>
-                <p className="text-2xl font-bold" style={{ color: 'var(--foreground)' }}>
+            <div className="rounded-xl border border-border bg-card p-6 shadow-sm transition-colors duration-200">
+                <p className="mb-2 text-sm text-muted-foreground">Giá trị hiện tại</p>
+                <p className="text-2xl font-bold text-foreground">
                     {formatCurrency(stats.currentValue)}
                 </p>
             </div>
 
-            <div
-                className="rounded-xl p-6 shadow-sm"
-                style={{ backgroundColor: 'var(--card)', border: '1px solid var(--border)' }}
-            >
-                <div className="flex items-center gap-2 mb-2">
-                    <p className="text-sm" style={{ color: 'var(--muted-foreground)' }}>
-                        Lãi/Lỗ
-                    </p>
-                    {stats.totalProfit >= 0 ? (
-                        <TrendingUp className="w-4 h-4 text-green-600" />
+            <div className="rounded-xl border border-border bg-card p-6 shadow-sm transition-colors duration-200">
+                <div className="mb-2 flex items-center gap-2">
+                    <p className="text-sm text-muted-foreground">Lãi/Lỗ</p>
+                    {isProfit ? (
+                        <TrendingUp className="h-4 w-4 text-success" aria-hidden />
                     ) : (
-                        <TrendingDown className="w-4 h-4 text-red-600" />
+                        <TrendingDown className="h-4 w-4 text-destructive" aria-hidden />
                     )}
                 </div>
                 <p
-                    className={`text-2xl font-bold ${
-                        stats.totalProfit >= 0 ? 'text-green-600' : 'text-red-600'
-                    }`}
+                    className={`text-2xl font-bold ${isProfit ? 'text-success' : 'text-destructive'}`}
                 >
                     {formatCurrency(stats.totalProfit)}
                 </p>
                 <p
-                    className={`text-sm mt-1 ${
-                        stats.totalProfit >= 0 ? 'text-green-600' : 'text-red-600'
-                    }`}
+                    className={`mt-1 text-sm ${isProfit ? 'text-success' : 'text-destructive'}`}
                 >
-                    {stats.totalProfit >= 0 ? '+' : ''}
+                    {isProfit ? '+' : ''}
                     {stats.totalProfitPercent.toFixed(2)}%
                 </p>
             </div>

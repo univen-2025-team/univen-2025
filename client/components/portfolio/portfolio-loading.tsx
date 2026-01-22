@@ -2,10 +2,11 @@ export function PortfolioLoading() {
     return (
         <div className="px-6 py-12 text-center">
             <div
-                className="animate-spin rounded-full h-12 w-12 border-b-2 mx-auto mb-4"
-                style={{ borderColor: 'var(--primary)' }}
-            ></div>
-            <p style={{ color: 'var(--muted-foreground)' }}>Đang tải danh mục...</p>
+                className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-2 border-border border-t-primary"
+                role="status"
+                aria-label="Đang tải"
+            />
+            <p className="text-muted-foreground">Đang tải danh mục...</p>
         </div>
     );
 }

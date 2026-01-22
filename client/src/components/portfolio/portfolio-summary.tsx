@@ -1,75 +1,104 @@
+'use client';
+
 import { TrendingUp, TrendingDown } from 'lucide-react';
 import { formatCurrency } from '@/features/history/utils/format';
+import { useCountUp } from './hooks/use-count-up';
 import type { PortfolioStats } from './types';
+
+const PRIMARY = '#1F3A8A';
+const SECONDARY = '#2563EB';
+const SUCCESS = '#16A34A';
+const DANGER = '#DC2626';
+const MUTED = '#64748B';
+const CARD = '#FFFFFF';
+const BORDER = '#E5E7EB';
 
 interface PortfolioSummaryProps {
     balance: number;
     stats: PortfolioStats;
+    animate?: boolean;
 }
 
-export function PortfolioSummary({ balance, stats }: PortfolioSummaryProps) {
+function Money({ value, className = '' }: { value: number; className?: string }) {
     return (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            {/* Available Balance Card */}
-            <div className="relative group">
-                <div className="absolute -inset-0.5 bg-gradient-to-r from-violet-500 to-blue-500 rounded-2xl blur opacity-20 group-hover:opacity-40 transition duration-500"></div>
-                <div className="relative bg-[#0F111A]/80 backdrop-blur-2xl rounded-2xl p-6 shadow-2xl border border-white/10 ring-1 ring-white/5">
-                    <p className="text-sm mb-2 text-slate-400">Số dư khả dụng</p>
-                    <p className="text-2xl font-bold text-white drop-shadow-md">
-                        {formatCurrency(balance)}
+        <span className={`font-variant-numeric tabular-nums ${className}`}>
+            {formatCurrency(Math.round(value))}
+        </span>
+    );
+}
+
+export function PortfolioSummary({ balance, stats, animate = true }: PortfolioSummaryProps) {
+    const isProfit = stats.totalProfit >= 0;
+    const displayBalance = useCountUp(balance, { duration: 600, enabled: animate });
+    const displayInvested = useCountUp(stats.totalInvested, { duration: 600, enabled: animate });
+    const displayValue = useCountUp(stats.currentValue, { duration: 600, enabled: animate });
+    const displayProfit = useCountUp(stats.totalProfit, { duration: 600, enabled: animate });
+
+    return (
+        <div
+            className="group rounded-2xl border-2 p-6 shadow-sm transition-all duration-300 ease-out hover:-translate-y-0.5 hover:shadow-lg"
+            style={{ backgroundColor: CARD, borderColor: BORDER }}
+        >
+            <div className="grid grid-cols-2 gap-6 lg:grid-cols-4">
+                <div>
+                    <p className="mb-1 text-sm font-medium" style={{ color: MUTED }}>
+                        Số dư khả dụng
+                    </p>
+                    <p className="text-2xl font-bold" style={{ color: PRIMARY }}>
+                        <Money value={displayBalance} />
                     </p>
                 </div>
-            </div>
 
-            {/* Total Invested Card */}
-            <div className="relative group">
-                <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-2xl blur opacity-20 group-hover:opacity-40 transition duration-500"></div>
-                <div className="relative bg-[#0F111A]/80 backdrop-blur-2xl rounded-2xl p-6 shadow-2xl border border-white/10 ring-1 ring-white/5">
-                    <p className="text-sm mb-2 text-slate-400">Tổng đã đầu tư</p>
-                    <p className="text-2xl font-bold text-white drop-shadow-md">
-                        {formatCurrency(stats.totalInvested)}
+                <div>
+                    <p className="mb-1 text-sm font-medium" style={{ color: MUTED }}>
+                        Tổng đã đầu tư
+                    </p>
+                    <p className="text-2xl font-bold" style={{ color: PRIMARY }}>
+                        <Money value={displayInvested} />
                     </p>
                 </div>
-            </div>
 
-            {/* Current Value Card */}
-            <div className="relative group">
-                <div className="absolute -inset-0.5 bg-gradient-to-r from-fuchsia-500 to-pink-500 rounded-2xl blur opacity-20 group-hover:opacity-40 transition duration-500"></div>
-                <div className="relative bg-[#0F111A]/80 backdrop-blur-2xl rounded-2xl p-6 shadow-2xl border border-white/10 ring-1 ring-white/5">
-                    <p className="text-sm mb-2 text-slate-400">Giá trị hiện tại</p>
-                    <p className="text-2xl font-bold text-white drop-shadow-md">
-                        {formatCurrency(stats.currentValue)}
-                    </p>
-                </div>
-            </div>
-
-            {/* Profit/Loss Card */}
-            <div className="relative group">
                 <div
-                    className={`absolute -inset-0.5 bg-gradient-to-r ${stats.totalProfit >= 0 ? 'from-emerald-500 to-cyan-500' : 'from-red-500 to-orange-500'} rounded-2xl blur opacity-30 group-hover:opacity-50 transition duration-500`}
-                ></div>
-                <div className="relative bg-[#0F111A]/80 backdrop-blur-2xl rounded-2xl p-6 shadow-2xl border border-white/10 ring-1 ring-white/5">
-                    <div className="flex items-center gap-2 mb-2">
-                        <p className="text-sm text-slate-400">Lãi/Lỗ</p>
-                        {stats.totalProfit >= 0 ? (
-                            <TrendingUp className="w-4 h-4 text-emerald-400" />
+                    className="rounded-xl border-2 p-4"
+                    style={{
+                        backgroundColor: 'rgba(31, 58, 138, 0.06)',
+                        borderColor: BORDER
+                    }}
+                >
+                    <p className="mb-1 text-sm font-medium" style={{ color: MUTED }}>
+                        Giá trị hiện tại
+                    </p>
+                    <p className="text-3xl font-bold" style={{ color: PRIMARY }}>
+                        <Money value={displayValue} />
+                    </p>
+                </div>
+
+                <div>
+                    <div className="mb-1 flex items-center gap-1.5">
+                        <p className="text-sm font-medium" style={{ color: MUTED }}>
+                            Lãi/Lỗ
+                        </p>
+                        {isProfit ? (
+                            <TrendingUp className="h-4 w-4" style={{ color: SUCCESS }} aria-hidden />
                         ) : (
-                            <TrendingDown className="w-4 h-4 text-red-400" />
+                            <TrendingDown
+                                className="h-4 w-4"
+                                style={{ color: DANGER }}
+                                aria-hidden
+                            />
                         )}
                     </div>
                     <p
-                        className={`text-2xl font-bold drop-shadow-[0_0_8px_${stats.totalProfit >= 0 ? 'rgba(52,211,153,0.4)' : 'rgba(239,68,68,0.4)'}] ${
-                            stats.totalProfit >= 0 ? 'text-emerald-400' : 'text-red-400'
-                        }`}
+                        className="text-2xl font-bold"
+                        style={{ color: isProfit ? SUCCESS : DANGER }}
                     >
-                        {formatCurrency(stats.totalProfit)}
+                        <Money value={displayProfit} />
                     </p>
                     <p
-                        className={`text-sm mt-1 ${
-                            stats.totalProfit >= 0 ? 'text-emerald-400' : 'text-red-400'
-                        }`}
+                        className="mt-0.5 text-sm font-medium"
+                        style={{ color: isProfit ? SUCCESS : DANGER }}
                     >
-                        {stats.totalProfit >= 0 ? '+' : ''}
+                        {isProfit ? '+' : ''}
                         {stats.totalProfitPercent.toFixed(2)}%
                     </p>
                 </div>
