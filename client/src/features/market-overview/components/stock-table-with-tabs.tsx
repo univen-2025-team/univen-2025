@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { useVirtualizer } from '@tanstack/react-virtual';
-import { Search, Eye, EyeOff, Layers, ArrowUpDown, ArrowUp, ArrowDown, Filter } from 'lucide-react';
+import { Search, Eye, EyeOff, Layers, ArrowUpDown, ArrowUp, ArrowDown, Filter, Maximize2, Minimize2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { MarketNews } from './market-news';
 
@@ -61,6 +62,7 @@ export function StockTableWithTabs({
 }: StockTableWithTabsProps) {
     const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>({ key: 'price', direction: 'desc' });
     const [statusFilter, setStatusFilter] = useState<'up' | 'down' | 'ref' | null>(null);
+    const [isFullscreen, setIsFullscreen] = useState(false);
 
     // Virtual scrolling
     const parentRef = useRef<HTMLDivElement>(null);
@@ -128,13 +130,26 @@ export function StockTableWithTabs({
         overscan: 5, // Render 5 extra rows above/below viewport
     });
 
-    return (
-        <div className="h-full flex flex-col bg-white">
+    // Fullscreen content renderer (used in both normal and portal modes)
+    const renderContent = (inFullscreen: boolean) => (
+        <div className={cn(
+            "flex flex-col bg-white transition-all duration-300",
+            inFullscreen ? "h-full" : "h-full"
+        )}>
             {/* New Modern Header */}
             <div className="px-6 py-4 flex flex-col gap-4 border-b border-gray-100">
-                <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                    <Layers className="w-5 h-5 text-indigo-600" /> Dữ liệu thị trường
-                </h3>
+                <div className="flex items-center justify-between">
+                    <h3 className={cn("font-bold text-gray-900 flex items-center gap-2", inFullscreen ? "text-2xl" : "text-lg")}>
+                        <Layers className={cn("text-indigo-600", inFullscreen ? "w-6 h-6" : "w-5 h-5")} /> Dữ liệu thị trường
+                    </h3>
+                    <button
+                        onClick={() => setIsFullscreen(!isFullscreen)}
+                        className="p-2 rounded-lg bg-gray-100 hover:bg-indigo-100 text-gray-600 hover:text-indigo-600 transition-colors"
+                        title={isFullscreen ? 'Thu nhỏ' : 'Phóng to'}
+                    >
+                        {isFullscreen ? <Minimize2 className="w-5 h-5" /> : <Maximize2 className="w-5 h-5" />}
+                    </button>
+                </div>
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                     <div className="flex bg-gray-100/50 p-1 rounded-xl">
                         {(['all', 'watchlist', 'news'] as const).map((mode) => (
@@ -304,6 +319,18 @@ export function StockTableWithTabs({
                     </div>
                 )}
             </div>
-        </div >
+        </div>
     );
+
+    // Main return: either render in portal (fullscreen) or inline (normal)
+    if (isFullscreen && typeof document !== 'undefined') {
+        return createPortal(
+            <div className="fixed inset-0 z-[99999] bg-white flex flex-col animate-fade-in">
+                {renderContent(true)}
+            </div>,
+            document.body
+        );
+    }
+
+    return renderContent(false);
 }
