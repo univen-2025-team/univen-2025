@@ -92,7 +92,7 @@ export default function LessonsList({ lessons }: LessonsListProps) {
 
               <div className="grid gap-4">
                 {groupedLessons[date].map((lesson) => (
-                  <Link key={lesson.id} href={`/lesson/${lesson.id}`} className="block group">
+                  <Link key={lesson.id} href={`/dashboard/lesson/${lesson.id}`} className="block group">
                     <Card className="p-5 bg-secondary hover:bg-secondary/80 border-border transition-all duration-200 cursor-pointer">
                       <div className="flex items-start justify-between gap-4">
                         <div className="flex-1 min-w-0">
@@ -111,11 +111,15 @@ export default function LessonsList({ lessons }: LessonsListProps) {
                                 ? "📈 Strong Up"
                                 : lesson.volatility_type === "strong_down"
                                   ? "📉 Strong Down"
-                                  : lesson.volatility_type}
+                                  : lesson.volatility_type === "moderate_up"
+                                    ? "📈 Up"
+                                    : lesson.volatility_type === "moderate_down"
+                                      ? "📉 Down"
+                                      : lesson.volatility_type}
                             </Badge>
                           </div>
 
-                          <p className="text-sm text-muted-foreground line-clamp-2">{lesson.news_summary}</p>
+                          <p className="text-sm text-muted-foreground line-clamp-2">{lesson.news_summary || '—'}</p>
 
                           <div className="flex gap-4 mt-3 text-xs text-muted-foreground">
                             <span>Level: {lesson.difficulty_level}</span>

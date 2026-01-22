@@ -6,7 +6,7 @@ import { FeatureArea } from '@/features/components/feature-area';
 import { FeatureState, FeatureInstruction, MarketOverviewData } from '@/features/types/features';
 import { reduceFeatureState } from '@/features/utils/feature-reducer';
 import { getLatestMarketData } from '@/lib/api/market-cache';
-import { MessageCircle, X, GripVertical } from 'lucide-react';
+import { MessageCircle, X, GripVertical, Trash2 } from 'lucide-react';
 
 // Default Market Overview Data - fallback if API fails
 const defaultMarketOverview: MarketOverviewData = {
@@ -203,12 +203,27 @@ export default function Chatbot() {
                                 <MessageCircle className="w-5 h-5 text-[#2D5BDE]" />
                                 <h2 className="font-semibold text-[#2D3748]">Trợ lý AI</h2>
                             </div>
-                            <button
-                                onClick={() => setIsChatOpen(false)}
-                                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                            >
-                                <X className="w-5 h-5 text-[#718096]" />
-                            </button>
+                            <div className="flex items-center gap-2">
+                                <button
+                                    onClick={() => {
+                                        if (typeof window !== 'undefined') {
+                                            localStorage.removeItem('chatbot_messages');
+                                            sessionStorage.removeItem('chatbot_conversation_id');
+                                            window.location.reload();
+                                        }
+                                    }}
+                                    className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                                    title="Xóa dữ liệu chat"
+                                >
+                                    <Trash2 className="w-5 h-5 text-[#718096]" />
+                                </button>
+                                <button
+                                    onClick={() => setIsChatOpen(false)}
+                                    className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                                >
+                                    <X className="w-5 h-5 text-[#718096]" />
+                                </button>
+                            </div>
                         </div>
 
                         {/* Chat Content */}

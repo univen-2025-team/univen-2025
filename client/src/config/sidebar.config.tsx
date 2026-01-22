@@ -31,64 +31,106 @@ export interface SidebarRoute {
      * Additional paths that should also highlight this route
      */
     aliases?: string[];
+    /**
+     * Group name for organizing routes
+     */
+    group?: string;
 }
 
-export const sidebarRoutes: SidebarRoute[] = [
-    {
-        name: 'Trang chủ',
-        path: '/dashboard',
-        exact: true,
-        aliases: ['/dashboard'],
-        icon: <Home className="w-5 h-5" />
-    },
+export interface SidebarGroup {
+    name: string;
+    routes: SidebarRoute[];
+}
 
+// Nhóm các routes theo tính năng
+export const sidebarGroups: SidebarGroup[] = [
     {
-        name: 'Thị trường',
-        path: '/dashboard/market',
-        icon: <TrendingUp className="w-5 h-5" />
+        name: 'Tính năng chính',
+        routes: [
+            {
+                name: 'Trang chủ',
+                path: '/dashboard',
+                exact: true,
+                aliases: ['/dashboard'],
+                icon: <Home className="w-5 h-5" />,
+                group: 'Tính năng chính'
+            },
+            {
+                name: 'Thị trường',
+                path: '/dashboard/market',
+                icon: <TrendingUp className="w-5 h-5" />,
+                group: 'Tính năng chính'
+            },
+            {
+                name: 'Phân tích đầu tư',
+                path: '/dashboard/stock-analysis',
+                icon: <Brain className="w-5 h-5" />,
+                group: 'Tính năng chính'
+            }
+        ]
     },
     {
-        name: 'Tin tức',
-        path: '/dashboard/news',
-        icon: <Newspaper className="w-5 h-5" />
+        name: 'Thông tin',
+        routes: [
+            {
+                name: 'Tin tức',
+                path: '/dashboard/news',
+                icon: <Newspaper className="w-5 h-5" />,
+                group: 'Thông tin'
+            }
+        ]
     },
     {
-        name: 'Danh mục',
-        path: '/dashboard/portfolio',
-        icon: <Briefcase className="w-5 h-5" />
+        name: 'Giao dịch & Quản lý',
+        routes: [
+            {
+                name: 'Danh mục',
+                path: '/dashboard/portfolio',
+                icon: <Briefcase className="w-5 h-5" />,
+                group: 'Giao dịch & Quản lý'
+            },
+            {
+                name: 'Giao dịch',
+                path: '/dashboard/trade',
+                icon: <ArrowLeftRight className="w-5 h-5" />,
+                group: 'Giao dịch & Quản lý'
+            },
+            {
+                name: 'Lịch sử',
+                path: '/dashboard/history',
+                icon: <Clock className="w-5 h-5" />,
+                group: 'Giao dịch & Quản lý'
+            }
+        ]
     },
     {
-        name: 'Giao dịch',
-        path: '/dashboard/trade',
-        icon: <ArrowLeftRight className="w-5 h-5" />
-    },
-    {
-        name: 'Bảng xếp hạng',
-        path: '/dashboard/ranking',
-        icon: <Trophy className="w-5 h-5" />
-    },
-    {
-        name: 'Phân tích đầu tư',
-        path: '/dashboard/stock-analysis',
-        icon: <Brain className="w-5 h-5" />
-    },
-    {
-        name: 'Học đầu tư',
-        path: '/dashboard/learn-trading',
-        aliases: ['/dashboard/learn-trading'],
-        icon: <BookOpen className="w-5 h-5" />
-    },
-    {
-        name: 'Lịch sử',
-        path: '/dashboard/history',
-        icon: <Clock className="w-5 h-5" />
-    },
-    {
-        name: 'Huy hiệu',
-        path: '/dashboard/badges',
-        icon: <Award className="w-5 h-5" />
+        name: 'Học tập & Giải trí',
+        routes: [
+            {
+                name: 'Học đầu tư',
+                path: '/dashboard/learn-trading',
+                aliases: ['/dashboard/learn-trading'],
+                icon: <BookOpen className="w-5 h-5" />,
+                group: 'Học tập & Giải trí'
+            },
+            {
+                name: 'Bảng xếp hạng',
+                path: '/dashboard/ranking',
+                icon: <Trophy className="w-5 h-5" />,
+                group: 'Học tập & Giải trí'
+            },
+            {
+                name: 'Huy hiệu',
+                path: '/dashboard/badges',
+                icon: <Award className="w-5 h-5" />,
+                group: 'Học tập & Giải trí'
+            }
+        ]
     }
 ];
+
+// Flatten routes for backward compatibility
+export const sidebarRoutes: SidebarRoute[] = sidebarGroups.flatMap(group => group.routes);
 
 /**
  * Check if a route is active based on current pathname

@@ -569,6 +569,7 @@ Dựa trên câu hỏi từ người dùng, trả về một trong các effect s
 
 NAVIGATION (QUAN TRỌNG): Nếu user muốn mua cổ phiếu hoặc thực hiện action ở sidebar, trả về navigation path tương ứng:
 - "mua [symbol]", "buy [symbol]", "muốn mua", "tôi muốn mua" → navigation: "/dashboard/trade"
+- "chi tiết [symbol]", "thông tin [symbol]", "giá [symbol]", "[symbol]", "chi tiết VCB", "VCB", "thông tin MWG", "giá FPT" → navigation: "/dashboard/market/[SYMBOL]" (thay [SYMBOL] bằng mã cổ phiếu thực tế, VD: "/dashboard/market/VCB")
 - "xem thị trường", "thị trường", "market" → navigation: "/dashboard/market"
 - "tin tức", "news", "xem tin tức" → navigation: "/dashboard/news"
 - "danh mục", "portfolio", "xem danh mục" → navigation: "/dashboard/portfolio"
@@ -580,6 +581,13 @@ NAVIGATION (QUAN TRỌNG): Nếu user muốn mua cổ phiếu hoặc thực hi�
 - "huy hiệu", "badges", "xem huy hiệu" → navigation: "/dashboard/badges"
 - "trang chủ", "home", "dashboard" → navigation: "/dashboard"
 - Nếu không cần navigate, trả về navigation: null
+
+QUAN TRỌNG VỀ MÃ CỔ PHIẾU:
+- Khi user hỏi về mã cổ phiếu (ví dụ: "chi tiết VCB", "VCB", "thông tin MWG", "giá FPT"), KHÔNG dùng OPEN_STOCK_DETAIL
+- Thay vào đó, trả về navigation: "/dashboard/market/[SYMBOL]" với [SYMBOL] được thay bằng mã cổ phiếu thực tế (VD: "/dashboard/market/VCB")
+- uiEffects: "NONE" khi navigate đến trang market với symbol
+- Ví dụ: "chi tiết VCB" → navigation: "/dashboard/market/VCB", uiEffects: "NONE"
+- Ví dụ: "VCB" → navigation: "/dashboard/market/VCB", uiEffects: "NONE"
 
 QUAN TRỌNG: 
 - Khi user nói "mua [symbol]" hoặc "buy [symbol]" → dùng OPEN_BUY_STOCK VÀ navigation: "/dashboard/trade"

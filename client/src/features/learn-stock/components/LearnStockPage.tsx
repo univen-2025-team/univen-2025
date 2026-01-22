@@ -1,81 +1,167 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import CandlestickChart from '@/features/learn-stock/components/candlestick-chart';
+import CandlestickChart from '@/components/market/charts/CandlestickChart';
 import LessonsList from './lessons-list';
 import StockPicker from './stock-picker';
-import { mockLessons } from '@/lib/mock-data';
 import { useLearnStockStore } from '@/features/learn-stock/stores/useLearnStockStore';
-import { getStockData, CachedStockData } from '@/lib/api/market-cache';
+import {
+    getStockData,
+    getStockLessons,
+    generateStockLessons,
+    type CachedStockData,
+    type LearnProductResponse,
+    type LearnProductLesson
+} from '@/lib/api/market-cache';
+import { fetchStockIntraday } from '@/lib/services/marketService';
+import { mapLearnProductToLesson } from '@/features/learn-stock/utils/lesson-map';
+import { aggregateIntradayToDaily } from '@/features/learn-stock/utils/chart-data';
+import type { Lesson } from '@/lib/types';
+import { Loader2 } from 'lucide-react';
+
+const DEFAULT_USER_AGE = 25;
 
 export default function LearnStockPage() {
     const { selectedStock, setSelectedStock, isLoading, setIsLoading } = useLearnStockStore();
     const [stockData, setStockData] = useState<CachedStockData | null>(null);
     const [priceLoading, setPriceLoading] = useState(false);
+    const [chartData, setChartData] = useState<{ time: string; open: number; high: number; low: number; close: number }[]>([]);
+    const [chartLoading, setChartLoading] = useState(false);
+    const [lessons, setLessons] = useState<LearnProductLesson[]>([]);
+    const [lessonsLoading, setLessonsLoading] = useState(false);
+    const [lessonsMeta, setLessonsMeta] = useState<{
+        total: number;
+        generated: number;
+        cached: number;
+    } | null>(null);
+    const [lessonsSource, setLessonsSource] = useState<'none' | 'fetch' | 'generate'>('none');
+    const [generateError, setGenerateError] = useState<string | null>(null);
+
     const selectedSymbol = selectedStock ?? '';
 
-    // Fetch stock data when selected stock changes
-    useEffect(() => {
-        const fetchStockData = async () => {
-            if (!selectedStock) return;
-            
-            setPriceLoading(true);
-            try {
-                const data = await getStockData(selectedStock);
-                setStockData(data);
-            } catch (error) {
-                console.error('Error fetching stock data:', error);
-                setStockData(null);
-            } finally {
-                setPriceLoading(false);
-            }
-        };
+    const formatPrice = useCallback((price: number) => price.toLocaleString('vi-VN'), []);
 
-        fetchStockData();
+    const valueFormatter = useCallback((v: number) => formatPrice(v), [formatPrice]);
+
+    // Fetch stock summary (price, etc.) when symbol changes
+    useEffect(() => {
+        if (!selectedStock) {
+            setStockData(null);
+            return;
+        }
+        setPriceLoading(true);
+        getStockData(selectedStock)
+            .then((data) => setStockData(data))
+            .catch(() => setStockData(null))
+            .finally(() => setPriceLoading(false));
     }, [selectedStock]);
 
-    // Calculate percentage change: (price - previousClose) / previousClose * 100
-    const calculateChangePercent = () => {
-        if (!stockData || !stockData.previousClose) return 0;
-        return ((stockData.price - stockData.previousClose) / stockData.previousClose) * 100;
-    };
+    // Fetch existing lessons when symbol changes
+    useEffect(() => {
+        if (!selectedStock) {
+            setLessons([]);
+            setLessonsMeta(null);
+            setLessonsSource('none');
+            return;
+        }
+        setLessonsLoading(true);
+        setGenerateError(null);
+        getStockLessons(selectedStock)
+            .then((list) => {
+                setLessons(list);
+                setLessonsMeta({ total: list.length, generated: 0, cached: 0 });
+                setLessonsSource('fetch');
+            })
+            .catch(() => {
+                setLessons([]);
+                setLessonsMeta(null);
+            })
+            .finally(() => setLessonsLoading(false));
+    }, [selectedStock]);
 
-    const changePercent = calculateChangePercent();
-    const isPositive = changePercent >= 0;
-
-    // Format price with thousand separator
-    const formatPrice = (price: number) => {
-        return price.toLocaleString('vi-VN');
-    };
+    // Fetch intraday → daily candles for chart when symbol changes
+    useEffect(() => {
+        if (!selectedStock) {
+            setChartData([]);
+            return;
+        }
+        setChartLoading(true);
+        fetchStockIntraday({ symbol: selectedStock, filter: '1Y' })
+            .then((res) => {
+                if (res.success && res.data?.length) {
+                    const daily = aggregateIntradayToDaily(res.data as any);
+                    setChartData(daily);
+                } else {
+                    setChartData([]);
+                }
+            })
+            .catch(() => setChartData([]))
+            .finally(() => setChartLoading(false));
+    }, [selectedStock]);
 
     const handleGenerateLessons = async () => {
+        if (!selectedStock) return;
         setIsLoading(true);
-        // Simulate API call
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-        setIsLoading(false);
+        setGenerateError(null);
+        try {
+            const res: LearnProductResponse = await generateStockLessons(
+                selectedStock,
+                DEFAULT_USER_AGE,
+                { lookbackDays: 365, limit: 10 }
+            );
+            setLessons(res.lessons);
+            setLessonsMeta({
+                total: res.total,
+                generated: res.generated,
+                cached: res.cached
+            });
+            setLessonsSource('generate');
+        } catch (e) {
+            setGenerateError(e instanceof Error ? e.message : 'Lỗi khi tạo phân tích');
+        } finally {
+            setIsLoading(false);
+        }
     };
 
-    // Filter lessons for selected stock
-    const stockLessons = mockLessons.filter((lesson) => lesson.symbol === selectedStock);
+    const changePercent =
+        stockData && stockData.previousClose
+            ? ((stockData.price - stockData.previousClose) / stockData.previousClose) * 100
+            : 0;
+    const isPositive = changePercent >= 0;
+
+    const mappedLessons: Lesson[] = lessons.map((l) =>
+        mapLearnProductToLesson(l, selectedSymbol)
+    );
+
+    const showGenerateEmpty =
+        selectedStock &&
+        lessons.length === 0 &&
+        (lessonsSource === 'fetch' || lessonsSource === 'none') &&
+        !lessonsLoading;
+    const showNoEvents =
+        selectedStock &&
+        lessons.length === 0 &&
+        lessonsSource === 'generate' &&
+        !lessonsLoading;
 
     return (
         <div className="container mx-auto px-4 py-8">
-            {/* Header */}
             <div className="mb-8">
-                <h1 className="text-4xl font-bold text-foreground mb-2">Phân tích cổ phiếu</h1>
+                <h1 className="text-4xl font-bold text-foreground mb-2">
+                    Phân tích cổ phiếu
+                </h1>
                 <p className="text-muted-foreground text-lg">
                     Học trading thông qua sự kiện thị trường
                 </p>
             </div>
 
-            {/* Stock Picker Section */}
             <Card className="mb-8 p-6 bg-card border-border">
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:gap-4">
                     <div className="flex-1">
                         <label className="block text-sm font-medium text-foreground mb-2">
-                            Select Stock Symbol
+                            Mã cổ phiếu
                         </label>
                         <StockPicker
                             value={selectedSymbol}
@@ -85,59 +171,122 @@ export default function LearnStockPage() {
                     </div>
                     <Button
                         onClick={handleGenerateLessons}
-                        disabled={isLoading}
+                        disabled={isLoading || !selectedStock}
                         className="bg-primary hover:bg-primary/90 text-primary-foreground"
                     >
-                        {isLoading ? 'Đang tạo phân tích...' : 'Tạo phân tích'}
+                        {isLoading ? (
+                            <>
+                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                Đang tạo phân tích...
+                            </>
+                        ) : (
+                            'Tạo phân tích'
+                        )}
                     </Button>
                 </div>
+                {generateError && (
+                    <p className="text-destructive text-sm mt-3">{generateError}</p>
+                )}
             </Card>
 
-            {/* Main Content */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                {/* Chart Section */}
                 <div className="lg:col-span-2">
-                    <Card className="p-6 bg-card border-border h-full">
+                    <Card className="p-6 bg-card border-border h-full min-h-[420px] flex flex-col">
                         <h2 className="text-xl font-semibold text-foreground mb-4">
-                            Price Movement Analysis
+                            Biểu đồ giá (1 năm)
                         </h2>
-                        <CandlestickChart symbol={selectedSymbol} />
+                        {!selectedStock ? (
+                            <div className="flex-1 flex items-center justify-center text-muted-foreground">
+                                Chọn mã cổ phiếu để xem biểu đồ
+                            </div>
+                        ) : chartLoading ? (
+                            <div className="flex-1 flex items-center justify-center">
+                                <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+                            </div>
+                        ) : chartData.length === 0 ? (
+                            <div className="flex-1 flex items-center justify-center text-muted-foreground min-h-[360px]">
+                                Không có dữ liệu nến cho mã này
+                            </div>
+                        ) : (
+                            <div className="h-[420px] w-full">
+                                <CandlestickChart
+                                    data={chartData}
+                                    valueFormatter={valueFormatter}
+                                    selectedRange="1Y"
+                                />
+                            </div>
+                        )}
                     </Card>
                 </div>
 
-                {/* Stats Section */}
                 <div className="flex flex-col gap-4">
                     <Card className="p-6 bg-card border-border">
                         <h3 className="text-sm font-medium text-muted-foreground mb-2">
-                            Current Price
+                            Giá hiện tại
                         </h3>
                         <p className="text-3xl font-bold text-foreground">
-                            {priceLoading ? '...' : stockData ? formatPrice(stockData.price) : '---'} VND
+                            {priceLoading
+                                ? '...'
+                                : stockData
+                                  ? `${formatPrice(stockData.price)} VND`
+                                  : '---'}
                         </p>
-                        <p className={`text-sm mt-2 ${isPositive ? 'text-chart-up' : 'text-chart-down'}`}>
-                            {priceLoading ? '...' : stockData ? `${isPositive ? '+' : ''}${changePercent.toFixed(2)}% today` : '---'}
+                        <p
+                            className={`text-sm mt-2 ${isPositive ? 'text-chart-up' : 'text-chart-down'}`}
+                        >
+                            {priceLoading
+                                ? '...'
+                                : stockData
+                                  ? `${isPositive ? '+' : ''}${changePercent.toFixed(2)}%`
+                                  : '---'}
                         </p>
                     </Card>
 
                     <Card className="p-6 bg-card border-border">
                         <h3 className="text-sm font-medium text-muted-foreground mb-2">
-                            Tổng số phân tích
+                            Tổng phân tích
                         </h3>
-                        <p className="text-3xl font-bold text-foreground">{stockLessons.length}</p>
+                        <p className="text-3xl font-bold text-foreground">
+                            {lessonsLoading ? '...' : lessonsMeta?.total ?? 0}
+                        </p>
                         <p className="text-sm text-muted-foreground mt-2">
-                            Từ chuyển động giá
+                            {lessonsMeta &&
+                            (lessonsMeta.generated > 0 || lessonsMeta.cached > 0)
+                                ? `Mới tạo: ${lessonsMeta.generated} · Đã lưu: ${lessonsMeta.cached}`
+                                : 'Từ chuyển động giá'}
                         </p>
                     </Card>
                 </div>
             </div>
 
-            {/* Lessons Section */}
             <div className="mt-8">
                 <Card className="p-6 bg-card border-border">
                     <h2 className="text-2xl font-semibold text-foreground mb-6">
                         Phân tích theo ngày giao dịch
                     </h2>
-                    <LessonsList lessons={stockLessons} />
+                    {lessonsLoading ? (
+                        <div className="flex justify-center py-12">
+                            <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+                        </div>
+                    ) : showGenerateEmpty ? (
+                        <div className="text-center py-12 text-muted-foreground">
+                            <p className="text-lg mb-2">Chưa có phân tích cho mã này.</p>
+                            <p className="text-sm">
+                                Bấm <strong>Tạo phân tích</strong> để tạo bài học từ biến động giá.
+                            </p>
+                        </div>
+                    ) : showNoEvents ? (
+                        <div className="text-center py-12 text-muted-foreground">
+                            <p className="text-lg">
+                                Không tìm thấy sự kiện bất thường nào trong 1 năm.
+                            </p>
+                            <p className="text-sm mt-1">
+                                Thử mã khác hoặc điều chỉnh ngưỡng phân tích.
+                            </p>
+                        </div>
+                    ) : (
+                        <LessonsList lessons={mappedLessons} />
+                    )}
                 </Card>
             </div>
         </div>

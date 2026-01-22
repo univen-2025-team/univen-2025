@@ -7,7 +7,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useAppSelector, useAppDispatch } from '@/lib/store/hooks';
 import { selectUser, logoutUser } from '@/lib/store/authSlice';
 import { appConfig } from '@/config';
-import { sidebarRoutes, isRouteActive } from '@/config/sidebar.config';
+import { sidebarGroups, sidebarRoutes, isRouteActive } from '@/config/sidebar.config';
 import { getMediaUrl } from '@/lib/api/media.api';
 import { useSidebar } from '@/context/SidebarContext';
 
@@ -127,75 +127,91 @@ export function Sidebar() {
 
                     {/* Navigation */}
                     <nav className="flex-1 p-3 overflow-y-auto overflow-x-hidden">
-                        <div className="space-y-1">
-                            {sidebarRoutes.map((route) => {
-                                const active = isRouteActive(route, pathname);
-                                // Use dynamic badge count for 'Huy hiệu' route (unearned badges)
-                                const isBadgesRoute = route.path === '/dashboard/badges';
-                                const badgeCount = isBadgesRoute
-                                    ? unearnedBadges.length > 0
-                                        ? unearnedBadges.length.toString()
-                                        : undefined
-                                    : route.badge;
-
-                                return (
-                                    <Link
-                                        key={route.path}
-                                        href={route.path}
-                                        onClick={() => setIsOpen(false)}
-                                        className={`group flex items-center gap-3 p-3 rounded-lg relative transition-all duration-200 ${
-                                            active
-                                                ? 'bg-[#F0F4FF] text-[#2D5BDE] font-semibold shadow-sm'
-                                                : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                                        } ${isCollapsed ? 'justify-center' : ''}`}
-                                    >
-                                        {/* Active indicator
-                                        {active && !isCollapsed && (
-                                            <div className="" />
-                                        )} */}
-
-                                        <div
-                                            className={`shrink-0 ${
-                                                active
-                                                    ? 'text-[#2D5BDE]'
-                                                    : 'text-gray-500'
-                                            }`}
-                                        >
-                                            {route.icon}
+                        <div className="space-y-4">
+                            {sidebarGroups.map((group, groupIndex) => (
+                                <div key={group.name} className="space-y-1">
+                                    {/* Group Header */}
+                                    {!isCollapsed && (
+                                        <div className="px-3 py-2">
+                                            <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                                {group.name}
+                                            </h3>
                                         </div>
+                                    )}
+                                    
+                                    {/* Group Routes */}
+                                    {group.routes.map((route) => {
+                                        const active = isRouteActive(route, pathname);
+                                        // Use dynamic badge count for 'Huy hiệu' route (unearned badges)
+                                        const isBadgesRoute = route.path === '/dashboard/badges';
+                                        const badgeCount = isBadgesRoute
+                                            ? unearnedBadges.length > 0
+                                                ? unearnedBadges.length.toString()
+                                                : undefined
+                                            : route.badge;
 
-                                        {!isCollapsed && (
-                                            <>
-                                                <span className="flex-1 font-medium">
-                                                    {route.name}
-                                                </span>
-                                                {badgeCount && (
-                                                    <span
-                                                        className={`ml-2 px-2 py-0.5 rounded-full text-xs font-semibold ${
-                                                            isBadgesRoute
-                                                                ? active
-                                                                    ? 'bg-white text-red-500'
-                                                                    : 'bg-red-500 text-white'
-                                                                : active
-                                                                  ? 'bg-white text-[#2D5BDE]'
-                                                                  : 'bg-[#2D5BDE] text-white'
-                                                        }`}
-                                                    >
-                                                        {badgeCount}
-                                                    </span>
+                                        return (
+                                            <Link
+                                                key={route.path}
+                                                href={route.path}
+                                                onClick={() => setIsOpen(false)}
+                                                className={`group flex items-center gap-3 p-3 rounded-lg relative transition-all duration-200 ${
+                                                    active
+                                                        ? 'bg-[#F0F4FF] text-[#2D5BDE] font-semibold shadow-sm'
+                                                        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                                                } ${isCollapsed ? 'justify-center' : ''}`}
+                                            >
+                                                <div
+                                                    className={`shrink-0 ${
+                                                        active
+                                                            ? 'text-[#2D5BDE]'
+                                                            : 'text-gray-500'
+                                                    }`}
+                                                >
+                                                    {route.icon}
+                                                </div>
+
+                                                {!isCollapsed && (
+                                                    <>
+                                                        <span className="flex-1 font-medium">
+                                                            {route.name}
+                                                        </span>
+                                                        {badgeCount && (
+                                                            <span
+                                                                className={`ml-2 px-2 py-0.5 rounded-full text-xs font-semibold ${
+                                                                    isBadgesRoute
+                                                                        ? active
+                                                                            ? 'bg-white text-red-500'
+                                                                            : 'bg-red-500 text-white'
+                                                                        : active
+                                                                          ? 'bg-white text-[#2D5BDE]'
+                                                                          : 'bg-[#2D5BDE] text-white'
+                                                                }`}
+                                                            >
+                                                                {badgeCount}
+                                                            </span>
+                                                        )}
+                                                    </>
                                                 )}
-                                            </>
-                                        )}
 
-                                        {/* Tooltip when collapsed */}
-                                        {isCollapsed && (
-                                            <div className="absolute left-full ml-2 px-3 py-2 bg-gray-900 border border-gray-700 shadow-xl rounded-lg text-sm text-white opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50">
-                                                {route.name}
-                                            </div>
-                                        )}
-                                    </Link>
-                                );
-                            })}
+                                                {/* Tooltip when collapsed */}
+                                                {isCollapsed && (
+                                                    <div className="absolute left-full ml-2 px-3 py-2 bg-gray-900 border border-gray-700 shadow-xl rounded-lg text-sm text-white opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50">
+                                                        {route.name}
+                                                    </div>
+                                                )}
+                                            </Link>
+                                        );
+                                    })}
+                                    
+                                    {/* Divider between groups (except last) */}
+                                    {!isCollapsed && groupIndex < sidebarGroups.length - 1 && (
+                                        <div className="pt-2">
+                                            <div className="border-t border-gray-200"></div>
+                                        </div>
+                                    )}
+                                </div>
+                            ))}
                         </div>
                     </nav>
 

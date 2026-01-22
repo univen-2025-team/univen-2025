@@ -86,6 +86,7 @@ export type UseChatReturn = {
   suggestions: SuggestionMessage[]
   handleSendMessage: (text: string) => Promise<void>
   handleSuggestionClick: (suggestionText: string) => void
+  clearStorage: () => void
 }
 
 /**
@@ -142,6 +143,32 @@ const ACTION_ROUTE_MAP: Record<string, string> = {
 }
 
 /**
+ * Extract symbol từ text - ưu tiên các symbol phổ biến
+ */
+function extractSymbol(text: string): string | undefined {
+  const upperText = text.toUpperCase().trim()
+
+  // Danh sách symbol phổ biến (ưu tiên)
+  const commonSymbols = ['VCB', 'VNM', 'MWG', 'VIC', 'VHM', 'HPG', 'FPT', 'MSN', 'TCB', 'BID', 'CTG', 'ACB', 'MBB', 'VPB', 'STB', 'TPB', 'EIB', 'HDB', 'SSI', 'VCI', 'VND', 'BSI', 'VIX', 'VRE', 'VGC', 'VSH', 'VHC', 'VSC', 'VPI', 'VCI']
+
+  // Nếu text chỉ là symbol (2-5 chữ cái in hoa, không có khoảng trắng hoặc ký tự đặc biệt)
+  if (/^[A-Z]{2,5}$/.test(upperText)) {
+    return upperText
+  }
+
+  // Tìm symbol phổ biến trong text trước
+  for (const sym of commonSymbols) {
+    if (upperText.includes(sym)) {
+      return sym
+    }
+  }
+
+  // Nếu không tìm thấy symbol phổ biến, tìm bất kỳ pattern 2-5 chữ cái in hoa
+  const symbolMatch = upperText.match(/\b[A-Z]{2,5}\b/)
+  return symbolMatch ? symbolMatch[0] : undefined
+}
+
+/**
  * Detect action từ user message và trả về route tương ứng
  */
 function detectActionRoute(text: string): string | null {
@@ -154,6 +181,23 @@ function detectActionRoute(text: string): string | null {
   
   if (buyPatterns.test(text.trim()) || sellPatterns.test(text.trim())) {
     return '/dashboard/trade'
+  }
+  
+  // Check for stock symbol queries (chi tiết, thông tin, giá, etc. + symbol)
+  // Patterns: "chi tiết VCB", "thông tin MWG", "giá FPT", "VCB", etc.
+  const stockQueryPatterns = [
+    /(chi\s*tiết|thông\s*tin|giá|giá\s*cả|thông\s*số|phân\s*tích|biểu\s*đồ|chart)\s+[A-Z]{2,5}/i,
+    /^[A-Z]{2,5}$/i, // Chỉ là symbol
+    /[A-Z]{2,5}\s+(chi\s*tiết|thông\s*tin|giá|giá\s*cả|thông\s*số|phân\s*tích|biểu\s*đồ|chart)/i,
+  ]
+  
+  for (const pattern of stockQueryPatterns) {
+    if (pattern.test(text.trim())) {
+      const symbol = extractSymbol(text)
+      if (symbol) {
+        return `/dashboard/market/${symbol}`
+      }
+    }
   }
   
   // Check keyword matches (exact or starts with)
@@ -285,8 +329,26 @@ export function useChat({ onUiEffects }: UseChatOptions = {}): UseChatReturn {
 
         // Xử lý navigation nếu có
         if (primaryResult.navigation) {
-          console.log(`🧭 Navigating to: ${primaryResult.navigation}`)
-          router.push(primaryResult.navigation)
+          let navigationPath: string | null = primaryResult.navigation
+          
+          // Nếu navigation path chứa [symbol] hoặc [SYMBOL], thay thế bằng symbol thực tế
+          if (navigationPath.includes('[symbol]') || navigationPath.includes('[SYMBOL]')) {
+            const symbol = extractSymbol(text)
+            if (symbol) {
+              // Replace cả [symbol] và [SYMBOL] (case-insensitive)
+              navigationPath = navigationPath.replace(/\[symbol\]/gi, symbol)
+              console.log(`🔤 Extracted symbol for navigation: ${symbol}`)
+            } else {
+              console.warn('⚠️ Navigation path contains [symbol] but no symbol found in message')
+              // Nếu không tìm thấy symbol, không navigate
+              navigationPath = null
+            }
+          }
+          
+          if (navigationPath) {
+            console.log(`🧭 Navigating to: ${navigationPath}`)
+            router.push(navigationPath)
+          }
         }
 
         // Hiển thị reply
@@ -748,6 +810,24 @@ export function useChat({ onUiEffects }: UseChatOptions = {}): UseChatReturn {
     }
   }, []) // Empty dependency array - chỉ đăng ký listener một lần
 
+  const clearStorage = () => {
+    if (typeof window === 'undefined') return
+    
+    // Clear localStorage
+    localStorage.removeItem(STORAGE_KEY)
+    
+    // Clear sessionStorage
+    sessionStorage.removeItem('chatbot_conversation_id')
+    
+    // Reset messages về mockMessages
+    setMessages(mockMessages)
+    
+    // Reset conversation ID
+    conversationIdRef.current = `conv_${Date.now()}`
+    
+    console.log('✅ Cleared chatbot storage')
+  }
+
   return {
     messages,
     isLoading,
@@ -755,6 +835,7 @@ export function useChat({ onUiEffects }: UseChatOptions = {}): UseChatReturn {
     suggestions,
     handleSendMessage,
     handleSuggestionClick,
+    clearStorage,
   }
 }
 

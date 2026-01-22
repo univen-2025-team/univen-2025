@@ -16,6 +16,7 @@ export function ChatInterface({ onUiEffects }: ChatInterfaceProps) {
     suggestions,
     handleSendMessage,
     handleSuggestionClick,
+    clearStorage,
   } = useChat({ onUiEffects })
 
   return (
@@ -26,6 +27,7 @@ export function ChatInterface({ onUiEffects }: ChatInterfaceProps) {
       onSendMessage={handleSendMessage}
       onSuggestionClick={handleSuggestionClick}
       hasComponentLoaded={hasComponentLoaded}
+      onClearStorage={clearStorage}
     />
   )
 }

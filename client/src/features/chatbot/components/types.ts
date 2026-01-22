@@ -21,6 +21,7 @@ export type TradingChatPanelProps = {
   onSendMessage: (text: string) => void
   onSuggestionClick: (suggestion: string) => void
   hasComponentLoaded?: boolean // Component đã được load chưa
+  onClearStorage?: () => void
 }
 
 // Feature IDs

@@ -13,10 +13,14 @@ import type {
     LearnProductResponse,
     AbnormalPriceEvent,
     GeneratedLesson,
-    AgeGroup
+    AgeGroup,
+    LearnProductDocument
 } from '@/types/learn-product.types';
 import { classifyAgeGroup } from '@/types/learn-product.types';
 import { parseISO } from 'date-fns';
+
+/** Raw DB row (e.g. from .lean()); _id may be ObjectId. */
+type LearnProductRaw = Omit<LearnProductDocument, '_id'> & { _id?: unknown };
 
 const CONFIG = {
     DEFAULT_THRESHOLD: 3,
@@ -28,6 +32,29 @@ const CONFIG = {
 
 export default class LearnProductService {
     private static logger = LoggerService.getInstance();
+
+    /**
+     * Convert raw DB row to LearnProductDocument.
+     * Converts _id from ObjectId to string for API response.
+     */
+    private static toLearnProductDocument(doc: LearnProductRaw): LearnProductDocument {
+        const id = doc._id;
+        return {
+            _id: id != null ? (typeof id === 'string' ? id : String(id)) : undefined,
+            symbol: doc.symbol,
+            eventDate: doc.eventDate,
+            priceChangePercent: doc.priceChangePercent,
+            lessonTitle: doc.lessonTitle,
+            lessonContent: doc.lessonContent,
+            newsSummary: doc.newsSummary,
+            keyTakeaways: doc.keyTakeaways,
+            difficultyLevel: doc.difficultyLevel,
+            confidenceScore: doc.confidenceScore,
+            userAgeGroup: doc.userAgeGroup,
+            createdAt: doc.createdAt,
+            updatedAt: doc.updatedAt
+        };
+    }
 
     /**
      * Main entry: get or generate lessons for a symbol
@@ -50,7 +77,10 @@ export default class LearnProductService {
         );
 
         // Step 1: Check existing lessons in DB
-        const existingLessons = await LearnProductRepository.findBySymbol(upperSymbol, limit);
+        const existingLessonsRaw = (await LearnProductRepository.findBySymbol(upperSymbol, limit)) as LearnProductRaw[];
+        const existingLessons: LearnProductDocument[] = existingLessonsRaw.map((doc) =>
+            this.toLearnProductDocument(doc)
+        );
 
         if (existingLessons.length >= limit) {
             this.logger.info(`Returning ${existingLessons.length} cached lessons for ${upperSymbol}`);
@@ -123,7 +153,10 @@ export default class LearnProductService {
         );
 
         // Step 7: Fetch updated lessons from DB
-        const allLessons = await LearnProductRepository.findBySymbol(upperSymbol, limit);
+        const allLessonsRaw = (await LearnProductRepository.findBySymbol(upperSymbol, limit)) as LearnProductRaw[];
+        const allLessons: LearnProductDocument[] = allLessonsRaw.map((doc) =>
+            this.toLearnProductDocument(doc)
+        );
 
         return {
             symbol: upperSymbol,
