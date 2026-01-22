@@ -191,7 +191,7 @@ const StockDetailPage = () => {
       });
 
       // Update Header Data as well
-      setStockData(prev => {
+      setStockData((prev: any) => {
         if (!prev) return prev;
         return {
           ...prev,

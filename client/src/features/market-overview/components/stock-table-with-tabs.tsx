@@ -61,7 +61,7 @@ export function StockTableWithTabs({
     toggleWatchlist,
     onSearchChange
 }: StockTableWithTabsProps) {
-    const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>({ key: 'price', direction: 'desc' });
+    const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>({ key: 'volume', direction: 'desc' });
     const [statusFilter, setStatusFilter] = useState<'up' | 'down' | 'ref' | null>(null);
     const [isFullscreen, setIsFullscreen] = useState(false);
 
