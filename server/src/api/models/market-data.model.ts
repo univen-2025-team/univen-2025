@@ -48,8 +48,7 @@ const MarketDataSchema = new Schema(
         date: {
             type: String,
             required: true,
-            unique: true,
-            index: true
+            unique: true
         },
         timestamp: {
             type: Date,
@@ -84,7 +83,7 @@ const MarketDataSchema = new Schema(
 );
 
 // Indexes
-MarketDataSchema.index({ date: 1 }, { unique: true });
+// Note: date index is already defined in schema with unique: true and index: true
 MarketDataSchema.index({ timestamp: -1 });
 
 export default mongoose.model<IMarketData>('MarketData', MarketDataSchema);

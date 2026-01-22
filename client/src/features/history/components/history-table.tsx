@@ -77,21 +77,20 @@ export const HistoryTable: FC<HistoryTableProps> = ({
     return (
         <>
             <div className="relative group/table">
-                <div className="absolute -inset-0.5 bg-gradient-to-r from-violet-500/30 to-blue-500/30 rounded-3xl blur opacity-20 group-hover/table:opacity-30 transition duration-500"></div>
-                <div className="relative bg-[#0F111A]/80 backdrop-blur-2xl rounded-3xl shadow-2xl overflow-hidden border border-white/10 ring-1 ring-white/5">
-                    <div className="px-6 py-4 border-b border-white/10">
+                <div className="relative bg-white rounded-lg shadow-sm overflow-hidden border border-gray-200 hover:shadow-md hover:border-[#2D5BDE]/30 transition-all duration-200">
+                    <div className="px-6 py-4 border-b border-gray-200">
                         <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-                            <h3 className="text-lg font-bold text-white">
+                            <h3 className="text-lg font-bold text-[#2D3748]">
                                 Danh sách giao dịch ({transactions.length})
                             </h3>
                             {isLoading ? (
-                                <div className="flex items-center gap-2 text-sm text-slate-400">
+                                <div className="flex items-center gap-2 text-sm text-[#718096]">
                                     <Loader2 className="h-4 w-4 animate-spin" />
                                     <span>Đang tải...</span>
                                 </div>
                             ) : (
                                 <button
-                                    className="text-violet-400 hover:text-violet-300 text-sm font-medium disabled:opacity-40 transition-colors"
+                                    className="text-[#2D5BDE] hover:text-[#1E3A8A] text-sm font-medium disabled:opacity-40 transition-colors"
                                     type="button"
                                     disabled
                                     title="Tính năng đang được phát triển"
@@ -105,29 +104,29 @@ export const HistoryTable: FC<HistoryTableProps> = ({
                     {/* Desktop Table */}
                     <div className="hidden md:block overflow-x-auto">
                         <table className="w-full">
-                            <thead className="bg-white/5 border-b border-white/10">
+                            <thead className="bg-gray-50 border-b border-gray-200">
                                 <tr>
-                                    <th className="px-6 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                                    <th className="px-6 py-3 text-left text-xs font-semibold text-[#718096] uppercase tracking-wider">
                                         Loại
                                     </th>
-                                    <th className="px-6 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                                    <th className="px-6 py-3 text-left text-xs font-semibold text-[#718096] uppercase tracking-wider">
                                         Mô tả
                                     </th>
-                                    <th className="px-6 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                                    <th className="px-6 py-3 text-left text-xs font-semibold text-[#718096] uppercase tracking-wider">
                                         Số tiền
                                     </th>
-                                    <th className="px-6 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                                    <th className="px-6 py-3 text-left text-xs font-semibold text-[#718096] uppercase tracking-wider">
                                         Trạng thái
                                     </th>
-                                    <th className="px-6 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                                    <th className="px-6 py-3 text-left text-xs font-semibold text-[#718096] uppercase tracking-wider">
                                         Thời gian
                                     </th>
-                                    <th className="px-6 py-3 text-right text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                                    <th className="px-6 py-3 text-right text-xs font-semibold text-[#718096] uppercase tracking-wider">
                                         Thao tác
                                     </th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-white/10">
+                            <tbody className="divide-y divide-gray-200">
                                 {transactions.map((transaction) => {
                                     const typeInfo =
                                         TRANSACTION_TYPE_INFO[transaction.transaction_type];
@@ -145,7 +144,7 @@ export const HistoryTable: FC<HistoryTableProps> = ({
                                     return (
                                         <tr
                                             key={transaction._id}
-                                            className="hover:bg-white/5 transition-colors"
+                                            className="hover:bg-gray-50 transition-colors"
                                         >
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <div
@@ -156,10 +155,10 @@ export const HistoryTable: FC<HistoryTableProps> = ({
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4">
-                                                <div className="text-sm text-white">
+                                                <div className="text-sm text-[#2D3748]">
                                                     {getTransactionDescription(transaction)}
                                                 </div>
-                                                <div className="text-xs text-gray-400 mt-1">
+                                                <div className="text-xs text-[#718096] mt-1">
                                                     {transaction.stock_code} •{' '}
                                                     {transaction.quantity} CP @{' '}
                                                     {formatCurrency(transaction.price_per_unit)}
@@ -180,7 +179,7 @@ export const HistoryTable: FC<HistoryTableProps> = ({
                                                     {statusInfo.label}
                                                 </span>
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-400">
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-[#718096]">
                                                 {formatDate(timestamp)}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-right">
@@ -191,7 +190,7 @@ export const HistoryTable: FC<HistoryTableProps> = ({
                                                         onClick={() =>
                                                             handleViewDetail(transaction)
                                                         }
-                                                        className="text-primary hover:text-primary/80"
+                                                        className="text-[#2D5BDE] hover:text-[#1E3A8A]"
                                                     >
                                                         <Eye className="h-4 w-4 mr-1" />
                                                         Chi tiết
@@ -204,7 +203,7 @@ export const HistoryTable: FC<HistoryTableProps> = ({
                                 {isLoading && !transactions.length && (
                                     <tr>
                                         <td colSpan={6} className="px-6 py-8">
-                                            <div className="flex items-center justify-center gap-2 text-sm text-gray-400">
+                                            <div className="flex items-center justify-center gap-2 text-sm text-[#718096]">
                                                 <Loader2 className="h-4 w-4 animate-spin" />
                                                 <span>Đang tải dữ liệu...</span>
                                             </div>
@@ -216,7 +215,7 @@ export const HistoryTable: FC<HistoryTableProps> = ({
                     </div>
 
                     {/* Mobile Cards */}
-                    <div className="md:hidden divide-y divide-white/10">
+                    <div className="md:hidden divide-y divide-gray-200">
                         {transactions.map((transaction) => {
                             const typeInfo = TRANSACTION_TYPE_INFO[transaction.transaction_type];
                             const statusInfo =
@@ -232,7 +231,7 @@ export const HistoryTable: FC<HistoryTableProps> = ({
                             return (
                                 <div
                                     key={transaction._id}
-                                    className="p-4 hover:bg-white/5 transition-colors"
+                                    className="p-4 hover:bg-gray-50 transition-colors"
                                 >
                                     <div className="flex items-start justify-between mb-2">
                                         <div
@@ -247,10 +246,10 @@ export const HistoryTable: FC<HistoryTableProps> = ({
                                             {statusInfo.label}
                                         </span>
                                     </div>
-                                    <div className="text-sm text-white mb-1">
+                                    <div className="text-sm text-[#2D3748] mb-1">
                                         {getTransactionDescription(transaction)}
                                     </div>
-                                    <div className="text-xs text-gray-400 mb-2">
+                                    <div className="text-xs text-[#718096] mb-2">
                                         {transaction.stock_code} • {transaction.quantity} CP
                                     </div>
                                     <div className="flex items-center justify-between">
@@ -258,7 +257,7 @@ export const HistoryTable: FC<HistoryTableProps> = ({
                                             {amountPrefix}
                                             {formatCurrency(transaction.total_amount)}
                                         </div>
-                                        <div className="text-xs text-gray-400">
+                                        <div className="text-xs text-[#718096]">
                                             {formatDate(timestamp)}
                                         </div>
                                     </div>
@@ -267,7 +266,7 @@ export const HistoryTable: FC<HistoryTableProps> = ({
                                             variant="ghost"
                                             size="sm"
                                             onClick={() => handleViewDetail(transaction)}
-                                            className="text-primary hover:text-primary/80"
+                                            className="text-[#2D5BDE] hover:text-[#1E3A8A]"
                                         >
                                             <Eye className="h-4 w-4 mr-1" />
                                             Chi tiết
@@ -281,7 +280,7 @@ export const HistoryTable: FC<HistoryTableProps> = ({
                     {isEmpty && (
                         <div className="px-6 py-12 text-center">
                             <svg
-                                className="w-16 h-16 mx-auto text-slate-400 mb-4"
+                                className="w-16 h-16 mx-auto text-[#718096] mb-4"
                                 fill="none"
                                 stroke="currentColor"
                                 viewBox="0 0 24 24"
@@ -293,10 +292,10 @@ export const HistoryTable: FC<HistoryTableProps> = ({
                                     d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
                                 />
                             </svg>
-                            <h3 className="text-lg font-medium text-white mb-1">
+                            <h3 className="text-lg font-medium text-[#2D3748] mb-1">
                                 Không có giao dịch
                             </h3>
-                            <p className="text-slate-400">
+                            <p className="text-[#718096]">
                                 Không tìm thấy giao dịch nào phù hợp với bộ lọc hiện tại.
                             </p>
                         </div>

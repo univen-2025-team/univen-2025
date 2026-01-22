@@ -1,4 +1,6 @@
-import { useState, useRef } from 'react'
+"use client"
+import { useState, useRef, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { ChatMessage, SuggestionMessage } from '../types'
 import { FeatureInstruction } from '@/features/types/features'
 import { useAppSelector } from '@/lib/store/hooks'
@@ -20,6 +22,8 @@ import {
 
 const AGENT_API = getAgentApiUrl()
 
+const STORAGE_KEY = 'chatbot_messages'
+
 const mockMessages: ChatMessage[] = [
   {
     id: '1',
@@ -28,6 +32,41 @@ const mockMessages: ChatMessage[] = [
     createdAt: '09:00 AM',
   },
 ]
+
+/**
+ * Load messages từ localStorage
+ */
+function loadMessagesFromStorage(): ChatMessage[] {
+  if (typeof window === 'undefined') return mockMessages
+  
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY)
+    if (stored) {
+      const parsed = JSON.parse(stored) as ChatMessage[]
+      // Validate và đảm bảo có ít nhất 1 message
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed
+      }
+    }
+  } catch (error) {
+    console.warn('⚠️ Failed to load messages from localStorage:', error)
+  }
+  
+  return mockMessages
+}
+
+/**
+ * Save messages vào localStorage
+ */
+function saveMessagesToStorage(messages: ChatMessage[]): void {
+  if (typeof window === 'undefined') return
+  
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(messages))
+  } catch (error) {
+    console.warn('⚠️ Failed to save messages to localStorage:', error)
+  }
+}
 
 const defaultSuggestions: SuggestionMessage[] = [
   { text: 'Tin tức thị trường', icon: '📰' },
@@ -50,19 +89,118 @@ export type UseChatReturn = {
 }
 
 /**
+ * Map action keywords với routes tương ứng
+ */
+const ACTION_ROUTE_MAP: Record<string, string> = {
+  // Buy/Sell actions -> trade page
+  'mua': '/dashboard/trade',
+  'buy': '/dashboard/trade',
+  'muốn mua': '/dashboard/trade',
+  'tôi muốn mua': '/dashboard/trade',
+  'bán': '/dashboard/trade',
+  'sell': '/dashboard/trade',
+  'muốn bán': '/dashboard/trade',
+  'tôi muốn bán': '/dashboard/trade',
+  'giao dịch': '/dashboard/trade',
+  'trade': '/dashboard/trade',
+  // Market actions
+  'thị trường': '/dashboard/market',
+  'market': '/dashboard/market',
+  'xem thị trường': '/dashboard/market',
+  // News actions
+  'tin tức': '/dashboard/news',
+  'news': '/dashboard/news',
+  'xem tin tức': '/dashboard/news',
+  // Portfolio actions
+  'danh mục': '/dashboard/portfolio',
+  'portfolio': '/dashboard/portfolio',
+  'xem danh mục': '/dashboard/portfolio',
+  // Ranking actions
+  'bảng xếp hạng': '/dashboard/ranking',
+  'ranking': '/dashboard/ranking',
+  'xem ranking': '/dashboard/ranking',
+  // Analysis actions
+  'phân tích': '/dashboard/stock-analysis',
+  'stock analysis': '/dashboard/stock-analysis',
+  'xem phân tích': '/dashboard/stock-analysis',
+  // Learning actions
+  'học đầu tư': '/dashboard/learn-trading',
+  'learn': '/dashboard/learn-trading',
+  'học tập': '/dashboard/learn-trading',
+  // History actions
+  'lịch sử': '/dashboard/history',
+  'history': '/dashboard/history',
+  'xem lịch sử': '/dashboard/history',
+  // Badges actions
+  'huy hiệu': '/dashboard/badges',
+  'badges': '/dashboard/badges',
+  'xem huy hiệu': '/dashboard/badges',
+  // Home actions
+  'trang chủ': '/dashboard',
+  'home': '/dashboard',
+  'dashboard': '/dashboard',
+}
+
+/**
+ * Detect action từ user message và trả về route tương ứng
+ */
+function detectActionRoute(text: string): string | null {
+  const lowerText = text.toLowerCase().trim()
+  
+  // Check for buy/sell patterns with stock symbols first (highest priority)
+  // Patterns: "mua VCB", "buy MWG", "muốn mua FPT", etc.
+  const buyPatterns = /^(mua|buy|muốn mua|tôi muốn mua|tôi muốn mua cổ phiếu)\s+[A-Z]{2,5}/i
+  const sellPatterns = /^(bán|sell|muốn bán|tôi muốn bán|tôi muốn bán cổ phiếu)\s+[A-Z]{2,5}/i
+  
+  if (buyPatterns.test(text.trim()) || sellPatterns.test(text.trim())) {
+    return '/dashboard/trade'
+  }
+  
+  // Check keyword matches (exact or starts with)
+  for (const [keyword, route] of Object.entries(ACTION_ROUTE_MAP)) {
+    const keywordLower = keyword.toLowerCase()
+    
+    // Exact match
+    if (lowerText === keywordLower) {
+      return route
+    }
+    
+    // Starts with keyword + space
+    if (lowerText.startsWith(keywordLower + ' ')) {
+      return route
+    }
+    
+    // Contains keyword as whole word
+    const wordBoundaryRegex = new RegExp(`\\b${keywordLower}\\b`, 'i')
+    if (wordBoundaryRegex.test(lowerText)) {
+      return route
+    }
+  }
+  
+  return null
+}
+
+/**
  * Custom hook để quản lý chat logic
  */
 export function useChat({ onUiEffects }: UseChatOptions = {}): UseChatReturn {
-  const [messages, setMessages] = useState<ChatMessage[]>(mockMessages)
+  // Load messages từ localStorage khi mount
+  const [messages, setMessages] = useState<ChatMessage[]>(() => loadMessagesFromStorage())
   const [isLoading, setIsLoading] = useState(false)
   const [hasComponentLoaded, setHasComponentLoaded] = useState(false) // Track component đã load chưa
   const [suggestions, setSuggestions] = useState<SuggestionMessage[]>(defaultSuggestions)
   const user = useAppSelector(selectUser)
+  const router = useRouter()
   const conversationIdRef = useRef<string>(
     typeof window !== 'undefined'
       ? sessionStorage.getItem('chatbot_conversation_id') || `conv_${Date.now()}`
       : `conv_${Date.now()}`
   )
+
+  // Lưu messages vào localStorage mỗi khi messages thay đổi
+  useEffect(() => {
+    saveMessagesToStorage(messages)
+  }, [messages])
 
   const handleSendMessage = async (text: string) => {
     const userMessage: ChatMessage = {
@@ -80,6 +218,33 @@ export function useChat({ onUiEffects }: UseChatOptions = {}): UseChatReturn {
     setHasComponentLoaded(false) // Reset khi bắt đầu message mới
 
     // ============================================
+    // BƯỚC 0: DETECT ACTION VÀ NAVIGATE TRỰC TIẾP (KHÔNG GỌI AGENT)
+    // ============================================
+    const detectedRoute = detectActionRoute(text)
+    if (detectedRoute) {
+      console.log('🎯 ========== ACTION DETECTED - DIRECT NAVIGATION ==========')
+      console.log('📝 User message:', text)
+      console.log('🧭 Detected route:', detectedRoute)
+      
+      // Thêm bot response ngắn gọn
+      const botResponse: ChatMessage = {
+        id: `msg-${Date.now() + 1}`,
+        role: 'assistant',
+        text: 'Đang chuyển đến trang bạn yêu cầu...',
+        createdAt: new Date().toLocaleTimeString([], {
+          hour: '2-digit',
+          minute: '2-digit',
+        }),
+      }
+      setMessages((prev) => [...prev, botResponse])
+      
+      // Navigate trực tiếp
+      router.push(detectedRoute)
+      setIsLoading(false)
+      return // Skip API call
+    }
+
+    // ============================================
     // BƯỚC 1: GỌI PRIMARY API (HuggingFace > Groq) - Phân loại intent và hiển thị component ngay
     // ============================================
     console.log('🚀 ========== STARTING CHAT FLOW ==========')
@@ -87,12 +252,13 @@ export function useChat({ onUiEffects }: UseChatOptions = {}): UseChatReturn {
     console.log('🔧 HuggingFace configured:', isHuggingFaceConfigured())
 
     const allMessages = [...messages, userMessage]
-    const conversationHistory = buildConversationHistory(allMessages)
+    // Giới hạn 3 context (6 messages: 3 user + 3 assistant)
+    const conversationHistory = buildConversationHistory(allMessages, 3)
     console.log('💬 Conversation history length:', conversationHistory.length)
-    console.log('💬 Conversation history:', conversationHistory)
+    console.log('💬 Conversation history (limited to 3 contexts):', conversationHistory)
 
     // Gọi Primary API (HuggingFace > Groq) để phân loại intent
-    let primaryResult: { reply: string; uiEffects: FeatureInstruction[]; suggestions: SuggestionMessage[] } | null = null
+    let primaryResult: { reply: string; uiEffects: FeatureInstruction[]; suggestions: SuggestionMessage[]; navigation: string | null } | null = null
     try {
       console.log('🤖 ========== CALLING PRIMARY API (HF > Groq) ==========')
       console.log('🤖 Preparing messages...')
@@ -115,6 +281,13 @@ export function useChat({ onUiEffects }: UseChatOptions = {}): UseChatReturn {
         console.log('✅ Reply:', primaryResult.reply)
         console.log('✅ UI effects:', primaryResult.uiEffects)
         console.log('✅ Suggestions:', primaryResult.suggestions)
+        console.log('✅ Navigation:', primaryResult.navigation)
+
+        // Xử lý navigation nếu có
+        if (primaryResult.navigation) {
+          console.log(`🧭 Navigating to: ${primaryResult.navigation}`)
+          router.push(primaryResult.navigation)
+        }
 
         // Hiển thị reply
         const botResponse: ChatMessage = {
@@ -552,6 +725,28 @@ export function useChat({ onUiEffects }: UseChatOptions = {}): UseChatReturn {
       handleSendMessage(action)
     }
   }
+
+  // Listen for external message events (e.g., from chart analysis)
+  // Sử dụng useRef để lưu reference của handleSendMessage và tránh re-register listener
+  const handleSendMessageRef = useRef(handleSendMessage)
+  useEffect(() => {
+    handleSendMessageRef.current = handleSendMessage
+  }, [handleSendMessage])
+
+  useEffect(() => {
+    const handleExternalMessage = (event: CustomEvent<string>) => {
+      const messageText = event.detail
+      if (messageText) {
+        // Sử dụng ref để gọi function mới nhất mà không cần re-register listener
+        handleSendMessageRef.current(messageText)
+      }
+    }
+
+    window.addEventListener('chatbot:send-message' as any, handleExternalMessage as EventListener)
+    return () => {
+      window.removeEventListener('chatbot:send-message' as any, handleExternalMessage as EventListener)
+    }
+  }, []) // Empty dependency array - chỉ đăng ký listener một lần
 
   return {
     messages,

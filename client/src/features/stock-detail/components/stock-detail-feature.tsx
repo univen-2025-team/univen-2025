@@ -18,7 +18,7 @@ import {
   TechnicalIndicator,
   TimeRange,
 } from '@/lib/types/stock-detail'
-import { fetchStockDetail } from '@/lib/services/marketService'
+import { fetchStockDetail, fetchStockIntraday } from '@/lib/services/marketService'
 import { useStockSocket } from '@/lib/hooks/useMarketSocket'
 
 type StockDetailFeatureProps = {
@@ -156,19 +156,77 @@ export function StockDetailFeature({ data, onBack, onBuyClick }: StockDetailFeat
       setLoading(true)
       setError(null)
 
-      // Fetch từ backend API để lấy giá thật
-      const result = await fetchStockDetail({ symbol, timeRange })
+      // Gọi API intraday để lấy dữ liệu chart
+      const intradayResult = await fetchStockIntraday({ 
+        symbol, 
+        filter: timeRange,
+        refresh: false 
+      })
 
-      if (result.success && result.data) {
-        console.log('✅ Stock data fetched from backend:', result.data.stock.symbol, result.data.stock.price)
-        setStockData(result.data.stock)
-        setPriceHistory(result.data.priceHistory)
-        setTechnicalIndicators(result.data.technicalIndicators)
+      if (intradayResult.success && intradayResult.data) {
+        const intradayData = intradayResult.data
+        console.log('✅ Stock intraday data fetched from backend:', symbol, intradayData.length, 'points')
+        
+        // Convert intraday data to PriceHistoryPoint format
+        const historyPoints: PriceHistoryPoint[] = intradayData.map((point) => ({
+          time: point.time,
+          price: point.close,
+          volume: point.volume,
+          open: point.open,
+          close: point.close,
+          high: point.high,
+          low: point.low,
+        }))
+
+        setPriceHistory(historyPoints)
+
+        // Update stock data từ điểm cuối cùng của intraday data
+        if (intradayData.length > 0) {
+          const latestPoint = intradayData[intradayData.length - 1]
+          const firstPoint = intradayData[0]
+          
+          setStockData((prev) => ({
+            ...prev,
+            price: latestPoint.close,
+            open: firstPoint.open,
+            high: Math.max(...intradayData.map(p => p.high)),
+            low: Math.min(...intradayData.map(p => p.low)),
+            close: latestPoint.close,
+            volume: intradayData.reduce((sum, p) => sum + (p.volume || 0), 0),
+            change: latestPoint.close - firstPoint.open,
+            changePercent: ((latestPoint.close - firstPoint.open) / firstPoint.open) * 100,
+            lastUpdate: new Date().toISOString(),
+          }))
+
+          // Calculate technical indicators từ price history
+          const prices = historyPoints.map(p => p.price)
+          const base = prices.length ? prices[prices.length - 1] : latestPoint.close
+          const avg = (items: number[]) => {
+            if (!items.length) return base
+            return items.reduce((acc, val) => acc + val, 0) / items.length
+          }
+
+          setTechnicalIndicators({
+            ma5: avg(prices.slice(-5)),
+            ma10: avg(prices.slice(-10)),
+            ma20: avg(prices.slice(-20)),
+            rsi: 50, // TODO: Calculate RSI
+            macd: 0, // TODO: Calculate MACD
+          })
+        }
+
         setError(null)
       } else {
-        // Nếu API lỗi, giữ nguyên data hiện tại (fallback)
-        console.warn('⚠️ Failed to fetch stock data from API, keeping current data:', result?.error || result?.message)
-        // Không set lại fallback vì đã có data rồi
+        // Fallback: thử fetchStockDetail nếu intraday fail
+        const result = await fetchStockDetail({ symbol, timeRange })
+        if (result.success && result.data) {
+          console.log('✅ Stock data fetched from backend (fallback):', result.data.stock.symbol)
+          setStockData(result.data.stock)
+          setPriceHistory(result.data.priceHistory)
+          setTechnicalIndicators(result.data.technicalIndicators)
+        } else {
+          console.warn('⚠️ Failed to fetch stock data from API, keeping current data:', intradayResult?.error || result?.error)
+        }
       }
     } catch (err) {
       console.error('Error fetching stock data:', err)

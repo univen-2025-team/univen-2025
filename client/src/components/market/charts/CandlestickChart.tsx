@@ -55,7 +55,6 @@ export default function CandlestickChart({ data, valueFormatter, onLoadMore, onN
     const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
     const loadMoreThrottleRef = useRef<number>(0);
     const dragStartWithRightClickRef = useRef<{ x: number, y: number } | null>(null);
-
     // Selection State (Restored)
     const [isSelecting, setIsSelecting] = useState(false);
     const [selectionRange, setSelectionRange] = useState<{ start: number; end: number } | null>(null);
@@ -63,6 +62,9 @@ export default function CandlestickChart({ data, valueFormatter, onLoadMore, onN
 
     // Context Menu State
     const [contextMenu, setContextMenu] = useState<{ x: number, y: number } | null>(null);
+    
+    // Notification state for message sent
+    const [messageSentNotification, setMessageSentNotification] = useState(false);
 
     // State Refs for Event Listeners (Prevent Stale Closures)
     const viewRangeRef = useRef(viewRange);
@@ -959,10 +961,42 @@ export default function CandlestickChart({ data, valueFormatter, onLoadMore, onN
                 >
                     <div className="py-1">
                         <button
-                            className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                            className={`w-full text-left px-4 py-2 text-sm flex items-center gap-2 ${
+                                selectionAnalysis && selectionRange
+                                    ? 'text-gray-700 hover:bg-gray-100'
+                                    : 'text-gray-400 cursor-not-allowed'
+                            }`}
+                            disabled={!selectionAnalysis || !selectionRange}
                             onClick={() => {
-                                // To be implemented
-                                console.log('Giải thích biến động');
+                                if (selectionAnalysis && selectionRange) {
+                                    // Lấy dữ liệu từ vùng đã chọn
+                                    const selectedData = data.slice(selectionRange.start, selectionRange.end + 1);
+                                    
+                                    // Format message với thông tin biến động
+                                    const message = `Hãy giải thích biến động giá trong khoảng thời gian từ ${selectionAnalysis.startTime} đến ${selectionAnalysis.endTime}:\n\n` +
+                                        `- Số lượng nến: ${selectionAnalysis.count}\n` +
+                                        `- Giá mở: ${valueFormatter(selectedData[0].open)}\n` +
+                                        `- Giá đóng: ${valueFormatter(selectedData[selectedData.length - 1].close)}\n` +
+                                        `- Giá thấp nhất: ${valueFormatter(selectionAnalysis.minPrice)}\n` +
+                                        `- Giá cao nhất: ${valueFormatter(selectionAnalysis.maxPrice)}\n` +
+                                        `- Giá trung bình: ${valueFormatter(selectionAnalysis.avgClose)}\n` +
+                                        `- Biến động: ${selectionAnalysis.priceChange >= 0 ? '+' : ''}${valueFormatter(selectionAnalysis.priceChange)} (${selectionAnalysis.priceChangePercent >= 0 ? '+' : ''}${selectionAnalysis.priceChangePercent.toFixed(2)}%)\n\n` +
+                                        `Dữ liệu chi tiết các nến:\n${selectedData.map((candle, idx) => 
+                                            `${idx + 1}. ${candle.time}: Mở=${valueFormatter(candle.open)}, Đóng=${valueFormatter(candle.close)}, Cao=${valueFormatter(candle.high)}, Thấp=${valueFormatter(candle.low)}`
+                                        ).join('\n')}`;
+
+                                    // Chỉ gửi message cho chatbot (không mở chatbot tự động)
+                                    const event = new CustomEvent('chatbot:send-message', {
+                                        detail: message
+                                    });
+                                    window.dispatchEvent(event);
+                                    
+                                    // Hiển thị notification
+                                    setMessageSentNotification(true);
+                                    setTimeout(() => {
+                                        setMessageSentNotification(false);
+                                    }, 3000);
+                                }
                                 setContextMenu(null);
                             }}
                         >
@@ -1043,6 +1077,30 @@ export default function CandlestickChart({ data, valueFormatter, onLoadMore, onN
                     style={{ width: '100%', height: '100%' }}
                 />
             </div>
+            
+            {/* Notification khi message đã được gửi */}
+            {messageSentNotification && typeof document !== 'undefined' && createPortal(
+                <div
+                    className="fixed bottom-6 right-6 z-[10000] bg-blue-600 text-white px-4 py-3 rounded-lg shadow-xl flex items-center gap-3 transition-all duration-300 ease-out opacity-100 translate-y-0"
+                >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <div>
+                        <div className="font-semibold text-sm">Đã gửi câu hỏi</div>
+                        <div className="text-xs text-blue-100">Mở chatbot để xem phản hồi</div>
+                    </div>
+                    <button
+                        onClick={() => setMessageSentNotification(false)}
+                        className="ml-2 hover:bg-blue-700 rounded p-1 transition-colors"
+                    >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>,
+                document.body
+            )}
         </div>
     );
 }

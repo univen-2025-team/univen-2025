@@ -64,9 +64,9 @@ export default function LearnStockPage() {
         <div className="container mx-auto px-4 py-8">
             {/* Header */}
             <div className="mb-8">
-                <h1 className="text-4xl font-bold text-foreground mb-2">Stock Learning Hub</h1>
+                <h1 className="text-4xl font-bold text-foreground mb-2">Phân tích cổ phiếu</h1>
                 <p className="text-muted-foreground text-lg">
-                    Learn trading through real market events and price movements
+                    Học trading thông qua sự kiện thị trường
                 </p>
             </div>
 
@@ -88,7 +88,7 @@ export default function LearnStockPage() {
                         disabled={isLoading}
                         className="bg-primary hover:bg-primary/90 text-primary-foreground"
                     >
-                        {isLoading ? 'Generating...' : 'Generate Lessons'}
+                        {isLoading ? 'Đang tạo phân tích...' : 'Tạo phân tích'}
                     </Button>
                 </div>
             </Card>
@@ -121,23 +121,12 @@ export default function LearnStockPage() {
 
                     <Card className="p-6 bg-card border-border">
                         <h3 className="text-sm font-medium text-muted-foreground mb-2">
-                            Total Lessons
+                            Tổng số phân tích
                         </h3>
                         <p className="text-3xl font-bold text-foreground">{stockLessons.length}</p>
                         <p className="text-sm text-muted-foreground mt-2">
-                            From price movements
+                            Từ chuyển động giá
                         </p>
-                    </Card>
-
-                    <Card className="p-6 bg-card border-border">
-                        <h3 className="text-sm font-medium text-muted-foreground mb-2">
-                            Difficulty Level
-                        </h3>
-                        <div className="flex gap-2 mt-3">
-                            <span className="px-3 py-1 rounded-full text-xs font-medium bg-secondary text-secondary-foreground">
-                                Beginner
-                            </span>
-                        </div>
                     </Card>
                 </div>
             </div>
@@ -146,7 +135,7 @@ export default function LearnStockPage() {
             <div className="mt-8">
                 <Card className="p-6 bg-card border-border">
                     <h2 className="text-2xl font-semibold text-foreground mb-6">
-                        Lessons by Trading Date
+                        Phân tích theo ngày giao dịch
                     </h2>
                     <LessonsList lessons={stockLessons} />
                 </Card>

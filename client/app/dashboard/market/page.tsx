@@ -240,10 +240,10 @@ export default function MarketPage() {
 
     if (loading) {
         return (
-            <div className="flex items-center justify-center h-screen bg-gray-50">
+            <div className="flex items-center justify-center h-screen bg-muted/10">
                 <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
-                    <p className="text-gray-500 font-medium">Đang tải dữ liệu thị trường...</p>
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+                    <p className="text-muted-foreground font-medium">Đang tải dữ liệu thị trường...</p>
                 </div>
             </div>
         );
@@ -251,10 +251,10 @@ export default function MarketPage() {
 
     if (error) {
         return (
-            <div className="flex items-center justify-center h-screen bg-gray-50">
+            <div className="flex items-center justify-center h-screen bg-muted/10">
                 <div className="text-center">
-                    <p className="text-red-500 mb-4 font-medium">{error}</p>
-                    <button onClick={() => fetchMarketData(true)} className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium shadow-sm transition-colors">Thử lại</button>
+                    <p className="text-destructive mb-4 font-medium">{error}</p>
+                    <button onClick={() => fetchMarketData(true)} className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:opacity-90 font-medium shadow-sm transition-colors">Thử lại</button>
                 </div>
             </div>
         );
@@ -262,10 +262,10 @@ export default function MarketPage() {
 
     if (!marketData) {
         return (
-            <div className="flex items-center justify-center h-screen bg-gray-50">
+            <div className="flex items-center justify-center h-screen bg-muted/10">
                 <div className="text-center">
-                    <p className="text-gray-500 mb-4 font-medium">Không có dữ liệu thị trường</p>
-                    <button onClick={() => fetchMarketData(true)} className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium shadow-sm transition-colors">Làm mới</button>
+                    <p className="text-muted-foreground mb-4 font-medium">Không có dữ liệu thị trường</p>
+                    <button onClick={() => fetchMarketData(true)} className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:opacity-90 font-medium shadow-sm transition-colors">Làm mới</button>
                 </div>
             </div>
         );
@@ -297,7 +297,7 @@ export default function MarketPage() {
             {/* Buy Stock Modal */}
             {buyStock && (
                 <Dialog open={isBuyModalOpen} onOpenChange={setIsBuyModalOpen}>
-                    <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-gray-900 border-gray-800 text-white">
+                    <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-card border-border text-foreground">
                         <BuyStockFeature
                             data={{
                                 symbol: buyStock.symbol,

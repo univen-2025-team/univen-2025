@@ -23,14 +23,14 @@ export function SuggestionChips({ suggestions, onClick }: SuggestionChipsProps) 
 
     return (
         <div className="mb-3 space-y-2">
-            <p className="text-xs text-white/60 font-medium tracking-wide pl-1">Quick actions:</p>
+            <p className="text-xs text-[#718096] font-medium tracking-wide pl-1">Quick actions:</p>
             <div className="flex flex-wrap gap-2">
                 {chips.map((chip, index) => (
                     <Button
                         key={chip.text || index}
                         variant={undefined}
                         size="sm"
-                        className="text-xs font-semibold text-white bg-[#23243a]/70 hover:bg-violet-800/80 hover:text-fuchsia-300 border border-white/10 shadow-md backdrop-blur-md rounded-xl px-3 py-1.5 transition-all duration-200"
+                        className="text-xs font-semibold text-[#2D3748] bg-gray-100 hover:bg-[#2D5BDE] hover:text-white border border-gray-200 shadow-sm rounded-xl px-3 py-1.5 transition-all duration-200"
                         onClick={() => onClick?.(chip.text)}
                     >
                         {chip.icon && (

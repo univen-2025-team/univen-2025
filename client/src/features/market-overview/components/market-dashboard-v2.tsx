@@ -43,7 +43,7 @@ interface MarketDashboardV2Props {
 // Helper for Clean Card (previously GlassCard)
 const CleanCard = ({ children, className }: { children: React.ReactNode, className?: string }) => (
     <div className={cn(
-        "bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden",
+        "bg-card rounded-xl shadow-sm border border-border overflow-hidden",
         className
     )}>
         {children}
@@ -72,7 +72,7 @@ export function MarketDashboardV2({
 }: MarketDashboardV2Props) {
 
     return (
-        <div className="min-h-screen bg-gray-50/50 p-4 md:p-6 space-y-6 text-gray-900 font-sans">
+        <div className="min-h-screen bg-background p-4 md:p-6 space-y-6 text-foreground font-sans">
             {/* Selection Overlay for Drag Select */}
             <SelectionOverlay
                 isSelecting={false} // Hook logic needed if implemented at this level
@@ -80,13 +80,13 @@ export function MarketDashboardV2({
             />
 
             {/* Header Section */}
-            <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8 sticky top-0 z-30 bg-gray-50/80 backdrop-blur-md py-2 -mx-2 px-2 transition-all">
+            <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8 sticky top-0 z-30 bg-background/80 backdrop-blur-md py-2 -mx-2 px-2 transition-all">
                 <div>
-                    <h1 className="text-3xl font-bold text-gray-900 tracking-tight">
+                    <h1 className="text-3xl font-bold text-foreground tracking-tight">
                         Tổng quan thị trường
                     </h1>
-                    <p className="text-gray-500 mt-1 flex items-center gap-2 text-sm font-medium">
-                        <Activity className="w-4 h-4 text-emerald-600" />
+                    <p className="text-muted-foreground mt-1 flex items-center gap-2 text-sm font-medium">
+                        <Activity className="w-4 h-4 text-primary" />
                         Dữ liệu thị trường trực tuyến • {new Date().toLocaleDateString('vi-VN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
                     </p>
                 </div>
@@ -95,12 +95,12 @@ export function MarketDashboardV2({
                     <div className={cn(
                         "px-3 py-1.5 rounded-full text-xs font-semibold border flex items-center gap-2 shadow-sm",
                         isConnected
-                            ? "bg-white border-emerald-200 text-emerald-700"
-                            : "bg-white border-red-200 text-red-700"
+                            ? "bg-card border-success/30 text-success"
+                            : "bg-card border-destructive/30 text-destructive"
                     )}>
                         <span className="relative flex h-2 w-2">
-                            <span className={cn("animate-ping absolute inline-flex h-full w-full rounded-full opacity-75", isConnected ? "bg-emerald-400" : "bg-red-400")}></span>
-                            <span className={cn("relative inline-flex rounded-full h-2 w-2", isConnected ? "bg-emerald-500" : "bg-red-500")}></span>
+                            <span className={cn("animate-ping absolute inline-flex h-full w-full rounded-full opacity-75", isConnected ? "bg-success" : "bg-destructive")}></span>
+                            <span className={cn("relative inline-flex rounded-full h-2 w-2", isConnected ? "bg-success" : "bg-destructive")}></span>
                         </span>
                         {isConnected ? "Hệ thống hoạt động" : "Mất kết nối"}
                     </div>
@@ -115,48 +115,48 @@ export function MarketDashboardV2({
             >
                 <CleanCard className="p-4 flex items-center justify-between hover:shadow-md transition-shadow cursor-default group">
                     <div>
-                        <p className="text-gray-500 text-xs uppercase font-bold tracking-wider">Tổng khối lượng</p>
-                        <p className="text-lg md:text-xl font-bold text-gray-900 mt-1">
+                        <p className="text-muted-foreground text-xs uppercase font-bold tracking-wider">Tổng khối lượng</p>
+                        <p className="text-lg md:text-xl font-bold text-foreground mt-1">
                             {marketStats?.totalVolume ? (marketStats.totalVolume / 1000000).toFixed(2) : '0.00'}M
                         </p>
                     </div>
-                    <div className="p-2 bg-blue-50 rounded-lg text-blue-600 group-hover:bg-blue-100 transition-colors">
+                    <div className="p-2 bg-primary/10 rounded-lg text-primary group-hover:bg-primary/20 transition-colors">
                         <BarChart2 className="w-5 h-5" />
                     </div>
                 </CleanCard>
 
                 <CleanCard className="p-4 flex items-center justify-between hover:shadow-md transition-shadow cursor-default group">
                     <div>
-                        <p className="text-gray-500 text-xs uppercase font-bold tracking-wider">Mã tăng</p>
-                        <p className="text-lg md:text-xl font-bold text-emerald-600 mt-1">
+                        <p className="text-muted-foreground text-xs uppercase font-bold tracking-wider">Mã tăng</p>
+                        <p className="text-lg md:text-xl font-bold text-success mt-1">
                             {marketStats?.advancing || 0}
                         </p>
                     </div>
-                    <div className="p-2 bg-emerald-50 rounded-lg text-emerald-600 group-hover:bg-emerald-100 transition-colors">
+                    <div className="p-2 bg-success/10 rounded-lg text-success group-hover:bg-success/20 transition-colors">
                         <TrendingUp className="w-5 h-5" />
                     </div>
                 </CleanCard>
 
                 <CleanCard className="p-4 flex items-center justify-between hover:shadow-md transition-shadow cursor-default group">
                     <div>
-                        <p className="text-gray-500 text-xs uppercase font-bold tracking-wider">Mã giảm</p>
-                        <p className="text-lg md:text-xl font-bold text-red-600 mt-1">
+                        <p className="text-muted-foreground text-xs uppercase font-bold tracking-wider">Mã giảm</p>
+                        <p className="text-lg md:text-xl font-bold text-destructive mt-1">
                             {marketStats?.declining || 0}
                         </p>
                     </div>
-                    <div className="p-2 bg-red-50 rounded-lg text-red-600 group-hover:bg-red-100 transition-colors">
+                    <div className="p-2 bg-destructive/10 rounded-lg text-destructive group-hover:bg-destructive/20 transition-colors">
                         <TrendingDown className="w-5 h-5" />
                     </div>
                 </CleanCard>
 
                 <CleanCard className="p-4 flex items-center justify-between hover:shadow-md transition-shadow cursor-default group">
                     <div>
-                        <p className="text-gray-500 text-xs uppercase font-bold tracking-wider">Tham chiếu</p>
-                        <p className="text-lg md:text-xl font-bold text-yellow-600 mt-1">
+                        <p className="text-muted-foreground text-xs uppercase font-bold tracking-wider">Tham chiếu</p>
+                        <p className="text-lg md:text-xl font-bold text-warning mt-1">
                             {marketStats?.unchanged || 0}
                         </p>
                     </div>
-                    <div className="p-2 bg-yellow-50 rounded-lg text-yellow-600 group-hover:bg-yellow-100 transition-colors">
+                    <div className="p-2 bg-warning/10 rounded-lg text-warning group-hover:bg-warning/20 transition-colors">
                         <Activity className="w-5 h-5" />
                     </div>
                 </CleanCard>
@@ -176,23 +176,23 @@ export function MarketDashboardV2({
                             lastUpdate={new Date().toLocaleTimeString('vi-VN')}
                         />
 
-                        <CleanCard className="p-4 bg-white">
-                            <h3 className="text-sm font-bold text-gray-900 mb-3 flex items-center gap-2">
-                                <Monitor className="w-4 h-4 text-blue-600" /> Trạng thái thị trường
+                        <CleanCard className="p-4 bg-card">
+                            <h3 className="text-sm font-bold text-foreground mb-3 flex items-center gap-2">
+                                <Monitor className="w-4 h-4 text-primary" /> Trạng thái thị trường
                             </h3>
                             <div className="space-y-3 text-sm">
                                 <div className="flex justify-between items-center">
-                                    <span className="text-gray-500">Phiên</span>
-                                    <span className="font-medium text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded text-xs">Mở cửa</span>
+                                    <span className="text-muted-foreground">Phiên</span>
+                                    <span className="font-medium text-success bg-success/10 px-2 py-0.5 rounded text-xs">Mở cửa</span>
                                 </div>
                                 <div className="flex justify-between items-center">
-                                    <span className="text-gray-500">Trạng thái</span>
-                                    <span className="font-medium text-gray-900">Khớp lệnh liên tục</span>
+                                    <span className="text-muted-foreground">Trạng thái</span>
+                                    <span className="font-medium text-foreground">Khớp lệnh liên tục</span>
                                 </div>
-                                <div className="h-px bg-gray-100 my-2" />
+                                <div className="h-px bg-border my-2" />
                                 <div className="flex justify-between items-center">
-                                    <span className="text-gray-500">Tổng mã CP</span>
-                                    <span className="font-mono font-medium text-gray-900">{marketStats?.totalStocks || 0}</span>
+                                    <span className="text-muted-foreground">Tổng mã CP</span>
+                                    <span className="font-mono font-medium text-foreground">{marketStats?.totalStocks || 0}</span>
                                 </div>
                             </div>
                         </CleanCard>
@@ -203,8 +203,8 @@ export function MarketDashboardV2({
                 <div className="col-span-12 lg:col-span-6">
                     <CleanCard className="h-[450px] p-4 flex flex-col">
                         <div className="flex justify-between items-center mb-4">
-                            <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                                <Activity className="w-5 h-5 text-indigo-600" />
+                            <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
+                                <Activity className="w-5 h-5 text-primary" />
                                 Xu hướng VN30
                             </h2>
                         </div>
@@ -241,7 +241,7 @@ export function MarketDashboardV2({
 
                 <div className="col-span-12 xl:col-span-8">
                     <CleanCard className="h-[500px] flex flex-col p-0 overflow-hidden">
-                        <div className="flex-1 overflow-auto bg-white">
+                        <div className="flex-1 overflow-auto bg-card">
                             <StockTableWithTabs
                                 stocks={filteredStocks}
                                 viewMode={viewMode as "watchlist" | "all" | "news"}

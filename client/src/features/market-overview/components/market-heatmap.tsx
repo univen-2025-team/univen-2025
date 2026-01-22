@@ -156,7 +156,7 @@ export function MarketHeatmap({ stocks }: MarketHeatmapProps) {
                     <span className="w-1 h-6 bg-indigo-500 rounded-full"></span>
                     Market Heatmap
                 </h3>
-                <div className="h-64 flex items-center justify-center text-gray-400 bg-gray-50 rounded-xl border border-dashed border-gray-200">
+                <div className="h-64 flex items-center justify-center text-gray-400 bg-gray-50 rounded-xl border border-dashed border-gray-100">
                     Không có dữ liệu
                 </div>
             </div>

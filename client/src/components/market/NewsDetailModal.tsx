@@ -1,9 +1,11 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { ExternalLink, Sparkles, X, Calendar, Newspaper, ArrowRight } from 'lucide-react';
+import { ExternalLink, Sparkles, X, Calendar, Newspaper, ArrowRight, Loader2 } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
+import { API_URL } from '@/config/app';
 
 interface NewsItem {
     id?: string;
@@ -25,9 +27,113 @@ interface NewsDetailModalProps {
 }
 
 const NewsDetailModal: React.FC<NewsDetailModalProps> = ({ isOpen, onClose, newsItem }) => {
+    const [summary, setSummary] = useState<string | null>(null);
+    const [isLoadingSummary, setIsLoadingSummary] = useState(false);
+    const [summaryError, setSummaryError] = useState<string | null>(null);
+
+    // Reset state when modal closes or newsItem changes
+    useEffect(() => {
+        if (!isOpen || !newsItem) {
+            setSummary(null);
+            setSummaryError(null);
+            setIsLoadingSummary(false);
+        }
+    }, [isOpen, newsItem]);
+
     if (!newsItem) return null;
 
     const sourceName = newsItem.source_domain || (newsItem.source && newsItem.source !== 'Google News' ? newsItem.source : 'Nguồn tin');
+
+    const handleSummarize = async () => {
+        // Check if we have content or URL
+        if (!newsItem.source_link && !newsItem.full_content && !newsItem.short_content) {
+            setSummaryError('Không có nội dung hoặc link bài viết để tóm tắt');
+            return;
+        }
+
+        setIsLoadingSummary(true);
+        setSummaryError(null);
+        setSummary(null);
+
+        try {
+            // Prepare request body - prioritize using existing content
+            const requestBody: any = {
+                title: newsItem.title
+            };
+
+            // Use full_content or short_content if available (prefer full_content)
+            if (newsItem.full_content) {
+                // Extract text from HTML if needed
+                const textContent = newsItem.full_content
+                    .replace(/<[^>]+>/g, ' ')
+                    .replace(/\s+/g, ' ')
+                    .trim();
+                
+                if (textContent.length > 100) {
+                    requestBody.content = textContent;
+                    console.log('Using full_content from news item:', textContent.length, 'chars');
+                }
+            } else if (newsItem.short_content && newsItem.short_content.length > 100) {
+                requestBody.content = newsItem.short_content;
+                console.log('Using short_content from news item:', newsItem.short_content.length, 'chars');
+            }
+
+            // Add URL as fallback if content extraction fails
+            if (newsItem.source_link) {
+                requestBody.url = newsItem.source_link;
+            }
+
+            console.log('Calling summarize API:', `${API_URL}/market/news/summarize`);
+            console.log('Request body:', { 
+                ...requestBody, 
+                content: requestBody.content ? `${requestBody.content.substring(0, 100)}...` : undefined 
+            });
+
+            const response = await fetch(`${API_URL}/market/news/summarize`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(requestBody)
+            });
+
+            console.log('Response status:', response.status, response.statusText);
+
+            if (!response.ok) {
+                let errorMessage = 'Không thể tóm tắt bài viết';
+                try {
+                    const errorData = await response.json();
+                    errorMessage = errorData.message || errorData.error || errorMessage;
+                    console.error('Error response:', errorData);
+                } catch (e) {
+                    const errorText = await response.text();
+                    console.error('Error text:', errorText);
+                    errorMessage = errorText || errorMessage;
+                }
+                throw new Error(errorMessage);
+            }
+
+            const data = await response.json();
+            console.log('Response data:', data);
+
+            // Handle different response formats
+            if (data.metadata?.summary) {
+                setSummary(data.metadata.summary);
+            } else if (data.summary) {
+                setSummary(data.summary);
+            } else if (data.data?.summary) {
+                setSummary(data.data.summary);
+            } else {
+                console.error('Unexpected response format:', data);
+                throw new Error('Không nhận được nội dung tóm tắt từ server');
+            }
+        } catch (error: any) {
+            console.error('Error summarizing news:', error);
+            setSummaryError(error.message || 'Đã xảy ra lỗi khi tóm tắt bài viết. Vui lòng thử lại sau.');
+        } finally {
+            setIsLoadingSummary(false);
+        }
+    };
     return (
         <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
             <DialogContent className="max-w-3xl h-[85vh] flex flex-col p-0 gap-0 overflow-hidden bg-white/95 backdrop-blur-xl border-white/20 shadow-2xl">
@@ -73,6 +179,61 @@ const NewsDetailModal: React.FC<NewsDetailModalProps> = ({ isOpen, onClose, news
                     )}
 
                     <div className="p-6 md:p-8 pt-4">
+                        {/* AI Summary Section */}
+                        {summary && (
+                            <div className="mb-6 p-5 bg-gradient-to-br from-indigo-50 to-purple-50 rounded-xl border border-indigo-100 shadow-sm">
+                                <div className="flex items-center gap-2 mb-3">
+                                    <Sparkles className="w-5 h-5 text-indigo-600 fill-indigo-200" />
+                                    <h3 className="text-lg font-semibold text-indigo-900">Tóm tắt với AI</h3>
+                                </div>
+                                <div
+                                    className="news-summary-markdown text-gray-700 leading-relaxed
+                                        prose prose-sm max-w-none prose-p:my-2 prose-p:first:mt-0 prose-p:last:mb-0
+                                        prose-strong:text-indigo-800 prose-strong:font-semibold [&_blockquote>p]:my-0"
+                                >
+                                    <ReactMarkdown
+                                        components={{
+                                            blockquote: ({ children, ...props }) => (
+                                                <blockquote
+                                                    {...props}
+                                                    className="my-3 py-2 px-4 bg-amber-50 border-l-4 border-amber-400 rounded-r-md text-gray-800 font-medium"
+                                                >
+                                                    {children}
+                                                </blockquote>
+                                            ),
+                                        }}
+                                    >
+                                        {summary}
+                                    </ReactMarkdown>
+                                </div>
+                            </div>
+                        )}
+
+                        {summaryError && (
+                            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+                                <div className="flex items-start gap-2">
+                                    <span className="text-red-600 font-semibold">⚠️</span>
+                                    <div>
+                                        <p className="text-sm font-medium text-red-800 mb-1">Lỗi khi tóm tắt</p>
+                                        <p className="text-sm text-red-700">{summaryError}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {isLoadingSummary && (
+                            <div className="mb-6 p-5 bg-blue-50 border border-blue-200 rounded-xl">
+                                <div className="flex items-center gap-3">
+                                    <Loader2 className="w-5 h-5 text-blue-600 animate-spin" />
+                                    <div>
+                                        <p className="text-sm font-medium text-blue-800">Đang tóm tắt bài viết...</p>
+                                        <p className="text-xs text-blue-600 mt-1">Vui lòng đợi trong giây lát</p>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Main Content - Only show if we have content and no summary */}
                         {newsItem.full_content ? (
                             <div
                                 className="prose prose-blue prose-lg max-w-none 
@@ -88,22 +249,26 @@ const NewsDetailModal: React.FC<NewsDetailModalProps> = ({ isOpen, onClose, news
                                 <p className="text-lg text-gray-700 leading-relaxed font-medium">
                                     {newsItem.short_content}
                                 </p>
-                                <div className="p-4 bg-gray-50 rounded-lg border border-gray-100 flex flex-col items-center text-center gap-3">
-                                    <p className="text-sm text-gray-500">
-                                        Bài viết đầy đủ chưa được tải. Vui lòng xem tiếp tại nguồn gốc.
-                                    </p>
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        className="gap-2 text-blue-600"
-                                        onClick={() => window.open(newsItem.source_link, '_blank')}
-                                    >
-                                        Đọc tiếp tại {sourceName}
-                                        <ArrowRight className="w-4 h-4" />
-                                    </Button>
-                                </div>
+                                {/* Only show "read more" message if no summary exists */}
+                                {!summary && (
+                                    <div className="p-4 bg-gray-50 rounded-lg border border-gray-100 flex flex-col items-center text-center gap-3">
+                                        <p className="text-sm text-gray-500">
+                                            Bài viết đầy đủ chưa được tải. Vui lòng xem tiếp tại nguồn gốc.
+                                        </p>
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            className="gap-2 text-blue-600"
+                                            onClick={() => window.open(newsItem.source_link, '_blank')}
+                                        >
+                                            Đọc tiếp tại {sourceName}
+                                            <ArrowRight className="w-4 h-4" />
+                                        </Button>
+                                    </div>
+                                )}
                             </div>
-                        ) : (
+                        ) : !summary ? (
+                            // Only show "no content" message if we don't have summary
                             <div className="flex flex-col items-center justify-center h-full text-gray-400 space-y-4 py-10">
                                 <div className="bg-gray-50 p-6 rounded-full">
                                     <ExternalLink className="w-12 h-12 opacity-20" />
@@ -113,7 +278,7 @@ const NewsDetailModal: React.FC<NewsDetailModalProps> = ({ isOpen, onClose, news
                                     <br />Vui lòng xem trực tiếp tại nguồn.
                                 </p>
                             </div>
-                        )}
+                        ) : null}
                     </div>
                 </div>
 
@@ -138,11 +303,29 @@ const NewsDetailModal: React.FC<NewsDetailModalProps> = ({ isOpen, onClose, news
                         </Button>
 
                         <Button
-                            className="flex-1 md:flex-none bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white border-0 shadow-lg shadow-indigo-200 gap-2"
-                            onClick={() => alert("Tính năng tóm tắt AI đang phát triển!")}
+                            className="flex-1 md:flex-none bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white border-0 shadow-lg shadow-indigo-200 gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                            onClick={handleSummarize}
+                            disabled={
+                                isLoadingSummary ||
+                                !(
+                                    newsItem.source_link ||
+                                    (newsItem.full_content &&
+                                        newsItem.full_content.replace(/\s+/g, ' ').trim().length > 100) ||
+                                    (newsItem.short_content && newsItem.short_content.length > 100)
+                                )
+                            }
                         >
-                            <Sparkles className="w-4 h-4 fill-white/20" />
-                            Tóm tắt AI
+                            {isLoadingSummary ? (
+                                <>
+                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                    Đang tóm tắt...
+                                </>
+                            ) : (
+                                <>
+                                    <Sparkles className="w-4 h-4 fill-white/20" />
+                                    {summary ? 'Tóm tắt lại' : 'Tóm tắt với AI'}
+                                </>
+                            )}
                         </Button>
                     </div>
                 </div>

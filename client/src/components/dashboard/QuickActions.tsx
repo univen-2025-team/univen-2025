@@ -29,16 +29,15 @@ export default function QuickActions({ onLogout }: QuickActionsProps) {
 
     return (
         <div className="lg:col-span-1 relative group/quick">
-            <div className="absolute -inset-0.5 bg-gradient-to-r from-violet-500/30 to-fuchsia-500/30 rounded-3xl blur opacity-20 group-hover/quick:opacity-30 transition duration-500"></div>
-            <div className="relative bg-[#0F111A]/80 backdrop-blur-2xl rounded-3xl shadow-2xl border border-white/10 ring-1 ring-white/5 p-6 space-y-4 animate-scale-in">
-                <h2 className="text-xl font-bold text-white mb-4">Thao tác nhanh</h2>
+            <div className="relative bg-white rounded-lg shadow-sm border border-gray-200 p-6 space-y-4">
+                <h2 className="text-xl font-bold text-[#2D3748] mb-4">Thao tác nhanh</h2>
                 <div className="space-y-3">
                     <button
-                        className="w-full flex items-center justify-between p-4 bg-white/5 hover:bg-white/10 rounded-xl transition-all group border border-white/5 hover:border-violet-500/30"
+                        className="w-full flex items-center justify-between p-4 bg-[#F0F4FF] hover:bg-[#E0E8FF] rounded-lg transition-all group border border-gray-200 hover:border-[#2D5BDE]/30"
                         onClick={() => setSelectedAction('BUY')}
                     >
                         <div className="flex items-center gap-3">
-                            <div className="bg-violet-600 rounded-lg p-3 group-hover:scale-110 transition-transform shadow-lg shadow-violet-500/20">
+                            <div className="bg-[#2D5BDE] rounded-lg p-3 group-hover:scale-110 transition-transform">
                                 <svg
                                     className="w-6 h-6 text-white"
                                     fill="none"
@@ -53,10 +52,10 @@ export default function QuickActions({ onLogout }: QuickActionsProps) {
                                     />
                                 </svg>
                             </div>
-                            <span className="font-semibold text-white">Mua cổ phiếu</span>
+                            <span className="font-semibold text-[#2D3748]">Mua cổ phiếu</span>
                         </div>
                         <svg
-                            className="w-5 h-5 text-slate-400"
+                            className="w-5 h-5 text-[#718096]"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -71,11 +70,11 @@ export default function QuickActions({ onLogout }: QuickActionsProps) {
                     </button>
 
                     <button
-                        className="w-full flex items-center justify-between p-4 bg-white/5 hover:bg-white/10 rounded-xl transition-all group border border-white/5"
+                        className="w-full flex items-center justify-between p-4 bg-[#F0F4FF] hover:bg-[#E0E8FF] rounded-lg transition-all group border border-gray-200 hover:border-[#2D5BDE]/30"
                         onClick={() => setSelectedAction('SELL')}
                     >
                         <div className="flex items-center gap-3">
-                            <div className="bg-violet-600 rounded-lg p-3 group-hover:scale-110 transition-transform shadow-lg shadow-violet-500/20">
+                            <div className="bg-[#2D5BDE] rounded-lg p-3 group-hover:scale-110 transition-transform">
                                 <svg
                                     className="w-6 h-6 text-white"
                                     fill="none"
@@ -90,10 +89,10 @@ export default function QuickActions({ onLogout }: QuickActionsProps) {
                                     />
                                 </svg>
                             </div>
-                            <span className="font-semibold text-white">Bán cổ phiếu</span>
+                            <span className="font-semibold text-[#2D3748]">Bán cổ phiếu</span>
                         </div>
                         <svg
-                            className="w-5 h-5 text-gray-400"
+                            className="w-5 h-5 text-[#718096]"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -107,9 +106,9 @@ export default function QuickActions({ onLogout }: QuickActionsProps) {
                         </svg>
                     </button>
 
-                    <button className="w-full flex items-center justify-between p-4 bg-white/5 hover:bg-white/10 rounded-xl transition-all group border border-white/5">
+                    <button className="w-full flex items-center justify-between p-4 bg-[#F0F4FF] hover:bg-[#E0E8FF] rounded-lg transition-all group border border-gray-200 hover:border-[#2D5BDE]/30">
                         <div className="flex items-center gap-3">
-                            <div className="bg-violet-600 rounded-lg p-3 group-hover:scale-110 transition-transform shadow-lg shadow-violet-500/20">
+                            <div className="bg-[#2D5BDE] rounded-lg p-3 group-hover:scale-110 transition-transform">
                                 <svg
                                     className="w-6 h-6 text-white"
                                     fill="none"
@@ -124,10 +123,10 @@ export default function QuickActions({ onLogout }: QuickActionsProps) {
                                     />
                                 </svg>
                             </div>
-                            <span className="font-semibold text-white">Xem báo cáo</span>
+                            <span className="font-semibold text-[#2D3748]">Xem báo cáo</span>
                         </div>
                         <svg
-                            className="w-5 h-5 text-gray-400"
+                            className="w-5 h-5 text-[#718096]"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -143,13 +142,13 @@ export default function QuickActions({ onLogout }: QuickActionsProps) {
 
                     {onLogout && (
                         <button
-                            className="w-full flex items-center justify-between p-4 bg-white/5 hover:bg-red-500/10 rounded-xl transition-all group border border-white/5"
+                            className="w-full flex items-center justify-between p-4 bg-[#F0F4FF] hover:bg-red-50 rounded-lg transition-all group border border-gray-200 hover:border-red-300"
                             onClick={onLogout}
                         >
                             <div className="flex items-center gap-3">
-                                <div className="bg-red-500/20 rounded-lg p-3 group-hover:scale-110 transition-transform">
+                                <div className="bg-red-100 rounded-lg p-3 group-hover:scale-110 transition-transform">
                                     <svg
-                                        className="w-6 h-6 text-red-400"
+                                        className="w-6 h-6 text-red-600"
                                         fill="none"
                                         stroke="currentColor"
                                         viewBox="0 0 24 24"
@@ -162,10 +161,10 @@ export default function QuickActions({ onLogout }: QuickActionsProps) {
                                         />
                                     </svg>
                                 </div>
-                                <span className="font-semibold text-red-400">Đăng xuất</span>
+                                <span className="font-semibold text-red-600">Đăng xuất</span>
                             </div>
                             <svg
-                                className="w-5 h-5 text-gray-400"
+                                className="w-5 h-5 text-[#718096]"
                                 fill="none"
                                 stroke="currentColor"
                                 viewBox="0 0 24 24"
@@ -181,18 +180,18 @@ export default function QuickActions({ onLogout }: QuickActionsProps) {
                     )}
                 </div>
                 {selectedAction && (
-                    <div className="rounded-xl border border-white/10 bg-[#0F111A]/80 backdrop-blur-xl p-5 space-y-3 shadow-lg">
+                    <div className="rounded-lg border border-gray-200 bg-white p-5 space-y-3 shadow-sm">
                         <div className="flex items-start justify-between gap-4">
                             <div>
-                                <p className="text-sm font-semibold uppercase text-violet-400">
+                                <p className="text-sm font-semibold uppercase text-[#2D5BDE]">
                                     {selectedAction === 'BUY' ? 'Mua cổ phiếu' : 'Bán cổ phiếu'}
                                 </p>
-                                <h3 className="text-lg font-bold text-white">
+                                <h3 className="text-lg font-bold text-[#2D3748]">
                                     {ACTION_COPY[selectedAction].title}
                                 </h3>
                             </div>
                             <button
-                                className="text-gray-400 hover:text-white transition"
+                                className="text-[#718096] hover:text-[#2D3748] transition"
                                 onClick={() => setSelectedAction(null)}
                                 aria-label="Đóng hộp thoại thao tác"
                             >
@@ -211,18 +210,18 @@ export default function QuickActions({ onLogout }: QuickActionsProps) {
                                 </svg>
                             </button>
                         </div>
-                        <p className="text-sm text-slate-400">
+                        <p className="text-sm text-[#718096]">
                             {ACTION_COPY[selectedAction].description}
                         </p>
                         <div className="flex gap-3">
                             <button
-                                className="flex-1 rounded-xl bg-violet-600 px-4 py-2 text-sm font-semibold text-white hover:bg-violet-500 transition shadow-lg shadow-violet-500/20"
+                                className="flex-1 rounded-lg bg-[#2D5BDE] px-4 py-2 text-sm font-semibold text-white hover:opacity-90 transition"
                                 onClick={handleNavigateTrade}
                             >
                                 {ACTION_COPY[selectedAction].buttonLabel}
                             </button>
                             <button
-                                className="rounded-xl border border-white/10 px-4 py-2 text-sm font-semibold text-slate-300 hover:bg-white/5 transition"
+                                className="rounded-lg border border-gray-200 px-4 py-2 text-sm font-semibold text-[#2D3748] hover:bg-gray-50 transition"
                                 onClick={() => setSelectedAction(null)}
                             >
                                 Để sau

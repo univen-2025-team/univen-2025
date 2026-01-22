@@ -20,9 +20,9 @@ export default function StatsCard({
     iconBgColor
 }: StatsCardProps) {
     const changeColorMap = {
-        positive: 'text-green-400',
-        negative: 'text-red-400',
-        neutral: 'text-gray-400'
+        positive: 'text-success',
+        negative: 'text-error',
+        neutral: 'text-muted-foreground'
     };
 
     const changeIcon =
@@ -57,15 +57,11 @@ export default function StatsCard({
 
     return (
         <div className="relative group">
-            {/* Gradient glow effect */}
-            <div
-                className={`absolute -inset-0.5 bg-gradient-to-r ${borderColor === 'border-l-violet-500' ? 'from-violet-500 to-pink-500' : borderColor === 'border-l-emerald-500' ? 'from-emerald-500 to-cyan-500' : borderColor === 'border-l-amber-500' ? 'from-amber-500 to-orange-500' : 'from-blue-500 to-indigo-500'} rounded-2xl blur opacity-20 group-hover:opacity-40 transition duration-500`}
-            ></div>
-            <div className="relative bg-[#0F111A]/80 backdrop-blur-2xl rounded-2xl shadow-2xl p-6 border border-white/10 ring-1 ring-white/5 hover:shadow-violet-500/10 transition-all duration-300">
+            <div className="relative bg-white rounded-lg shadow-sm p-6 border border-gray-200 hover:shadow-md hover:border-[#2D5BDE]/30 transition-all duration-200">
                 <div className="flex items-center justify-between">
                     <div>
-                        <p className="text-slate-400 text-sm font-medium">{title}</p>
-                        <h3 className="text-2xl font-bold text-white mt-2 drop-shadow-md">
+                        <p className="text-[#718096] text-sm font-medium">{title}</p>
+                        <h3 className="text-2xl font-bold text-[#2D3748] mt-2">
                             {value}
                         </h3>
                         {change && (

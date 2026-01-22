@@ -109,11 +109,10 @@ const getAmountColor = (type: ActivityItem['type']) => {
 export default function RecentActivity() {
     return (
         <div className="lg:col-span-2 relative group/activity">
-            <div className="absolute -inset-0.5 bg-gradient-to-r from-violet-500/30 to-blue-500/30 rounded-3xl blur opacity-20 group-hover/activity:opacity-30 transition duration-500"></div>
-            <div className="relative bg-[#0F111A]/80 backdrop-blur-2xl rounded-3xl shadow-2xl border border-white/10 ring-1 ring-white/5 p-6 animate-scale-in">
+            <div className="relative bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                 <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-xl font-bold text-white">Hoạt động gần đây</h2>
-                    <button className="text-violet-400 hover:text-violet-300 text-sm font-semibold transition-colors">
+                    <h2 className="text-xl font-bold text-[#2D3748]">Hoạt động gần đây</h2>
+                    <button className="text-[#2D5BDE] hover:text-[#1E3A8A] text-sm font-semibold transition-colors">
                         Xem tất cả →
                     </button>
                 </div>
@@ -121,7 +120,7 @@ export default function RecentActivity() {
                     {activities.map((activity) => (
                         <div
                             key={activity.id}
-                            className="flex items-center gap-4 p-4 bg-white/5 rounded-xl hover:bg-white/10 transition-colors border border-white/5 hover:border-violet-500/30"
+                            className="flex items-center gap-4 p-4 bg-[#F0F4FF] rounded-lg hover:bg-[#E0E8FF] transition-colors border border-gray-200 hover:border-[#2D5BDE]/30"
                         >
                             <div className={`${activity.iconBgColor} rounded-full p-3`}>
                                 <svg
@@ -134,14 +133,14 @@ export default function RecentActivity() {
                                 </svg>
                             </div>
                             <div className="flex-1">
-                                <p className="font-semibold text-white">{activity.title}</p>
-                                <p className="text-sm text-slate-400">{activity.description}</p>
+                                <p className="font-semibold text-[#2D3748]">{activity.title}</p>
+                                <p className="text-sm text-[#718096]">{activity.description}</p>
                             </div>
                             <div className="text-right">
                                 <p className={`font-bold ${getAmountColor(activity.type)}`}>
                                     {activity.amount}
                                 </p>
-                                <p className="text-sm text-slate-400">{activity.price}</p>
+                                <p className="text-sm text-[#718096]">{activity.price}</p>
                             </div>
                         </div>
                     ))}

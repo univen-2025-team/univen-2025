@@ -4,17 +4,15 @@ import { Sidebar } from './Sidebar';
 
 export function MainLayout({ children }: { children: React.ReactNode }) {
     return (
-        <div className="flex h-screen overflow-hidden bg-[#050505] text-white relative">
-            {/* --- ZENOX STYLE BACKGROUND BLOBS --- */}
+        <div className="flex h-screen overflow-hidden bg-gradient-to-b from-white via-[#F0F4FF]/30 to-white text-foreground relative">
+            {/* Light blue subtle background gradient */}
             <div className="fixed inset-0 overflow-hidden pointer-events-none">
-                {/* Top Left - Pink/Red Glow */}
-                <div className="absolute top-[-10%] left-[-10%] w-[600px] h-[600px] bg-pink-600/20 rounded-full blur-[120px] mix-blend-screen animate-pulse"></div>
-                {/* Top Right - Violet/Blue Glow */}
-                <div className="absolute top-[10%] right-[-10%] w-[500px] h-[500px] bg-violet-600/20 rounded-full blur-[120px] mix-blend-screen"></div>
-                {/* Bottom Left - Blue Glow */}
-                <div className="absolute bottom-[-10%] left-[20%] w-[600px] h-[600px] bg-blue-600/10 rounded-full blur-[100px] mix-blend-screen"></div>
-                {/* Center - Subtle Violet Glow */}
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-violet-600/5 rounded-full blur-[150px] mix-blend-screen"></div>
+                {/* Top Left - Light Blue Glow */}
+                <div className="absolute top-[-10%] left-[-10%] w-[600px] h-[600px] bg-[#F0F4FF]/40 rounded-full blur-[120px]"></div>
+                {/* Top Right - Light Blue Glow */}
+                <div className="absolute top-[10%] right-[-10%] w-[500px] h-[500px] bg-[#F0F4FF]/30 rounded-full blur-[120px]"></div>
+                {/* Bottom Left - Very Light Blue Glow */}
+                <div className="absolute bottom-[-10%] left-[20%] w-[600px] h-[600px] bg-[#F0F4FF]/20 rounded-full blur-[100px]"></div>
             </div>
 
             <Sidebar />

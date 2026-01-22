@@ -35,4 +35,7 @@ router.get('/news/:symbol/date/:date', MarketCacheController.getStockNewsByDate)
 // GET /api/market/news/:symbol - Get stock news
 router.get('/news/:symbol', MarketCacheController.getStockNews);
 
+// POST /api/market/news/summarize - Summarize news article from URL
+router.post('/news/summarize', MarketCacheController.summarizeNews);
+
 export default router;

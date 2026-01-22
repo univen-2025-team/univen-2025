@@ -4,6 +4,7 @@ import { formatCurrency } from '@/features/history/utils/format';
 import LoadingSpinner from '@/components/dashboard/LoadingSpinner';
 import PageHeader from '@/components/dashboard/PageHeader';
 import { useBadges } from '@/lib/hooks/useBadges';
+import { BadgeCard } from '@/components/ui/badge';
 
 export default function BadgesPage() {
     const { badges, earnedBadges, unearnedBadges, userRanking, isLoading, error } = useBadges();
@@ -84,60 +85,15 @@ export default function BadgesPage() {
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {earnedBadges.map((badge) => (
-                        <div
+                        <BadgeCard
                             key={badge.id}
-                            className="rounded-xl p-6 shadow-sm transition-all hover:shadow-md"
-                            style={{
-                                backgroundColor: 'var(--card)',
-                                border: '2px solid var(--primary)'
-                            }}
-                        >
-                            <div className="flex items-start gap-4">
-                                <div
-                                    className="rounded-full p-3 flex-shrink-0"
-                                    style={{
-                                        backgroundColor: 'var(--primary)',
-                                        color: 'var(--primary-foreground)'
-                                    }}
-                                >
-                                    {badge.icon}
-                                </div>
-                                <div className="flex-1">
-                                    <h3
-                                        className="text-lg font-semibold mb-1"
-                                        style={{ color: 'var(--foreground)' }}
-                                    >
-                                        {badge.name}
-                                    </h3>
-                                    <p
-                                        className="text-sm mb-2"
-                                        style={{ color: 'var(--muted-foreground)' }}
-                                    >
-                                        {badge.description}
-                                    </p>
-                                    <p
-                                        className="text-xs"
-                                        style={{ color: 'var(--muted-foreground)' }}
-                                    >
-                                        Đạt được:{' '}
-                                        {badge.earnedDate
-                                            ? new Date(badge.earnedDate).toLocaleDateString('vi-VN')
-                                            : '—'}
-                                    </p>
-                                    <div className="mt-2">
-                                        <span
-                                            className="inline-flex items-center px-2 py-1 rounded text-xs font-medium"
-                                            style={{
-                                                backgroundColor: 'var(--success)',
-                                                color: 'var(--success-foreground)'
-                                            }}
-                                        >
-                                            ✓ Hoàn thành
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                            badgeId={badge.id}
+                            name={badge.name}
+                            description={badge.description}
+                            earned={badge.earned}
+                            earnedDate={badge.earnedDate}
+                            requirement={badge.requirement}
+                        />
                     ))}
                 </div>
             </div>
@@ -150,72 +106,16 @@ export default function BadgesPage() {
                     </h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         {unearnedBadges.map((badge) => (
-                            <div
+                            <BadgeCard
                                 key={badge.id}
-                                className="rounded-xl p-6 shadow-sm opacity-60"
-                                style={{
-                                    backgroundColor: 'var(--card)',
-                                    border: '1px solid var(--border)'
-                                }}
-                            >
-                                <div className="flex items-start gap-4">
-                                    <div
-                                        className="rounded-full p-3 flex-shrink-0"
-                                        style={{
-                                            backgroundColor: 'var(--muted)',
-                                            color: 'var(--muted-foreground)'
-                                        }}
-                                    >
-                                        {badge.icon}
-                                    </div>
-                                    <div className="flex-1">
-                                        <h3
-                                            className="text-lg font-semibold mb-1"
-                                            style={{ color: 'var(--foreground)' }}
-                                        >
-                                            {badge.name}
-                                        </h3>
-                                        <p
-                                            className="text-sm mb-2"
-                                            style={{ color: 'var(--muted-foreground)' }}
-                                        >
-                                            {badge.description}
-                                        </p>
-                                        <p
-                                            className="text-xs mb-2"
-                                            style={{ color: 'var(--muted-foreground)' }}
-                                        >
-                                            Yêu cầu: {badge.requirement}
-                                        </p>
-                                        {badge.progress !== undefined && badge.progress > 0 && (
-                                            <div className="mt-2">
-                                                <div className="flex items-center justify-between text-xs mb-1">
-                                                    <span
-                                                        style={{ color: 'var(--muted-foreground)' }}
-                                                    >
-                                                        Tiến độ
-                                                    </span>
-                                                    <span style={{ color: 'var(--foreground)' }}>
-                                                        {badge.progress.toFixed(0)}%
-                                                    </span>
-                                                </div>
-                                                <div
-                                                    className="w-full h-2 rounded-full overflow-hidden"
-                                                    style={{ backgroundColor: 'var(--muted)' }}
-                                                >
-                                                    <div
-                                                        className="h-full transition-all"
-                                                        style={{
-                                                            width: `${badge.progress}%`,
-                                                            backgroundColor: 'var(--primary)'
-                                                        }}
-                                                    />
-                                                </div>
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-                            </div>
+                                badgeId={badge.id}
+                                name={badge.name}
+                                description={badge.description}
+                                earned={badge.earned}
+                                earnedDate={badge.earnedDate}
+                                progress={badge.progress}
+                                requirement={badge.requirement}
+                            />
                         ))}
                     </div>
                 </div>

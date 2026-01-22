@@ -25,6 +25,7 @@ export type ChatApiResponse = {
   reply: string // Text response từ agent (BẮT BUỘC)
   ui_effects: FeatureInstruction[] // Danh sách UI components cần render
   suggestion_messages: SuggestionMessage[] // Gợi ý câu hỏi tiếp theo (luôn có ít nhất 1)
+  navigation?: string | null // Navigation route (optional)
   raw_agent_output?: RawAgentOutput // Debug info (optional)
 }
 
@@ -238,14 +239,28 @@ export const createDefaultUiEffects = (text: string): FeatureInstruction[] => {
  * Build conversation history từ messages
  * Đảm bảo message cuối cùng là từ user (theo tài liệu Frontend Integration Guide)
  */
-export const buildConversationHistory = (messages: ChatMessage[]): Array<{ role: 'user' | 'assistant'; content: string }> => {
+export const buildConversationHistory = (messages: ChatMessage[], maxContext: number = 3): Array<{ role: 'user' | 'assistant'; content: string }> => {
   // Lọc bỏ system messages và map sang format API
-  const history: Array<{ role: 'user' | 'assistant'; content: string }> = messages
+  let history: Array<{ role: 'user' | 'assistant'; content: string }> = messages
     .filter((msg) => msg.role !== 'system') // Loại bỏ system messages
     .map((msg) => ({
       role: (msg.role === 'user' ? 'user' : 'assistant') as 'user' | 'assistant',
       content: msg.text,
     }))
+
+  // Giới hạn chỉ lấy maxContext cặp user-assistant gần nhất (tức là 2 * maxContext messages)
+  // Nhưng đảm bảo message cuối cùng là từ user
+  if (history.length > maxContext * 2) {
+    // Lấy maxContext * 2 messages gần nhất
+    history = history.slice(-maxContext * 2)
+    
+    // Nếu message cuối cùng không phải từ user, loại bỏ nó
+    if (history.length > 0 && history[history.length - 1].role !== 'user') {
+      history = history.slice(0, -1)
+    }
+    
+    console.log(`📝 Limited conversation history to ${maxContext} contexts (${history.length} messages)`)
+  }
 
   // Đảm bảo message cuối cùng là từ user (theo tài liệu)
   // Nếu message cuối cùng không phải từ user, log warning
@@ -525,7 +540,7 @@ const parseGroqIntent = (userText: string, groqReply: string): FeatureInstructio
 export const callGroqAPI = async (
   messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }>,
   modelIndex: number = 0
-): Promise<{ reply: string; uiEffects: FeatureInstruction[]; suggestions: SuggestionMessage[] } | null> => {
+): Promise<{ reply: string; uiEffects: FeatureInstruction[]; suggestions: SuggestionMessage[]; navigation: string | null } | null> => {
   if (modelIndex >= GROQ_MODELS.length) {
     console.log('❌ All Groq models exhausted')
     return null
@@ -552,8 +567,22 @@ Dựa trên câu hỏi từ người dùng, trả về một trong các effect s
 - STOCK_SUGGESTIONS: gợi ý mã cổ phiếu (khi user nói "gợi ý cổ phiếu", "gợi ý mã cổ phiếu") phù hợp với user - là người mới bắt đầu Một vài mã: VNM,FPT,HPG,VCB,MWG,VIC
 - NONE: không có effect nào
 
+NAVIGATION (QUAN TRỌNG): Nếu user muốn mua cổ phiếu hoặc thực hiện action ở sidebar, trả về navigation path tương ứng:
+- "mua [symbol]", "buy [symbol]", "muốn mua", "tôi muốn mua" → navigation: "/dashboard/trade"
+- "xem thị trường", "thị trường", "market" → navigation: "/dashboard/market"
+- "tin tức", "news", "xem tin tức" → navigation: "/dashboard/news"
+- "danh mục", "portfolio", "xem danh mục" → navigation: "/dashboard/portfolio"
+- "giao dịch", "trade", "xem giao dịch" → navigation: "/dashboard/trade"
+- "bảng xếp hạng", "ranking", "xem ranking" → navigation: "/dashboard/ranking"
+- "phân tích", "stock analysis", "xem phân tích" → navigation: "/dashboard/stock-analysis"
+- "học đầu tư", "learn", "học tập" → navigation: "/dashboard/learn-trading"
+- "lịch sử", "history", "xem lịch sử" → navigation: "/dashboard/history"
+- "huy hiệu", "badges", "xem huy hiệu" → navigation: "/dashboard/badges"
+- "trang chủ", "home", "dashboard" → navigation: "/dashboard"
+- Nếu không cần navigate, trả về navigation: null
+
 QUAN TRỌNG: 
-- Khi user nói "mua [symbol]" hoặc "buy [symbol]" → dùng OPEN_BUY_STOCK (KHÔNG phải CONFIRM_TRANSACTION)
+- Khi user nói "mua [symbol]" hoặc "buy [symbol]" → dùng OPEN_BUY_STOCK VÀ navigation: "/dashboard/trade"
 - CONFIRM_TRANSACTION chỉ dùng khi user nói "xác nhận", "confirm", "xác nhận mua/bán"
 - Nếu không có effect phù hợp, trả về uiEffects là "NONE" cho uiEffects.
 
@@ -561,7 +590,8 @@ BẮT BUỘC trả về theo cấu trúc JSON hợp lệ (không có markdown, k
 {
   "reply": "Câu trả lời thân thiện, liên quan đến câu hỏi của người dùng bằng tiếng Việt",
   "uiEffects": "Tên effect (chỉ một effect, không có dấu ngoặc vuông)",
-  "suggestions": ["Gợi ý 1", "Gợi ý 2", "Gợi ý 3"] (Đây là chip text, gợi ý câu hỏi hoặc yêu cầu tiếp theo cho người dùng)
+  "suggestions": ["Gợi ý 1", "Gợi ý 2", "Gợi ý 3"],
+  "navigation": "/dashboard/trade" hoặc null (đường dẫn để navigate, hoặc null nếu không cần navigate)
 }`
 
     // Gọi Next.js API endpoint để gọi Groq từ server-side
@@ -609,6 +639,7 @@ BẮT BUỘC trả về theo cấu trúc JSON hợp lệ (không có markdown, k
       reply?: string
       uiEffects?: string
       suggestions?: string[]
+      navigation?: string | null
     } = {}
 
     try {
@@ -634,6 +665,7 @@ BẮT BUỘC trả về theo cấu trúc JSON hợp lệ (không có markdown, k
       console.log('📦 Parsed reply:', parsedData.reply)
       console.log('📦 Parsed uiEffects:', parsedData.uiEffects)
       console.log('📦 Parsed suggestions:', parsedData.suggestions)
+      console.log('📦 Parsed navigation:', parsedData.navigation)
     } catch (parseError) {
       console.log('❌ Failed to parse Groq JSON!')
       console.log('❌ Parse error:', parseError)
@@ -652,6 +684,7 @@ BẮT BUỘC trả về theo cấu trúc JSON hợp lệ (không có markdown, k
         reply: rawContent || 'Xin lỗi, tôi không thể trả lời câu hỏi này.',
         uiEffects: finalEffects,
         suggestions,
+        navigation: null,
       }
     }
 
@@ -849,9 +882,15 @@ BẮT BUỘC trả về theo cấu trúc JSON hợp lệ (không có markdown, k
     console.log(`✅ Reply preview: ${reply.substring(0, 100)}...`)
     console.log(`✅ UI Effects count: ${uiEffects.length}`)
     console.log(`✅ Suggestions count: ${suggestions.length}`)
+    console.log(`✅ Navigation: ${parsedData.navigation || 'null'}`)
     console.log(`✅ ================================================`)
 
-    return { reply, uiEffects, suggestions }
+    return { 
+      reply, 
+      uiEffects, 
+      suggestions,
+      navigation: parsedData.navigation || null
+    }
   } catch (error: any) {
     // Nếu lỗi do token limit, thử model tiếp theo
     if (error?.message?.includes('token') || error?.status === 429 || error?.status === 413) {
@@ -870,7 +909,7 @@ BẮT BUỘC trả về theo cấu trúc JSON hợp lệ (không có markdown, k
  */
 export const callHuggingFaceForIntent = async (
   messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }>
-): Promise<{ reply: string; uiEffects: FeatureInstruction[]; suggestions: SuggestionMessage[] } | null> => {
+): Promise<{ reply: string; uiEffects: FeatureInstruction[]; suggestions: SuggestionMessage[]; navigation: string | null } | null> => {
   const hfUrl = getHuggingFaceUrl()
 
   if (!hfUrl) {
@@ -921,6 +960,7 @@ export const callHuggingFaceForIntent = async (
         { text: 'Xem tổng quan thị trường', icon: '🌐' },
         { text: 'Tìm hiểu thêm', icon: '❓' },
       ],
+      navigation: data.navigation || null,
     }
   } catch (error: any) {
     clearTimeout(timeoutId)
@@ -939,7 +979,7 @@ export const callHuggingFaceForIntent = async (
  */
 export const callPrimaryAPI = async (
   messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }>
-): Promise<{ reply: string; uiEffects: FeatureInstruction[]; suggestions: SuggestionMessage[] } | null> => {
+): Promise<{ reply: string; uiEffects: FeatureInstruction[]; suggestions: SuggestionMessage[]; navigation: string | null } | null> => {
   const hfConfigured = isHuggingFaceConfigured()
 
   console.log('🔧 Primary API Config:', {
@@ -952,7 +992,7 @@ export const callPrimaryAPI = async (
     console.log('🚀 Priority 1: Trying HuggingFace API...')
     const hfResult = await callHuggingFaceForIntent(messages)
     if (hfResult) {
-      return hfResult
+      return hfResult;
     }
     console.warn('⚠️ HuggingFace failed, falling back to Groq...')
   } else {

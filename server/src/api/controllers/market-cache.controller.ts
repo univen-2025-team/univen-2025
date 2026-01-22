@@ -8,6 +8,7 @@ import { OkResponse } from '@/response/success.response';
 import { NotFoundErrorResponse, BadRequestErrorResponse } from '@/response/error.response';
 import MarketCacheService from '@/services/market-cache.service';
 import StockNewsService from '@/services/stock-news.service';
+import NewsSummaryService from '@/services/news-summary.service';
 
 export default class MarketCacheController {
     /**
@@ -64,7 +65,8 @@ export default class MarketCacheController {
             const { symbol } = req.params;
             const { date } = req.query;
 
-            if (!symbol) {
+            const symbolStr = Array.isArray(symbol) ? symbol[0] : symbol;
+            if (!symbolStr) {
                 throw new BadRequestErrorResponse({
                     message: 'Stock symbol is required'
                 });
@@ -72,9 +74,9 @@ export default class MarketCacheController {
 
             let stockData;
             if (date) {
-                stockData = await MarketCacheService.getStockData(symbol, date as string);
+                stockData = await MarketCacheService.getStockData(symbolStr, date as string);
             } else {
-                stockData = await MarketCacheService.getLatestStockData(symbol);
+                stockData = await MarketCacheService.getLatestStockData(symbolStr);
             }
 
             if (!stockData) {
@@ -184,17 +186,18 @@ export default class MarketCacheController {
         try {
             const { symbol } = req.params;
 
-            if (!symbol) {
+            const symbolStr = Array.isArray(symbol) ? symbol[0] : symbol;
+            if (!symbolStr) {
                 throw new BadRequestErrorResponse({
                     message: 'Stock symbol is required'
                 });
             }
 
-            const details = await MarketCacheService.getStockDetails(symbol);
+            const details = await MarketCacheService.getStockDetails(symbolStr);
 
             if (!details) {
                 throw new NotFoundErrorResponse({
-                    message: `No details found for stock: ${symbol}`
+                    message: `No details found for stock: ${symbolStr}`
                 });
             }
 
@@ -218,20 +221,60 @@ export default class MarketCacheController {
             const end = req.query.end as string;
             const refresh = req.query.refresh === 'true';
 
-            if (!symbol) {
+            const symbolStr = Array.isArray(symbol) ? symbol[0] : symbol;
+            if (!symbolStr) {
                 throw new BadRequestErrorResponse({
                     message: 'Stock symbol is required'
                 });
             }
 
-            const history = await MarketCacheService.getStockIntraday(symbol, filter, start, end, refresh);
+            const history = await MarketCacheService.getStockIntraday(symbolStr, filter, start, end, refresh);
 
             new OkResponse({
                 message: 'Stock intraday data retrieved successfully',
                 metadata: {
-                    symbol: symbol.toUpperCase(),
+                    symbol: symbolStr.toUpperCase(),
                     history,
                     total: history.length
+                }
+            }).send(res);
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    /**
+     * GET /api/market/news/:symbol/date/:date
+     * Get stock news by specific date
+     */
+    static async getStockNewsByDate(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { symbol, date } = req.params;
+
+            const symbolStr = Array.isArray(symbol) ? symbol[0] : symbol;
+            const dateStr = Array.isArray(date) ? date[0] : date;
+
+            if (!symbolStr) {
+                throw new BadRequestErrorResponse({
+                    message: 'Stock symbol is required'
+                });
+            }
+
+            if (!dateStr) {
+                throw new BadRequestErrorResponse({
+                    message: 'Date parameter is required'
+                });
+            }
+
+            const news = await StockNewsService.getInstance().getNewsByDate(symbolStr, dateStr);
+
+            new OkResponse({
+                message: 'Stock news retrieved successfully',
+                metadata: {
+                    symbol: symbolStr.toUpperCase(),
+                    date: dateStr,
+                    news,
+                    total: news.length
                 }
             }).send(res);
         } catch (error) {
@@ -247,20 +290,64 @@ export default class MarketCacheController {
         try {
             const { symbol } = req.params;
 
-            if (!symbol) {
+            const symbolStr = Array.isArray(symbol) ? symbol[0] : symbol;
+            if (!symbolStr) {
                 throw new BadRequestErrorResponse({
                     message: 'Stock symbol is required'
                 });
             }
 
-            const news = await StockNewsService.getInstance().getNews(symbol);
+            const news = await StockNewsService.getInstance().getNews(symbolStr);
 
             new OkResponse({
                 message: 'Stock news retrieved successfully',
                 metadata: {
-                    symbol: symbol.toUpperCase(),
+                    symbol: symbolStr.toUpperCase(),
                     news,
                     total: news.length
+                }
+            }).send(res);
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    /**
+     * POST /api/market/news/summarize
+     * Fetch content from URL or use provided content and summarize using AI
+     */
+    static async summarizeNews(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { url, title, content } = req.body;
+
+            // URL is required if content is not provided
+            if (!content && (!url || typeof url !== 'string')) {
+                throw new BadRequestErrorResponse({
+                    message: 'Either URL or content is required'
+                });
+            }
+
+            // If URL is provided, validate it
+            if (url && !url.startsWith('http://') && !url.startsWith('https://')) {
+                throw new BadRequestErrorResponse({
+                    message: 'Invalid URL format'
+                });
+            }
+
+            // Use provided content or fetch from URL
+            const summary = await NewsSummaryService.getInstance().summarizeNews(
+                url || '', 
+                title, 
+                content
+            );
+
+            new OkResponse({
+                message: 'News summarized successfully',
+                metadata: {
+                    summary,
+                    url: url || null,
+                    title: title || null,
+                    usedProvidedContent: !!content
                 }
             }).send(res);
         } catch (error) {

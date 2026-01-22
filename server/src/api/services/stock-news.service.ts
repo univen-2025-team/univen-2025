@@ -73,6 +73,65 @@ class StockNewsService {
     }
 
     /**
+     * Get news by symbol and specific date
+     * @param symbol Stock symbol
+     * @param date Date string in YYYY-MM-DD format
+     * @param limit Number of items to return
+     */
+    public async getNewsByDate(symbol: string, date: string, limit: number = 50) {
+        try {
+            const upperSymbol = symbol.toUpperCase();
+            const targetDate = new Date(date);
+            const startDate = new Date(targetDate);
+            startDate.setHours(0, 0, 0, 0);
+            const endDate = new Date(targetDate);
+            endDate.setHours(23, 59, 59, 999);
+
+            let query: any = {
+                pub_date: {
+                    $gte: startDate,
+                    $lte: endDate
+                }
+            };
+
+            // For specific stock symbol, filter by matched_symbols
+            if (upperSymbol !== 'MARKET' && upperSymbol !== 'ALL') {
+                query.matched_symbols = upperSymbol;
+            }
+
+            // Query from market_news collection (Multi-RSS)
+            const docs = await MarketNewsModel.find(query)
+                .sort({ pub_date: -1, fetched_at: -1 })
+                .limit(limit)
+                .lean();
+
+            // Transform to client-friendly format
+            const news = docs.map((doc: any) => ({
+                id: doc._id?.toString() || doc.url_hash,
+                title: doc.title,
+                source_link: doc.link,
+                public_date: doc.pub_date,
+                source: doc.source,
+                source_domain: doc.domain,
+                short_content: doc.summary,
+                image_url: doc.thumbnail,
+                full_content: doc.full_content,
+                author: doc.author,
+                images: doc.images || [],
+                matched_symbols: doc.matched_symbols || [],
+                category: doc.category,
+                is_scraped: doc.is_scraped
+            }));
+
+            return news;
+
+        } catch (error: any) {
+            this.logger.error(`[NewsService] Error getting news for ${symbol} on ${date}: ${error.message}`);
+            return [];
+        }
+    }
+
+    /**
      * Get news by category
      */
     public async getNewsByCategory(category: string, limit: number = 30) {

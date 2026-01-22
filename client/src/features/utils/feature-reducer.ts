@@ -36,7 +36,6 @@ export function reduceFeatureState(
             currentStepIndex: 0,
           },
         }
-
       case 'OPEN_NEWS':
         return {
           ...s,

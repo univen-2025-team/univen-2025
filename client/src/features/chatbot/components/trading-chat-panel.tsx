@@ -16,7 +16,7 @@ export function TradingChatPanel({
     hasComponentLoaded
 }: TradingChatPanelProps) {
     return (
-        <div className="flex h-full flex-col gap-0 bg-background">
+        <div className="flex h-full flex-col gap-0 bg-white">
             <div className="flex flex-1 flex-col overflow-hidden p-4 pb-3">
                 <ChatMessageList
                     messages={messages}

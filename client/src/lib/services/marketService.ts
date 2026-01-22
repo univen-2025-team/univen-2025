@@ -197,6 +197,75 @@ export const fetchStockDetail = async (
     }
 };
 
+export interface FetchStockIntradayParams {
+    symbol: string;
+    filter?: string; // TimeRange like '1D', '1W', '1M', etc.
+    refresh?: boolean;
+    signal?: AbortSignal;
+}
+
+export interface StockIntradayApiResponse {
+    success: boolean;
+    data?: Array<{
+        symbol: string;
+        time: string;
+        open: number;
+        high: number;
+        low: number;
+        close: number;
+        volume: number;
+    }>;
+    error?: string;
+    message?: string;
+}
+
+export const fetchStockIntraday = async (
+    params: FetchStockIntradayParams
+): Promise<StockIntradayApiResponse> => {
+    try {
+        const { symbol, filter = '1D', refresh = false, signal } = params;
+
+        const apiBaseUrl = API_URL;
+        const refreshParam = refresh ? '&refresh=true' : '';
+        const url = `${apiBaseUrl}/market/stock/${symbol}/intraday?filter=${filter}${refreshParam}`;
+
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            cache: 'no-store',
+            signal
+        });
+
+        if (!response.ok) {
+            throw new Error(`Failed to fetch stock intraday data (${response.status})`);
+        }
+
+        const result = await response.json();
+
+        // Handle Node.js backend response format: { statusCode, message, metadata }
+        if (result.statusCode === 200 && result.metadata?.history) {
+            return {
+                success: true,
+                data: result.metadata.history
+            };
+        }
+
+        return {
+            success: false,
+            error: result.message || 'Failed to fetch stock intraday data'
+        };
+    } catch (error) {
+        const message =
+            error instanceof Error ? error.message : 'Network error: Unable to fetch stock intraday data';
+        return {
+            success: false,
+            error: message
+        };
+    }
+};
+
 export const fetchStockNews = async (symbol: string): Promise<any> => {
     try {
         const apiBaseUrl = API_URL;

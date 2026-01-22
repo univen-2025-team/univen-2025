@@ -137,7 +137,7 @@ export default function LessonPage() {
               </div>
 
               {/* Content */}
-              <div className="prose prose-invert max-w-none dark:prose-invert">
+              <div className="prose max-w-none">
                 <div className="markdown-content text-foreground space-y-4">
                   <ReactMarkdown
                     components={{

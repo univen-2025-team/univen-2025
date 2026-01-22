@@ -24,11 +24,11 @@ export default function PageHeader({ title, description, icon }: PageHeaderProps
   );
 
   return (
-    <div className="bg-primary rounded-2xl shadow-xl p-8 text-white">
+    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl md:text-4xl font-bold mb-2">{title}</h1>
-          <p className="text-primary-foreground/80 text-lg">{description}</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-[#2D3748] mb-2">{title}</h1>
+          <p className="text-[#718096] text-sm">{description}</p>
         </div>
       </div>
     </div>

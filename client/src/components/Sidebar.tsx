@@ -52,7 +52,7 @@ export function Sidebar() {
             {/* Mobile Toggle Button */}
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className="lg:hidden fixed top-4 left-4 z-50 p-2 rounded-lg bg-[#0F111A]/80 backdrop-blur-xl border border-white/10 shadow-lg text-white"
+                className="lg:hidden fixed top-4 left-4 z-50 p-2 rounded-lg bg-white border border-gray-200 shadow-lg text-gray-700 hover:bg-gray-50"
                 aria-label="Mở menu"
             >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -84,7 +84,7 @@ export function Sidebar() {
 
             <aside
                 className={`fixed lg:static inset-y-0 left-0 z-40 ${isCollapsed ? 'w-20' : 'w-64'
-                    } bg-white/95 backdrop-blur-sm border-r border-gray-200 shadow-xl transform transition-all duration-300 ease-in-out overflow-x-hidden ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+                    } bg-white border-r border-gray-200 shadow-sm transform transition-all duration-300 ease-in-out overflow-x-hidden ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
                     }`}
             >
                 <div className="h-full flex flex-col">
@@ -106,7 +106,7 @@ export function Sidebar() {
                         {/* Collapse Toggle (desktop) */}
                         <button
                             onClick={() => setIsCollapsed(!isCollapsed)}
-                            className="hidden lg:inline-flex p-2 rounded-xl hover:bg-white/10 text-slate-400 hover:text-white transition-all border border-transparent hover:border-violet-500/20"
+                            className="hidden lg:inline-flex p-2 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-700 transition-all"
                             title={isCollapsed ? 'Mở rộng' : 'Thu gọn'}
                         >
                             <svg
@@ -143,10 +143,10 @@ export function Sidebar() {
                                         key={route.path}
                                         href={route.path}
                                         onClick={() => setIsOpen(false)}
-                                        className={`group flex items-center gap-3 p-3 rounded-xl relative transition-all duration-300 ${
+                                        className={`group flex items-center gap-3 p-3 rounded-lg relative transition-all duration-200 ${
                                             active
-                                                ? 'shadow-lg shadow-violet-500/30 ring-1 ring-violet-400/20 border border-violet-500/30 bg-[#0F111A]/80 backdrop-blur-xl text-gradient-to-r from-violet-400 via-fuchsia-400 to-blue-400'
-                                                : 'text-gray-400 hover:bg-white/5 hover:text-white'
+                                                ? 'bg-[#F0F4FF] text-[#2D5BDE] font-semibold shadow-sm'
+                                                : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                                         } ${isCollapsed ? 'justify-center' : ''}`}
                                     >
                                         {/* Active indicator
@@ -155,10 +155,10 @@ export function Sidebar() {
                                         )} */}
 
                                         <div
-                                            className={`flex-shrink-0 ${
+                                            className={`shrink-0 ${
                                                 active
-                                                    ? 'text-gradient-to-r from-violet-400 via-fuchsia-400 to-blue-400'
-                                                    : 'text-gray-400'
+                                                    ? 'text-[#2D5BDE]'
+                                                    : 'text-gray-500'
                                             }`}
                                         >
                                             {route.icon}
@@ -177,8 +177,8 @@ export function Sidebar() {
                                                                     ? 'bg-white text-red-500'
                                                                     : 'bg-red-500 text-white'
                                                                 : active
-                                                                  ? 'bg-white text-primary'
-                                                                  : 'bg-primary text-white'
+                                                                  ? 'bg-white text-[#2D5BDE]'
+                                                                  : 'bg-[#2D5BDE] text-white'
                                                         }`}
                                                     >
                                                         {badgeCount}
@@ -189,7 +189,7 @@ export function Sidebar() {
 
                                         {/* Tooltip when collapsed */}
                                         {isCollapsed && (
-                                            <div className="absolute left-full ml-2 px-3 py-2 bg-[#0F111A]/90 backdrop-blur-xl border border-white/10 shadow-xl rounded-lg text-sm text-white opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50">
+                                            <div className="absolute left-full ml-2 px-3 py-2 bg-gray-900 border border-gray-700 shadow-xl rounded-lg text-sm text-white opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50">
                                                 {route.name}
                                             </div>
                                         )}
@@ -200,12 +200,12 @@ export function Sidebar() {
                     </nav>
 
                     {/* Footer / Profile */}
-                    <div className="p-4 border-t border-white/10 relative" ref={profileMenuRef}>
+                    <div className="p-4 border-t border-gray-200 relative" ref={profileMenuRef}>
                         <button
                             onClick={() => setShowProfileMenu(!showProfileMenu)}
                             className={`w-full flex items-center gap-3 ${
                                 isCollapsed ? 'justify-center' : ''
-                            } hover:bg-white/5 rounded-xl p-2 transition-all duration-300`}
+                            } hover:bg-gray-50 rounded-lg p-2 transition-all duration-200`}
                         >
                             {(() => {
                                 const avatarUrl = getMediaUrl(user?.user_avatar);
@@ -216,24 +216,24 @@ export function Sidebar() {
                                         className="w-9 h-9 rounded-full object-cover"
                                     />
                                 ) : (
-                                    <div className="w-9 h-9 rounded-full bg-primary flex items-center justify-center text-white font-bold">
+                                    <div className="w-9 h-9 rounded-full bg-[#2D5BDE] flex items-center justify-center text-white font-bold">
                                         {user?.user_fullName?.charAt(0).toUpperCase() || 'U'}
                                     </div>
                                 );
                             })()}
                             {!isCollapsed && (
                                 <div className="min-w-0 flex-1 text-left">
-                                    <p className="text-sm font-semibold text-white truncate">
+                                    <p className="text-sm font-semibold text-gray-900 truncate">
                                         {user?.user_fullName || 'User'}
                                     </p>
-                                    <p className="text-xs text-gray-400 truncate">
+                                    <p className="text-xs text-gray-500 truncate">
                                         {user?.email || 'user@example.com'}
                                     </p>
                                 </div>
                             )}
                             {!isCollapsed && (
                                 <svg
-                                    className={`w-4 h-4 text-gray-400 transition-transform ${
+                                    className={`w-4 h-4 text-gray-500 transition-transform ${
                                         showProfileMenu ? 'rotate-180' : ''
                                     }`}
                                     fill="none"
@@ -252,11 +252,11 @@ export function Sidebar() {
 
                         {/* Profile Dropdown Menu */}
                         {showProfileMenu && !isCollapsed && (
-                            <div className="absolute bottom-full left-0 right-0 mb-2 mx-4 bg-[#0F111A]/90 backdrop-blur-xl rounded-xl shadow-2xl border border-white/10 py-2 z-50">
+                            <div className="absolute bottom-full left-0 right-0 mb-2 mx-4 bg-white rounded-lg shadow-xl border border-gray-200 py-2 z-50">
                                 <Link
                                     href="/dashboard/profile"
                                     onClick={() => setShowProfileMenu(false)}
-                                    className="flex items-center gap-3 px-4 py-2 hover:bg-white/5 transition-colors text-gray-300 hover:text-white rounded-lg mx-2"
+                                    className="flex items-center gap-3 px-4 py-2 hover:bg-gray-50 transition-colors text-gray-700 hover:text-gray-900 rounded-lg mx-2"
                                 >
                                     <svg
                                         className="w-5 h-5"
@@ -274,11 +274,11 @@ export function Sidebar() {
                                     <span className="text-sm font-medium">Thông tin cá nhân</span>
                                 </Link>
 
-                                <div className="border-t border-white/10 my-2"></div>
+                                <div className="border-t border-gray-200 my-2"></div>
 
                                 <button
                                     onClick={handleLogout}
-                                    className="w-full flex items-center gap-3 px-4 py-2 hover:bg-red-500/10 transition-colors text-red-400 hover:text-red-300 rounded-lg mx-2"
+                                    className="w-full flex items-center gap-3 px-4 py-2 hover:bg-red-50 transition-colors text-red-600 hover:text-red-700 rounded-lg mx-2"
                                 >
                                     <svg
                                         className="w-5 h-5"
@@ -300,11 +300,11 @@ export function Sidebar() {
 
                         {/* Tooltip for collapsed sidebar */}
                         {isCollapsed && showProfileMenu && (
-                            <div className="absolute bottom-full left-full ml-2 mb-2 bg-[#0F111A]/90 backdrop-blur-xl rounded-xl shadow-2xl border border-white/10 py-2 z-50 w-48">
+                            <div className="absolute bottom-full left-full ml-2 mb-2 bg-white rounded-lg shadow-xl border border-gray-200 py-2 z-50 w-48">
                                 <Link
                                     href="/dashboard/profile"
                                     onClick={() => setShowProfileMenu(false)}
-                                    className="flex items-center gap-3 px-4 py-2 hover:bg-white/5 transition-colors text-gray-300 hover:text-white rounded-lg mx-2"
+                                    className="flex items-center gap-3 px-4 py-2 hover:bg-gray-50 transition-colors text-gray-700 hover:text-gray-900 rounded-lg mx-2"
                                 >
                                     <svg
                                         className="w-5 h-5"
@@ -322,11 +322,11 @@ export function Sidebar() {
                                     <span className="text-sm font-medium">Thông tin cá nhân</span>
                                 </Link>
 
-                                <div className="border-t border-white/10 my-2"></div>
+                                <div className="border-t border-gray-200 my-2"></div>
 
                                 <button
                                     onClick={handleLogout}
-                                    className="w-full flex items-center gap-3 px-4 py-2 hover:bg-red-500/10 transition-colors text-red-400 hover:text-red-300 rounded-lg mx-2"
+                                    className="w-full flex items-center gap-3 px-4 py-2 hover:bg-red-50 transition-colors text-red-600 hover:text-red-700 rounded-lg mx-2"
                                 >
                                     <svg
                                         className="w-5 h-5"

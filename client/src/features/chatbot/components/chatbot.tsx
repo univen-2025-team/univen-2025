@@ -168,13 +168,13 @@ export default function Chatbot() {
     // Mobile: Fullscreen chat popup
     if (isMobile) {
         return (
-            <div className="min-h-screen bg-[#18192a]">
+            <div className="min-h-screen bg-white">
                 {/* Main Content */}
                 <div className="h-screen overflow-y-auto pb-20">
                     <div className="p-4">
                         {isLoading ? (
                             <div className="flex items-center justify-center h-full">
-                                <div className="text-white/70">Loading market data...</div>
+                                <div className="text-[#718096]">Loading market data...</div>
                             </div>
                         ) : (
                             <FeatureArea
@@ -189,30 +189,30 @@ export default function Chatbot() {
                 {/* Floating Chat Button */}
                 <button
                     onClick={() => setIsChatOpen(true)}
-                    className="fixed bottom-6 right-6 w-14 h-14 bg-gradient-to-br from-violet-900 to-fuchsia-900 text-white rounded-full shadow-xl hover:from-violet-700 hover:to-fuchsia-700 transition-all duration-200 flex items-center justify-center z-40 border border-white/10 backdrop-blur-lg"
+                    className="fixed bottom-6 right-6 w-14 h-14 bg-[#2D5BDE] text-white rounded-full shadow-xl hover:bg-[#1E3A8A] transition-all duration-200 flex items-center justify-center z-40"
                 >
                     <MessageCircle className="w-6 h-6" />
                 </button>
 
                 {/* Fullscreen Chat Modal */}
                 {isChatOpen && (
-                    <div className="fixed inset-0 z-50 bg-[#18192a]/95 backdrop-blur-2xl">
+                    <div className="fixed inset-0 z-50 bg-white">
                         {/* Header */}
-                        <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 bg-[#23243a]/90 shadow-sm backdrop-blur rounded-t-2xl">
+                        <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 bg-white shadow-sm">
                             <div className="flex items-center gap-2">
-                                <MessageCircle className="w-5 h-5 text-fuchsia-300" />
-                                <h2 className="font-semibold text-white">Trợ lý AI</h2>
+                                <MessageCircle className="w-5 h-5 text-[#2D5BDE]" />
+                                <h2 className="font-semibold text-[#2D3748]">Trợ lý AI</h2>
                             </div>
                             <button
                                 onClick={() => setIsChatOpen(false)}
-                                className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+                                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
                             >
-                                <X className="w-5 h-5 text-white/80" />
+                                <X className="w-5 h-5 text-[#718096]" />
                             </button>
                         </div>
 
                         {/* Chat Content */}
-                        <div className="h-[calc(100%-56px)] overflow-hidden">
+                        <div className="h-[calc(100%-56px)] overflow-hidden bg-white">
                             <ChatInterface onUiEffects={handleUiEffects} />
                         </div>
                     </div>
@@ -224,29 +224,23 @@ export default function Chatbot() {
     // Desktop: Resizable split layout
     return (
         <div
-            className="min-h-screen md:h-[calc(100vh-48px)] -m-4 md:-m-6 overflow-hidden bg-[#18192a]"
+            className="min-h-screen md:h-[calc(100vh-48px)] -m-4 md:-m-6 overflow-hidden bg-gray-50"
             ref={containerRef}
         >
-            <div className="fixed inset-0 overflow-hidden pointer-events-none bg-[#050505]">
-                {/* Top Left - Pink/Red Glow */}
-                <div className="absolute top-[-10%] left-[-10%] w-[600px] h-[600px] bg-pink-600/20 rounded-full blur-[120px] mix-blend-screen animate-pulse"></div>
-                {/* Top Right - Violet/Blue Glow */}
-                <div className="absolute top-[10%] right-[-10%] w-[500px] h-[500px] bg-violet-600/20 rounded-full blur-[120px] mix-blend-screen"></div>
-                {/* Bottom Left - Blue Glow */}
-                <div className="absolute bottom-[-10%] left-[20%] w-[600px] h-[600px] bg-blue-600/10 rounded-full blur-[100px] mix-blend-screen"></div>
-                {/* Center - Subtle Violet Glow */}
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-violet-600/5 rounded-full blur-[150px] mix-blend-screen"></div>
+            <div className="fixed inset-0 overflow-hidden pointer-events-none bg-gray-50">
+                {/* Subtle background gradient */}
+                <div className="absolute inset-0 bg-gradient-to-br from-gray-50 to-white"></div>
             </div>
             <div className="flex h-full">
                 {/* LEFT: Feature Area (flexible width) - scrollable */}
                 <section
-                    className="flex-1 border-r border-white/10 overflow-y-auto bg-[#18192a]/80 backdrop-blur-xl"
+                    className="flex-1 border-r border-gray-200 overflow-y-auto bg-white"
                     style={{ minWidth: 0 }}
                 >
                     <div className="p-6">
                         {isLoading ? (
                             <div className="flex items-center justify-center h-full">
-                                <div className="text-white/70">Loading market data...</div>
+                                <div className="text-[#718096]">Loading market data...</div>
                             </div>
                         ) : (
                             <FeatureArea
@@ -260,19 +254,19 @@ export default function Chatbot() {
 
                 {/* Resize Handle */}
                 <div
-                    className={`w-1.5 bg-[#23243a]/80 hover:bg-violet-900/60 cursor-col-resize flex items-center justify-center transition-colors ${
-                        isResizing ? 'bg-violet-900/60' : ''
+                    className={`w-1.5 bg-gray-200 hover:bg-[#2D5BDE]/60 cursor-col-resize flex items-center justify-center transition-colors ${
+                        isResizing ? 'bg-[#2D5BDE]/60' : ''
                     }`}
                     onMouseDown={startResizing}
                 >
                     <div className="flex flex-col gap-1 py-4">
-                        <GripVertical className="w-4 h-4 text-white/30" />
+                        <GripVertical className="w-4 h-4 text-gray-400" />
                     </div>
                 </div>
 
                 {/* RIGHT: Chatbot Panel (resizable width) - full height with padding */}
                 <section
-                    className="h-full flex flex-col bg-[#23243a]/90 backdrop-blur-2xl border-l border-white/10"
+                    className="h-full flex flex-col bg-white border-l border-gray-200"
                     style={{
                         width: chatWidth,
                         minWidth: MIN_CHAT_WIDTH,

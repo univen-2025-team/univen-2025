@@ -78,7 +78,7 @@ services:
   server:
     build:
       context: ./server
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.dev
     container_name: univen-server
     restart: unless-stopped
     environment:
@@ -91,10 +91,15 @@ services:
       REDIS_URL: ${REDIS_URL:-redis://redis:6379}
       HOST: 0.0.0.0
       CLIENT_URL: ${NEXT_PUBLIC_APP_URL:-http://localhost:3000}
+      # Enable file watching in Docker
+      CHOKIDAR_USEPOLLING: "true"
     ports:
       # Always map to 4000 to match NEXT_PUBLIC_API_URL
       - "4000:4000"
     volumes:
+      # Mount source code for hot reload
+      - ./server:/app
+      - /app/node_modules
       - ./server/logs:/app/logs
       - ./server/public:/app/public
     networks:
@@ -116,7 +121,7 @@ services:
   client:
     build:
       context: ./client
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.dev
       args:
         # Build time args for Next.js (NEXT_PUBLIC_ vars must be set at build time)
         NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:4000/v1/api}
@@ -126,7 +131,7 @@ services:
     container_name: univen-client
     restart: unless-stopped
     environment:
-      NODE_ENV: ${NODE_ENV:-production}
+      NODE_ENV: development
       # Runtime env (only works for server-side, NEXT_PUBLIC_ need rebuild)
       NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:4000/v1/api}
       NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-http://localhost:3000}
@@ -135,8 +140,16 @@ services:
       # Server-side env (không cần NEXT_PUBLIC_ prefix)
       HF_TOKEN: ${HF_TOKEN:-}
       GROQ_API_KEY: ${GROQ_API_KEY:-}
+      # Enable file watching in Docker
+      WATCHPACK_POLLING: "true"
+      CHOKIDAR_USEPOLLING: "true"
     ports:
       - "${CUSTOMER_PORT:-3000}:3000"
+    volumes:
+      # Mount source code for hot reload
+      - ./client:/app
+      - /app/node_modules
+      - /app/.next
     networks:
       - univen-network
     depends_on:
