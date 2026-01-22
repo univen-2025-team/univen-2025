@@ -4,6 +4,7 @@ import { useVirtualizer } from '@tanstack/react-virtual';
 import { Search, Eye, EyeOff, Layers, ArrowUpDown, ArrowUp, ArrowDown, Filter, Maximize2, Minimize2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { MarketNews } from './market-news';
+import { MiniSparkline } from '@/components/market/charts/MiniSparkline';
 
 interface StockTableWithTabsProps {
     stocks: any[];
@@ -280,7 +281,16 @@ export function StockTableWithTabs({
                                                     </div>
                                                 </div>
 
-                                                <div className="flex items-center gap-6 md:gap-12">
+                                                {/* Sparkline Chart */}
+                                                <div className="hidden sm:block">
+                                                    <MiniSparkline
+                                                        changePercent={stock.changePercent || 0}
+                                                        width={50}
+                                                        height={24}
+                                                    />
+                                                </div>
+
+                                                <div className="flex items-center gap-4 md:gap-8">
                                                     <div className="text-right hidden sm:block w-24">
                                                         <p className="text-xs text-gray-400 font-medium uppercase tracking-wider mb-0.5">Giá</p>
                                                         <p className="font-mono font-bold text-gray-900 text-base">{formatNumber(stock.price)}</p>

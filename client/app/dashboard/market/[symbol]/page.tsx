@@ -778,6 +778,7 @@ const StockDetailPage = () => {
         companyName={info?.organShortName || profile?.companyShortName}
         currentPrice={displayData.price * 1000}
         initialAction={tradeAction}
+        currentHolding={positionSummary}
       />
     </div>
   );

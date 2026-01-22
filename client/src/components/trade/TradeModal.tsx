@@ -18,6 +18,7 @@ interface TradeModalProps {
     companyName?: string;
     currentPrice?: number;
     initialAction?: 'buy' | 'sell';
+    currentHolding?: number; // Number of shares user currently holds
 }
 
 const validationSchema = Yup.object({
@@ -42,13 +43,15 @@ export default function TradeModal({
     symbol,
     companyName,
     currentPrice = 0,
-    initialAction = 'buy'
+    initialAction = 'buy',
+    currentHolding = 0
 }: TradeModalProps) {
     const reduxUser = useAppSelector(selectUser);
     const [profile, setProfile] = useState<UserProfile | null>(null);
     const [loadingProfile, setLoadingProfile] = useState(true);
     const [submitError, setSubmitError] = useState<string | null>(null);
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
+    const [lastTransactionDetails, setLastTransactionDetails] = useState<{ quantity: number; total: number } | null>(null);
 
     // Fetch user profile
     useEffect(() => {
@@ -97,15 +100,13 @@ export default function TradeModal({
                 });
 
                 setSuccessMessage(response.message);
+                setLastTransactionDetails({ quantity: values.quantity, total: values.quantity * values.price_per_unit });
                 if (profile) {
                     setProfile({
                         ...profile,
                         balance: response.transaction.balance_after,
                     });
                 }
-
-                // Reset quantity after successful transaction
-                helpers.setFieldValue('quantity', 0);
 
                 // Keep modal open to show success message - user closes manually
             } catch (error) {
@@ -133,15 +134,96 @@ export default function TradeModal({
     }, [transaction_type, profile?.balance, price_per_unit]);
 
     const handleClose = useCallback(() => {
-        // Don't allow close while showing success message (auto-closing)
-        if (successMessage) return;
-
         setSubmitError(null);
+        setSuccessMessage(null);
+        setLastTransactionDetails(null);
         formik.resetForm();
         onClose();
-    }, [onClose, formik, successMessage]);
+    }, [onClose, formik]);
+
+    // Handle "Buy more" - reset to form state
+    const handleBuyMore = useCallback(() => {
+        setSuccessMessage(null);
+        setLastTransactionDetails(null);
+        formik.setFieldValue('quantity', 0);
+    }, [formik]);
+
+    // ESC key handler
+    useEffect(() => {
+        if (!isOpen) return;
+
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') {
+                handleClose();
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [isOpen, handleClose]);
 
     if (!isOpen || typeof document === 'undefined') return null;
+
+    // Success State UI
+    if (successMessage && lastTransactionDetails) {
+        return createPortal(
+            <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 animate-fade-in">
+                <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={handleClose} />
+                <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-slide-up">
+                    {/* Success Header */}
+                    <div className="bg-gradient-to-r from-emerald-500 to-teal-600 p-8 text-center">
+                        <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <CheckCircle className="w-12 h-12 text-white" />
+                        </div>
+                        <h2 className="text-2xl font-bold text-white mb-2">Giao dịch thành công!</h2>
+                        <p className="text-white/90">{successMessage}</p>
+                    </div>
+
+                    {/* Transaction Details */}
+                    <div className="p-6 space-y-4">
+                        <div className="bg-gray-50 rounded-xl p-4 space-y-3">
+                            <div className="flex justify-between">
+                                <span className="text-gray-500">Mã cổ phiếu</span>
+                                <span className="font-bold text-gray-900">{symbol}</span>
+                            </div>
+                            <div className="flex justify-between">
+                                <span className="text-gray-500">Số lượng</span>
+                                <span className="font-bold text-gray-900">{lastTransactionDetails.quantity.toLocaleString()} CP</span>
+                            </div>
+                            <div className="flex justify-between border-t pt-3">
+                                <span className="text-gray-500">Tổng giá trị</span>
+                                <span className="font-bold text-emerald-600 text-lg">{lastTransactionDetails.total.toLocaleString('vi-VN')} VND</span>
+                            </div>
+                            <div className="flex justify-between">
+                                <span className="text-gray-500">Số dư còn lại</span>
+                                <span className="font-semibold text-gray-700">{availableBalance.toLocaleString('vi-VN')} VND</span>
+                            </div>
+                        </div>
+
+                        {/* Action Buttons */}
+                        <div className="flex gap-3">
+                            <button
+                                onClick={handleClose}
+                                className="flex-1 py-3 rounded-xl font-bold text-gray-700 bg-gray-100 hover:bg-gray-200 transition-colors"
+                            >
+                                Đóng
+                            </button>
+                            <button
+                                onClick={handleBuyMore}
+                                className="flex-1 py-3 rounded-xl font-bold text-white bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 transition-all flex items-center justify-center gap-2"
+                            >
+                                <ShoppingCart className="w-5 h-5" />
+                                {isBuy ? 'Mua tiếp' : 'Bán tiếp'}
+                            </button>
+                        </div>
+
+                        <p className="text-center text-xs text-gray-400">Nhấn ESC để đóng</p>
+                    </div>
+                </div>
+            </div>,
+            document.body
+        );
+    }
 
     return createPortal(
         <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 animate-fade-in">
@@ -204,31 +286,46 @@ export default function TradeModal({
 
                 {/* Form Content */}
                 <form onSubmit={formik.handleSubmit} className="p-6 space-y-4">
-                    {/* Balance Info */}
-                    <div className="bg-gray-50 rounded-lg p-3 flex justify-between items-center">
-                        <span className="text-sm text-gray-500">Số dư khả dụng</span>
-                        <span className="font-bold text-gray-900">
-                            {loadingProfile ? '...' : availableBalance.toLocaleString('vi-VN')} <span className="text-xs text-gray-500">VND</span>
-                        </span>
-                    </div>
+                    {/* Balance Info (for BUY) or Holding Info (for SELL) */}
+                    {isBuy ? (
+                        <div className="bg-gray-50 rounded-lg p-3 flex justify-between items-center">
+                            <span className="text-sm text-gray-500">Số dư khả dụng</span>
+                            <span className="font-bold text-gray-900">
+                                {loadingProfile ? '...' : availableBalance.toLocaleString('vi-VN')} <span className="text-xs text-gray-500">VND</span>
+                            </span>
+                        </div>
+                    ) : (
+                        <div className="bg-red-50 rounded-lg p-3 space-y-2">
+                            <div className="flex justify-between items-center">
+                                <span className="text-sm text-red-600">Đang nắm giữ</span>
+                                <span className="font-bold text-red-700">
+                                    {currentHolding.toLocaleString()} <span className="text-xs">CP</span>
+                                </span>
+                            </div>
+                            {currentHolding > 0 && (
+                                <button
+                                    type="button"
+                                    onClick={() => formik.setFieldValue('quantity', Math.floor(currentHolding / 10) * 10)}
+                                    className="w-full py-2 text-sm font-bold text-red-600 bg-white rounded-lg border border-red-200 hover:bg-red-100 transition-colors"
+                                >
+                                    Bán tất cả ({Math.floor(currentHolding / 10)} lô)
+                                </button>
+                            )}
+                            {currentHolding <= 0 && (
+                                <p className="text-xs text-red-500 text-center">Bạn không có cổ phiếu này để bán</p>
+                            )}
+                        </div>
+                    )}
 
-                    {/* Price Input */}
+                    {/* Price Display (Read-only - determined by market) */}
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Giá mỗi CP (VND)
+                            Giá thị trường (VND)
                         </label>
-                        <input
-                            type="number"
-                            name="price_per_unit"
-                            value={price_per_unit || ''}
-                            onChange={formik.handleChange}
-                            onBlur={formik.handleBlur}
-                            className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 text-lg font-mono transition-all"
-                            placeholder="Nhập giá"
-                        />
-                        {formik.touched.price_per_unit && formik.errors.price_per_unit && (
-                            <p className="mt-1 text-sm text-red-500">{formik.errors.price_per_unit}</p>
-                        )}
+                        <div className="w-full px-4 py-3 rounded-lg border border-gray-200 bg-gray-50 text-lg font-mono text-gray-700">
+                            {price_per_unit.toLocaleString('vi-VN')}
+                        </div>
+                        <p className="mt-1 text-xs text-gray-400">Giá do thị trường quyết định</p>
                     </div>
 
                     {/* Quantity Input - Lot Based (1 lot = 10 shares) */}
@@ -342,8 +439,8 @@ export default function TradeModal({
                         )}
                     </button>
                 </form>
-            </div>
-        </div>,
+            </div >
+        </div >,
         document.body
     );
 }
