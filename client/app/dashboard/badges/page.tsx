@@ -28,7 +28,7 @@ export default function BadgesPage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {/* Total Badges */}
                 <div className="relative group">
-                    <div className="relative bg-white rounded-lg shadow-sm p-6 border border-gray-200 hover:shadow-md hover:border-[#2D5BDE]/30 transition-all duration-200">
+                    <div className="relative bg-white rounded-lg p-6">
                         <div className="flex items-center justify-between mb-2">
                             <span className="text-[#718096] text-sm font-medium">Tổng huy hiệu</span>
                             <div className="bg-[#F0F4FF] rounded-lg p-3">
@@ -48,7 +48,7 @@ export default function BadgesPage() {
 
                 {/* Ranking */}
                 <div className="relative group">
-                    <div className="relative bg-white rounded-lg shadow-sm p-6 border border-gray-200 hover:shadow-md hover:border-[#2D5BDE]/30 transition-all duration-200">
+                    <div className="relative bg-white rounded-lg p-6">
                         <div className="flex items-center justify-between mb-2">
                             <span className="text-[#718096] text-sm font-medium">Xếp hạng</span>
                             <div className="bg-amber-50 rounded-lg p-3">
@@ -64,7 +64,7 @@ export default function BadgesPage() {
 
                 {/* Total Profit */}
                 <div className="relative group">
-                    <div className="relative bg-white rounded-lg shadow-sm p-6 border border-gray-200 hover:shadow-md hover:border-[#2D5BDE]/30 transition-all duration-200">
+                    <div className="relative bg-white rounded-lg p-6 transition-all duration-200">
                         <div className="flex items-center justify-between mb-2">
                             <span className="text-[#718096] text-sm font-medium">Tổng lợi nhuận</span>
                             <div className={`${isPositiveProfit ? 'bg-emerald-50' : 'bg-red-50'} rounded-lg p-3`}>

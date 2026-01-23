@@ -84,9 +84,9 @@ function BadgeCard({
   return (
     <div
       className={cn(
-        'relative bg-white rounded-lg shadow-sm p-5 border transition-all duration-200 overflow-hidden',
+        'relative bg-white rounded-lg p-5 transition-all duration-200 overflow-hidden',
         earned
-          ? 'border-[#2D5BDE]/30 hover:shadow-md hover:border-[#2D5BDE]/50'
+          ? 'hover:shadow-md '
           : 'border-gray-200 opacity-70 hover:opacity-90',
         className
       )}
@@ -96,29 +96,21 @@ function BadgeCard({
         <div
           className={cn(
             'relative shrink-0 rounded-lg overflow-hidden w-20 h-20',
-            earned
-              ? 'ring-2 ring-[#2D5BDE]/30 bg-[#F0F4FF]'
-              : 'bg-gray-100 border border-gray-200'
+            // earned
+            //   ? 'ring-2 ring-[#2D5BDE]/30 bg-[#F0F4FF]'
+            //   : 'bg-gray-100 border border-gray-200'
           )}
         >
           <Image
             src={imagePath}
             alt={name}
-            width={80}
-            height={80}
+            width={100}
+            height={100}
             className={cn(
               'w-full h-full object-cover',
               !earned && 'grayscale opacity-50'
             )}
           />
-          {/* Checkmark overlay for earned badges */}
-          {earned && (
-            <div className="absolute bottom-1 right-1 bg-emerald-500 rounded-full p-0.5">
-              <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-              </svg>
-            </div>
-          )}
         </div>
 
         {/* Badge Info */}
@@ -146,12 +138,6 @@ function BadgeCard({
                     : '—'}
                 </span>
               </p>
-              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-600 border border-emerald-200">
-                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-                Hoàn thành
-              </span>
             </>
           ) : (
             <>
