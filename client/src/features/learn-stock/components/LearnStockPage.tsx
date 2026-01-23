@@ -125,10 +125,19 @@ export default function LearnStockPage() {
         }
     };
 
-    const changePercent =
-        stockData && stockData.previousClose
-            ? ((stockData.price - stockData.previousClose) / stockData.previousClose) * 100
-            : 0;
+    // Tính % thay đổi giá: (giá hiện tại - giá đóng cửa hôm trước) / giá đóng cửa hôm trước * 100
+    const changePercent = (() => {
+        if (!stockData) return 0;
+        // Nếu có previousClose và > 0, tính toán từ giá hiện tại
+        if (stockData.previousClose && stockData.previousClose > 0) {
+            return ((stockData.price - stockData.previousClose) / stockData.previousClose) * 100;
+        }
+        // Fallback: sử dụng changePercent từ API nếu có
+        if (typeof stockData.changePercent === 'number') {
+            return stockData.changePercent;
+        }
+        return 0;
+    })();
     const isPositive = changePercent >= 0;
 
     const mappedLessons: Lesson[] = lessons.map((l) =>

@@ -345,7 +345,7 @@ export function BuyStockWizard({ data, onBack }: BuyStockWizardProps) {
                   </div>
                   
                   {insufficientBalance && quantity > 0 && (
-                    <div className="rounded-lg border border-error bg-error-light p-4 text-sm text-error">
+                    <div className="rounded-lg border border-error bg-error p-4 text-sm text-white">
                       ⚠️ Số dư không đủ! Cần {totalCost.toLocaleString('vi-VN')} VND nhưng chỉ có {availableBalance.toLocaleString('vi-VN')} VND
                     </div>
                   )}

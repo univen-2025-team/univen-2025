@@ -9,7 +9,8 @@ import {
     SelectValue
 } from '@/components/ui/select';
 import type { BuyStockFormValues, TransactionType } from '@/lib/types/transactions';
-import { ChangeEvent, ReactNode } from 'react';
+import { ChangeEvent, ReactNode, useEffect, useState, useMemo } from 'react';
+import { getAllStocks, CachedStockData } from '@/lib/api/market-cache';
 
 type BuyOrderFormProps = {
     formik: FormikProps<BuyStockFormValues>;
@@ -32,6 +33,71 @@ export function BuyOrderForm({
     availableBalance,
     disableSubmit
 }: BuyOrderFormProps) {
+    // Load danh sách cổ phiếu
+    const [stocks, setStocks] = useState<CachedStockData[]>([])
+    const [isLoadingStocks, setIsLoadingStocks] = useState(true)
+
+    useEffect(() => {
+        const fetchStocks = async () => {
+            setIsLoadingStocks(true)
+            try {
+                const data = await getAllStocks()
+                const filteredStocks = data
+                    .filter(stock => stock.symbol !== 'VN30')
+                    .sort((a, b) => a.symbol.localeCompare(b.symbol))
+                setStocks(filteredStocks)
+            } catch (error) {
+                console.error('Error fetching stocks:', error)
+            } finally {
+                setIsLoadingStocks(false)
+            }
+        }
+        fetchStocks()
+    }, [])
+
+    // Map để lookup nhanh symbol <-> companyName
+    const stockBySymbol = useMemo(() => {
+        const map = new Map<string, CachedStockData>()
+        stocks.forEach(stock => map.set(stock.symbol, stock))
+        return map
+    }, [stocks])
+
+    const stockByName = useMemo(() => {
+        const map = new Map<string, CachedStockData>()
+        stocks.forEach(stock => {
+            if (stock.companyName) {
+                map.set(stock.companyName, stock)
+            }
+        })
+        return map
+    }, [stocks])
+
+    // Handler khi chọn mã cổ phiếu
+    const handleStockCodeChange = (symbol: string) => {
+        formik.setFieldValue('stock_code', symbol)
+        const stock = stockBySymbol.get(symbol)
+        if (stock) {
+            formik.setFieldValue('stock_name', stock.companyName || symbol)
+            // Tự động điền giá hiện tại
+            if (stock.price > 0) {
+                formik.setFieldValue('price_per_unit', stock.price)
+            }
+        }
+    }
+
+    // Handler khi chọn tên cổ phiếu
+    const handleStockNameChange = (companyName: string) => {
+        formik.setFieldValue('stock_name', companyName)
+        const stock = stockByName.get(companyName)
+        if (stock) {
+            formik.setFieldValue('stock_code', stock.symbol)
+            // Tự động điền giá hiện tại
+            if (stock.price > 0) {
+                formik.setFieldValue('price_per_unit', stock.price)
+            }
+        }
+    }
+
     const renderError = (field: keyof BuyStockFormValues) => {
         if (!formik.touched[field] || !formik.errors[field]) return null;
         return <p className="text-sm text-destructive">{formik.errors[field]}</p>;
@@ -40,7 +106,7 @@ export function BuyOrderForm({
     const inputClass =
         'bg-background border-input text-foreground placeholder:text-muted-foreground focus-visible:border-primary focus-visible:ring-primary/20';
     const triggerClass =
-        'w-full bg-background border-input text-foreground hover:bg-muted/50 [&_svg]:text-muted-foreground focus-visible:border-primary focus-visible:ring-primary/20';
+        'w-full bg-white border-gray-300 text-gray-900 hover:bg-gray-50 [&_svg]:text-gray-500 focus-visible:border-primary focus-visible:ring-primary/20';
 
     const isBuyTransaction = formik.values.transaction_type === 'BUY';
     const numericBalance = typeof availableBalance === 'number' ? availableBalance : undefined;
@@ -118,30 +184,53 @@ export function BuyOrderForm({
                 <section className="grid gap-4 sm:grid-cols-2">
                     <div className="space-y-2">
                         <Label htmlFor="stock_code">Mã cổ phiếu</Label>
-                        <Input
-                            id="stock_code"
-                            name="stock_code"
-                            placeholder="VD: VNM"
+                        <Select
                             value={formik.values.stock_code}
-                            onChange={formik.handleChange}
-                            onBlur={formik.handleBlur}
-                            autoComplete="off"
-                            className={inputClass}
-                        />
+                            onValueChange={handleStockCodeChange}
+                            disabled={isLoadingStocks}
+                        >
+                            <SelectTrigger id="stock_code" className={triggerClass}>
+                                <SelectValue placeholder={isLoadingStocks ? "Đang tải..." : "Chọn mã cổ phiếu"} />
+                            </SelectTrigger>
+                            <SelectContent className="bg-white border-gray-200 text-gray-900 max-h-[300px]">
+                                {stocks.map((stock) => (
+                                    <SelectItem 
+                                        key={stock.symbol} 
+                                        value={stock.symbol}
+                                        className="hover:bg-gray-100 focus:bg-gray-100 text-gray-900"
+                                    >
+                                        <span className="font-semibold">{stock.symbol}</span>
+                                        <span className="text-gray-500 ml-2">{stock.companyName}</span>
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
                         {renderError('stock_code')}
                     </div>
 
                     <div className="space-y-2">
                         <Label htmlFor="stock_name">Tên cổ phiếu</Label>
-                        <Input
-                            id="stock_name"
-                            name="stock_name"
-                            placeholder="Vinamilk"
+                        <Select
                             value={formik.values.stock_name}
-                            onChange={formik.handleChange}
-                            onBlur={formik.handleBlur}
-                            className={inputClass}
-                        />
+                            onValueChange={handleStockNameChange}
+                            disabled={isLoadingStocks}
+                        >
+                            <SelectTrigger id="stock_name" className={triggerClass}>
+                                <SelectValue placeholder={isLoadingStocks ? "Đang tải..." : "Chọn tên cổ phiếu"} />
+                            </SelectTrigger>
+                            <SelectContent className="bg-white border-gray-200 text-gray-900 max-h-[300px]">
+                                {stocks.filter(s => s.companyName).map((stock) => (
+                                    <SelectItem 
+                                        key={stock.symbol} 
+                                        value={stock.companyName || stock.symbol}
+                                        className="hover:bg-gray-100 focus:bg-gray-100 text-gray-900"
+                                    >
+                                        <span className="font-semibold">{stock.companyName}</span>
+                                        <span className="text-gray-500 ml-2">({stock.symbol})</span>
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
                         {renderError('stock_name')}
                     </div>
                 </section>
@@ -158,9 +247,13 @@ export function BuyOrderForm({
                             <SelectTrigger id="transaction_type" className={triggerClass}>
                                 <SelectValue placeholder="Chọn loại lệnh" />
                             </SelectTrigger>
-                            <SelectContent>
+                            <SelectContent className="bg-white border-gray-200 text-gray-900">
                                 {TRANSACTION_OPTIONS.map((option) => (
-                                    <SelectItem key={option} value={option}>
+                                    <SelectItem 
+                                        key={option} 
+                                        value={option}
+                                        className="hover:bg-gray-100 focus:bg-gray-100 text-gray-900"
+                                    >
                                         {option === 'BUY' ? 'Mua (BUY)' : 'Bán (SELL)'}
                                     </SelectItem>
                                 ))}
@@ -219,7 +312,7 @@ export function BuyOrderForm({
                             id="price_per_unit"
                             type="number"
                             min={0}
-                            step="100"
+                            step="any"
                             value={getNumberValue(formik.values.price_per_unit)}
                             onChange={handlePriceChange}
                             onBlur={formik.handleBlur}

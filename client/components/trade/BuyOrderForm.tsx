@@ -196,7 +196,7 @@ export function BuyOrderForm({
                         id="price_per_unit"
                         type="number"
                         min={0}
-                        step="100"
+                        step="any"
                         value={getNumberValue(formik.values.price_per_unit)}
                         onChange={handlePriceChange}
                         onBlur={formik.handleBlur}

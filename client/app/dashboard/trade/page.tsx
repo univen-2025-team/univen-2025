@@ -156,13 +156,13 @@ export default function TradePage() {
             )}
 
             {submitError && (
-                <div className="rounded-lg border border-error bg-error-light px-4 py-3 text-sm text-error">
+                <div className="rounded-lg border border-error bg-error px-4 py-3 text-sm text-white">
                     {submitError}
                 </div>
             )}
 
             {successMessage && (
-                <div className="rounded-lg border border-success bg-success-light px-4 py-3 text-sm text-success">
+                <div className="rounded-lg border border-success bg-success px-4 py-3 text-sm text-white">
                     {successMessage}
                 </div>
             )}

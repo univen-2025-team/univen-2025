@@ -106,13 +106,13 @@ export function TransactionSummaryCard({
                 </Button>
 
                 {successMessage && (
-                    <div className="rounded-xl border border-success bg-success-light px-4 py-3 text-sm text-success">
+                    <div className="rounded-xl border border-success bg-success px-4 py-3 text-sm text-white">
                         {successMessage}
                     </div>
                 )}
 
                 {lastTransaction && (
-                    <div className="rounded-xl border border-success bg-success-light px-4 py-3 text-xs text-success">
+                    <div className="rounded-xl border border-success bg-success px-4 py-3 text-xs text-white">
                         <p className="font-semibold">Lệnh gần nhất</p>
                         <p>
                             {lastTransaction.transaction_type} {lastTransaction.stock_code} •{' '}

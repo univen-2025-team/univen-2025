@@ -335,7 +335,7 @@ export function SellStockFeature({ data, onBack, onSuccess }: SellStockFeaturePr
                         {transactionResult.success &&
                             transactionResult.balance_after !== undefined && (
                                 <div className="rounded-2xl border border-success bg-success-light p-4">
-                                    <h3 className="font-semibold text-green-800 mb-2">
+                                    <h3 className="font-semibold text-white mb-2">
                                         💰 Số dư tài khoản
                                     </h3>
                                     <div className="space-y-1">
@@ -480,7 +480,7 @@ export function SellStockFeature({ data, onBack, onSuccess }: SellStockFeaturePr
                 </CardHeader>
                 <CardContent className="space-y-6">
                     {quantityError && (
-                        <div className="rounded-lg border border-error bg-error-light px-4 py-3 text-sm font-medium text-error">
+                        <div className="rounded-lg border border-error bg-error px-4 py-3 text-sm font-medium text-white">
                             ⚠️ {quantityError}
                         </div>
                     )}

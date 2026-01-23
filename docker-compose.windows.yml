@@ -180,8 +180,10 @@ services:
     depends_on:
       mongodb:
         condition: service_healthy
-      server:
+      redis:
         condition: service_healthy
+      # server:  # Commented out - vnstock-api can run independently
+      #   condition: service_healthy
 
 # =============================================================================
 # Networks

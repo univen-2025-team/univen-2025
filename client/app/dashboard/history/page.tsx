@@ -154,7 +154,7 @@ export default function HistoryPage() {
             />
 
             {error && (
-                <div className="rounded-xl border border-error bg-error-light px-4 py-3 text-sm text-error">
+                <div className="rounded-xl border border-error bg-error px-4 py-3 text-sm text-white">
                     {error}
                 </div>
             )}

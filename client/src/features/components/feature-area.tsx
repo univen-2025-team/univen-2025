@@ -515,7 +515,10 @@ function RankingFeature({ data, onBack }: { data: any; onBack?: () => void }) {
         <div className="space-y-2">
           {displayRankings.length > 0 ? (
             <>
-              {displayRankings.map((rank: any, idx: number) => (
+              {displayRankings.map((rank: any, idx: number) => {
+                const profit = rank.total_profit ?? rank.profit ?? 0
+                const isPositive = profit >= 0
+                return (
                 <div key={idx} className="p-3 border rounded-lg flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <span className="font-bold text-lg w-8">#{idx + 1}</span>
@@ -523,17 +526,13 @@ function RankingFeature({ data, onBack }: { data: any; onBack?: () => void }) {
                       <p className="font-semibold">
                         {rank.user_fullName || rank.name || rank.userId || 'N/A'}
                       </p>
-                      <p className="text-sm text-muted-foreground">
-                        {rank.total_profit !== undefined
-                          ? `${rank.total_profit.toLocaleString('vi-VN')} VNĐ`
-                          : rank.profit !== undefined
-                          ? `${rank.profit.toLocaleString('vi-VN')} VNĐ`
-                          : 'N/A'}
+                      <p className={`text-sm font-medium ${isPositive ? 'text-green-600' : 'text-red-600'}`}>
+                        {isPositive ? '+' : ''}{profit.toLocaleString('vi-VN')} VNĐ
                       </p>
                     </div>
                   </div>
                 </div>
-              ))}
+              )})}
               {(userRank !== undefined || data?.userRank !== undefined) && (
                 <div className="mt-4 p-3 bg-primary/10 rounded-lg">
                   <p className="text-sm text-muted-foreground">Xếp hạng của bạn</p>

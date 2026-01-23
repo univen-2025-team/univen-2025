@@ -348,7 +348,7 @@ export function BuyStockFeature({ data, onBack }: BuyStockFeatureProps) {
                         {transactionResult.success &&
                             transactionResult.balance_after !== undefined && (
                                 <div className="rounded-lg border border-success bg-success-light p-4">
-                                    <h3 className="font-semibold text-green-800 mb-2">
+                                    <h3 className="font-semibold text-white mb-2">
                                         💰 Thông tin tài khoản sau giao dịch
                                     </h3>
                                     <div className="space-y-1">
