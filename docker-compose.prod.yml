@@ -1,0 +1,148 @@
+services:
+  # (Compose v2 ignores `version:`; keep file simple and rely on default .env loading)
+  # =============================================================================
+  # Infrastructure Services
+  # =============================================================================
+
+  mongodb:
+    image: mongo:7
+    container_name: univen-mongodb
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME:-admin}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD:-password123}
+      MONGO_INITDB_DATABASE: ${MONGO_INITDB_DATABASE:-do_an_1}
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - univen-network
+    healthcheck:
+      test: [ "CMD", "mongosh", "--eval", "db.adminCommand('ping')" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  redis:
+    image: redis:alpine
+    container_name: univen-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - univen-network
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  minio:
+    image: minio/minio
+    container_name: univen-minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-admin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-password123}
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+    networks:
+      - univen-network
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:9000/minio/health/live" ]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+
+  # =============================================================================
+  # Application Services
+  # =============================================================================
+
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: univen-server
+    restart: unless-stopped
+    environment:
+      NODE_ENV: ${NODE_ENV:-production}
+      PORT: 4000
+      SERVER_PORT: 4000
+      MONGODB_URI: ${MONGODB_URI:-mongodb://admin:password123@mongodb:27017/univen2025?authSource=admin}
+      DB_URL: ${MONGODB_URI:-mongodb://admin:password123@mongodb:27017/univen2025?authSource=admin}
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379}
+      HOST: 0.0.0.0
+      CLIENT_URL: ${NEXT_PUBLIC_APP_URL:-http://localhost:3000}
+      VNSTOCK_API_URL: ${VNSTOCK_API_URL:-http://vnstock-api:8000}
+    ports:
+      # Always map to 4000 to match NEXT_PUBLIC_API_URL
+      - "4000:4000"
+    volumes:
+      - ./server/logs:/app/logs
+      - ./server/public:/app/public
+    networks:
+      - univen-network
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      # Dùng node để check health endpoint (node:22-alpine không có wget/curl)
+      # Health endpoint ở /v1/api/health, container internal port is always 4000
+      test: [ "CMD-SHELL", "node -e \"require('http').get('http://localhost:4000/v1/api/health',(r)=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))\"" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  vnstock-api:
+    build:
+      context: ./vnstock-api
+      dockerfile: Dockerfile
+    container_name: univen-vnstock-api
+    restart: unless-stopped
+    environment:
+      MONGODB_URI: ${MONGODB_URI:-mongodb://admin:password123@mongodb:27017/univen2025?authSource=admin}
+      CRONJOB_ENABLED: ${CRONJOB_ENABLED:-true}
+      VNSTOCK_SOURCE: ${VNSTOCK_SOURCE:-TCBS}
+      VNSTOCK_API_KEY: ${VNSTOCK_API_KEY:-}
+      PYTHONUNBUFFERED: 1
+      PYTHONDONTWRITEBYTECODE: 1
+    ports:
+      - "8000:8000"
+    networks:
+      - univen-network
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      server:
+        condition: service_healthy
+
+# =============================================================================
+# Networks
+# =============================================================================
+
+networks:
+  univen-network:
+    driver: bridge
+
+# =============================================================================
+# Volumes
+# =============================================================================
+
+volumes:
+  mongodb_data:
+    driver: local
+  redis_data:
+    driver: local
+  minio_data:
+    driver: local

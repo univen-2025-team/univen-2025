@@ -81,6 +81,7 @@ services:
       REDIS_URL: ${REDIS_URL:-redis://redis:6379}
       HOST: 0.0.0.0
       CLIENT_URL: ${NEXT_PUBLIC_APP_URL:-http://localhost:3000}
+      VNSTOCK_API_URL: ${VNSTOCK_API_URL:-http://vnstock-api:8000}
     ports:
       # Always map to 4000 to match NEXT_PUBLIC_API_URL
       - "4000:4000"
