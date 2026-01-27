@@ -37,7 +37,7 @@ Dán nội dung sau vào (Thay `YOUR_DOMAIN.duckdns.org` bằng tên miền th�
 ```nginx
 server {
     listen 80;
-    server_name YOUR_DOMAIN.duckdns.org; # <--- SỬA TÊN MIỀN CỦA BẠN Ở ĐÂY
+    server_name univen-1111-api.duckdns.org; # <--- SỬA TÊN MIỀN CỦA BẠN Ở ĐÂY
 
     location / {
         proxy_pass http://127.0.0.1:4000; # Chuyển tiếp về Node Server đang chạy local
@@ -67,7 +67,7 @@ sudo systemctl restart nginx
 Dùng Certbot để tự động xin chứng chỉ và cài vào Nginx:
 
 ```bash
-sudo certbot --nginx -d YOUR_DOMAIN.duckdns.org
+sudo certbot --nginx -d univen-1111-api.duckdns.org
 ```
 
 - Nhập email (để nhận thông báo hết hạn).
