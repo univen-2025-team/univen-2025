@@ -1,89 +1,87 @@
-# Hướng Dẫn Deploy Lên AWS EC2 (Backend Services)
+# Hướng Dẫn Deploy Lên AWS EC2 (Backend + Cloud IO)
 
-Tài liệu này hướng dẫn cách deploy phần Backend (Server, Python Service, Database) lên máy chủ AWS EC2 sử dụng `docker-compose.prod.yml`.
+Tài liệu hướng dẫn deploy version sử dụng services chuyên nghiệp:
+- **MongoDB Atlas** (Database)
+- **Redis Cloud** (Cache)
+- **MinIO** (Self-hosted Object Storage)
+- **Server Node.js** & **VNStock API**
 
-> **Lưu ý:** Tệp cấu hình này **KHÔNG** deploy Next.js Client. Bạn cần deploy Client riêng (ví dụ trên Vercel hoặc một container riêng).
+> **Note:** Client (Next.js) deploy riêng.
 
 ## 1. Chuẩn bị VPS (EC2)
 
-- **OS**: Ubuntu 22.04 LTS hoặc mới hơn.
-- **Inbound Rules (Security Group)**:
-    - SSH (22): My IP
-    - Custom TCP (4000): Anywhere (API Server)
-    - Custom TCP (8000): Anywhere (VNStock API)
-    - Custom TCP (9000-9001): Cho MinIO (nếu cần access admin)
+- **OS**: Ubuntu 22.04 LTS.
+- **Inbound Rules**: Port 22 (SSH), 80 (API), 8000 (VNStock), 9000-9001 (MinIO).
 
-## 2. Cài đặt Docker & Git
+## 2. Setup Cơ Bản
+
+SSH vào server và chạy:
 
 ```bash
-# Cập nhật hệ thống
-sudo apt-get update
-sudo apt-get install -y ca-certificates curl gnupg git
-
-# Cài đặt Docker
-sudo install -m 0755 -d /etc/apt/keyrings
-curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
-sudo chmod a+r /etc/apt/keyrings/docker.gpg
-
-echo \
-  "deb [arch="$(dpkg --print-architecture)" signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
-  "$(. /etc/os-release && echo "$VERSION_CODENAME")" stable" | \
-  sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-
-sudo apt-get update
-sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-
-# Phân quyền
+# Cài Docker
+curl -fsSL https://get.docker.com -o get-docker.sh
+sudo sh get-docker.sh
 sudo usermod -aG docker $USER
 newgrp docker
-```
 
-## 3. Setup Project
-
-```bash
-cd ~
+# Clone Code
 git clone https://github.com/tranconcoder/univen-2025.git
 cd univen-2025
 ```
 
-## 4. Cấu hình Env
+## 3. Cấu hình Env (QUAN TRỌNG)
 
-Tạo file `.env` từ mẫu:
+Bạn cần lấy connection string từ MongoDB Atlas và Redis Cloud.
 
+Tạo file `.env`:
 ```bash
-cp .env.docker.example .env
 nano .env
 ```
 
-Điền các thông số thực tế:
+**Nội dung `.env`:** (Hãy điền thông tin thật của bạn)
 
 ```ini
-# Database
-MONGO_INITDB_ROOT_PASSWORD=your_secure_password
-MONGODB_URI=mongodb://admin:your_secure_password@mongodb:27017/univen2025?authSource=admin
-MINIO_ROOT_PASSWORD=your_secure_minio_password
+# --- External Services ---
+# MongoDB Atlas Connection String
+MONGODB_URI=mongodb+srv://<username>:<password>@cluster0.xxxxx.mongodb.net/1111venture?retryWrites=true&w=majority
 
-# Client URL (Để server biết cho phép CORS từ đâu)
-NEXT_PUBLIC_APP_URL=https://your-domain.com
+# Redis Cloud Connection String
+REDIS_URL=redis://:<password>@redis-12345.c1.us-east-1-2.ec2.cloud.redislabs.com:12345
 
-# APIs
+# --- MinIO (Self-hosted) ---
+MINIO_ROOT_USER=admin
+MINIO_ROOT_PASSWORD=secure_minio_password
+
+# --- App URLs ---
+NEXT_PUBLIC_APP_URL=http://your-domain.duckdns.org
+
+# --- API Keys ---
 VNSTOCK_API_URL=http://vnstock-api:8000
+HF_TOKEN=
+GROQ_API_KEY=
 ```
 
-## 5. Chạy Docker Compose
+## 4. Deploy
 
-Chạy lệnh sau để build và start các service backend (sử dụng file `docker-compose.prod.yml`):
+Do dùng services bên ngoài nên server EC2 sẽ nhẹ gánh hơn rất nhiều.
 
 ```bash
+# Deploy bằng file prod (đã map port 80 -> 4000)
 docker compose -f docker-compose.prod.yml up -d --build
 ```
 
-### Các lệnh hữu ích:
+### Các lệnh quản lý:
 
-- Xem logs: `docker compose -f docker-compose.prod.yml logs -f`
-- Restart server: `docker compose -f docker-compose.prod.yml restart server`
-- Stop toàn bộ: `docker compose -f docker-compose.prod.yml down`
+- Xem logs server:
+  ```bash
+  docker compose -f docker-compose.prod.yml logs -f server
+  ```
+- Restart khi đổi env:
+  ```bash
+  docker compose -f docker-compose.prod.yml down
+  docker compose -f docker-compose.prod.yml up -d
+  ```
 
-## 6. Kiểm tra
+## 5. Kiểm tra
 
-Truy cập: `http://YOUR_EC2_IP:4000/v1/api/health` để xem server đã chạy chưa.
+Truy cập: `http://<EC2_IP_or_Domain>/v1/api/health`

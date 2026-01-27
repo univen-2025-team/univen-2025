@@ -4,43 +4,6 @@ services:
   # Infrastructure Services
   # =============================================================================
 
-  mongodb:
-    image: mongo:7
-    container_name: univen-mongodb
-    restart: unless-stopped
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME:-admin}
-      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD:-password123}
-      MONGO_INITDB_DATABASE: ${MONGO_INITDB_DATABASE:-1111venture}
-    ports:
-      - "27017:27017"
-    volumes:
-      - mongodb_data:/data/db
-    networks:
-      - univen-network
-    healthcheck:
-      test: [ "CMD", "mongosh", "--eval", "db.adminCommand('ping')" ]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
-
-  redis:
-    image: redis:alpine
-    container_name: univen-redis
-    restart: unless-stopped
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis_data:/data
-    networks:
-      - univen-network
-    healthcheck:
-      test: [ "CMD", "redis-cli", "ping" ]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
   minio:
     image: minio/minio
     container_name: univen-minio
@@ -76,28 +39,23 @@ services:
       NODE_ENV: ${NODE_ENV:-production}
       PORT: 4000
       SERVER_PORT: 4000
-      MONGODB_URI: ${MONGODB_URI:-mongodb://admin:password123@mongodb:27017/1111venture?authSource=admin}
-      DB_URL: ${MONGODB_URI:-mongodb://admin:password123@mongodb:27017/1111venture?authSource=admin}
-      REDIS_URL: ${REDIS_URL:-redis://redis:6379}
+      # External Services - provided by .env
+      MONGODB_URI: ${MONGODB_URI}
+      DB_URL: ${MONGODB_URI}
+      REDIS_URL: ${REDIS_URL}
       HOST: 0.0.0.0
       CLIENT_URL: ${NEXT_PUBLIC_APP_URL:-http://localhost:3000}
       VNSTOCK_API_URL: ${VNSTOCK_API_URL:-http://vnstock-api:8000}
     ports:
-      # Always map to 4000 to match NEXT_PUBLIC_API_URL
-      - "4000:4000"
+      # Map port 80 to 4000 as requested
+      - "80:4000"
     volumes:
       - ./server/logs:/app/logs
       - ./server/public:/app/public
     networks:
       - univen-network
-    depends_on:
-      mongodb:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
+    # No local mongodb/redis dependency anymore
     healthcheck:
-      # Dùng node để check health endpoint (node:22-alpine không có wget/curl)
-      # Health endpoint ở /v1/api/health, container internal port is always 4000
       test: [ "CMD-SHELL", "node -e \"require('http').get('http://localhost:4000/v1/api/health',(r)=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))\"" ]
       interval: 30s
       timeout: 10s
@@ -111,7 +69,7 @@ services:
     container_name: univen-vnstock-api
     restart: unless-stopped
     environment:
-      MONGODB_URI: ${MONGODB_URI:-mongodb://admin:password123@mongodb:27017/1111venture?authSource=admin}
+      MONGODB_URI: ${MONGODB_URI}
       CRONJOB_ENABLED: ${CRONJOB_ENABLED:-true}
       VNSTOCK_SOURCE: ${VNSTOCK_SOURCE:-TCBS}
       VNSTOCK_API_KEY: ${VNSTOCK_API_KEY:-}
@@ -122,8 +80,6 @@ services:
     networks:
       - univen-network
     depends_on:
-      mongodb:
-        condition: service_healthy
       server:
         condition: service_healthy
 
@@ -140,9 +96,5 @@ networks:
 # =============================================================================
 
 volumes:
-  mongodb_data:
-    driver: local
-  redis_data:
-    driver: local
   minio_data:
     driver: local
