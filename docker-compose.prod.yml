@@ -47,8 +47,8 @@ services:
       CLIENT_URL: ${NEXT_PUBLIC_APP_URL:-http://localhost:3000}
       VNSTOCK_API_URL: ${VNSTOCK_API_URL:-http://vnstock-api:8000}
     ports:
-      # Map port 80 to 4000 as requested
-      - "80:4000"
+      # Bind to localhost only, let Nginx handle external traffic
+      - "4000:4000"
     volumes:
       - ./server/logs:/app/logs
       - ./server/public:/app/public
