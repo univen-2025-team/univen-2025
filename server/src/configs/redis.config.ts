@@ -7,10 +7,10 @@ export const PESSIMISTIC_RETRY_TIMES = ms('50 ms');
 
 export const REDIS_CONFIG = {
     username: process.env.REDIS_USERNAME || 'default',
-    password: process.env.REDIS_PASSWORD || '',
+    password: process.env.REDIS_PASSWORD || 'wLiw6HGNWUzwjwNXMp3kyEH8QZ7SZfgG',
     socket: {
-        host: process.env.REDIS_HOST || 'localhost',
-        port: Number(process.env.REDIS_PORT) || 6379
+        host: process.env.REDIS_HOST || 'redis-16415.c334.asia-southeast2-1.gce.cloud.redislabs.com',
+        port: Number(process.env.REDIS_PORT) || 16415
     }
 };
 
