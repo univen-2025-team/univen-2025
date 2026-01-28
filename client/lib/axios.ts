@@ -3,7 +3,7 @@ import axios from 'axios';
 // Base URL cho API
 // Default to HTTP for local development (server runs on HTTP, not HTTPS)
 // Set NEXT_PUBLIC_API_URL in .env.local to override
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/v1/api';
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://univen-1111-api.duckdns.org/v1/api';
 
 // Tạo axios instance
 const axiosInstance = axios.create({

@@ -44,7 +44,7 @@ services:
       DB_URL: ${MONGODB_URI}
       REDIS_URL: ${REDIS_URL}
       HOST: 0.0.0.0
-      CLIENT_URL: ${NEXT_PUBLIC_APP_URL:-http://localhost:3000}
+      CLIENT_URL: ${NEXT_PUBLIC_APP_URL:-https://www.univen-1111.duckdns.org}
       VNSTOCK_API_URL: ${VNSTOCK_API_URL:-http://vnstock-api:8000}
     ports:
       # Bind to localhost only, let Nginx handle external traffic

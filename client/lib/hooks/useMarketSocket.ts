@@ -38,7 +38,7 @@ interface StockDetailUpdate {
   timestamp: string;
 }
 
-export function useMarketSocket(serverUrl: string = 'http://localhost:4000') {
+export function useMarketSocket(serverUrl: string = 'https://univen-1111-api.duckdns.org') {
   const socketRef = useRef<Socket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [marketData, setMarketData] = useState<MarketUpdate | null>(null);
@@ -119,7 +119,7 @@ export function useMarketSocket(serverUrl: string = 'http://localhost:4000') {
 export function useStockSocket(
   symbol: string,
   interval: number = 15000,
-  serverUrl: string = 'http://localhost:4000'
+  serverUrl: string = 'https://univen-1111-api.duckdns.org'
 ) {
   const socketRef = useRef<Socket | null>(null);
   const [isConnected, setIsConnected] = useState(false);

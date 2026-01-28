@@ -11,9 +11,9 @@ import Image from 'next/image';
 import { io } from 'socket.io-client';
 import LoadingSpinner from '@/components/dashboard/LoadingSpinner';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://univen-1111-api.duckdns.org';
 // Fix: Ensure SOCKET_URL is just the origin, stripping any API path suffix like /v1/api or /api
-const SOCKET_URL = API_URL.replace(/\/v1\/api|\/api\/v1|\/api$/, '') || 'http://localhost:4000'; // Connect to root for socket namespaces
+const SOCKET_URL = API_URL.replace(/\/v1\/api|\/api\/v1|\/api$/, '') || 'https://univen-1111-api.duckdns.org'; // Connect to root for socket namespaces
 import ErrorMessage from '@/components/common/ErrorMessage';
 import CandlestickChart from '@/components/market/charts/CandlestickChart';
 import NewsFeed from '@/components/market/NewsFeed';
@@ -121,7 +121,7 @@ const StockDetailPage = () => {
   }, [fetchChartData]);
 
   // API URL Env
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://univen-1111-api.duckdns.org';
 
   // Socket Connection
   useEffect(() => {

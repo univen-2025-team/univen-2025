@@ -5,7 +5,7 @@ export const appConfig = {
   description: "Nền tảng giao dịch chứng khoán hiện đại và thông minh",
   tagline: "Đầu tư thông minh, Sinh lời bền vững",
   version: "1.0.0",
-  
+
   // Company info
   company: {
     name: "SampleUniven2025",
@@ -100,7 +100,7 @@ export const appConfig = {
 
   // API
   api: {
-    baseURL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/v1/api",
+    baseURL: process.env.NEXT_PUBLIC_API_URL || "https://univen-1111-api.duckdns.org/v1/api",
     timeout: 30000,
     version: "v1",
   },

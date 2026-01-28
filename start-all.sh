@@ -190,7 +190,7 @@ cd client
 if [ ! -f ".env.local" ]; then
     echo -e "${YELLOW}Creating .env.local...${NC}"
     echo "PYTHON_SERVER_URL=http://localhost:5000" > .env.local
-    echo "NEXT_PUBLIC_API_URL=http://localhost:3000" >> .env.local
+    echo "NEXT_PUBLIC_API_URL=https://univen-1111-api.duckdns.org/v1/api" >> .env.local
 fi
 
 if port_in_use 3000; then

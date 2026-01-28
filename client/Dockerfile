@@ -22,8 +22,8 @@ FROM node:22-alpine AS builder
 WORKDIR /app
 
 # Build arguments for Next.js public env vars (must be available at build time)
-ARG NEXT_PUBLIC_API_URL=http://localhost:4000
-ARG NEXT_PUBLIC_APP_URL=http://localhost:3000
+ARG NEXT_PUBLIC_API_URL=https://univen-1111-api.duckdns.org/v1/api
+ARG NEXT_PUBLIC_APP_URL=https://www.univen-1111.duckdns.org
 ARG NEXT_PUBLIC_AGENT_API=
 ARG NEXT_PUBLIC_AGENT_HF=
 
