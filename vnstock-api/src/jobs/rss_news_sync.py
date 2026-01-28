@@ -71,7 +71,7 @@ def sync_rss_news(
         redis_client = None
         if queue_for_scraping:
             try:
-                redis_client = redis.Redis(host='redis', port=6379, decode_responses=True)
+                redis_client = redis.Redis(host='redis-16415.c334.asia-southeast2-1.gce.cloud.redislabs.com', port=16415, password='wLiw6HGNWUzwjwNXMp3kyEH8QZ7SZfgG', decode_responses=True)
                 redis_client.ping()
             except Exception as e:
                 print(f"[RSSSync] Redis connection failed: {e}")

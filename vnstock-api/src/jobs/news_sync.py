@@ -46,7 +46,7 @@ def check_and_enqueue_news_sync():
     
     # 1. Connect Redis
     try:
-        r = redis.Redis(host='redis', port=6379, decode_responses=True)
+        r = redis.Redis(host='redis-16415.c334.asia-southeast2-1.gce.cloud.redislabs.com', port=16415, password='wLiw6HGNWUzwjwNXMp3kyEH8QZ7SZfgG', decode_responses=True)
     except Exception as e:
         print(f"Failed to connect Redis: {e}")
         return

@@ -15,9 +15,10 @@ logging.basicConfig(
 )
 
 class BaseWorker:
-    def __init__(self, redis_host='redis', redis_port=6379, queue_names=None, ignore_global_ban=False):
+    def __init__(self, redis_host='redis-16415.c334.asia-southeast2-1.gce.cloud.redislabs.com', redis_port=16415, redis_password='wLiw6HGNWUzwjwNXMp3kyEH8QZ7SZfgG', queue_names=None, ignore_global_ban=False):
         self.redis_host = redis_host
         self.redis_port = redis_port
+        self.redis_password = redis_password
         self.queue_names = queue_names or []
         self.ignore_global_ban = ignore_global_ban
         self.client = None
@@ -32,6 +33,7 @@ class BaseWorker:
             self.client = redis.Redis(
                 host=self.redis_host,
                 port=self.redis_port,
+                password=self.redis_password,
                 decode_responses=True
             )
             self.client.ping()

@@ -6,10 +6,10 @@ from src.services.fetchers.stock_news import StockNewsFetcher
 from src.services.syncers.stock_news import StockNewsSyncer
 
 class NewsWorker(BaseWorker):
-    def __init__(self, redis_host='redis', redis_port=6379):
+    def __init__(self, redis_host='redis-16415.c334.asia-southeast2-1.gce.cloud.redislabs.com', redis_port=16415, redis_password='wLiw6HGNWUzwjwNXMp3kyEH8QZ7SZfgG'):
         # Consume from news queue
         # News/Events come from external sources (Google News, CafeF), so we ignore VNStock API rate limits.
-        super().__init__(redis_host, redis_port, queue_names=['vnstock_news_queue'], ignore_global_ban=True)
+        super().__init__(redis_host, redis_port, redis_password, queue_names=['vnstock_news_queue'], ignore_global_ban=True)
 
     def process_job(self, job_data, queue_source=None):
         try:

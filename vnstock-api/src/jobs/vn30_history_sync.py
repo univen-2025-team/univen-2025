@@ -39,7 +39,7 @@ def startup_vn30_sync():
     
     # helper for redis
     try:
-        r = redis.Redis(host='redis', port=6379, decode_responses=True)
+        r = redis.Redis(host='redis-16415.c334.asia-southeast2-1.gce.cloud.redislabs.com', port=16415, password='wLiw6HGNWUzwjwNXMp3kyEH8QZ7SZfgG', decode_responses=True)
     except Exception as e:
         print(f"Redis connect error: {e}")
         return
@@ -114,7 +114,7 @@ def sync_all_stocks_daily(date: str = None):
     syncer = StockHistorySyncer()
     
     try:
-        r = redis.Redis(host='redis', port=6379, decode_responses=True)
+        r = redis.Redis(host='redis-16415.c334.asia-southeast2-1.gce.cloud.redislabs.com', port=16415, password='wLiw6HGNWUzwjwNXMp3kyEH8QZ7SZfgG', decode_responses=True)
     except Exception as e:
         print(f"Redis connect error: {e}")
         return
