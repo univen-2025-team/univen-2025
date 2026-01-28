@@ -1,7 +1,7 @@
 from pymongo import MongoClient
 from datetime import datetime
 
-uri = "mongodb://admin:password123@localhost:27017/univen2025_dev?authSource=admin"
+uri = "mongodb+srv://univenadmin:7anDtT3SJNX2zgDj@cluster0.qhpwdw3.mongodb.net/univen2025?appName=Cluster0"
 
 try:
     client = MongoClient(uri, serverSelectionTimeoutMS=2000)

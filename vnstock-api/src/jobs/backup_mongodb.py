@@ -18,7 +18,7 @@ def perform_backup():
     minio_secret_key = os.getenv("MINIO_ROOT_PASSWORD", "password123")
     minio_bucket = os.getenv("MINIO_BUCKET_NAME", "mongodb-backups")
     
-    mongodb_uri = os.getenv("MONGODB_URI", "mongodb+srv://univenadmin:7anDtT3SJNX2zgDj@cluster0.qhpwdw3.mongodb.net/1111venture?appName=Cluster0")
+    mongodb_uri = os.getenv("MONGODB_URI", "mongodb+srv://univenadmin:7anDtT3SJNX2zgDj@cluster0.qhpwdw3.mongodb.net/univen2025?appName=Cluster0")
     
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     backup_filename = f"backup_{timestamp}.gz"

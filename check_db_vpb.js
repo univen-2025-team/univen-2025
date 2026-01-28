@@ -2,7 +2,7 @@
 const { MongoClient } = require('mongodb');
 
 // URI from server/.env.development or production config
-const uri = "mongodb+srv://univenadmin:7anDtT3SJNX2zgDj@cluster0.qhpwdw3.mongodb.net/1111venture?appName=Cluster0";
+const uri = "mongodb+srv://univenadmin:7anDtT3SJNX2zgDj@cluster0.qhpwdw3.mongodb.net/univen2025?appName=Cluster0";
 const client = new MongoClient(uri);
 
 async function run() {

@@ -2,7 +2,7 @@
 import mongoose from 'mongoose';
 import { format, subDays } from 'date-fns';
 
-const DB_URL = 'mongodb://admin:password123@localhost:27017/univen2025_dev?authSource=admin';
+const DB_URL = 'mongodb+srv://univenadmin:7anDtT3SJNX2zgDj@cluster0.qhpwdw3.mongodb.net/univen2025?appName=Cluster0';
 
 const stockHistorySchema = new mongoose.Schema({
     symbol: { type: String, required: true },

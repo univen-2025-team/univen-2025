@@ -3,12 +3,12 @@ import os
 import sys
 
 # Try localhost first, assuming port forwarding or host networking
-uri = "mongodb://admin:password123@localhost:27017/univen2025_dev?authSource=admin"
+uri = "mongodb+srv://univenadmin:7anDtT3SJNX2zgDj@cluster0.qhpwdw3.mongodb.net/univen2025?appName=Cluster0"
 
 try:
     print(f"Connecting to {uri}...")
     client = MongoClient(uri, serverSelectionTimeoutMS=2000)
-    db = client.get_database("univen2025_dev")
+    db = client.get_database("univen2025")
     
     # Check if we can ping
     client.admin.command('ping')
@@ -39,7 +39,7 @@ except Exception as e:
     # Try mongodb-dev hostname just in case we are inside the container network
     try:
         print("\nRetrying with hostname 'mongodb-dev'...")
-        uri = "mongodb://admin:password123@mongodb-dev:27017/univen2025_dev?authSource=admin"
+        uri = "mongodb+srv://univenadmin:7anDtT3SJNX2zgDj@cluster0.qhpwdw3.mongodb.net/univen2025?appName=Cluster0"
         client = MongoClient(uri, serverSelectionTimeoutMS=2000)
         client.admin.command('ping')
         print("Connected successfully to mongodb-dev!")
