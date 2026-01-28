@@ -9,8 +9,8 @@ async function run() {
   try {
     await client.connect();
     console.log("Connected to MongoDB...");
-    const database = client.db('1111venture');
-    const symbol = 'VPB';
+    const database = client.db('univen2025');
+    const symbol = 'SSB';
 
     console.log(`--- Checking Data for ${symbol} ---`);
 
