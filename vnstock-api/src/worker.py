@@ -1,6 +1,6 @@
 import logging
 import threading
-from src.workers import HistoryWorker, ProfileWorker
+from src.workers import HistoryWorker, ProfileWorker, NewsWorker
 
 # Configure logging
 logging.basicConfig(
@@ -18,6 +18,7 @@ class StockSyncWorker:
     def __init__(self, redis_host='redis-16415.c334.asia-southeast2-1.gce.cloud.redislabs.com', redis_port=16415, redis_password='wLiw6HGNWUzwjwNXMp3kyEH8QZ7SZfgG', queue_names=None):
         self.history_worker = HistoryWorker(redis_host, redis_port, redis_password)
         self.profile_worker = ProfileWorker(redis_host, redis_port, redis_password)
+        self.news_worker = NewsWorker(redis_host, redis_port, redis_password)
         self.running = False
 
     def start(self):
@@ -25,6 +26,7 @@ class StockSyncWorker:
         self.running = True
         self.history_worker.start()
         self.profile_worker.start()
+        self.news_worker.start()
         logging.info("[StockSyncWorker] All sub-workers started.")
 
     def stop(self):
@@ -32,4 +34,5 @@ class StockSyncWorker:
         self.running = False
         self.history_worker.stop()
         self.profile_worker.stop()
+        self.news_worker.stop()
         logging.info("[StockSyncWorker] All sub-workers stopped.")

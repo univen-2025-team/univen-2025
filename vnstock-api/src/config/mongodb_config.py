@@ -11,4 +11,4 @@ class MongoDBConfig:
     System environment variables (from Docker) take precedence over .env file.
     """
     URI = os.getenv("MONGODB_URI", "mongodb://localhost:27017")
-    DB_NAME = os.getenv("MONGO_INITDB_DATABASE", "univen2025")
+    DB_NAME = os.getenv("MONGO_INITDB_DATABASE", "1111venture")
