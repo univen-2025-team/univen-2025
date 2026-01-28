@@ -15,9 +15,9 @@ class StockSyncWorker:
     Facade worker that manages specific sub-workers.
     This maintains backward compatibility with main.py
     """
-    def __init__(self, redis_host='redis', redis_port=6379, queue_names=None):
-        self.history_worker = HistoryWorker(redis_host, redis_port)
-        self.profile_worker = ProfileWorker(redis_host, redis_port)
+    def __init__(self, redis_host='redis-16415.c334.asia-southeast2-1.gce.cloud.redislabs.com', redis_port=16415, redis_password='wLiw6HGNWUzwjwNXMp3kyEH8QZ7SZfgG', queue_names=None):
+        self.history_worker = HistoryWorker(redis_host, redis_port, redis_password)
+        self.profile_worker = ProfileWorker(redis_host, redis_port, redis_password)
         self.running = False
 
     def start(self):
