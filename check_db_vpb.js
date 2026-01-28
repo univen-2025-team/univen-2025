@@ -2,14 +2,14 @@
 const { MongoClient } = require('mongodb');
 
 // URI from server/.env.development or production config
-const uri = "mongodb+srv://univenadmin:7anDtT3SJNX2zgDj@cluster0.qhpwdw3.mongodb.net/univen2025?appName=Cluster0";
+const uri = "mongodb+srv://univenadmin:7anDtT3SJNX2zgDj@cluster0.qhpwdw3.mongodb.net/test?appName=Cluster0";
 const client = new MongoClient(uri);
 
 async function run() {
   try {
     await client.connect();
     console.log("Connected to MongoDB...");
-    const database = client.db('univen2025');
+    const database = client.db('test');
     const symbol = 'SSB';
 
     console.log(`--- Checking Data for ${symbol} ---`);

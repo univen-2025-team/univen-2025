@@ -2,12 +2,12 @@ from pymongo import MongoClient
 from bson import ObjectId
 import datetime
 
-uri = "mongodb+srv://univenadmin:7anDtT3SJNX2zgDj@cluster0.qhpwdw3.mongodb.net/univen2025?appName=Cluster0"
+uri = "mongodb+srv://univenadmin:7anDtT3SJNX2zgDj@cluster0.qhpwdw3.mongodb.net/test?appName=Cluster0"
 
 try:
     print(f"Connecting to {uri}...")
     client = MongoClient(uri, serverSelectionTimeoutMS=2000)
-    db = client.get_database("univen2025_dev")
+    db = client.get_database("test")
     
     # 1. Ensure Role
     roles_col = db.roles
