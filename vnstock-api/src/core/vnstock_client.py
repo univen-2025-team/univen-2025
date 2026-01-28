@@ -10,6 +10,7 @@ import warnings
 import logging
 from vnstock import Vnstock
 import itertools
+from src.config.app_config import AppConfig
 
 # Suppress pandas FutureWarnings (e.g. applymap deprecated)
 warnings.simplefilter(action='ignore', category=FutureWarning)
@@ -29,6 +30,11 @@ class VnstockClient:
     RATE_LIMIT_WAIT = 65  # Long wait when 429 occurs
     
     def __init__(self):
+        # FORCE API KEY FROM CONFIG to ensure library picks it up
+        if AppConfig.VNSTOCK_API_KEY:
+            os.environ['VNSTOCK_API_KEY'] = AppConfig.VNSTOCK_API_KEY
+            logging.info(f"[VnstockClient] Forced VNSTOCK_API_KEY from AppConfig: {AppConfig.VNSTOCK_API_KEY[:5]}...")
+
         # Load API keys from env or use default
         api_keys_str = os.getenv('VNSTOCK_API_KEYS', os.getenv('VNSTOCK_API_KEY', ''))
         
