@@ -329,30 +329,38 @@ class RBACService {
                 },
                 options: { upsert: true, new: true }
             });
-        }
-
-    async getAccessControlList() {
-            const roles = await findRoles({
-                query: {},
-                options: { populate: 'role_granted.resource', lean: true }
-            });
-
-            const result = roles.flatMap((role) =>
-                role.role_granted.flatMap((granted) => {
-                    const resource = granted.resource as any as model.rbac.ResourceSchema;
-
-                    return granted.actions.map((action) => ({
-                        role: role.role_name,
-                        resource: resource.resource_name,
-                        action,
-                        attributes: granted.attributes
-                    }));
-                })
-            );
-
-            return result;
+            console.log("✅ All roles initialized successfully.");
+            console.log("-----------------------------------------");
+            console.log("🎉 RBAC INITIALIZATION COMPLETE");
+            console.log("-----------------------------------------");
+        } catch (error) {
+            console.error("❌ RBAC INITIALIZATION FAILED:", error);
+            throw error;
         }
     }
+
+    async getAccessControlList() {
+        const roles = await findRoles({
+            query: {},
+            options: { populate: 'role_granted.resource', lean: true }
+        });
+
+        const result = roles.flatMap((role) =>
+            role.role_granted.flatMap((granted) => {
+                const resource = granted.resource as any as model.rbac.ResourceSchema;
+
+                return granted.actions.map((action) => ({
+                    role: role.role_name,
+                    resource: resource.resource_name,
+                    action,
+                    attributes: granted.attributes
+                }));
+            })
+        );
+
+        return result;
+    }
+}
 
 class RoleService {
     async getUserRoleData({ userId, roleId }: service.rbac.arguments.GetUserRoleData) {
