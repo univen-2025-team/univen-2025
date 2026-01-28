@@ -141,7 +141,7 @@ services:
     container_name: univen-vnstock-api
     restart: unless-stopped
     environment:
-      MONGODB_URI: ${MONGODB_URI:-mongodb+srv://univenadmin:7anDtT3SJNX2zgDj@cluster0.qhpwdw3.mongodb.net/1111venture?appName=Cluster0}
+      MONGODB_URI: ${MONGODB_URI:-mongodb+srv://univenadmin:7anDtT3SJNX2zgDj@cluster0.qhpwdw3.mongodb.net/univen2025?appName=Cluster0}
       CRONJOB_ENABLED: ${CRONJOB_ENABLED:-true}
       VNSTOCK_SOURCE: ${VNSTOCK_SOURCE:-TCBS}
       VNSTOCK_API_KEY: ${VNSTOCK_API_KEY:-}
