@@ -12,7 +12,7 @@ class MongoDB:
             # Send a ping to confirm a successful connection
             self.client.admin.command('ping')
             self.db = self.client[MongoDBConfig.DB_NAME]
-            print("Pinged your deployment. You successfully connected to MongoDB!")
+            print(f"Pinged your deployment. You successfully connected to MongoDB! Database: {self.db.name}")
         except Exception as e:
             print(f"Error connecting to MongoDB: {e}")
             raise e

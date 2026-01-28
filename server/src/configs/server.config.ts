@@ -16,7 +16,7 @@ export const CLIENT_URL = process.env.CLIENT_URL || 'https://www.univen-1111.duc
 export const NODE_ENV = (process.env.NODE_ENV || 'development') as 'development' | 'production';
 
 // Database
-export const DB_URL = process.env.DB_URL || 'mongodb+srv://univenadmin:7anDtT3SJNX2zgDj@cluster0.qhpwdw3.mongodb.net/1111venture?appName=Cluster0';
+export const DB_URL = process.env.DB_URL || 'mongodb+srv://univenadmin:7anDtT3SJNX2zgDj@cluster0.qhpwdw3.mongodb.net/univen2025?appName=Cluster0';
 export const DB_MIN_POOL_SIZE = 100;
 export const DB_MAX_POOL_SIZE = 500;
 
