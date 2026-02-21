@@ -5,7 +5,7 @@ export enum EnvKeyEnum {
     SERVER_PORT = 'SERVER_PORT',
     HOST = 'HOST',
     CLIENT_URL = 'CLIENT_URL',
-    DB_URL = 'DB_URL',
+    MONGODB_URL = 'MONGODB_URL',
     DOTENV_OVERRIDE = 'DOTENV_OVERRIDE',
 
     // Redis

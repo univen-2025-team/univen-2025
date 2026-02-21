@@ -19,9 +19,9 @@ export const CLIENT_URL = getEnv({ key: EnvKeyEnum.CLIENT_URL, default: 'https:/
 export const NODE_ENV = getEnv({ key: EnvKeyEnum.NODE_ENV, default: 'development' }) as 'development' | 'production';
 
 // Database
-export const DB_URL = getEnv({ key: EnvKeyEnum.DB_URL, default: 'mongodb+srv://univenadmin:7anDtT3SJNX2zgDj@cluster0.qhpwdw3.mongodb.net/test?appName=Cluster0' });
-export const DB_MIN_POOL_SIZE = 100;
-export const DB_MAX_POOL_SIZE = 500;
+export const MONGODB_URL = getEnv({ key: EnvKeyEnum.MONGODB_URL });
+export const MONGODB_MIN_POOL_SIZE = 100;
+export const MONGODB_MAX_POOL_SIZE = 500;
 
 // Paginate
 export const ITEM_PER_PAGE = 48; // Chia hết cho tá để dễ phân layout
