@@ -13,6 +13,8 @@ stages:
 deploy_job:
   stage: deploy
   image: alpine:latest
+  tags:
+    - docker
   rules:
     - if: '$CI_COMMIT_BRANCH == "master"'
   before_script:
