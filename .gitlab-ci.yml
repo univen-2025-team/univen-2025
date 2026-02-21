@@ -16,11 +16,14 @@ deploy_job:
     - shell 
   rules:
     - if: '$CI_COMMIT_BRANCH == "master"'
+  variables:
+    GIT_SUBMODULE_STRATEGY: none
   before_script:
 
   script:
     - echo "Updating specific submodules (server, vnstock-api)..."
-    - git submodule update --init --recursive server vnstock-api
+    - git submodule init server vnstock-api
+    - git submodule update server vnstock-api
     
     # 1. Tạo file .env cho dự án gốc (docker-compose) từ các biến bắt đầu bằng APP_
     - echo "Generating root environment variables..."
