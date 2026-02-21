@@ -1,0 +1,3 @@
+[submodule "server"]
+	path = server
+	url = git@gitlab.trancondev.site:tvconss/univen-2025_server.git
