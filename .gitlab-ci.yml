@@ -8,3 +8,39 @@ variables:
 
 stages:
   - sync-to-github
+  - deploy
+
+deploy_job:
+  stage: deploy
+  image: alpine:latest
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "master"'
+  before_script:
+    # Docker socket (/var/run/docker.sock) phải được mount từ Runner để dùng được lệnh docker ở đây
+    - apk add --no-cache git docker-cli docker-cli-compose
+  script:
+    - echo "Updating specific submodules (server, vnstock-api)..."
+    - git submodule update --init --recursive server vnstock-api
+    
+    # 1. Tạo file .env cho dự án gốc (docker-compose) từ các biến bắt đầu bằng APP_
+    - echo "Generating root environment variables..."
+    - printenv | grep '^APP_' | sed 's/^APP_//' > ./.env
+    
+    # 2. Tạo file .env cho server từ các biến bắt đầu bằng SERVER_
+    - echo "Generating server environment variables..."
+    - printenv | grep '^SERVER_' | sed 's/^SERVER_//' > ./server/.env.production
+    
+    # 3. Tạo file .env cho vnstock-api từ các biến bắt đầu bằng VNSTOCK_API_
+    - echo "Generating vnstock-api environment variables..."
+    - printenv | grep '^VNSTOCK_API_' | sed 's/^VNSTOCK_API_//' > ./vnstock-api/.env
+    
+    # 4. Chạy docker-compose để build và deploy
+    - echo "Starting deployment via Docker Compose..."
+    - docker-compose -f docker-compose.prod.yml up -d --build mongodb redis server vnstock-api
+    
+    # 5. Xóa các file .env chứa thông tin nhạy cảm
+    - echo "Cleaning up sensitive environment files..."
+    - rm -f ./.env
+    - rm -f ./server/.env.production
+    - rm -f ./vnstock-api/.env
+    - echo "Deployment completed securely!"
