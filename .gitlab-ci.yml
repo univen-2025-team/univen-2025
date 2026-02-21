@@ -17,8 +17,7 @@ deploy_job:
   rules:
     - if: '$CI_COMMIT_BRANCH == "master"'
   before_script:
-    # Cấu hình Git tự động chuyển đổi SSH sang HTTPS dùng Token của GitLab CI
-    - git config --global url."https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.trancondev.site/".insteadOf "git@gitlab.trancondev.site:"
+
   script:
     - echo "Updating specific submodules (server, vnstock-api)..."
     - git submodule update --init --recursive server vnstock-api
