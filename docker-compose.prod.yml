@@ -1,32 +1,65 @@
+# Production Docker Compose - VPS Standalone
+# Usage: docker compose -f docker-compose.prod.yml --env-file .env up -d
+
 services:
-  # (Compose v2 ignores `version:`; keep file simple and rely on default .env loading)
   # =============================================================================
   # Infrastructure Services
   # =============================================================================
 
-  minio:
-    image: minio/minio
-    container_name: univen-minio
+  puppeteer:
+    image: browserless/chrome:latest
+    container_name: univen-puppeteer
     restart: unless-stopped
-    command: server /data --console-address ":9001"
     environment:
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-admin}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-password123}
-    ports:
-      - "9000:9000"
-      - "9001:9001"
-    volumes:
-      - minio_data:/data
+      - CONNECTION_TIMEOUT=60000
     networks:
       - univen-network
     healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:9000/minio/health/live" ]
+      test: [ "CMD", "curl", "-f", "http://localhost:3000/" ]
       interval: 30s
-      timeout: 20s
+      timeout: 10s
       retries: 3
 
+  mongodb:
+    image: mongo:7
+    container_name: univen-mongodb
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGODB_ROOT_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGODB_ROOT_PASSWORD}
+      MONGO_INITDB_DATABASE: ${MONGODB_DATABASE}
+    ports:
+      - "127.0.0.1:27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - univen-network
+    healthcheck:
+      test: [ "CMD", "mongosh", "--eval", "db.adminCommand('ping')" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  redis:
+    image: redis:alpine
+    container_name: univen-redis
+    restart: unless-stopped
+    command: redis-server --requirepass ${REDIS_PASSWORD}
+    ports:
+      - "127.0.0.1:6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - univen-network
+    healthcheck:
+      test: [ "CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   # =============================================================================
-  # Application Services
+  # Application Services (Production)
   # =============================================================================
 
   server:
@@ -35,26 +68,31 @@ services:
       dockerfile: Dockerfile
     container_name: univen-server
     restart: unless-stopped
+    env_file:
+      - ./server/.env.production
     environment:
-      NODE_ENV: ${NODE_ENV:-production}
-      PORT: 4000
-      SERVER_PORT: 4000
-      # External Services - provided by .env
-      MONGODB_URI: ${MONGODB_URI}
-      DB_URL: ${MONGODB_URI}
-      REDIS_URL: ${REDIS_URL}
+      NODE_ENV: production
       HOST: 0.0.0.0
-      CLIENT_URL: ${NEXT_PUBLIC_APP_URL:-https://www.univen-1111.duckdns.org}
-      VNSTOCK_API_URL: ${VNSTOCK_API_URL:-http://vnstock-api:8000}
+      TZ: Asia/Ho_Chi_Minh
+      MONGODB_URI: mongodb://${MONGODB_ROOT_USERNAME}:${MONGODB_ROOT_PASSWORD}@mongodb:27017/${MONGODB_DATABASE}?authSource=admin
+      REDIS_HOST: redis
+      REDIS_PORT: ${REDIS_PORT:-6379}
+      REDIS_USERNAME: ${REDIS_USERNAME}
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      REDIS_DB: ${REDIS_DB:-0}
+      VNSTOCK_API_URL: http://vnstock-api:8000
     ports:
-      # Bind to localhost only, let Nginx handle external traffic
       - "4000:4000"
     volumes:
       - ./server/logs:/app/logs
       - ./server/public:/app/public
     networks:
       - univen-network
-    # No local mongodb/redis dependency anymore
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     healthcheck:
       test: [ "CMD-SHELL", "node -e \"require('http').get('http://localhost:4000/v1/api/health',(r)=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))\"" ]
       interval: 30s
@@ -69,20 +107,31 @@ services:
     container_name: univen-vnstock-api
     restart: unless-stopped
     environment:
-      MONGODB_URI: "mongodb+srv://univenadmin:7anDtT3SJNX2zgDj@cluster0.qhpwdw3.mongodb.net/test?appName=Cluster0"
-      MONGO_INITDB_DATABASE: test
+      MONGODB_URI: mongodb://${MONGODB_ROOT_USERNAME}:${MONGODB_ROOT_PASSWORD}@mongodb:27017/${MONGODB_DATABASE}?authSource=admin
+      MONGODB_DATABASE: ${MONGODB_DATABASE}
+      REDIS_HOST: redis
+      REDIS_PORT: ${REDIS_PORT:-6379}
+      REDIS_USERNAME: ${REDIS_USERNAME}
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      REDIS_DB: ${REDIS_DB:-0}
       CRONJOB_ENABLED: ${CRONJOB_ENABLED:-true}
       VNSTOCK_SOURCE: ${VNSTOCK_SOURCE:-TCBS}
-      VNSTOCK_API_KEY: ${VNSTOCK_API_KEY:-vnstock_771591ab3da3171ba9559567d05e247f}
+      VNSTOCK_API_KEY: ${VNSTOCK_API_KEY}
       PYTHONUNBUFFERED: 1
       PYTHONDONTWRITEBYTECODE: 1
+      TZ: Asia/Ho_Chi_Minh
     ports:
       - "8000:8000"
     networks:
       - univen-network
     depends_on:
+      mongodb:
+        condition: service_healthy
       server:
         condition: service_healthy
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
 
 # =============================================================================
 # Networks
@@ -97,5 +146,7 @@ networks:
 # =============================================================================
 
 volumes:
-  minio_data:
+  mongodb_data:
+    driver: local
+  redis_data:
     driver: local

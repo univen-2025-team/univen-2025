@@ -5,6 +5,8 @@
 
 import LoggerService from './logger.service';
 import GroqService from './groq.service';
+import { getEnv } from '../utils/env.util';
+import { EnvKeyEnum } from '../enums/env.enum';
 
 class NewsSummaryService {
     private static instance: NewsSummaryService;
@@ -212,10 +214,7 @@ Yêu cầu:
 4. Đoạn thường: paragraph bình thường. Đoạn có số liệu nổi bật: dùng \`> ...\`.
 5. Tóm tắt 4–7 câu, súc tích. Chỉ trả nội dung markdown, không giải thích thêm.`;
 
-            const apiKey = process.env.GROQ_API_KEY;
-            if (!apiKey) {
-                throw new Error('GROQ_API_KEY environment variable is not set');
-            }
+            const apiKey = getEnv({ key: EnvKeyEnum.GROQ_API_KEY, isRequired: true });
 
             const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
                 method: 'POST',

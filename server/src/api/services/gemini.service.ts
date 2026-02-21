@@ -13,6 +13,9 @@ import type {
 } from '@/types/learn-product.types';
 import { classifyAgeGroup, getAgeGroupLabel } from '@/types/learn-product.types';
 
+import { getEnv } from '../utils/env.util';
+import { EnvKeyEnum } from '../enums/env.enum';
+
 const CONFIG = {
     MODEL: 'gemini-2.0-flash',
     MAX_TOKENS: 2048
@@ -42,10 +45,7 @@ export default class GeminiService {
         }
         
         if (!this.model) {
-            const apiKey = process.env.GEMINI_API_KEY;
-            if (!apiKey) {
-                throw new Error('GEMINI_API_KEY environment variable is not set');
-            }
+            const apiKey = getEnv({ key: EnvKeyEnum.GEMINI_API_KEY, isRequired: true });
             this.client = new GoogleGenerativeAI(apiKey);
             this.model = this.client.getGenerativeModel({ model: CONFIG.MODEL });
         }
@@ -56,7 +56,7 @@ export default class GeminiService {
      * Check if Gemini service is configured
      */
     static isAvailable(): boolean {
-        return !!process.env.GEMINI_API_KEY;
+        return !!getEnv({ key: EnvKeyEnum.GEMINI_API_KEY });
     }
 
     /**

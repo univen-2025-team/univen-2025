@@ -28,6 +28,8 @@ interface MarketData {
     timestamp: string;
 }
 
+import { VNSTOCK_API_URL } from '@/configs/vnstock.config';
+
 export default class VNStockService {
     private static instance: VNStockService;
     private vnstock: any = null;
@@ -36,7 +38,7 @@ export default class VNStockService {
     private pythonServerUrl: string;
 
     private constructor() {
-        this.pythonServerUrl = process.env.VNSTOCK_API_URL || 'http://localhost:5000';
+        this.pythonServerUrl = VNSTOCK_API_URL || 'http://localhost:5000';
         this.initPromise = this.initialize();
     }
 

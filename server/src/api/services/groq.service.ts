@@ -13,6 +13,9 @@ import type {
 } from '@/types/learn-product.types';
 import { classifyAgeGroup, getAgeGroupLabel } from '@/types/learn-product.types';
 
+import { getEnv } from '../utils/env.util';
+import { EnvKeyEnum } from '../enums/env.enum';
+
 const CONFIG = {
     MODEL: 'llama-3.3-70b-versatile', // hoặc 'mixtral-8x7b-32768'
     MAX_TOKENS: 2048,
@@ -27,7 +30,7 @@ export default class GroqService {
      * Check if Groq service is configured
      */
     static isAvailable(): boolean {
-        return !!process.env.GROQ_API_KEY;
+        return !!getEnv({ key: EnvKeyEnum.GROQ_API_KEY });
     }
 
     /**
@@ -149,10 +152,7 @@ Trả về JSON thuần (không markdown, không code block):
      * Call Groq API
      */
     private static async callGroqAPI(prompt: string): Promise<string> {
-        const apiKey = process.env.GROQ_API_KEY;
-        if (!apiKey) {
-            throw new Error('GROQ_API_KEY environment variable is not set');
-        }
+        const apiKey = getEnv({ key: EnvKeyEnum.GROQ_API_KEY, isRequired: true });
 
         const response = await fetch(CONFIG.API_URL, {
             method: 'POST',

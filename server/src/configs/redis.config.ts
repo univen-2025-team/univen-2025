@@ -5,15 +5,14 @@ export const PESSIMISTIC_QUERY_TIME = ms('7 seconds');
 export const PESSIMISTIC_WAITING_TIME = ms('30 ms');
 export const PESSIMISTIC_RETRY_TIMES = ms('50 ms');
 
+import { getEnv } from '../api/utils/env.util';
+import { EnvKeyEnum } from '../api/enums/env.enum';
+
 export const REDIS_CONFIG = {
-    username: process.env.REDIS_USERNAME || 'default',
-    password: process.env.REDIS_PASSWORD || 'wLiw6HGNWUzwjwNXMp3kyEH8QZ7SZfgG',
+    username: getEnv({ key: EnvKeyEnum.REDIS_USERNAME }),
+    password: getEnv({ key: EnvKeyEnum.REDIS_PASSWORD }),
     socket: {
-        host: process.env.REDIS_HOST || 'redis-16415.c334.asia-southeast2-1.gce.cloud.redislabs.com',
-        port: Number(process.env.REDIS_PORT) || 16415
+        host: getEnv({ key: EnvKeyEnum.REDIS_HOST }),
+        port: getEnv({ key: EnvKeyEnum.REDIS_PORT, type: 'number' })
     }
 };
-
-if (REDIS_CONFIG.password === null || REDIS_CONFIG.password === undefined) {
-    throw new Error('REDIS_PASSWORD is not set');
-}

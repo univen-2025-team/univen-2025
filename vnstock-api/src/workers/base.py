@@ -4,7 +4,7 @@ import time
 import redis
 import socket
 from datetime import datetime
-from src.core.vnstock_client import VnstockClient
+from src.config.app_config import AppConfig
 
 # Configure logging
 logging.basicConfig(
@@ -15,7 +15,8 @@ logging.basicConfig(
 )
 
 class BaseWorker:
-    def __init__(self, redis_host='redis-16415.c334.asia-southeast2-1.gce.cloud.redislabs.com', redis_port=16415, redis_password='wLiw6HGNWUzwjwNXMp3kyEH8QZ7SZfgG', queue_names=None, ignore_global_ban=False):
+    def __init__(self, redis_host=AppConfig.REDIS_HOST, redis_port=AppConfig.REDIS_PORT, 
+                 redis_password=AppConfig.REDIS_PASSWORD, queue_names=None, ignore_global_ban=False):
         self.redis_host = redis_host
         self.redis_port = redis_port
         self.redis_password = redis_password

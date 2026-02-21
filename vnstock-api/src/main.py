@@ -327,8 +327,15 @@ def sync_stock(symbol: str):
         import redis
         import json
         import time
+        from src.config.app_config import AppConfig
         
-        r = redis.Redis(host='redis-16415.c334.asia-southeast2-1.gce.cloud.redislabs.com', port=16415, password='wLiw6HGNWUzwjwNXMp3kyEH8QZ7SZfgG', decode_responses=True)
+        r = redis.Redis(
+            host=AppConfig.REDIS_HOST, 
+            port=AppConfig.REDIS_PORT, 
+            password=AppConfig.REDIS_PASSWORD, 
+            db=AppConfig.REDIS_DB,
+            decode_responses=True
+        )
         job_data = json.dumps({
             'symbol': symbol,
             'source': 'api_request',

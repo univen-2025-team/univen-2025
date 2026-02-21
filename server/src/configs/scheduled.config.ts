@@ -1,3 +1,5 @@
+import { getEnv } from '../api/utils/env.util';
+import { EnvKeyEnum } from '../api/enums/env.enum';
 import LoggerService from '@/services/logger.service.js';
 
 export const TIMEZONE = 'Asia/Ho_Chi_Minh';
@@ -6,17 +8,17 @@ const CRON_TIME_DEV = '* * * * *';
 
 // Cleanup key token scheduled
 export const CLEAN_UP_KEY_TOKEN_CRON_TIME =
-    process.env.CLEAN_UP_KEY_TOKEN_CRON_TIME || CRON_TIME_DEV;
+    getEnv({ key: EnvKeyEnum.CLEAN_UP_KEY_TOKEN_CRON_TIME, default: CRON_TIME_DEV });
 
 // Cleanup product remove failed scheduled
-export const CLEAN_UP_PRODUCT_CRON_TIME = process.env.CLEAN_UP_PRODUCT_CRON_TIME || CRON_TIME_DEV;
+export const CLEAN_UP_PRODUCT_CRON_TIME = getEnv({ key: EnvKeyEnum.CLEAN_UP_PRODUCT_CRON_TIME, default: CRON_TIME_DEV });
 
 // Cleanup expired guest accounts - runs daily at midnight
 export const CLEAN_UP_EXPIRED_GUESTS_CRON_TIME =
-    process.env.CLEAN_UP_EXPIRED_GUESTS_CRON_TIME || '0 0 * * *';
+    getEnv({ key: EnvKeyEnum.CLEAN_UP_EXPIRED_GUESTS_CRON_TIME, default: '0 0 * * *' });
 
 // Sync inventory stock with SKU scheduled - every minute
-export const SYNC_INVENTORY_SKU_CRON_TIME = process.env.SYNC_INVENTORY_SKU_CRON_TIME || '* * * * *';
+export const SYNC_INVENTORY_SKU_CRON_TIME = getEnv({ key: EnvKeyEnum.SYNC_INVENTORY_SKU_CRON_TIME, default: '* * * * *' });
 
 export const getCronOptions = (options: service.scheduled.arguments.GetCronOption) => {
     return {
