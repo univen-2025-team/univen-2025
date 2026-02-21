@@ -4,3 +4,6 @@
 [submodule "vnstock-api"]
 	path = vnstock-api
 	url = git@gitlab.trancondev.site:tvconss/univen-2025_vnstock-api.git
+[submodule "client"]
+	path = client
+	url = git@gitlab.trancondev.site:tvconss/univen-2025_client.git
