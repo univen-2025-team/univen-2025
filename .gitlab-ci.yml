@@ -12,14 +12,11 @@ stages:
 
 deploy_job:
   stage: deploy
-  image: alpine:latest
   tags:
-    - docker
+    - shell 
   rules:
     - if: '$CI_COMMIT_BRANCH == "master"'
   before_script:
-    # Docker socket (/var/run/docker.sock) phải được mount từ Runner để dùng được lệnh docker ở đây
-    - apk add --no-cache git docker-cli docker-cli-compose
     # Cấu hình Git tự động chuyển đổi SSH sang HTTPS dùng Token của GitLab CI
     - git config --global url."https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.trancondev.site/".insteadOf "git@gitlab.trancondev.site:"
   script:
