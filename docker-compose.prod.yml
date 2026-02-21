@@ -28,8 +28,6 @@ services:
       MONGO_INITDB_ROOT_USERNAME: ${MONGODB_ROOT_USERNAME}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGODB_ROOT_PASSWORD}
       MONGO_INITDB_DATABASE: ${MONGODB_DATABASE}
-    ports:
-      - "127.0.0.1:27017:27017"
     volumes:
       - mongodb_data:/data/db
     networks:
@@ -46,8 +44,6 @@ services:
     container_name: univen-redis
     restart: unless-stopped
     command: redis-server --requirepass ${REDIS_PASSWORD}
-    ports:
-      - "127.0.0.1:6379:6379"
     volumes:
       - redis_data:/data
     networks:
@@ -82,7 +78,7 @@ services:
       REDIS_DB: ${REDIS_DB:-0}
       VNSTOCK_API_URL: http://vnstock-api:8000
     ports:
-      - "4000:4000"
+      - "127.0.0.1:4000:4000"
     volumes:
       - ./server/logs:/app/logs
       - ./server/public:/app/public
@@ -121,7 +117,7 @@ services:
       PYTHONDONTWRITEBYTECODE: 1
       TZ: Asia/Ho_Chi_Minh
     ports:
-      - "8000:8000"
+      - "127.0.0.1:8000:8000"
     networks:
       - univen-network
     depends_on:
