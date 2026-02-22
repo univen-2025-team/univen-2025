@@ -12,7 +12,7 @@ stages:
 
 deploy_job:
   stage: deploy
-  image: alpine:latest
+  image: docker:latest
   tags:
     - docker
   rules:
