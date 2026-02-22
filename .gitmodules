@@ -1,9 +1,12 @@
 [submodule "server"]
 	path = server
 	url = git@gitlab.trancondev.site:tvconss/univen-2025_server.git
+	ignore = dirty
 [submodule "vnstock-api"]
 	path = vnstock-api
 	url = git@gitlab.trancondev.site:tvconss/univen-2025_vnstock-api.git
+	ignore = dirty
 [submodule "client"]
 	path = client
 	url = git@gitlab.trancondev.site:tvconss/univen-2025_client.git
+	ignore = dirty
