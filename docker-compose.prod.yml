@@ -24,6 +24,8 @@ services:
     image: mongo:7
     container_name: univen-mongodb
     restart: unless-stopped
+    env_file:
+      - ./.env
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${MONGODB_ROOT_USERNAME}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGODB_ROOT_PASSWORD}
@@ -43,6 +45,8 @@ services:
     image: redis:alpine
     container_name: univen-redis
     restart: unless-stopped
+    env_file:
+      - ./.env
     command: redis-server --requirepass ${REDIS_PASSWORD}
     volumes:
       - redis_data:/data
@@ -65,20 +69,21 @@ services:
     container_name: univen-server
     restart: unless-stopped
     env_file:
+      - ./.env
       - ./server/.env.production
     environment:
-      NODE_ENV: production
+      NODE_ENV: ${NODE_ENV}
       HOST: 0.0.0.0
       TZ: Asia/Ho_Chi_Minh
       MONGODB_URI: mongodb://${MONGODB_ROOT_USERNAME}:${MONGODB_ROOT_PASSWORD}@mongodb:27017/${MONGODB_DATABASE}?authSource=admin
       REDIS_HOST: redis
-      REDIS_PORT: ${REDIS_PORT:-6379}
+      REDIS_PORT: ${REDIS_PORT}
       REDIS_USERNAME: ${REDIS_USERNAME}
       REDIS_PASSWORD: ${REDIS_PASSWORD}
-      REDIS_DB: ${REDIS_DB:-0}
+      REDIS_DB: ${REDIS_DB}
       VNSTOCK_API_URL: http://vnstock-api:8000
     ports:
-      - "127.0.0.1:4000:4000"
+      - "127.0.0.1:${SERVER_PORT}:4000"
     volumes:
       - ./server/logs:/app/logs
       - ./server/public:/app/public
@@ -102,6 +107,9 @@ services:
       dockerfile: Dockerfile
     container_name: univen-vnstock-api
     restart: unless-stopped
+    env_file:
+      - ./.env
+      - ./vnstock-api/.env
     environment:
       MONGODB_URI: mongodb://${MONGODB_ROOT_USERNAME}:${MONGODB_ROOT_PASSWORD}@mongodb:27017/${MONGODB_DATABASE}?authSource=admin
       MONGODB_DATABASE: ${MONGODB_DATABASE}
