@@ -28,18 +28,17 @@ deploy_job:
     - git clone git@gitlab.trancondev.site:tvconss/univen-2025_server.git server
     - git clone git@gitlab.trancondev.site:tvconss/univen-2025_vnstock-api.git vnstock-api
 
-    
     # 1. Tạo file .env cho dự án gốc (docker-compose) từ các biến bắt đầu bằng APP_
     - echo "Generating root environment variables..."
-    - printenv | grep '^APP_' | sed 's/^APP_//' > ./.env
+    - printenv | grep '^APP_' | sed 's/^APP_//' > ./.env || touch ./.env
     
     # 2. Tạo file .env cho server từ các biến bắt đầu bằng SERVER_
     - echo "Generating server environment variables..."
-    - printenv | grep '^SERVER_' | sed 's/^SERVER_//' > ./server/.env.production
+    - printenv | grep '^SERVER_' | sed 's/^SERVER_//' > ./server/.env.production || touch ./server/.env.production
     
     # 3. Tạo file .env cho vnstock-api từ các biến bắt đầu bằng VNSTOCK_API_
     - echo "Generating vnstock-api environment variables..."
-    - printenv | grep '^VNSTOCK_API_' | sed 's/^VNSTOCK_API_//' > ./vnstock-api/.env
+    - printenv | grep '^VNSTOCK_API_' | sed 's/^VNSTOCK_API_//' > ./vnstock-api/.env || touch ./vnstock-api/.env
     
     # 4. Chạy docker-compose để build và deploy
     - echo "Starting deployment via Docker Compose..."
