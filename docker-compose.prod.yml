@@ -72,21 +72,10 @@ services:
       - ./.env
       - ./server/.env.production
     environment:
-      NODE_ENV: ${NODE_ENV}
-      HOST: 0.0.0.0
       TZ: Asia/Ho_Chi_Minh
       MONGODB_URL: mongodb://${MONGODB_ROOT_USERNAME}:${MONGODB_ROOT_PASSWORD}@mongodb:27017/${MONGODB_DATABASE}?authSource=admin
-      REDIS_HOST: redis
-      REDIS_PORT: ${REDIS_PORT}
-      REDIS_USERNAME: ${REDIS_USERNAME}
-      REDIS_PASSWORD: ${REDIS_PASSWORD}
-      REDIS_DB: ${REDIS_DB}
+      REDIS_URL: redis://${REDIS_USERNAME}:${REDIS_PASSWORD}@redis:${REDIS_PORT}/${REDIS_DB}
       VNSTOCK_API_URL: http://vnstock-api:8000
-      PORT: ${SERVER_PORT}
-      CLEAN_UP_KEY_TOKEN_CRON_TIME: ${CLEAN_UP_KEY_TOKEN_CRON_TIME:-* * * * *}
-      CLEAN_UP_PRODUCT_CRON_TIME: ${CLEAN_UP_PRODUCT_CRON_TIME:-* * * * *}
-      CLEAN_UP_EXPIRED_GUESTS_CRON_TIME: ${CLEAN_UP_EXPIRED_GUESTS_CRON_TIME:-0 0 * * *}
-      SYNC_INVENTORY_SKU_CRON_TIME: ${SYNC_INVENTORY_SKU_CRON_TIME:-* * * * *}
     ports:
       - "127.0.0.1:${SERVER_PORT}:4000"
     volumes:
@@ -118,11 +107,7 @@ services:
     environment:
       MONGODB_URI: mongodb://${MONGODB_ROOT_USERNAME}:${MONGODB_ROOT_PASSWORD}@mongodb:27017/${MONGODB_DATABASE}?authSource=admin
       MONGODB_DATABASE: ${MONGODB_DATABASE}
-      REDIS_HOST: redis
-      REDIS_PORT: ${REDIS_PORT:-6379}
-      REDIS_USERNAME: ${REDIS_USERNAME}
-      REDIS_PASSWORD: ${REDIS_PASSWORD}
-      REDIS_DB: ${REDIS_DB:-0}
+      REDIS_URL: redis://${REDIS_USERNAME}:${REDIS_PASSWORD}@redis:${REDIS_PORT}/${REDIS_DB:-0}
       CRONJOB_ENABLED: ${CRONJOB_ENABLED:-true}
       VNSTOCK_SOURCE: ${VNSTOCK_SOURCE:-TCBS}
       VNSTOCK_API_KEY: ${VNSTOCK_API_KEY}
