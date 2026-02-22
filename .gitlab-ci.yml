@@ -42,11 +42,11 @@ deploy_job:
           new_key="${var_name#${PREFIX}}"
           case "$new_key" in
             *_BASE64)
-              new_key="${new_key%_BASE64}"
+              new_key=${new_key%_BASE64}
               val=$(printf '%s' "$val" | tr -d '\n\r ' | base64 -d) || echo "Warning: Base64 decode failed for $var_name"
               ;;
           esac
-          printf "%s=\"%s\"\n" "$new_key" "$val" >> "$OUT_FILE"
+          printf "%s=%s\n" "$new_key" "$val" >> "$OUT_FILE"
         done
       }
     - generate_env "APP_" "./.env"
