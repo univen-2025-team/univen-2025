@@ -75,3 +75,58 @@ deploy_api:
     - docker compose --env-file ./.env -f docker-compose.prod.yml up -d --build mongodb redis server vnstock-api client
     
     - echo "Deployment completed securely!"
+
+deploy_client:
+  stage: deploy
+  image: docker:latest
+  tags:
+    - docker
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "master" && $DEPLOY_SERVICE == "client"'
+    - if: '$CI_PIPELINE_SOURCE == "trigger" && $DEPLOY_SERVICE == "client"'
+  variables:
+    GIT_SUBMODULE_STRATEGY: none
+    DEPLOY_PATH: "/opt/apps/univen-2025-api"
+    DOCKER_HOST: unix:///var/run/docker.sock
+
+  before_script:
+    - apk add --no-cache rsync git docker-cli-compose
+
+  script:
+    - echo "Cloning client submodule..."
+    - rm -rf client
+    - git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.trancondev.site/tvconss/univen-2025_client.git client
+
+    - |
+      generate_env() {
+        PREFIX=$1
+        OUT_FILE=$2
+        echo "Generating environment variables for $PREFIX into $OUT_FILE..."
+        rm -f "$OUT_FILE" && touch "$OUT_FILE"
+        for var_name in $(env | awk -F= '$1 ~ /^'"$PREFIX"'/ {print $1}'); do
+          eval "val=\"\$$var_name\""
+          new_key="${var_name#${PREFIX}}"
+          case "$new_key" in
+            *_BASE64)
+              new_key=${new_key%_BASE64}
+              val=$(printf '%s' "$val" | tr -d '\n\r ' | base64 -d) || echo "Warning: Base64 decode failed for $var_name"
+              ;;
+          esac
+          printf "%s=%s\n" "$new_key" "$val" >> "$OUT_FILE"
+        done
+      }
+    - generate_env "CLIENT_" "./client/.env.production"
+
+    - echo "Syncing client to $DEPLOY_PATH/client..."
+    - mkdir -p $DEPLOY_PATH
+    - rsync -av --delete --exclude '.git' ./client/ $DEPLOY_PATH/client/
+
+    - echo "Securing client .env..."
+    - chmod 600 $DEPLOY_PATH/client/.env.production || true
+    - rm -f ./client/.env.production
+
+    - echo "Rebuilding client service..."
+    - cd $DEPLOY_PATH
+    - docker compose --env-file ./.env -f docker-compose.prod.yml up -d --build --no-deps client
+
+    - echo "Client deployment completed!"
