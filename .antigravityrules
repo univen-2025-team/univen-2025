@@ -1,0 +1,22 @@
+# 🚀 Antigravity Execution Protocol: Git Commit Standards
+
+To maintain a premium and professional codebase architecture, **Antigravity** MUST strictly adhere to the following Git Commit Protocol. 
+
+## 📝 Commit Message Architecture
+
+### 1. Structure
+- **Mandatory separation**: Always include a blank line between the subject and the body.
+- **Subject length**: Strictly limited to **50 characters**.
+- **Body wrap**: Auto-wrap content at **72 characters**.
+
+### 2. The Subject Line (Header)
+- **Mood**: Use the **Imperative Mood** (e.g., *Add*, *Fix*, *Refactor*, *Update*).
+- **Capitalization**: The first letter must be **Capitalized**.
+- **Closure**: Never end the subject with a period.
+
+### 3. The Message Body
+- **Focus**: Detail **What** was changed and **Why** it was necessary.
+- **Exclusion**: Avoid explaining *how* the change was done (the code demonstrates this).
+
+---
+> *Reference: [Commit Message Guidelines](https://www.theserverside.com/video/Follow-these-git-commit-message-guidelines)*
