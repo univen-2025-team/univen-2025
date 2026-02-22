@@ -18,7 +18,7 @@ deploy_job:
     - if: '$CI_COMMIT_BRANCH == "master"'
   variables:
     GIT_SUBMODULE_STRATEGY: none
-    DEPLOY_PATH: "/opt/apps/univenture-2025"
+    DEPLOY_PATH: "/opt/apps/$CI_PROJECT_NAME"
 
   script:
     - echo "Cloning submodules via CI_JOB_TOKEN..."
