@@ -12,43 +12,38 @@ stages:
 
 deploy_job:
   stage: deploy
-  image: docker:latest
   tags:
-    - docker
+    - shell 
   rules:
     - if: '$CI_COMMIT_BRANCH == "master"'
   variables:
     GIT_SUBMODULE_STRATEGY: none
-    DOCKER_HOST: unix:///var/run/docker.sock
-    DEPLOY_PATH: "/opt/apps/$CI_PROJECT_NAME"
-  before_script:
-    - apk add --no-cache rsync git openssh-client docker-cli-compose
-    - eval $(ssh-agent -s)
-    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
-    - mkdir -p ~/.ssh
-    - chmod 700 ~/.ssh
-    - ssh-keyscan gitlab.trancondev.site >> ~/.ssh/known_hosts
 
   script:
-    - echo "Cloning submodules via SSH..."
+    - echo "Cloning submodules via CI_JOB_TOKEN..."
     - rm -rf server vnstock-api
-    - git clone git@gitlab.trancondev.site:tvconss/univen-2025_server.git server
-    - git clone git@gitlab.trancondev.site:tvconss/univen-2025_vnstock-api.git vnstock-api
+    - git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.trancondev.site/tvconss/univen-2025_server.git server
+    - git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.trancondev.site/tvconss/univen-2025_vnstock-api.git vnstock-api
 
-    - echo "Generating environment variables..."
+    # 1. Tạo file .env cho dự án gốc (docker-compose) từ các biến bắt đầu bằng APP_
+    - echo "Generating root environment variables..."
     - printenv | grep '^APP_' | sed 's/^APP_//' > ./.env || touch ./.env
-    - printenv | grep '^SERVER_' | sed 's/^SERVER_//' > ./server/.env.production || touch ./server/.env.production
-    - printenv | grep '^VNSTOCK_API_' | sed 's/^VNSTOCK_API_//' > ./vnstock-api/.env || touch ./vnstock-api/.env
-
-    - echo "Syncing files to $DEPLOY_PATH..."
-    - mkdir -p $DEPLOY_PATH
-    - rsync -av --delete --exclude '.git' ./ $DEPLOY_PATH/
     
-    - echo "Cleaning up sensitive files from CI workspace..."
-    - rm -f ./.env ./server/.env.production ./vnstock-api/.env
-
+    # 2. Tạo file .env cho server từ các biến bắt đầu bằng SERVER_
+    - echo "Generating server environment variables..."
+    - printenv | grep '^SERVER_' | sed 's/^SERVER_//' > ./server/.env.production || touch ./server/.env.production
+    
+    # 3. Tạo file .env cho vnstock-api từ các biến bắt đầu bằng VNSTOCK_API_
+    - echo "Generating vnstock-api environment variables..."
+    - printenv | grep '^VNSTOCK_API_' | sed 's/^VNSTOCK_API_//' > ./vnstock-api/.env || touch ./vnstock-api/.env
+    
+    # 4. Chạy docker compose để build và deploy
     - echo "Starting deployment via Docker Compose..."
-    - cd $DEPLOY_PATH
-    - docker compose -f docker-compose.prod.yml down --remove-orphans || true
     - docker compose -f docker-compose.prod.yml up -d --build mongodb redis server vnstock-api
+    
+    # 5. Xóa các file .env chứa thông tin nhạy cảm
+    - echo "Cleaning up sensitive environment files..."
+    - rm -f ./.env
+    - rm -f ./server/.env.production
+    - rm -f ./vnstock-api/.env
     - echo "Deployment completed securely!"
