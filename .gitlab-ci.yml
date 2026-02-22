@@ -18,6 +18,7 @@ deploy_job:
     - if: '$CI_COMMIT_BRANCH == "master"'
   variables:
     GIT_SUBMODULE_STRATEGY: none
+    DEPLOY_PATH: "/opt/apps/univenture-2025"
 
   script:
     - echo "Cloning submodules via CI_JOB_TOKEN..."
@@ -37,13 +38,19 @@ deploy_job:
     - echo "Generating vnstock-api environment variables..."
     - printenv | grep '^VNSTOCK_API_' | sed 's/^VNSTOCK_API_//' > ./vnstock-api/.env || touch ./vnstock-api/.env
     
-    # 4. Chạy docker compose để build và deploy
+    # 4. Sync files ra thư mục deploy độc lập (giữ lại .env bên đó)
+    - echo "Syncing files to $DEPLOY_PATH..."
+    - mkdir -p $DEPLOY_PATH
+    - rsync -av --delete --exclude '.git' ./ $DEPLOY_PATH/
+    
+    # 5. Xóa các file .env chứa thông tin nhạy cảm ở workspace CI để tránh rò rỉ trong log cache
+    - echo "Cleaning up sensitive files from CI workspace..."
+    - rm -f ./.env ./server/.env.production ./vnstock-api/.env
+    
+    # 6. Chạy docker compose tại thư mục DEPLOY_PATH
     - echo "Starting deployment via Docker Compose..."
+    - cd $DEPLOY_PATH
+    - docker compose -f docker-compose.prod.yml down --remove-orphans || true
     - docker compose -f docker-compose.prod.yml up -d --build mongodb redis server vnstock-api
     
-    # 5. Xóa các file .env chứa thông tin nhạy cảm
-    - echo "Cleaning up sensitive environment files..."
-    - rm -f ./.env
-    - rm -f ./server/.env.production
-    - rm -f ./vnstock-api/.env
     - echo "Deployment completed securely!"
