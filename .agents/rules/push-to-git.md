@@ -14,6 +14,18 @@ When pushing changes to Git, perform high-quality commits following these 6 best
 5. **Write git commit messages imperatively**: Use the imperative mood for subject lines (e.g., "Fix", "Add", "Update"), not past tense or gerunds.
 6. **Describe what was done and why, but not how**: Explain the purpose and reasoning of the change; let the code explain how it was done.
 
+### Commit Types (AngularJS Convention)
+
+When applicable, start the subject line with one of the following words to clearly indicate the type of change:
+
+- **feat**: A new feature
+- **fix**: A bug fix
+- **docs**: Documentation only changes
+- **style**: Changes that do not affect the meaning of the code (white-space, formatting, missing semi-colons, etc)
+- **refactor**: A code change that neither fixes a bug nor adds a feature
+- **test**: Adding missing or correcting existing tests
+- **chore**: Changes to the build process or auxiliary tools and libraries such as documentation generation
+
 ### Example Format
 
 ```text
