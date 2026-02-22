@@ -52,14 +52,18 @@ deploy_job:
     - mkdir -p $DEPLOY_PATH
     - rsync -av --delete --exclude '.git' ./ $DEPLOY_PATH/
     
-    # 5. Xóa các file .env chứa thông tin nhạy cảm ở workspace CI để tránh rò rỉ trong log cache
+    # 5. Phân quyền bảo mật file .env (Chỉ chủ sở hữu được đọc/ghi - Chống lộ lọt log cho dev)
+    - echo "Securing environment variables files on VPS..."
+    - chmod 600 $DEPLOY_PATH/.env $DEPLOY_PATH/server/.env.production $DEPLOY_PATH/vnstock-api/.env || true
+
+    # 6. Xóa các file .env chứa thông tin nhạy cảm ở workspace CI để tránh rò rỉ trong log cache
     - echo "Cleaning up sensitive files from CI workspace..."
     - rm -f ./.env ./server/.env.production ./vnstock-api/.env
     
-    # 6. Chạy docker compose tại thư mục DEPLOY_PATH
+    # 7. Chạy docker compose tại thư mục DEPLOY_PATH
     - echo "Starting deployment via Docker Compose..."
     - cd $DEPLOY_PATH
-    - docker compose -f docker-compose.prod.yml down --remove-orphans || true
-    - docker compose -f docker-compose.prod.yml up -d --build mongodb redis server vnstock-api
+    - docker compose --env-file ./.env -f docker-compose.prod.yml down --remove-orphans || true
+    - docker compose --env-file ./.env -f docker-compose.prod.yml up -d --build mongodb redis server vnstock-api
     
     - echo "Deployment completed securely!"
