@@ -18,13 +18,15 @@ deploy_job:
     - if: '$CI_COMMIT_BRANCH == "master"'
   variables:
     GIT_SUBMODULE_STRATEGY: none
-  before_script: []
+  before_script:
+    # Runner inject URL rewrite vào ~/.gitconfig trước job, xóa đi để dùng SSH thuần
+    - git config --global --remove-section url 2>/dev/null || true
 
   script:
-    - echo "Updating submodule code via HTTPS with token..."
+    - echo "Cloning submodules via SSH..."
     - rm -rf server vnstock-api
-    - env -i HOME=$HOME PATH=$PATH git clone git@gitlab.trancondev.site:tvconss/univen-2025_server.git server
-    - env -i HOME=$HOME PATH=$PATH git clone git@gitlab.trancondev.site:tvconss/univen-2025_vnstock-api.git vnstock-api
+    - git clone git@gitlab.trancondev.site:tvconss/univen-2025_server.git server
+    - git clone git@gitlab.trancondev.site:tvconss/univen-2025_vnstock-api.git vnstock-api
 
     
     # 1. Tạo file .env cho dự án gốc (docker-compose) từ các biến bắt đầu bằng APP_
