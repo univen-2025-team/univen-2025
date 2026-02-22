@@ -40,9 +40,9 @@ deploy_job:
     - echo "Generating vnstock-api environment variables..."
     - printenv | grep '^VNSTOCK_API_' | sed 's/^VNSTOCK_API_//' > ./vnstock-api/.env || touch ./vnstock-api/.env
     
-    # 4. Chạy docker-compose để build và deploy
+    # 4. Chạy docker compose để build và deploy
     - echo "Starting deployment via Docker Compose..."
-    - docker-compose -f docker-compose.prod.yml up -d --build mongodb redis server vnstock-api
+    - docker compose -f docker-compose.prod.yml up -d --build mongodb redis server vnstock-api
     
     # 5. Xóa các file .env chứa thông tin nhạy cảm
     - echo "Cleaning up sensitive environment files..."
