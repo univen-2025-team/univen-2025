@@ -27,9 +27,10 @@ deploy_api:
 
   script:
     - echo "Cloning submodules via CI_JOB_TOKEN..."
-    - rm -rf server vnstock-api
+    - rm -rf server vnstock-api client
     - git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.trancondev.site/tvconss/univen-2025_server.git server
     - git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.trancondev.site/tvconss/univen-2025_vnstock-api.git vnstock-api
+    - git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.trancondev.site/tvconss/univen-2025_client.git client
 
     - |
       generate_env() {
