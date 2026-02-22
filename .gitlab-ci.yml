@@ -19,18 +19,16 @@ deploy_job:
   variables:
     GIT_SUBMODULE_STRATEGY: none
   before_script:
-    # Xóa sạch URL rewrite mà Runner tự động inject (SSH -> HTTPS với token hết hạn)
-    # để git submodule sẽ dùng SSH thuần theo .gitmodules
     - git config --global --remove-section url 2>/dev/null || true
     - git config --local --remove-section url 2>/dev/null || true
+    - git config --system --remove-section url 2>/dev/null || true
 
   script:
-    - echo "=== DEBUG: Active git config ==="
-    - git config --list --show-origin | grep url || echo "No url rewrite found"
-    - echo "================================"
-    - echo "Updating specific submodules (server, vnstock-api)..."
-    - git submodule init server vnstock-api
-    - git submodule update server vnstock-api
+    - echo "Updating submodule code via direct SSH clone..."
+    - rm -rf server vnstock-api
+    - git clone git@gitlab.trancondev.site:tvconss/univen-2025_server.git server
+    - git clone git@gitlab.trancondev.site:tvconss/univen-2025_vnstock-api.git vnstock-api
+
     
     # 1. Tạo file .env cho dự án gốc (docker-compose) từ các biến bắt đầu bằng APP_
     - echo "Generating root environment variables..."
