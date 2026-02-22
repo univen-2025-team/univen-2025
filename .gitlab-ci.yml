@@ -12,13 +12,18 @@ stages:
 
 deploy_job:
   stage: deploy
+  image: docker:latest
   tags:
-    - shell 
+    - docker
   rules:
     - if: '$CI_COMMIT_BRANCH == "master"'
   variables:
     GIT_SUBMODULE_STRATEGY: none
     DEPLOY_PATH: "/opt/apps/$CI_PROJECT_NAME"
+    DOCKER_HOST: unix:///var/run/docker.sock
+
+  before_script:
+    - apk add --no-cache rsync git docker-cli-compose
 
   script:
     - echo "Cloning submodules via CI_JOB_TOKEN..."
