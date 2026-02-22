@@ -37,15 +37,16 @@ deploy_job:
         OUT_FILE=$2
         echo "Generating environment variables for $PREFIX into $OUT_FILE..."
         rm -f "$OUT_FILE" && touch "$OUT_FILE"
-        printenv | grep "^${PREFIX}" | while IFS='=' read -r key val; do
-          new_key="${key#${PREFIX}}"
+        for var_name in $(env | awk -F= '$1 ~ /^'"$PREFIX"'/ {print $1}'); do
+          eval "val=\"\$$var_name\""
+          new_key="${var_name#${PREFIX}}"
           case "$new_key" in
             *_BASE64)
               new_key="${new_key%_BASE64}"
-              val=$(printf '%s' "$val" | base64 -d)
+              val=$(printf '%s' "$val" | tr -d '\n\r ' | base64 -d) || echo "Warning: Base64 decode failed for $var_name"
               ;;
           esac
-          printf "%s=%s\n" "$new_key" "$val" >> "$OUT_FILE"
+          printf "%s=\"%s\"\n" "$new_key" "$val" >> "$OUT_FILE"
         done
       }
     - generate_env "APP_" "./.env"
