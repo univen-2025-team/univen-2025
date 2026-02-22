@@ -19,8 +19,9 @@ deploy_job:
   variables:
     GIT_SUBMODULE_STRATEGY: none
   before_script:
-    # Ép git dùng SSH thay vì HTTPS (Runner tự động inject HTTPS, ta đảo ngược lại)
-    - git config --global url."git@gitlab.trancondev.site:".insteadOf "https://gitlab.trancondev.site/"
+    # Xóa sạch URL rewrite mà Runner tự động inject (SSH -> HTTPS với token hết hạn)
+    # để git submodule sẽ dùng SSH thuần theo .gitmodules
+    - git config --global --remove-section url 2>/dev/null || true
 
   script:
     - echo "Updating specific submodules (server, vnstock-api)..."
