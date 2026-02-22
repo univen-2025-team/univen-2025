@@ -23,8 +23,8 @@ deploy_job:
   script:
     - echo "Updating submodule code via HTTPS with token..."
     - rm -rf server vnstock-api
-    - git clone https://oauth2:${GITLAB_CLONE_TOKEN}@gitlab.trancondev.site/tvconss/univen-2025_server.git server
-    - git clone https://oauth2:${GITLAB_CLONE_TOKEN}@gitlab.trancondev.site/tvconss/univen-2025_vnstock-api.git vnstock-api
+    - git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.trancondev.site/tvconss/univen-2025_server.git server
+    - git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.trancondev.site/tvconss/univen-2025_vnstock-api.git vnstock-api
 
     
     # 1. Tạo file .env cho dự án gốc (docker-compose) từ các biến bắt đầu bằng APP_
