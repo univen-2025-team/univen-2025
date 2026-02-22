@@ -10,7 +10,7 @@ stages:
   - sync-to-github
   - deploy
 
-deploy_job:
+deploy_api:
   stage: deploy
   image: docker:latest
   tags:
@@ -19,7 +19,7 @@ deploy_job:
     - if: '$CI_COMMIT_BRANCH == "master"'
   variables:
     GIT_SUBMODULE_STRATEGY: none
-    DEPLOY_PATH: "/opt/apps/$CI_PROJECT_NAME"
+    DEPLOY_PATH: "/opt/apps/univen-2025-api"
     DOCKER_HOST: unix:///var/run/docker.sock
 
   before_script:
@@ -52,6 +52,7 @@ deploy_job:
     - generate_env "APP_" "./.env"
     - generate_env "SERVER_" "./server/.env.production"
     - generate_env "VNSTOCK_API_" "./vnstock-api/.env"
+    - generate_env "CLIENT_" "./client/.env.production"
     
     # 4. Sync files ra thư mục deploy độc lập (giữ lại .env bên đó)
     - echo "Syncing files to $DEPLOY_PATH..."
@@ -60,16 +61,16 @@ deploy_job:
     
     # 5. Phân quyền bảo mật file .env (Chỉ chủ sở hữu được đọc/ghi - Chống lộ lọt log cho dev)
     - echo "Securing environment variables files on VPS..."
-    - chmod 600 $DEPLOY_PATH/.env $DEPLOY_PATH/server/.env.production $DEPLOY_PATH/vnstock-api/.env || true
+    - chmod 600 $DEPLOY_PATH/.env $DEPLOY_PATH/server/.env.production $DEPLOY_PATH/vnstock-api/.env $DEPLOY_PATH/client/.env.production || true
 
     # 6. Xóa các file .env chứa thông tin nhạy cảm ở workspace CI để tránh rò rỉ trong log cache
     - echo "Cleaning up sensitive files from CI workspace..."
-    - rm -f ./.env ./server/.env.production ./vnstock-api/.env
+    - rm -f ./.env ./server/.env.production ./vnstock-api/.env ./client/.env.production
     
     # 7. Chạy docker compose tại thư mục DEPLOY_PATH
     - echo "Starting deployment via Docker Compose..."
     - cd $DEPLOY_PATH
     - docker compose --env-file ./.env -f docker-compose.prod.yml down --remove-orphans || true
-    - docker compose --env-file ./.env -f docker-compose.prod.yml up -d --build mongodb redis server vnstock-api
+    - docker compose --env-file ./.env -f docker-compose.prod.yml up -d --build mongodb redis server vnstock-api client
     
     - echo "Deployment completed securely!"
