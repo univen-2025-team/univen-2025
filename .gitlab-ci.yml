@@ -72,6 +72,9 @@ deploy_api:
     - echo "Starting deployment via Docker Compose..."
     - cd $DEPLOY_PATH
     - docker compose --env-file ./.env -f docker-compose.prod.yml down --remove-orphans || true
-    - docker compose --env-file ./.env -f docker-compose.prod.yml up -d --build mongodb redis server vnstock-api client
+    - echo "Building Docker images without cache..."
+    - docker compose --env-file ./.env -f docker-compose.prod.yml build --no-cache mongodb redis server vnstock-api client
+    - echo "Starting services..."
+    - docker compose --env-file ./.env -f docker-compose.prod.yml up -d
     
     - echo "Deployment completed securely!"
