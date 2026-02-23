@@ -19,7 +19,7 @@ deploy_api:
     - if: '$CI_COMMIT_BRANCH == "master"'
   variables:
     GIT_SUBMODULE_STRATEGY: none
-    DEPLOY_PATH: "/opt/apps/univen-2025-api"
+    DEPLOY_PATH: "/opt/apps/univen-2025"
     DOCKER_HOST: unix:///var/run/docker.sock
 
   before_script:
