@@ -34,6 +34,8 @@ services:
       - mongodb_data:/data/db
     networks:
       - univen-network
+    ports:
+      - "127.0.0.1:${MONGODB_PORT}:27017"
     healthcheck:
       test: [ "CMD", "mongosh", "--eval", "db.adminCommand('ping')" ]
       interval: 10s
