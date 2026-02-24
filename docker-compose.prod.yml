@@ -72,14 +72,12 @@ services:
       - ./server/.env.production
     environment:
       NODE_ENV: ${NODE_ENV}
-      HOST: "0.0.0.0"
-      PORT: ${SERVER_PORT:-3006}
       TZ: Asia/Ho_Chi_Minh
       MONGODB_URL: mongodb://${MONGODB_ROOT_USERNAME}:${MONGODB_ROOT_PASSWORD}@mongodb:27017/${MONGODB_DATABASE}?authSource=admin
       REDIS_URL: redis://${REDIS_USERNAME}:${REDIS_PASSWORD}@redis:${REDIS_PORT}/${REDIS_DB}
       VNSTOCK_API_URL: http://vnstock-api:8000
     ports:
-      - "127.0.0.1:${SERVER_PORT:-3006}:${SERVER_PORT:-3006}"
+      - "127.0.0.1:${SERVER_PORT}:3000"
     volumes:
       - ./server/logs:/app/logs
       - ./server/public:/app/public
@@ -91,7 +89,7 @@ services:
       redis:
         condition: service_healthy
     healthcheck:
-      test: [ "CMD-SHELL", "node -e \"require('http').get('http://localhost:${SERVER_PORT:-3005}/v1/api/health',(r)=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))\"" ]
+      test: [ "CMD-SHELL", "node -e \"require('http').get('http://localhost:3000/v1/api/health',(r)=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))\"" ]
       interval: 30s
       timeout: 10s
       retries: 5
