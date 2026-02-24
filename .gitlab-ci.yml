@@ -33,27 +33,25 @@ deploy_api:
     - git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.trancondev.site/tvconss/univen-2025_client.git client
 
     - |
-      generate_env() {
-        PREFIX=$1
-        OUT_FILE=$2
-        echo "Generating environment variables for $PREFIX into $OUT_FILE..."
-        rm -f "$OUT_FILE" && touch "$OUT_FILE"
-        for var_name in $(env | awk -F= '$1 ~ /^'"$PREFIX"'/ {print $1}'); do
-          eval "val=\"\$$var_name\""
-          new_key="${var_name#${PREFIX}}"
-          case "$new_key" in
-            *_BASE64)
-              new_key=${new_key%_BASE64}
-              val=$(printf '%s' "$val" | tr -d '\n\r ' | base64 -d) || echo "Warning: Base64 decode failed for $var_name"
-              ;;
-          esac
-          printf "%s=%s\n" "$new_key" "$val" >> "$OUT_FILE"
-        done
+      echo "Creating environment variables files from GitLab File variables..."
+      [ -n "$ENV_FILE" ] && cp "$ENV_FILE" ./.env || echo "Warning: ENV_FILE not set"
+      [ -n "$ENV_SERVER_FILE" ] && cp "$ENV_SERVER_FILE" ./server/.env.production || echo "Warning: ENV_SERVER_FILE not set"
+      [ -n "$ENV_VNSTOCK_API_FILE" ] && cp "$ENV_VNSTOCK_API_FILE" ./vnstock-api/.env || echo "Warning: ENV_VNSTOCK_API_FILE not set"
+      [ -n "$ENV_CLIENT_FILE" ] && cp "$ENV_CLIENT_FILE" ./client/.env.production || echo "Warning: ENV_CLIENT_FILE not set"
+
+    - |
+      echo "Validating environment files in CI workspace..."
+      validate_env() {
+        F=$1
+        echo "Checking $F..."
+        [ -f "$F" ] || { echo "Error: $F missing"; exit 1; }
+        [ -s "$F" ] || { echo "Error: $F empty"; exit 1; }
+        ls -lh "$F"
       }
-    - generate_env "APP_" "./.env"
-    - generate_env "SERVER_" "./server/.env.production"
-    - generate_env "VNSTOCK_API_" "./vnstock-api/.env"
-    - generate_env "CLIENT_" "./client/.env.production"
+      validate_env "./.env"
+      validate_env "./server/.env.production"
+      validate_env "./vnstock-api/.env"
+      validate_env "./client/.env.production"
     
     # 4. Sync files ra thư mục deploy độc lập (giữ lại .env bên đó)
     - echo "Syncing files to $DEPLOY_PATH..."
@@ -62,7 +60,19 @@ deploy_api:
     
     # 5. Phân quyền bảo mật file .env (Chỉ chủ sở hữu được đọc/ghi - Chống lộ lọt log cho dev)
     - echo "Securing environment variables files on VPS..."
-    - chmod 600 $DEPLOY_PATH/.env $DEPLOY_PATH/server/.env.production $DEPLOY_PATH/vnstock-api/.env $DEPLOY_PATH/client/.env.production || true
+    - |
+      FILES="$DEPLOY_PATH/.env $DEPLOY_PATH/server/.env.production $DEPLOY_PATH/vnstock-api/.env $DEPLOY_PATH/client/.env.production"
+      chmod 600 $FILES || true
+      echo "Verifying permissions and ownership at deployment path..."
+      for F in $FILES; do
+        if [ -f "$F" ]; then
+          ls -l "$F"
+          PERM=$(stat -c "%a" "$F")
+          if [ "$PERM" != "600" ]; then
+            echo "Warning: $F has incorrect permissions: $PERM"
+          fi
+        fi
+      done
 
     # 6. Xóa các file .env chứa thông tin nhạy cảm ở workspace CI để tránh rò rỉ trong log cache
     - echo "Cleaning up sensitive files from CI workspace..."

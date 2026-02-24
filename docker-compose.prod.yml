@@ -69,16 +69,15 @@ services:
     container_name: univen-server
     restart: unless-stopped
     env_file:
-      - ./.env
       - ./server/.env.production
     environment:
-      PORT: ${SERVER_PORT:-3005}
+      PORT: ${SERVER_PORT:-3006}
       TZ: Asia/Ho_Chi_Minh
       MONGODB_URL: mongodb://${MONGODB_ROOT_USERNAME}:${MONGODB_ROOT_PASSWORD}@mongodb:27017/${MONGODB_DATABASE}?authSource=admin
       REDIS_URL: redis://${REDIS_USERNAME}:${REDIS_PASSWORD}@redis:${REDIS_PORT}/${REDIS_DB}
       VNSTOCK_API_URL: http://vnstock-api:8000
     ports:
-      - "127.0.0.1:${SERVER_PORT:-3005}:${SERVER_PORT:-3005}"
+      - "127.0.0.1:${SERVER_PORT:-3006}:${SERVER_PORT:-3006}"
     volumes:
       - ./server/logs:/app/logs
       - ./server/public:/app/public
